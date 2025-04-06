@@ -1,11 +1,12 @@
 import AppFooter from "@/components/AppFooter";
-import { Input } from "@/components/ui/input";
+import SourceFileUploader from "@/components/source-file-uploader";
 
 export default function Home() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Input id="source" type="file" />
+        <h1 className="text-2xl font-semibold">Upload JSON File</h1>
+        <SourceFileUploader />
       </main>
       <AppFooter />
     </div>

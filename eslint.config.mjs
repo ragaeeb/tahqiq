@@ -15,8 +15,8 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  sonarjs.configs.recommended,
   eslintPluginUnicorn.configs.recommended,
+  sonarjs.configs.recommended,
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   perfectionist.configs["recommended-natural"],
   eslintPluginPrettierRecommended,
