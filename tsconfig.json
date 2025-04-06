@@ -1,8 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "skipDefaultLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
