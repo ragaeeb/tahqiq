@@ -1,10 +1,12 @@
 'use client';
 
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectParts, useTranscriptStore } from '@/stores/useTranscriptStore';
 import React from 'react';
+import { shallow } from 'zustand/shallow';
 
 export default function PartSelector() {
-    const { parts, selectedPart, setSelectedPart } = useTranscriptStore();
+    const { selectedPart, setSelectedPart } = useTranscriptStore();
+    const parts = useTranscriptStore(selectParts, shallow);
 
     if (parts.length === 0) {
         return null;

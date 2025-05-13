@@ -1,3 +1,4 @@
+import memoizeOne from 'memoize-one';
 import { mergeSegments, type Segment as ParagrafsSegment, type Token } from 'paragrafs';
 import { create } from 'zustand';
 
@@ -6,89 +7,142 @@ export type Segment = ParagrafsSegment & {
     status?: 'done';
 };
 
-export type TranscriptState = {
-    readonly isInitialized: boolean;
+export type TranscriptState = TranscriptActions & TranscriptStateCore;
+
+type TranscriptActions = {
     mergeSegments: () => void;
-    readonly parts: number[];
-    readonly segments: Segment[];
-    readonly selectedPart: number;
-    readonly selectedSegments: Segment[];
-    readonly selectedToken: null | Token;
     setSelectedPart: (part: number) => void;
     setSelectedToken: (token: null | Token) => void;
     setTranscripts: (fileToTranscript: Record<string, ParagrafsSegment[]>) => void;
-    toggleSegmentSelection: (segment: Segment, selected: boolean) => void;
-    readonly transcripts: Record<string, Segment[]>;
+    toggleSegmentSelection: (segment: Segment, isSelected: boolean) => void;
     updateSegment: (update: Partial<Segment> & { id: number }) => void;
+};
+
+type TranscriptStateCore = {
+    readonly isInitialized: boolean;
+    readonly selectedPart: number;
+    readonly selectedSegments: Segment[];
+    readonly selectedToken: null | Token;
+    readonly transcripts: Record<string, Segment[]>;
+};
+
+const getParts = memoizeOne((transcripts: Record<string, any>) =>
+    Object.keys(transcripts)
+        .map((p) => parseInt(p, 10))
+        .sort((a, b) => a - b),
+);
+
+const getCurrentSegments = memoizeOne(
+    (transcripts: Record<string, Segment[]>, selectedPart: number) => transcripts[selectedPart] ?? [],
+);
+
+export const selectParts = (state: TranscriptStateCore): number[] => getParts(state.transcripts);
+
+export const selectCurrentSegments = (state: TranscriptStateCore): Segment[] => {
+    return getCurrentSegments(state.transcripts, state.selectedPart);
 };
 
 export const useTranscriptStore = create<TranscriptState>((set) => ({
     isInitialized: false,
     mergeSegments: () => {
         set((state) => {
-            const [from, to] = state.selectedSegments;
-            let segments = state.transcripts[state.selectedPart]!;
-            const fromIndex = segments.findIndex((segment) => segment === from);
-            const toIndex = segments.findIndex((segment) => segment === to);
-            const merged = mergeSegments(segments.slice(fromIndex, toIndex + 1), '\n');
-            segments = [...segments.slice(0, fromIndex), { ...merged, id: Date.now() }, ...segments.slice(toIndex + 1)];
+            const currentSegments = selectCurrentSegments(state);
+            const { selectedPart, selectedSegments, transcripts } = state;
+
+            if (selectedSegments.length !== 2) {
+                console.warn('MergeSegments: Exactly two segments must be selected for merging.');
+                return {}; // No change
+            }
+
+            const [fromSegment, toSegment] = selectedSegments.toSorted((a, b) => a.start - b.start);
+            const fromIndex = currentSegments.findIndex((segment) => segment.id === fromSegment!.id);
+            const toIndex = currentSegments.findIndex((segment) => segment.id === toSegment!.id);
+
+            const segmentsToMerge = currentSegments.slice(fromIndex, toIndex + 1);
+            const mergedContent = mergeSegments(segmentsToMerge, '\n'); // The '\n' is the joiner for text
+
+            const newMergedSegment: Segment = {
+                ...mergedContent, // Spread the text and tokens from mergeSegments result
+                id: Date.now(), // New ID for the merged segment
+            };
+
+            const updatedSegmentsForPart = [
+                ...currentSegments.slice(0, fromIndex),
+                newMergedSegment,
+                ...currentSegments.slice(toIndex + 1),
+            ];
 
             return {
-                segments,
                 selectedSegments: [],
                 transcripts: {
-                    ...state.transcripts,
-                    [state.selectedPart]: segments,
+                    ...transcripts,
+                    [selectedPart]: updatedSegmentsForPart,
                 },
             };
         });
     },
-    parts: [],
-    segments: [],
-    selectedPart: 0,
+    selectedPart: 0, // Default to a sensible value
     selectedSegments: [],
     selectedToken: null,
     setSelectedPart: (part) =>
-        set((state) => ({ segments: state.transcripts[part] || [], selectedPart: part, selectedSegments: [] })),
+        set(() => {
+            return { selectedPart: part, selectedSegments: [] };
+        }),
+
     setSelectedToken: (token: null | Token) => set({ selectedToken: token }),
+
     setTranscripts: (fileToTranscript) =>
         set(() => {
+            const transcripts: Record<string, Segment[]> = {};
+            let idCounter = 0;
+
             const parts = Object.keys(fileToTranscript)
                 .map((part) => parseInt(part))
-                .sort();
-            const transcripts: Record<string, Segment[]> = {};
-            let id = 0;
+                .sort((a, b) => a - b);
 
             for (const part of parts) {
                 const segments: Segment[] = [];
                 const paragrafSegments = fileToTranscript[part] as ParagrafsSegment[];
 
                 for (const segment of paragrafSegments) {
-                    segments.push({ ...segment, id: id++ });
+                    segments.push({ ...segment, id: idCounter++ });
                 }
-
                 transcripts[part] = segments;
             }
 
-            const selectedPart = parts[0]!;
-
-            return { isInitialized: true, parts, segments: transcripts[selectedPart]!, selectedPart, transcripts };
+            return {
+                isInitialized: true,
+                selectedPart: parts[0]!,
+                selectedSegments: [],
+                transcripts,
+            };
         }),
-    toggleSegmentSelection: (segment, selected) =>
+
+    toggleSegmentSelection: (segment, isSelected) =>
         set((state) => {
             return {
-                selectedSegments: selected
+                selectedSegments: isSelected
                     ? state.selectedSegments.concat(segment)
                     : state.selectedSegments.filter((s) => segment !== s),
             };
         }),
+
     transcripts: {},
-    updateSegment: (upd) =>
+
+    updateSegment: (update) =>
         set((state) => {
-            const list = state.transcripts[state.selectedPart] || [];
-            const segments = list.map((seg) => (seg.id === upd.id ? { ...seg, ...upd } : seg));
+            const { selectedPart, transcripts } = state;
+            const segmentsForCurrentPart = transcripts[selectedPart] || [];
+
+            const updatedSegments = segmentsForCurrentPart.map((seg) =>
+                seg.id === update.id ? { ...seg, ...update } : seg,
+            );
+
             return {
-                transcripts: { ...state.transcripts, segments, [state.selectedPart]: segments },
+                transcripts: {
+                    ...transcripts,
+                    [selectedPart]: updatedSegments,
+                },
             };
         }),
 }));

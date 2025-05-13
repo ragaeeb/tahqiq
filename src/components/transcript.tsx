@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectCurrentSegments, useTranscriptStore } from '@/stores/useTranscriptStore';
 import { formatSecondsToTimestamp } from 'paragrafs';
 
 import JsonDropZone from './json-drop-zone';
@@ -9,7 +9,8 @@ import SegmentItem from './segment-item';
 import Toolbar from './toolbar';
 
 export default function Transcript() {
-    const { isInitialized, segments, selectedToken, setTranscripts } = useTranscriptStore();
+    const { isInitialized, selectedToken, setTranscripts } = useTranscriptStore();
+    const segments = useTranscriptStore(selectCurrentSegments);
 
     return (
         <div className="flex flex-col w-full max-w">
