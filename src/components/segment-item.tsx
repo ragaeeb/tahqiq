@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function SegmentItem({ segment }: Props) {
-    const { selectedIds, setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore();
+    const { selectedSegments, setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore();
 
     const autoResize = (textArea: HTMLTextAreaElement) => {
         textArea.style.height = 'auto';
@@ -22,9 +22,9 @@ export default function SegmentItem({ segment }: Props) {
         <tr className={clsx(segment.status === 'done' && 'bg-green-50')} key={segment.id}>
             <td className="px-2 py-1 align-top">
                 <input
-                    checked={selectedIds.includes(segment.id)}
+                    checked={selectedSegments.includes(segment)}
                     className="form-checkbox"
-                    onChange={(e) => toggleSegmentSelection(segment.id, e.target.checked)}
+                    onChange={(e) => toggleSegmentSelection(segment, e.target.checked)}
                     type="checkbox"
                 />
             </td>

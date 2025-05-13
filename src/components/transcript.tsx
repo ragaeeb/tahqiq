@@ -6,8 +6,9 @@ import { formatSecondsToTimestamp } from 'paragrafs';
 import JsonDropZone from './json-drop-zone';
 import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
+import Toolbar from './toolbar';
 
-export default function TranscriptManager() {
+export default function Transcript() {
     const { isInitialized, selectedPart, selectedToken, setTranscripts, transcripts } = useTranscriptStore();
 
     return (
@@ -16,12 +17,7 @@ export default function TranscriptManager() {
 
             <div className="flex items-center justify-between mb-4">
                 <PartSelector />
-
-                <div className="flex space-x-2">
-                    <button className="px-3 py-1 border rounded hover:bg-gray-100">Save</button>
-                    <button className="px-3 py-1 border rounded hover:bg-gray-100">Export</button>
-                    <button className="px-3 py-1 border rounded hover:bg-gray-100">Clear</button>
-                </div>
+                <Toolbar />
             </div>
 
             {isInitialized ? (
