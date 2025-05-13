@@ -1,7 +1,9 @@
 'use client';
 
-import { selectCurrentSegments, useTranscriptStore } from '@/stores/useTranscriptStore';
 import { formatSecondsToTimestamp } from 'paragrafs';
+import { useMemo } from 'react';
+
+import { selectCurrentSegments, useTranscriptStore } from '@/stores/useTranscriptStore';
 
 import JsonDropZone from './json-drop-zone';
 import PartSelector from './part-selector';
@@ -11,6 +13,10 @@ import Toolbar from './toolbar';
 export default function Transcript() {
     const { isInitialized, selectedToken, setTranscripts } = useTranscriptStore();
     const segments = useTranscriptStore(selectCurrentSegments);
+
+    const segmentItems = useMemo(() => {
+        return segments.map((segment) => <SegmentItem key={segment.id} segment={segment} />);
+    }, [segments]);
 
     return (
         <div className="flex flex-col w-full max-w">
@@ -35,11 +41,7 @@ export default function Transcript() {
                                 <th className="px-4 py-1 text-right">النص</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {segments.map((segment) => (
-                                <SegmentItem key={segment.id} segment={segment} />
-                            ))}
-                        </tbody>
+                        <tbody className="divide-y divide-gray-200">{segmentItems}</tbody>
                     </table>
                 </div>
             ) : (

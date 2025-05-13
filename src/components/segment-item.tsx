@@ -1,22 +1,25 @@
 'use client';
 
-import { timeToSeconds } from '@/lib/time';
-import { type Segment, useTranscriptStore } from '@/stores/useTranscriptStore';
 import clsx from 'clsx';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
+
+import { timeToSeconds } from '@/lib/time';
+import { type Segment, useTranscriptStore } from '@/stores/useTranscriptStore';
 
 type Props = {
     segment: Segment;
 };
 
-export default function SegmentItem({ segment }: Props) {
+function SegmentItem({ segment }: Props) {
     const { selectedSegments, setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore();
 
     const autoResize = (textArea: HTMLTextAreaElement) => {
         textArea.style.height = 'auto';
         textArea.style.height = `${textArea.scrollHeight}px`;
     };
+
+    console.log('SEg', segment);
 
     return (
         <tr className={clsx(segment.status === 'done' && 'bg-green-50')} key={segment.id}>
@@ -75,3 +78,5 @@ export default function SegmentItem({ segment }: Props) {
         </tr>
     );
 }
+
+export default React.memo(SegmentItem);

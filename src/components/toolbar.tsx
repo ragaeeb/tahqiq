@@ -1,8 +1,9 @@
 'use client';
 
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
+
+import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 export default function Toolbar() {
     const { isInitialized, mergeSegments, selectedSegments } = useTranscriptStore();
