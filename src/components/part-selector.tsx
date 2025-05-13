@@ -1,19 +1,24 @@
 'use client';
 
+import { useTranscriptStore } from '@/stores/useTranscriptStore';
 import React from 'react';
 
-type Props = {
-    onChange: (part: string) => void;
-    parts: string[];
-    selected: string;
-};
+export default function PartSelector() {
+    const { parts, selectedPart, setSelectedPart } = useTranscriptStore();
 
-export default function PartSelector({ onChange, parts, selected }: Props) {
+    if (parts.length === 0) {
+        return null;
+    }
+
     return (
-        <select className="p-2 border rounded" onChange={(e) => onChange(e.target.value)} value={selected}>
+        <select
+            className="p-2 border rounded"
+            onChange={(e) => setSelectedPart(parseInt(e.target.value))}
+            value={selectedPart}
+        >
             {parts.map((p) => (
                 <option key={p} value={p}>
-                    Part {p}
+                    {p}
                 </option>
             ))}
         </select>

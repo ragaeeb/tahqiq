@@ -1,30 +1,21 @@
 'use client';
 
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { formatSecondsToTimestamp } from 'paragrafs';
 
 import JsonDropZone from './json-drop-zone';
 import PartSelector from './part-selector';
-import Transcript from './transcript';
+import SegmentItem from './segment-item';
 
 export default function TranscriptManager() {
-    const {
-        selectedIds,
-        selectedPart,
-        setSelectedPart,
-        setTranscripts,
-        toggleSegmentSelection,
-        transcripts,
-        updateSegment,
-    } = useTranscriptStore();
-
-    const parts = Object.keys(transcripts).sort((a, b) => parseInt(a) - parseInt(b));
+    const { isInitialized, selectedPart, selectedToken, setTranscripts, transcripts } = useTranscriptStore();
 
     return (
         <div className="flex flex-col w-full max-w">
             <JsonDropZone onFiles={setTranscripts as any} />
 
             <div className="flex items-center justify-between mb-4">
-                {parts.length > 0 && <PartSelector onChange={setSelectedPart} parts={parts} selected={selectedPart} />}
+                <PartSelector />
 
                 <div className="flex space-x-2">
                     <button className="px-3 py-1 border rounded hover:bg-gray-100">Save</button>
@@ -33,16 +24,27 @@ export default function TranscriptManager() {
                 </div>
             </div>
 
-            {parts.length > 0 ? (
-                <Transcript
-                    currentPart={selectedPart}
-                    onUpdate={updateSegment}
-                    onWordSelected={(w) => console.log('word selected', w)}
-                    pageUrlTemplate="/player/{part-page}"
-                    segments={transcripts[selectedPart] || []}
-                    selectedIds={selectedIds}
-                    toggleSegmentSelection={toggleSegmentSelection}
-                />
+            {isInitialized ? (
+                <div className="overflow-auto border rounded">
+                    <table className="w-full table-auto divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-2 py-1 w-8 text-left">
+                                    <input className="form-checkbox" type="checkbox" />
+                                </th>
+                                <th className="px-2 py-1 w-36 text-left">
+                                    Time: {selectedToken && formatSecondsToTimestamp(selectedToken.start)}
+                                </th>
+                                <th className="px-4 py-1 text-right">النص</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {transcripts[selectedPart]?.map((segment) => (
+                                <SegmentItem key={segment.id} segment={segment} />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             ) : (
                 <p className="text-gray-500">Drag & drop your JSON transcript files anywhere on this page.</p>
             )}
