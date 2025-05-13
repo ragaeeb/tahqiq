@@ -9,7 +9,7 @@ import SegmentItem from './segment-item';
 import Toolbar from './toolbar';
 
 export default function Transcript() {
-    const { isInitialized, selectedPart, selectedToken, setTranscripts, transcripts } = useTranscriptStore();
+    const { isInitialized, segments, selectedToken, setTranscripts } = useTranscriptStore();
 
     return (
         <div className="flex flex-col w-full max-w">
@@ -35,7 +35,7 @@ export default function Transcript() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {transcripts[selectedPart]?.map((segment) => (
+                            {segments.map((segment) => (
                                 <SegmentItem key={segment.id} segment={segment} />
                             ))}
                         </tbody>

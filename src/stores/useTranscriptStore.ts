@@ -6,18 +6,19 @@ export type Segment = ParagrafsSegment & {
     status?: 'done';
 };
 
-type TranscriptState = {
-    isInitialized: boolean;
+export type TranscriptState = {
+    readonly isInitialized: boolean;
     mergeSegments: () => void;
-    parts: number[];
-    selectedPart: number;
-    selectedSegments: Segment[];
-    selectedToken: null | Token;
+    readonly parts: number[];
+    readonly segments: Segment[];
+    readonly selectedPart: number;
+    readonly selectedSegments: Segment[];
+    readonly selectedToken: null | Token;
     setSelectedPart: (part: number) => void;
     setSelectedToken: (token: null | Token) => void;
     setTranscripts: (fileToTranscript: Record<string, ParagrafsSegment[]>) => void;
     toggleSegmentSelection: (segment: Segment, selected: boolean) => void;
-    transcripts: Record<string, Segment[]>;
+    readonly transcripts: Record<string, Segment[]>;
     updateSegment: (update: Partial<Segment> & { id: number }) => void;
 };
 
@@ -26,25 +27,29 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
     mergeSegments: () => {
         set((state) => {
             const [from, to] = state.selectedSegments;
-            const segments = state.transcripts[state.selectedPart]!;
+            let segments = state.transcripts[state.selectedPart]!;
             const fromIndex = segments.findIndex((segment) => segment === from);
             const toIndex = segments.findIndex((segment) => segment === to);
             const merged = mergeSegments(segments.slice(fromIndex, toIndex + 1), '\n');
+            segments = [...segments.slice(0, fromIndex), { ...merged, id: Date.now() }, ...segments.slice(toIndex + 1)];
 
             return {
+                segments,
                 selectedSegments: [],
                 transcripts: {
                     ...state.transcripts,
-                    [state.selectedPart]: [...segments.slice(0, fromIndex), merged, ...segments.slice(toIndex)],
+                    [state.selectedPart]: segments,
                 },
             };
         });
     },
     parts: [],
+    segments: [],
     selectedPart: 0,
     selectedSegments: [],
     selectedToken: null,
-    setSelectedPart: (part) => set({ selectedPart: part, selectedSegments: [] }),
+    setSelectedPart: (part) =>
+        set((state) => ({ segments: state.transcripts[part] || [], selectedPart: part, selectedSegments: [] })),
     setSelectedToken: (token: null | Token) => set({ selectedToken: token }),
     setTranscripts: (fileToTranscript) =>
         set(() => {
@@ -65,7 +70,9 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
                 transcripts[part] = segments;
             }
 
-            return { isInitialized: true, parts, selectedPart: parts[0]!, transcripts };
+            const selectedPart = parts[0]!;
+
+            return { isInitialized: true, parts, segments: transcripts[selectedPart]!, selectedPart, transcripts };
         }),
     toggleSegmentSelection: (segment, selected) =>
         set((state) => {
@@ -79,9 +86,9 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
     updateSegment: (upd) =>
         set((state) => {
             const list = state.transcripts[state.selectedPart] || [];
-            const updated = list.map((seg) => (seg.id === upd.id ? { ...seg, ...upd } : seg));
+            const segments = list.map((seg) => (seg.id === upd.id ? { ...seg, ...upd } : seg));
             return {
-                transcripts: { ...state.transcripts, [state.selectedPart]: updated },
+                transcripts: { ...state.transcripts, segments, [state.selectedPart]: segments },
             };
         }),
 }));
