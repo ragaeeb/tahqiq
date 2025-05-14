@@ -5,6 +5,8 @@ import React from 'react';
 
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import { Button } from './ui/button';
+
 export default function Toolbar() {
     const isInitialized = useTranscriptStore((state) => state.isInitialized);
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
@@ -21,18 +23,16 @@ export default function Toolbar() {
     return (
         <div className="flex space-x-2">
             {selectedSegments.length === 2 && (
-                <button className="px-3 py-1 border rounded hover:bg-gray-100" onClick={mergeSegments}>
+                <Button onClick={mergeSegments}>
                     🔗 {formatSecondsToTimestamp(sortedSegments[0]!.start)} -{' '}
                     {formatSecondsToTimestamp(sortedSegments.at(-1)!.end)} (
                     {formatSecondsToTimestamp(Math.ceil(sortedSegments.at(-1)!.end - sortedSegments[0]!.start))})
-                </button>
+                </Button>
             )}
             {selectedToken && (
-                <button className="px-3 py-1 border rounded hover:bg-gray-100" onClick={() => splitSegment()}>
-                    ✂️ at {formatSecondsToTimestamp(selectedToken.start)}
-                </button>
+                <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}
-            <button className="px-3 py-1 border rounded hover:bg-gray-100">Clear</button>
+            <Button>Clear</Button>
         </div>
     );
 }

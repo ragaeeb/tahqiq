@@ -11,6 +11,7 @@ export type TranscriptState = TranscriptActions & TranscriptStateCore;
 
 type TranscriptActions = {
     mergeSegments: () => void;
+    selectAllSegments: (isSelected: boolean) => void;
     setSelectedPart: (part: number) => void;
     setSelectedToken: (token: null | Token) => void;
     setTranscripts: (fileToTranscript: Record<string, ParagrafsSegment[]>) => void;
@@ -82,6 +83,11 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
             };
         });
     },
+    selectAllSegments: (isSelected: boolean) => {
+        return set((state) => {
+            return { selectedSegments: isSelected ? getCurrentSegments(state.transcripts, state.selectedPart) : [] };
+        });
+    },
     selectedPart: 0, // Default to a sensible value
     selectedSegments: [],
     selectedToken: null,
@@ -89,6 +95,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
         set(() => {
             return { selectedPart: part, selectedSegments: [] };
         }),
+
     setSelectedToken: (token: null | Token) => set({ selectedToken: token }),
 
     setTranscripts: (fileToTranscript) =>
@@ -121,6 +128,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
     splitSegment: () => {
         return set((state) => {
             let segments = selectCurrentSegments(state);
+
             const segmentIndex = segments.findIndex(
                 (segment) => state.selectedToken!.start >= segment.start && state.selectedToken!.end <= segment.end,
             );

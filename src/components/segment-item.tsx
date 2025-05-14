@@ -7,6 +7,10 @@ import React from 'react';
 import { timeToSeconds } from '@/lib/time';
 import { type Segment, useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+
 type Props = {
     segment: Segment;
 };
@@ -32,8 +36,7 @@ function SegmentItem({ segment }: Props) {
             </td>
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">
-                <input
-                    className="block w-full border rounded p-1 text-xs"
+                <Input
                     defaultValue={formatSecondsToTimestamp(segment.start)}
                     onBlur={(e) => {
                         const start = timeToSeconds(e.target.value);
@@ -43,8 +46,7 @@ function SegmentItem({ segment }: Props) {
                         }
                     }}
                 />
-                <input
-                    className="block w-full border rounded p-1 text-xs"
+                <Input
                     defaultValue={formatSecondsToTimestamp(segment.end)}
                     onBlur={(e) => {
                         const end = timeToSeconds(e.target.value);
@@ -54,14 +56,11 @@ function SegmentItem({ segment }: Props) {
                         }
                     }}
                 />
-                <div className="text-[0.6rem] block mt-2">
-                    ({formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))})
-                </div>
+                <Label className="mt-2">({formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))})</Label>
             </td>
 
             <td className="px-4 py-1 align-top">
-                <textarea
-                    className="w-full h-full min-h-[4rem] border rounded p-2 text-sm resize-none whitespace-pre-wrap text-right"
+                <Textarea
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {
