@@ -1,5 +1,5 @@
 import memoizeOne from 'memoize-one';
-import { mergeSegments, type Segment as ParagrafsSegment, type Token } from 'paragrafs';
+import { mergeSegments, type Segment as ParagrafsSegment, splitSegment, type Token } from 'paragrafs';
 import { create } from 'zustand';
 
 export type Segment = ParagrafsSegment & {
@@ -14,6 +14,7 @@ type TranscriptActions = {
     setSelectedPart: (part: number) => void;
     setSelectedToken: (token: null | Token) => void;
     setTranscripts: (fileToTranscript: Record<string, ParagrafsSegment[]>) => void;
+    splitSegment: () => void;
     toggleSegmentSelection: (segment: Segment, isSelected: boolean) => void;
     updateSegment: (update: Partial<Segment> & { id: number }) => void;
 };
@@ -88,7 +89,6 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
         set(() => {
             return { selectedPart: part, selectedSegments: [] };
         }),
-
     setSelectedToken: (token: null | Token) => set({ selectedToken: token }),
 
     setTranscripts: (fileToTranscript) =>
@@ -117,6 +117,31 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
                 transcripts,
             };
         }),
+
+    splitSegment: () => {
+        return set((state) => {
+            let segments = selectCurrentSegments(state);
+            const segmentIndex = segments.findIndex(
+                (segment) => state.selectedToken!.start >= segment.start && state.selectedToken!.end <= segment.end,
+            );
+
+            if (segmentIndex === -1) {
+                console.warn('Segment not found for token');
+                return {};
+            }
+
+            const [first, second] = splitSegment(segments[segmentIndex]!, state.selectedToken!.start);
+
+            segments = [
+                ...segments.slice(0, segmentIndex),
+                { ...first!, id: Date.now() },
+                { ...second!, id: Date.now() + 1 },
+                ...segments.slice(segmentIndex + 1),
+            ];
+
+            return { selectedToken: null, transcripts: { ...state.transcripts, [state.selectedPart]: segments } };
+        });
+    },
 
     toggleSegmentSelection: (segment, isSelected) =>
         set((state) => {

@@ -1,6 +1,5 @@
 'use client';
 
-import { formatSecondsToTimestamp } from 'paragrafs';
 import { useMemo } from 'react';
 
 import { selectCurrentSegments, useTranscriptStore } from '@/stores/useTranscriptStore';
@@ -11,9 +10,9 @@ import SegmentItem from './segment-item';
 import Toolbar from './toolbar';
 
 export default function Transcript() {
-    const { isInitialized, selectedToken, setTranscripts } = useTranscriptStore();
+    const isInitialized = useTranscriptStore((state) => state.isInitialized);
+    const setTranscripts = useTranscriptStore((state) => state.setTranscripts);
     const segments = useTranscriptStore(selectCurrentSegments);
-
     const segmentItems = useMemo(() => {
         return segments.map((segment) => <SegmentItem key={segment.id} segment={segment} />);
     }, [segments]);
@@ -35,9 +34,7 @@ export default function Transcript() {
                                 <th className="px-2 py-1 w-8 text-left">
                                     <input className="form-checkbox" type="checkbox" />
                                 </th>
-                                <th className="px-2 py-1 w-36 text-left">
-                                    Time: {selectedToken && formatSecondsToTimestamp(selectedToken.start)}
-                                </th>
+                                <th className="px-2 py-1 w-36 text-left">Time:</th>
                                 <th className="px-4 py-1 text-right">النص</th>
                             </tr>
                         </thead>

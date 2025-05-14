@@ -12,20 +12,19 @@ type Props = {
 };
 
 function SegmentItem({ segment }: Props) {
-    const { selectedSegments, setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore();
+    const { setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore.getInitialState();
+    const isSelected = useTranscriptStore((state) => state.selectedSegments.includes(segment));
 
     const autoResize = (textArea: HTMLTextAreaElement) => {
         textArea.style.height = 'auto';
         textArea.style.height = `${textArea.scrollHeight}px`;
     };
 
-    console.log('SEg', segment);
-
     return (
         <tr className={clsx(segment.status === 'done' && 'bg-green-50')} key={segment.id}>
             <td className="px-2 py-1 align-top">
                 <input
-                    checked={selectedSegments.includes(segment)}
+                    checked={isSelected}
                     className="form-checkbox"
                     onChange={(e) => toggleSegmentSelection(segment, e.target.checked)}
                     type="checkbox"
@@ -37,14 +36,22 @@ function SegmentItem({ segment }: Props) {
                     className="block w-full border rounded p-1 text-xs"
                     defaultValue={formatSecondsToTimestamp(segment.start)}
                     onBlur={(e) => {
-                        updateSegment({ id: segment.id, start: timeToSeconds(e.target.value) });
+                        const start = timeToSeconds(e.target.value);
+
+                        if (start !== segment.start) {
+                            updateSegment({ id: segment.id, start });
+                        }
                     }}
                 />
                 <input
                     className="block w-full border rounded p-1 text-xs"
                     defaultValue={formatSecondsToTimestamp(segment.end)}
                     onBlur={(e) => {
-                        updateSegment({ end: timeToSeconds(e.target.value), id: segment.id });
+                        const end = timeToSeconds(e.target.value);
+
+                        if (end !== segment.end) {
+                            updateSegment({ end, id: segment.id });
+                        }
                     }}
                 />
                 <div className="text-[0.6rem] block mt-2">
@@ -58,14 +65,19 @@ function SegmentItem({ segment }: Props) {
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {
-                        autoResize(e.currentTarget);
-                        updateSegment({ id: segment.id, text: e.target.value });
+                        if (e.target.value !== segment.text) {
+                            autoResize(e.currentTarget);
+                            updateSegment({ id: segment.id, text: e.target.value });
+                        }
                     }}
                     onSelect={(e) => {
                         const { selectionEnd, selectionStart } = e.currentTarget;
-                        if (selectionStart !== selectionEnd) {
-                            setSelectedToken(getFirstTokenForSelection(segment, selectionStart, selectionEnd));
-                        }
+
+                        setSelectedToken(
+                            selectionStart !== selectionEnd
+                                ? getFirstTokenForSelection(segment, selectionStart, selectionEnd)
+                                : null,
+                        );
                     }}
                     ref={(el) => {
                         if (el) {
