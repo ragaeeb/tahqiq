@@ -5,6 +5,7 @@ import React from 'react';
 
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import { FormatDialog } from './format-dialog';
 import { Button } from './ui/button';
 
 export default function Toolbar() {
@@ -32,7 +33,10 @@ export default function Toolbar() {
             {selectedToken && (
                 <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}
-            <Button>Clear</Button>
+            <FormatDialog>
+                <Button variant="outline">AutoFormat</Button>
+            </FormatDialog>
+            <Button className="bg-emerald-500">💾</Button>
         </div>
     );
 }

@@ -7,6 +7,7 @@ import React from 'react';
 import { timeToSeconds } from '@/lib/time';
 import { type Segment, useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
@@ -27,16 +28,15 @@ function SegmentItem({ segment }: Props) {
     return (
         <tr className={clsx(segment.status === 'done' && 'bg-green-50')} key={segment.id}>
             <td className="px-2 py-1 align-top">
-                <input
+                <Checkbox
                     checked={isSelected}
-                    className="form-checkbox"
-                    onChange={(e) => toggleSegmentSelection(segment, e.target.checked)}
-                    type="checkbox"
+                    onCheckedChange={(isSelected) => toggleSegmentSelection(segment, Boolean(isSelected))}
                 />
             </td>
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">
                 <Input
+                    className="text-xs"
                     defaultValue={formatSecondsToTimestamp(segment.start)}
                     onBlur={(e) => {
                         const start = timeToSeconds(e.target.value);
@@ -56,7 +56,9 @@ function SegmentItem({ segment }: Props) {
                         }
                     }}
                 />
-                <Label className="mt-2">({formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))})</Label>
+                <Label className="mt-2 text-xs">
+                    ({formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))})
+                </Label>
             </td>
 
             <td className="px-4 py-1 align-top">

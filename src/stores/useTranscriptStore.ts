@@ -1,5 +1,13 @@
 import memoizeOne from 'memoize-one';
-import { mergeSegments, type Segment as ParagrafsSegment, splitSegment, type Token } from 'paragrafs';
+import {
+    createHints,
+    mapSegmentsIntoFormattedSegments,
+    markAndCombineSegments,
+    mergeSegments,
+    type Segment as ParagrafsSegment,
+    splitSegment,
+    type Token,
+} from 'paragrafs';
 import { create } from 'zustand';
 
 export type Segment = ParagrafsSegment & {
@@ -9,7 +17,17 @@ export type Segment = ParagrafsSegment & {
 
 export type TranscriptState = TranscriptActions & TranscriptStateCore;
 
+type FormatOptions = {
+    fillers: string[];
+    hints: string[];
+    maxSecondsPerLine: number;
+    maxSecondsPerSegment: number;
+    minWordsPerSegment: number;
+    silenceGapThreshold: number;
+};
+
 type TranscriptActions = {
+    groupAndSliceSegments: (options: FormatOptions) => void;
     mergeSegments: () => void;
     selectAllSegments: (isSelected: boolean) => void;
     setSelectedPart: (part: number) => void;
@@ -45,6 +63,27 @@ export const selectCurrentSegments = (state: TranscriptStateCore): Segment[] => 
 };
 
 export const useTranscriptStore = create<TranscriptState>((set) => ({
+    groupAndSliceSegments: (options: FormatOptions) => {
+        set((state) => {
+            let segments = getCurrentSegments(state.transcripts, state.selectedPart);
+            const fillers = options.fillers.flatMap((token) => [token, token + '.', token + '?']);
+            const combinedSegments = markAndCombineSegments(segments, {
+                fillers,
+                gapThreshold: options.silenceGapThreshold,
+                hints: createHints(...options.hints),
+                maxSecondsPerSegment: options.maxSecondsPerSegment,
+                minWordsPerSegment: options.minWordsPerSegment,
+            });
+
+            const now = Date.now();
+            segments = mapSegmentsIntoFormattedSegments(combinedSegments, options.maxSecondsPerLine).map((s, i) => ({
+                ...s,
+                id: i + now,
+            }));
+
+            return { transcripts: { ...state.transcripts, [state.selectedPart]: segments } };
+        });
+    },
     isInitialized: false,
     mergeSegments: () => {
         set((state) => {

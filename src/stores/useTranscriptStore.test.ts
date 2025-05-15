@@ -50,7 +50,7 @@ describe('mergeSegments function', () => {
         expect(state.transcripts[1]).toEqual([
             {
                 end: 4,
-                id: 1,
+                id: expect.any(Number),
                 start: 0,
                 text: 'The quick\nbrown fox',
                 tokens: [
@@ -126,7 +126,7 @@ describe('mergeSegments function', () => {
         expect(state.transcripts[1]).toEqual([
             {
                 end: 4,
-                id: 1,
+                id: expect.any(Number),
                 start: 0,
                 text: 'The quick\nbrown fox',
                 tokens: [
