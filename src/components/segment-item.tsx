@@ -6,13 +6,11 @@ import React from 'react';
 
 import type { Segment } from '@/stores/types';
 
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
-
-import { Checkbox } from './ui/checkbox';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 
 function SegmentItem({ segment }: { segment: Segment }) {
     const { setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore.getInitialState();

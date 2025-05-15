@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
-import { type TranscriptState, useTranscriptStore } from './useTranscriptStore'; // Adjust import path as needed
+import { useTranscriptStore } from './useTranscriptStore'; // Adjust import path as needed
 
 describe('mergeSegments function', () => {
     let originalState: TranscriptState;
@@ -40,14 +40,14 @@ describe('mergeSegments function', () => {
         useTranscriptStore.setState({
             selectedPart: 1,
             selectedSegments: segments,
-            transcripts: { 1: segments },
+            transcripts: { 1: { segments } },
         });
 
         useTranscriptStore.getInitialState().mergeSegments();
 
         const state = useTranscriptStore.getState();
         expect(state.selectedSegments).toBeEmpty();
-        expect(state.transcripts[1]).toEqual([
+        expect(state.transcripts[1]?.segments).toEqual([
             {
                 end: 4,
                 id: expect.any(Number),
@@ -116,14 +116,14 @@ describe('mergeSegments function', () => {
         useTranscriptStore.setState({
             selectedPart: 1,
             selectedSegments: [segments[0]!, segments[1]!],
-            transcripts: { 1: segments },
+            transcripts: { 1: { segments } },
         });
 
         useTranscriptStore.getInitialState().mergeSegments();
 
         const state = useTranscriptStore.getState();
         expect(state.selectedSegments).toBeEmpty();
-        expect(state.transcripts[1]).toEqual([
+        expect(state.transcripts[1]?.segments).toEqual([
             {
                 end: 4,
                 id: expect.any(Number),

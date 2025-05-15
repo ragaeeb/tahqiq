@@ -17,6 +17,12 @@ export type Segment = ParagrafsSegment & {
     status?: 'done';
 };
 
+export type Transcript = {
+    segments: Segment[];
+    text?: string;
+    timestamp?: Date;
+};
+
 export type TranscriptState = TranscriptActions & TranscriptStateCore;
 
 export type TranscriptStateCore = {
@@ -24,7 +30,7 @@ export type TranscriptStateCore = {
     readonly selectedPart: number;
     readonly selectedSegments: Segment[];
     readonly selectedToken: null | Token;
-    readonly transcripts: Record<string, Segment[]>;
+    readonly transcripts: Record<string, Transcript>;
 };
 
 type TranscriptActions = {

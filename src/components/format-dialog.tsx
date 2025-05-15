@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -18,8 +19,6 @@ import { Slider } from '@/components/ui/slider';
 import { TagInput } from '@/components/ui/tag-input';
 import { DEFAULT_FILLER_WORDS, DEFAULT_HINTS } from '@/lib/constants';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
-
-import { Checkbox } from './ui/checkbox';
 
 export function FormatDialog({
     children,

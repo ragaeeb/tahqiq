@@ -1,6 +1,6 @@
 import memoizeOne from 'memoize-one';
 
-import type { Segment, TranscriptStateCore } from './types';
+import type { Transcript, TranscriptStateCore } from './types';
 
 const getParts = memoizeOne((transcripts: Record<string, any>) =>
     Object.keys(transcripts)
@@ -8,12 +8,10 @@ const getParts = memoizeOne((transcripts: Record<string, any>) =>
         .sort((a, b) => a - b),
 );
 
-export const getCurrentSegments = memoizeOne(
-    (transcripts: Record<string, Segment[]>, selectedPart: number) => transcripts[selectedPart] ?? [],
-);
+const getSegments = memoizeOne((transcript?: Transcript) => transcript?.segments || []);
 
 export const selectParts = (state: TranscriptStateCore): number[] => getParts(state.transcripts);
 
-export const selectCurrentSegments = (state: TranscriptStateCore): Segment[] => {
-    return getCurrentSegments(state.transcripts, state.selectedPart);
-};
+export const selectCurrentTranscript = (state: TranscriptStateCore) => state.transcripts[state.selectedPart];
+
+export const selectCurrentSegments = (state: TranscriptStateCore) => getSegments(selectCurrentTranscript(state));

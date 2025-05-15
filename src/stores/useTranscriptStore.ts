@@ -27,22 +27,13 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
     selectedPart: 0,
     selectedSegments: [],
     selectedToken: null,
-    setSelectedPart: (part) =>
-        set(() => {
-            return { selectedPart: part, selectedSegments: [] };
-        }),
-
+    setSelectedPart: (selectedPart) => set({ selectedPart, selectedSegments: [] }),
     setSelectedToken: (token: null | Token) => set({ selectedToken: token }),
-
     setTranscripts: (fileToTranscript) => set(() => mapFileToTranscript(fileToTranscript)),
-
     splitSegment: () => {
         return set(splitSelectedSegment);
     },
-
     toggleSegmentSelection: (segment, isSelected) => set((state) => applySelection(state, segment, isSelected)),
-
     transcripts: {},
-
     updateSegment: (update) => set((state) => updateSegmentWithDiff(state, update)),
 }));

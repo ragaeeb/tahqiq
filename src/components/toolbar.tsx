@@ -6,6 +6,7 @@ import React from 'react';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 import { FormatDialog } from './format-dialog';
+import { PreviewDialog } from './preview-dialog';
 import { Button } from './ui/button';
 
 export default function Toolbar() {
@@ -30,6 +31,9 @@ export default function Toolbar() {
             <FormatDialog>
                 <Button variant="outline">AutoFormat</Button>
             </FormatDialog>
+            <PreviewDialog>
+                <Button className="bg-blue-500">Preview</Button>
+            </PreviewDialog>
             <Button className="bg-emerald-500">💾</Button>
         </div>
     );
