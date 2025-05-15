@@ -4,19 +4,17 @@ import clsx from 'clsx';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
 
+import type { Segment } from '@/stores/types';
+
 import { timeToSeconds } from '@/lib/time';
-import { type Segment, useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 
-type Props = {
-    segment: Segment;
-};
-
-function SegmentItem({ segment }: Props) {
+function SegmentItem({ segment }: { segment: Segment }) {
     const { setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore.getInitialState();
     const isSelected = useTranscriptStore((state) => state.selectedSegments.includes(segment));
 

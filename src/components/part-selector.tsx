@@ -2,15 +2,12 @@
 
 import React from 'react';
 
-import { selectParts, useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectParts } from '@/stores/selectors';
+import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 export default function PartSelector() {
     const { selectedPart, setSelectedPart } = useTranscriptStore();
     const parts = useTranscriptStore(selectParts);
-
-    if (parts.length === 0) {
-        return null;
-    }
 
     return (
         <select

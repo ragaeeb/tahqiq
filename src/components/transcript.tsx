@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 
-import { selectCurrentSegments, useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectCurrentSegments } from '@/stores/selectors';
+import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 import JsonDropZone from './json-drop-zone';
 import PartSelector from './part-selector';
@@ -20,36 +21,41 @@ export default function Transcript() {
         return segments.map((segment) => <SegmentItem key={segment.id} segment={segment} />);
     }, [segments]);
 
+    if (!isInitialized) {
+        return (
+            <div className="flex flex-col w-full max-w">
+                <JsonDropZone onFiles={setTranscripts as any} />
+                <div className="flex items-center justify-center mb-4">
+                    <p className="text-gray-500 flex">Drag & drop your JSON transcript files anywhere on this page.</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="flex flex-col w-full max-w">
-                <JsonDropZone onFiles={setTranscripts as any} />
-
                 <div className="flex items-center justify-between mb-4">
                     <PartSelector />
                     <Toolbar />
                 </div>
 
-                {isInitialized ? (
-                    <div className="overflow-auto border rounded">
-                        <table className="w-full table-auto divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-2 py-1 w-8 text-left">
-                                        <Checkbox
-                                            onCheckedChange={(isSelected) => selectAllSegments(Boolean(isSelected))}
-                                        />
-                                    </th>
-                                    <th className="px-2 py-1 w-36 text-left">Time:</th>
-                                    <th className="px-4 py-1 text-right">النص</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">{segmentItems}</tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-gray-500">Drag & drop your JSON transcript files anywhere on this page.</p>
-                )}
+                <div className="overflow-auto border rounded">
+                    <table className="w-full table-auto divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-2 py-1 w-8 text-left">
+                                    <Checkbox
+                                        onCheckedChange={(isSelected) => selectAllSegments(Boolean(isSelected))}
+                                    />
+                                </th>
+                                <th className="px-2 py-1 w-36 text-left">Time:</th>
+                                <th className="px-4 py-1 text-right">النص</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">{segmentItems}</tbody>
+                    </table>
+                </div>
             </div>
             <footer className="mt-auto row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
                 <Textarea />

@@ -19,6 +19,8 @@ import { TagInput } from '@/components/ui/tag-input';
 import { DEFAULT_FILLER_WORDS, DEFAULT_HINTS } from '@/lib/constants';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import { Checkbox } from './ui/checkbox';
+
 export function FormatDialog({
     children,
 }: Readonly<{
@@ -28,6 +30,7 @@ export function FormatDialog({
     const [maxSecondsPerLine, setMaxSecondsPerLine] = useState([30]);
     const [minWordsPerSegment, setMinWordsPerSegment] = useState([10]);
     const [silenceGapThreshold, setSilenceGapThreshold] = useState([2]);
+    const [flipPunctuation, setFlipPunctuation] = useState(true);
     const [hints, setHints] = useState(DEFAULT_HINTS);
     const [fillers, setFillers] = useState(DEFAULT_FILLER_WORDS);
     const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
@@ -41,6 +44,15 @@ export function FormatDialog({
                     <DialogDescription>Edit these values to change how the segments get chunked.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            checked={flipPunctuation}
+                            id="flipPunctuation"
+                            onCheckedChange={(isSelected) => setFlipPunctuation(Boolean(isSelected))}
+                        />
+                        <Label htmlFor="flipPunctuation">Flip English to Arabic Punctuation</Label>
+                    </div>
+
                     <Label className="text-right">Max Seconds Per Segment: {maxSecondsPerSegment}s</Label>
                     <Slider
                         max={300}
@@ -88,6 +100,7 @@ export function FormatDialog({
                             onClick={() => {
                                 groupAndSliceSegments({
                                     fillers,
+                                    flipPunctuation,
                                     hints,
                                     maxSecondsPerLine: maxSecondsPerLine[0]!,
                                     maxSecondsPerSegment: maxSecondsPerSegment[0]!,
