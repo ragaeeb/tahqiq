@@ -53,10 +53,8 @@ function SegmentItem({ segment }: { segment: Segment }) {
                             updateSegment({ end, id: segment.id });
                         }
                     }}
+                    title={formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))}
                 />
-                <Label className="mt-2 text-xs">
-                    ({formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))})
-                </Label>
             </td>
 
             <td className="px-4 py-1 align-top">
