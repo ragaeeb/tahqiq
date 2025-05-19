@@ -9,6 +9,8 @@ import type { Segment } from '@/stores/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { pasteText } from '@/lib/domUtils';
+import { preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
@@ -64,6 +66,12 @@ function SegmentItem({ segment }: { segment: Segment }) {
                             autoResize(e.currentTarget);
                             updateSegment({ id: segment.id, text: e.target.value });
                         }
+                    }}
+                    onPaste={(e) => {
+                        e.preventDefault();
+
+                        const text = preformatArabicText(e.clipboardData.getData('text'));
+                        pasteText(e.target as HTMLTextAreaElement, text);
                     }}
                     onSelect={(e) => {
                         const { selectionEnd, selectionStart } = e.currentTarget;

@@ -9,8 +9,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing "text" in request body.' }, { status: 400 });
         }
 
+        if (!process.env.GOOGLE_GENAI_API_KEY) {
+            console.error('GOOGLE_GENAI_API_KEY not set:');
+            return NextResponse.json({ error: 'Missing Google Gemini API key.' }, { status: 500 });
+        }
+
         const client = new GoogleGenAI({
-            apiKey: process.env.GOOGLE_GENAI_API_KEY!,
+            apiKey: process.env.GOOGLE_GENAI_API_KEY,
         });
 
         console.log('issuing', process.env.GOOGLE_GENAI_API_KEY, 'model', process.env.GOOGLE_GENAI_MODEL);
