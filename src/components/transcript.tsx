@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 
+import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/selectors';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
@@ -23,7 +24,7 @@ export default function Transcript() {
     if (!isInitialized) {
         return (
             <div className="flex flex-col w-full max-w">
-                <JsonDropZone onFile={initTranscripts as any} />
+                <JsonDropZone onFile={(file) => initTranscripts(adaptLegacyTranscripts(file))} />
                 <div className="flex items-center justify-center mb-4">
                     <p className="text-gray-500 flex">Drag & drop your JSON transcript files anywhere on this page.</p>
                 </div>

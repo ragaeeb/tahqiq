@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from 'react';
 
-type JsonData = Record<string, Record<number | string, unknown> | unknown[]>;
+import type { JsonData } from '@/stores/types';
 
 type Props = {
     onFile: (map: JsonData) => void;

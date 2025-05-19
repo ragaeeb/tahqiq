@@ -10,6 +10,8 @@ export type FormatOptions = {
     silenceGapThreshold: number;
 };
 
+export type JsonData = Record<string, Record<number | string, unknown> | unknown[]>;
+
 export type Segment = ParagrafsSegment & {
     readonly id: number;
     status?: 'done';
