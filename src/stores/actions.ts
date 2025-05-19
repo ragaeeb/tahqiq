@@ -1,55 +1,51 @@
 import { replaceEnglishPunctuationWithArabic } from 'bitaboom';
 import {
     createHints,
-    formatSegmentsToTimestampedTranscript,
     mapSegmentsIntoFormattedSegments,
     markAndCombineSegments,
     mergeSegments,
     splitSegment,
 } from 'paragrafs';
 
-import type { FormatOptions, RawTranscript, Segment, Transcript, TranscriptState } from './types';
+import type { Segment, Transcript, TranscriptSeries, TranscriptState } from './types';
 
-import { selectCurrentSegments } from './selectors';
+import { selectCurrentSegments, selectCurrentTranscript } from './selectors';
 
-export const getMarkedSegments = (state: TranscriptState, options: FormatOptions) => {
-    let segments = selectCurrentSegments(state);
+export const groupAndSliceSegments = (state: TranscriptState) => {
+    const { formatOptions: options } = state;
+    const transcripts: Record<string, Transcript> = {};
+    let idIndex = Date.now();
 
-    if (options.flipPunctuation) {
-        segments = segments.map((segment) => ({
-            ...segment,
-            text: replaceEnglishPunctuationWithArabic(segment.text),
-            tokens: segment.tokens.map((t) => ({ ...t, text: replaceEnglishPunctuationWithArabic(t.text) })),
+    Object.entries(state.transcripts).forEach(([part, transcript]) => {
+        let segments = transcript.segments.slice();
+
+        if (options.flipPunctuation) {
+            segments = segments.map((segment) => ({
+                ...segment,
+                text: replaceEnglishPunctuationWithArabic(segment.text),
+                tokens: segment.tokens.map((t) => ({ ...t, text: replaceEnglishPunctuationWithArabic(t.text) })),
+            }));
+        }
+
+        const fillers = options.fillers.flatMap((token) => [token, token + '.', token + '؟']);
+        const marked = markAndCombineSegments(segments, {
+            fillers,
+            gapThreshold: options.silenceGapThreshold,
+            hints: createHints(...options.hints),
+            maxSecondsPerSegment: options.maxSecondsPerSegment,
+            minWordsPerSegment: options.minWordsPerSegment,
+        });
+
+        segments = mapSegmentsIntoFormattedSegments(marked, options.maxSecondsPerLine).map((s) => ({
+            ...s,
+            id: idIndex++,
         }));
-    }
 
-    const fillers = options.fillers.flatMap((token) => [token, token + '.', token + '؟']);
-    return markAndCombineSegments(segments, {
-        fillers,
-        gapThreshold: options.silenceGapThreshold,
-        hints: createHints(...options.hints),
-        maxSecondsPerSegment: options.maxSecondsPerSegment,
-        minWordsPerSegment: options.minWordsPerSegment,
+        transcripts[part] = { ...transcript, segments };
     });
-};
-
-export const groupAndSliceSegments = (state: TranscriptState, options: FormatOptions) => {
-    const combinedSegments = getMarkedSegments(state, options);
-
-    const now = Date.now();
-    const segments = mapSegmentsIntoFormattedSegments(combinedSegments, options.maxSecondsPerLine).map((s, i) => ({
-        ...s,
-        id: i + now,
-    }));
 
     return {
-        transcripts: {
-            ...state.transcripts,
-            [state.selectedPart]: {
-                segments,
-                text: formatSegmentsToTimestampedTranscript(combinedSegments, options.maxSecondsPerLine),
-            },
-        },
+        transcripts,
     };
 };
 
@@ -82,7 +78,7 @@ export const mergeSelectedSegments = (state: TranscriptState) => {
         selectedSegments: [],
         transcripts: {
             ...transcripts,
-            [selectedPart]: { ...transcripts[selectedPart], segments: updatedSegmentsForPart },
+            [selectedPart]: { segments: updatedSegmentsForPart, volume: transcripts[selectedPart]!.volume },
         },
     };
 };
@@ -99,6 +95,20 @@ export const applySelection = (state: TranscriptState, segment: Segment, isSelec
     };
 };
 
+export const removeSelectedSegments = (state: TranscriptState) => {
+    const transcript = selectCurrentTranscript(state)!;
+    return {
+        selectedSegments: [],
+        transcripts: {
+            ...state.transcripts,
+            [transcript.volume]: {
+                segments: transcript.segments.filter((segment) => !state.selectedSegments.includes(segment)),
+                volume: transcript.volume,
+            },
+        },
+    };
+};
+
 export const updateSegmentWithDiff = (
     { selectedPart, transcripts }: TranscriptState,
     diff: Partial<Segment> & { id: number },
@@ -108,34 +118,34 @@ export const updateSegmentWithDiff = (
     return {
         transcripts: {
             ...transcripts,
-            [selectedPart]: { ...transcripts[selectedPart], segments },
+            [selectedPart]: { segments, volume: transcripts[selectedPart]!.volume },
         },
     };
 };
 
-export const mapFileToTranscript = (fileToTranscript: Record<string, RawTranscript>) => {
-    const transcripts: Record<string, Transcript> = {};
+export const initStore = (data: TranscriptSeries) => {
+    const result: Record<string, Transcript> = {};
     let idCounter = 0;
 
-    const parts = Object.keys(fileToTranscript)
-        .map((part) => parseInt(part))
-        .sort((a, b) => a - b);
-
-    for (const part of parts) {
-        const segments: Segment[] = [];
-        const paragrafSegments = fileToTranscript[part]!;
-
-        for (const segment of paragrafSegments) {
-            segments.push({ ...segment, id: idCounter++ });
-        }
-        transcripts[part] = { segments };
+    for (const transcript of data.transcripts) {
+        result[transcript.volume] = {
+            segments: [
+                {
+                    end: transcript.tokens.at(-1)!.end,
+                    id: idCounter++,
+                    start: transcript.tokens[0]!.start,
+                    text: transcript.tokens.map((t) => t.text).join(' '),
+                    tokens: transcript.tokens,
+                },
+            ],
+            volume: transcript.volume,
+        };
     }
 
     return {
         isInitialized: true,
-        selectedPart: parts[0]!,
-        selectedSegments: [],
-        transcripts,
+        selectedPart: data.transcripts[0]?.volume || 0,
+        transcripts: result,
     };
 };
 

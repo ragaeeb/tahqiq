@@ -17,7 +17,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { TagInput } from '@/components/ui/tag-input';
-import { DEFAULT_FILLER_WORDS, DEFAULT_HINTS } from '@/lib/constants';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 export function FormatDialog({
@@ -25,14 +24,15 @@ export function FormatDialog({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const [maxSecondsPerSegment, setMaxSecondsPerSegment] = useState([240]);
-    const [maxSecondsPerLine, setMaxSecondsPerLine] = useState([30]);
-    const [minWordsPerSegment, setMinWordsPerSegment] = useState([10]);
-    const [silenceGapThreshold, setSilenceGapThreshold] = useState([2]);
-    const [flipPunctuation, setFlipPunctuation] = useState(true);
-    const [hints, setHints] = useState(DEFAULT_HINTS);
-    const [fillers, setFillers] = useState(DEFAULT_FILLER_WORDS);
-    const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
+    const formatOptions = useTranscriptStore((state) => state.formatOptions);
+    const setFormattingOptions = useTranscriptStore((state) => state.setFormattingOptions);
+    const [maxSecondsPerSegment, setMaxSecondsPerSegment] = useState([formatOptions.maxSecondsPerSegment]);
+    const [maxSecondsPerLine, setMaxSecondsPerLine] = useState([formatOptions.maxSecondsPerLine]);
+    const [minWordsPerSegment, setMinWordsPerSegment] = useState([formatOptions.minWordsPerSegment]);
+    const [silenceGapThreshold, setSilenceGapThreshold] = useState([formatOptions.silenceGapThreshold]);
+    const [flipPunctuation, setFlipPunctuation] = useState(formatOptions.flipPunctuation);
+    const [hints, setHints] = useState(formatOptions.hints);
+    const [fillers, setFillers] = useState(formatOptions.fillers);
 
     return (
         <Dialog>
@@ -97,7 +97,7 @@ export function FormatDialog({
                     <DialogClose asChild>
                         <Button
                             onClick={() => {
-                                groupAndSliceSegments({
+                                setFormattingOptions({
                                     fillers,
                                     flipPunctuation,
                                     hints,

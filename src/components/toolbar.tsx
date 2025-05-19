@@ -5,13 +5,16 @@ import React from 'react';
 
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
 import { PreviewDialog } from './preview-dialog';
 import { Button } from './ui/button';
 
 export default function Toolbar() {
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
+    const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
     const splitSegment = useTranscriptStore((state) => state.splitSegment);
+    const removeSegments = useTranscriptStore((state) => state.deleteSelectedSegments);
     const selectedSegments = useTranscriptStore((state) => state.selectedSegments);
     const selectedToken = useTranscriptStore((state) => state.selectedToken);
     const sortedSegments = selectedSegments.toSorted((a, b) => a.start - b.start);
@@ -25,16 +28,22 @@ export default function Toolbar() {
                     {formatSecondsToTimestamp(Math.ceil(sortedSegments.at(-1)!.end - sortedSegments[0]!.start))})
                 </Button>
             )}
+            {selectedSegments.length > 0 && (
+                <Button className="bg-red-200" onClick={removeSegments}>
+                    🗑️
+                </Button>
+            )}
             {selectedToken && (
                 <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}
             <FormatDialog>
-                <Button variant="outline">AutoFormat</Button>
+                <Button variant="outline">⚙️</Button>
             </FormatDialog>
             <PreviewDialog>
                 <Button className="bg-blue-500">Preview</Button>
             </PreviewDialog>
-            <Button className="bg-emerald-500">💾</Button>
+            <Button onClick={groupAndSliceSegments}>🔧</Button>
+            <DownloadButton />
         </div>
     );
 }

@@ -10,36 +10,43 @@ export type FormatOptions = {
     silenceGapThreshold: number;
 };
 
-export type RawTranscript = ParagrafsSegment[];
-
 export type Segment = ParagrafsSegment & {
     readonly id: number;
     status?: 'done';
 };
 
 export type Transcript = {
-    segments: Segment[];
-    text?: string;
-    timestamp?: Date;
+    readonly segments: Segment[];
+    readonly volume: number;
+};
+
+export type TranscriptSeries = {
+    contractVersion: string;
+    createdAt: Date;
+    lastUpdatedAt: Date;
+    transcripts: { timestamp: Date; tokens: Token[]; urls?: string[]; volume: number }[];
 };
 
 export type TranscriptState = TranscriptActions & TranscriptStateCore;
 
 export type TranscriptStateCore = {
-    readonly isInitialized: boolean;
+    readonly formatOptions: FormatOptions;
+    readonly refreshToken: number;
     readonly selectedPart: number;
     readonly selectedSegments: Segment[];
     readonly selectedToken: null | Token;
-    readonly transcripts: Record<string, Transcript>;
+    readonly transcripts: Record<number, Transcript>;
 };
 
 type TranscriptActions = {
-    groupAndSliceSegments: (options: FormatOptions) => void;
+    deleteSelectedSegments: () => void;
+    groupAndSliceSegments: () => void;
+    init: (data: TranscriptSeries) => void;
     mergeSegments: () => void;
     selectAllSegments: (isSelected: boolean) => void;
+    setFormattingOptions: (options: FormatOptions) => void;
     setSelectedPart: (part: number) => void;
     setSelectedToken: (token: null | Token) => void;
-    setTranscripts: (fileToTranscript: Record<string, RawTranscript>) => void;
     splitSegment: () => void;
     toggleSegmentSelection: (segment: Segment, isSelected: boolean) => void;
     updateSegment: (update: Partial<Segment> & { id: number }) => void;

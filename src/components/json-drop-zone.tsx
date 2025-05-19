@@ -2,29 +2,26 @@
 
 import { useCallback, useEffect } from 'react';
 
+type JsonData = Record<string, Record<number | string, unknown> | unknown[]>;
+
 type Props = {
-    onFiles: (map: Record<string, unknown>) => void;
+    onFile: (map: JsonData) => void;
 };
 
-export default function JsonDropZone({ onFiles }: Props) {
+export default function JsonDropZone({ onFile }: Props) {
     const handleDrop = useCallback(
         async (e: DragEvent) => {
             e.preventDefault();
             const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.name.endsWith('.json'));
-            if (!files.length) return;
 
-            const map: Record<string, unknown> = {};
-            for (const f of files) {
-                try {
-                    const data = JSON.parse(await f.text());
-                    map[f.name.replace(/\.json$/, '')] = data;
-                } catch {
-                    console.error('bad json:', f.name);
-                }
+            if (files.length !== 1) {
+                return;
             }
-            onFiles(map);
+
+            const data = JSON.parse(await files[0]!.text());
+            onFile(data);
         },
-        [onFiles],
+        [onFile],
     );
 
     useEffect(() => {
