@@ -2,6 +2,7 @@ import { FlatCompat } from '@eslint/eslintrc';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import perfectionist from 'eslint-plugin-perfectionist';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import sonarjs from 'eslint-plugin-sonarjs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,6 +14,7 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+    sonarjs.configs.recommended,
     ...compat.extends('next/core-web-vitals', 'next/typescript'),
     perfectionist.configs['recommended-natural'],
     eslintPluginPrettierRecommended,
