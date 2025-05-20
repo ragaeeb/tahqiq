@@ -10,3 +10,7 @@ export const timeToSeconds = (str: string) => {
     }
     return parseInt(str, 10) || 0;
 };
+
+export const roundToDecimal = (value: number, decimals: number = 2) => {
+    return Math.round(value * 10 ** decimals) / 10 ** decimals;
+};

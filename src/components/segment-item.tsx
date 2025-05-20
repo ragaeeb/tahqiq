@@ -24,7 +24,7 @@ function SegmentItem({ segment }: { segment: Segment }) {
     };
 
     return (
-        <tr className={clsx(segment.status === 'done' && 'bg-green-50')} key={segment.id}>
+        <tr className={clsx(segment.status === 'done' && 'bg-green-50')}>
             <td className="px-2 py-1 align-top">
                 <Checkbox
                     checked={isSelected}
@@ -40,7 +40,7 @@ function SegmentItem({ segment }: { segment: Segment }) {
                         const start = timeToSeconds(e.target.value);
 
                         if (start !== segment.start) {
-                            updateSegment({ id: segment.id, start });
+                            updateSegment(segment.start, { start });
                         }
                     }}
                 />
@@ -50,7 +50,7 @@ function SegmentItem({ segment }: { segment: Segment }) {
                         const end = timeToSeconds(e.target.value);
 
                         if (end !== segment.end) {
-                            updateSegment({ end, id: segment.id });
+                            updateSegment(segment.start, { end });
                         }
                     }}
                     title={formatSecondsToTimestamp(Math.ceil(segment.end - segment.start))}
@@ -59,12 +59,13 @@ function SegmentItem({ segment }: { segment: Segment }) {
 
             <td className="px-4 py-1 align-top">
                 <Textarea
+                    className={segment.status === 'done' ? 'bg-emerald-100' : undefined}
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {
                         if (e.target.value !== segment.text) {
                             autoResize(e.currentTarget);
-                            updateSegment({ id: segment.id, text: e.target.value });
+                            updateSegment(segment.start, { text: e.target.value });
                         }
                     }}
                     onPaste={(e) => {

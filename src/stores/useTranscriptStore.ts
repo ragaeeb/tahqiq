@@ -16,6 +16,7 @@ import {
     applySelection,
     groupAndSliceSegments,
     initStore,
+    markSelectedDone,
     mergeSelectedSegments,
     removeSelectedSegments,
     selectAllSegments,
@@ -25,6 +26,7 @@ import {
 
 export const useTranscriptStore = create<TranscriptState>((set) => {
     return {
+        createdAt: new Date(),
         deleteSelectedSegments: () => {
             set(removeSelectedSegments);
         },
@@ -41,10 +43,12 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
             set(groupAndSliceSegments);
         },
         init: (data) => set(() => initStore(data)),
+        markCompleted: () => {
+            set(markSelectedDone);
+        },
         mergeSegments: () => {
             set(mergeSelectedSegments);
         },
-        refreshToken: Date.now(),
         selectAllSegments: (isSelected: boolean) => {
             return set((state) => selectAllSegments(state, isSelected));
         },
@@ -61,6 +65,6 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         },
         toggleSegmentSelection: (segment, isSelected) => set((state) => applySelection(state, segment, isSelected)),
         transcripts: {},
-        updateSegment: (update) => set((state) => updateSegmentWithDiff(state, update)),
+        updateSegment: (segmentStart, update) => set((state) => updateSegmentWithDiff(state, segmentStart, update)),
     };
 });

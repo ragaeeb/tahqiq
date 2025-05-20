@@ -14,6 +14,7 @@ export default function Toolbar() {
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
     const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
     const splitSegment = useTranscriptStore((state) => state.splitSegment);
+    const markCompleted = useTranscriptStore((state) => state.markCompleted);
     const removeSegments = useTranscriptStore((state) => state.deleteSelectedSegments);
     const selectedSegments = useTranscriptStore((state) => state.selectedSegments);
     const selectedToken = useTranscriptStore((state) => state.selectedToken);
@@ -33,6 +34,7 @@ export default function Toolbar() {
                     🗑️
                 </Button>
             )}
+            {selectedSegments.length > 0 && <Button onClick={markCompleted}>✅</Button>}
             {selectedToken && (
                 <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}

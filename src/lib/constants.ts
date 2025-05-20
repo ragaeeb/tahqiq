@@ -17,3 +17,5 @@ export const DEFAULT_MAX_SECONDS_PER_LINE = 30;
 export const DEFAULT_MIN_WORDS_PER_SEGMENT = 10;
 
 export const DEFAULT_SILENCE_GAP_THRESHOLD = 2;
+
+export const CONTRACT_LATEST = 'v1.0';

@@ -11,10 +11,11 @@ import type { Segment, Transcript, TranscriptSeries, TranscriptState } from './t
 
 import { selectCurrentSegments, selectCurrentTranscript } from './selectors';
 
+const START_DIFF = 0.001; // hack to bust the key to re-render the textareas
+
 export const groupAndSliceSegments = (state: TranscriptState) => {
     const { formatOptions: options } = state;
     const transcripts: Record<string, Transcript> = {};
-    let idIndex = Date.now();
 
     Object.entries(state.transcripts).forEach(([part, transcript]) => {
         let segments = transcript.segments.slice();
@@ -38,7 +39,7 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
 
         segments = mapSegmentsIntoFormattedSegments(marked, options.maxSecondsPerLine).map((s) => ({
             ...s,
-            id: idIndex++,
+            start: s.start + START_DIFF,
         }));
 
         transcripts[part] = { ...transcript, segments };
@@ -49,9 +50,25 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
     };
 };
 
+export const markSelectedDone = (state: TranscriptState) => {
+    const transcript = selectCurrentTranscript(state)!;
+    const { selectedSegments, transcripts } = state;
+
+    const segments = transcript.segments.map((segment) => {
+        if (selectedSegments.includes(segment)) {
+            return { ...segment, status: 'done' };
+        }
+
+        return segment;
+    });
+
+    return { selectedSegments: [], transcripts: { ...transcripts, [transcript.volume]: { ...transcript, segments } } };
+};
+
 export const mergeSelectedSegments = (state: TranscriptState) => {
-    const currentSegments = selectCurrentSegments(state);
-    const { selectedPart, selectedSegments, transcripts } = state;
+    const transcript = selectCurrentTranscript(state)!;
+    const currentSegments = transcript.segments;
+    const { selectedSegments, transcripts } = state;
 
     if (selectedSegments.length !== 2) {
         console.warn('MergeSegments: Exactly two segments must be selected for merging.');
@@ -59,8 +76,8 @@ export const mergeSelectedSegments = (state: TranscriptState) => {
     }
 
     const [fromSegment, toSegment] = selectedSegments.toSorted((a, b) => a.start - b.start);
-    const fromIndex = currentSegments.findIndex((segment) => segment.id === fromSegment!.id);
-    const toIndex = currentSegments.findIndex((segment) => segment.id === toSegment!.id);
+    const fromIndex = currentSegments.findIndex((segment) => segment.start === fromSegment!.start);
+    const toIndex = currentSegments.findIndex((segment) => segment.start === toSegment!.start);
 
     const segmentsToMerge = currentSegments.slice(fromIndex, toIndex + 1);
     const mergedContent = mergeSegments(segmentsToMerge, '\n');
@@ -69,7 +86,7 @@ export const mergeSelectedSegments = (state: TranscriptState) => {
         ...currentSegments.slice(0, fromIndex),
         {
             ...mergedContent,
-            id: Date.now(),
+            start: mergedContent.start + START_DIFF,
         },
         ...currentSegments.slice(toIndex + 1),
     ];
@@ -78,7 +95,10 @@ export const mergeSelectedSegments = (state: TranscriptState) => {
         selectedSegments: [],
         transcripts: {
             ...transcripts,
-            [selectedPart]: { segments: updatedSegmentsForPart, volume: transcripts[selectedPart]!.volume },
+            [transcript.volume]: {
+                ...transcript,
+                segments: updatedSegmentsForPart,
+            },
         },
     };
 };
@@ -102,55 +122,42 @@ export const removeSelectedSegments = (state: TranscriptState) => {
         transcripts: {
             ...state.transcripts,
             [transcript.volume]: {
+                ...transcript,
                 segments: transcript.segments.filter((segment) => !state.selectedSegments.includes(segment)),
-                volume: transcript.volume,
             },
         },
     };
 };
 
-export const updateSegmentWithDiff = (
-    { selectedPart, transcripts }: TranscriptState,
-    diff: Partial<Segment> & { id: number },
-) => {
-    const segments = transcripts[selectedPart]!.segments.map((seg) => (seg.id === diff.id ? { ...seg, ...diff } : seg));
+export const updateSegmentWithDiff = (state: TranscriptState, segmentStart: number, diff: Partial<Segment>) => {
+    const transcript = selectCurrentTranscript(state)!;
+    const segments = transcript.segments.map((seg) => (seg.start === segmentStart ? { ...seg, ...diff } : seg));
 
     return {
         transcripts: {
-            ...transcripts,
-            [selectedPart]: { segments, volume: transcripts[selectedPart]!.volume },
+            ...state.transcripts,
+            [transcript.volume]: { ...transcript, segments },
         },
     };
 };
 
 export const initStore = (data: TranscriptSeries) => {
-    const result: Record<string, Transcript> = {};
-    let idCounter = 0;
+    const transcripts: Record<string, Transcript> = {};
 
     for (const transcript of data.transcripts) {
-        result[transcript.volume] = {
-            segments: [
-                {
-                    end: transcript.tokens.at(-1)!.end,
-                    id: idCounter++,
-                    start: transcript.tokens[0]!.start,
-                    text: transcript.tokens.map((t) => t.text).join(' '),
-                    tokens: transcript.tokens,
-                },
-            ],
-            volume: transcript.volume,
-        };
+        transcripts[transcript.volume] = transcript;
     }
 
     return {
-        isInitialized: true,
-        selectedPart: data.transcripts[0]?.volume || 0,
-        transcripts: result,
+        createdAt: data.createdAt,
+        selectedPart: data.transcripts[0]!.volume,
+        transcripts,
     };
 };
 
-export const splitSelectedSegment = (state: TranscriptState): Partial<TranscriptState> => {
-    let segments = selectCurrentSegments(state);
+export const splitSelectedSegment = (state: TranscriptState) => {
+    const transcript = selectCurrentTranscript(state)!;
+    let segments = transcript.segments;
 
     const segmentIndex = segments.findIndex(
         (segment) => state.selectedToken!.start >= segment.start && state.selectedToken!.end <= segment.end,
@@ -165,18 +172,13 @@ export const splitSelectedSegment = (state: TranscriptState): Partial<Transcript
 
     segments = [
         ...segments.slice(0, segmentIndex),
-        { ...first!, id: Date.now() },
-        { ...second!, id: Date.now() + 1 },
+        { ...first!, start: first!.start + START_DIFF },
+        { ...second!, start: second!.start + START_DIFF },
         ...segments.slice(segmentIndex + 1),
     ];
 
-    const transcript = state.transcripts[state.selectedPart]!;
-
     return {
         selectedToken: null,
-        transcripts: {
-            ...state.transcripts,
-            [state.selectedPart]: { ...transcript, segments },
-        },
+        transcripts: { ...state.transcripts, [transcript.volume]: { ...transcript, segments } },
     };
 };
