@@ -12,6 +12,11 @@ import SegmentItem from './segment-item';
 import Toolbar from './toolbar';
 import { Checkbox } from './ui/checkbox';
 
+/**
+ * Displays and manages transcript segments with selection and file import capabilities.
+ *
+ * Renders a transcript viewer that allows users to import transcript files, select transcript parts, and interact with individual segments. If no transcript is loaded, prompts the user to upload a JSON transcript file.
+ */
 export default function Transcript() {
     const isInitialized = useTranscriptStore((state) => state.selectedPart > 0);
     const initTranscripts = useTranscriptStore((state) => state.init);

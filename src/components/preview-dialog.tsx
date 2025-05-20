@@ -19,6 +19,13 @@ import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
 import { Textarea } from './ui/textarea';
 
+/**
+ * Displays a dialog for previewing, editing, copying, and translating a formatted transcript.
+ *
+ * The dialog presents the current transcript with configurable formatting, supports right-to-left text direction for Arabic content, and provides options to copy the text or translate it via an API.
+ *
+ * @param children - The element that triggers the dialog when interacted with.
+ */
 export function PreviewDialog({
     children,
 }: Readonly<{

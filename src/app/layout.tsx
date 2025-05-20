@@ -19,6 +19,13 @@ export const metadata: Metadata = {
     title: 'Tahqiq',
 };
 
+/**
+ * Defines the root layout for the application, applying global fonts and styles.
+ *
+ * Wraps all page content with the configured font variables and sets the HTML language to English.
+ *
+ * @param children - The content to be rendered within the layout.
+ */
 export default function RootLayout({
     children,
 }: Readonly<{

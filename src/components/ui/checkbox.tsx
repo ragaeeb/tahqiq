@@ -6,6 +6,13 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * Renders a styled checkbox component with support for custom classes and indicator icon.
+ *
+ * Combines Radix UI's checkbox functionality with predefined and custom styles, and displays a checkmark icon when checked.
+ *
+ * @param className - Additional CSS classes to apply to the checkbox root element.
+ */
 function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
     return (
         <CheckboxPrimitive.Root

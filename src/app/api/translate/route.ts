@@ -1,6 +1,16 @@
 import { createUserContent, GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Handles POST requests to translate input text using Google Gemini AI.
+ *
+ * Expects a JSON body with a `text` field and returns the translated text in a JSON response.
+ *
+ * @returns A JSON response containing the translated text or an error message.
+ *
+ * @remark
+ * Returns a 400 error if the `text` field is missing from the request body, or a 500 error if the Google Gemini API key is not set or if translation fails.
+ */
 export async function POST(req: NextRequest) {
     try {
         const { text } = await req.json();

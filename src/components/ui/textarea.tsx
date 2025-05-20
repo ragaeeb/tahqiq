@@ -2,6 +2,14 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * Renders a styled textarea element with customizable classes and all standard textarea props.
+ *
+ * Combines default utility classes for consistent appearance, focus, invalid, and disabled states, while allowing additional custom classes via the {@link className} prop.
+ *
+ * @param className - Additional CSS classes to apply to the textarea.
+ * @returns A React textarea element with merged styling and props.
+ */
 function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
     return (
         <textarea

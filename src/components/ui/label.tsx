@@ -5,6 +5,13 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * Renders a styled label component with support for disabled and peer-disabled states.
+ *
+ * Merges predefined utility classes with any additional {@link className} and passes all other props to the underlying Radix UI label primitive.
+ *
+ * @returns A React element representing the label.
+ */
 function Label({ className, ...properties }: React.ComponentProps<typeof LabelPrimitive.Root>) {
     return (
         <LabelPrimitive.Root
