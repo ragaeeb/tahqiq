@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
+import type { TranscriptState } from './types';
+
 import { useTranscriptStore } from './useTranscriptStore'; // Adjust import path as needed
 
 describe('mergeSegments function', () => {
@@ -17,7 +19,6 @@ describe('mergeSegments function', () => {
         const segments = [
             {
                 end: 2,
-                id: 1,
                 start: 0,
                 text: 'The quick',
                 tokens: [
@@ -27,7 +28,6 @@ describe('mergeSegments function', () => {
             },
             {
                 end: 4,
-                id: 2,
                 start: 3,
                 text: 'brown fox',
                 tokens: [
@@ -40,7 +40,7 @@ describe('mergeSegments function', () => {
         useTranscriptStore.setState({
             selectedPart: 1,
             selectedSegments: segments,
-            transcripts: { 1: { segments } },
+            transcripts: { 1: { segments, timestamp: new Date(), volume: 1 } },
         });
 
         useTranscriptStore.getInitialState().mergeSegments();
@@ -50,8 +50,7 @@ describe('mergeSegments function', () => {
         expect(state.transcripts[1]?.segments).toEqual([
             {
                 end: 4,
-                id: expect.any(Number),
-                start: 0,
+                start: 0.001,
                 text: 'The quick\nbrown fox',
                 tokens: [
                     {
@@ -83,7 +82,6 @@ describe('mergeSegments function', () => {
         const segments = [
             {
                 end: 2,
-                id: 1,
                 start: 0,
                 text: 'The quick',
                 tokens: [
@@ -93,7 +91,6 @@ describe('mergeSegments function', () => {
             },
             {
                 end: 4,
-                id: 2,
                 start: 3,
                 text: 'brown fox',
                 tokens: [
@@ -103,7 +100,6 @@ describe('mergeSegments function', () => {
             },
             {
                 end: 6,
-                id: 3,
                 start: 5,
                 text: 'jumps right',
                 tokens: [
@@ -116,7 +112,7 @@ describe('mergeSegments function', () => {
         useTranscriptStore.setState({
             selectedPart: 1,
             selectedSegments: [segments[0]!, segments[1]!],
-            transcripts: { 1: { segments } },
+            transcripts: { 1: { segments, timestamp: new Date(), volume: 1 } },
         });
 
         useTranscriptStore.getInitialState().mergeSegments();
@@ -126,8 +122,7 @@ describe('mergeSegments function', () => {
         expect(state.transcripts[1]?.segments).toEqual([
             {
                 end: 4,
-                id: expect.any(Number),
-                start: 0,
+                start: 0.001,
                 text: 'The quick\nbrown fox',
                 tokens: [
                     {
@@ -154,7 +149,6 @@ describe('mergeSegments function', () => {
             },
             {
                 end: 6,
-                id: 3,
                 start: 5,
                 text: 'jumps right',
                 tokens: [
