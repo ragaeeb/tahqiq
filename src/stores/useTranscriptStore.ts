@@ -24,6 +24,13 @@ import {
     updateSegmentWithDiff,
 } from './actions';
 
+/**
+ * Creates a Zustand store for managing transcript state
+ * Provides actions for manipulating transcript data, segments, and selection
+ * Initializes with default formatting options from constants
+ *
+ * @returns A Zustand store with transcript state and actions
+ */
 export const useTranscriptStore = create<TranscriptState>((set) => {
     return {
         createdAt: new Date(),

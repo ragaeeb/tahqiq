@@ -13,6 +13,14 @@ import { selectCurrentSegments, selectCurrentTranscript } from './selectors';
 
 const START_DIFF = 0.001; // hack to bust the key to re-render the textareas
 
+/**
+ * Processes transcript segments based on format options
+ * Applies Arabic punctuation if enabled and groups segments according to configured thresholds
+ * Adds a small time offset to ensure unique keys for rendering
+ *
+ * @param state - Current transcript state containing segments and format options
+ * @returns Object with updated transcripts incorporating formatted segments
+ */
 export const groupAndSliceSegments = (state: TranscriptState) => {
     const { formatOptions: options } = state;
     const transcripts: Record<string, Transcript> = {};
@@ -50,6 +58,14 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
     };
 };
 
+/**
+ * Marks all currently selected segments as 'done' in the transcript
+ * Updates segment status while preserving other segment properties
+ * Clears the selection after marking
+ *
+ * @param state - Current transcript state containing segments and selection info
+ * @returns Object with cleared selection and updated transcript segments
+ */
 export const markSelectedDone = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
     const { selectedSegments, transcripts } = state;
@@ -65,6 +81,15 @@ export const markSelectedDone = (state: TranscriptState) => {
     return { selectedSegments: [], transcripts: { ...transcripts, [transcript.volume]: { ...transcript, segments } } };
 };
 
+/**
+ * Merges two selected segments into a single segment
+ * Combines all segments between the earliest and latest selected segments
+ * Clears the selection after merging
+ * Requires exactly two segments to be selected
+ *
+ * @param state - Current transcript state containing segments and selection info
+ * @returns Object with cleared selection and updated transcript segments, or empty object if conditions not met
+ */
 export const mergeSelectedSegments = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
     const currentSegments = transcript.segments;
@@ -103,10 +128,26 @@ export const mergeSelectedSegments = (state: TranscriptState) => {
     };
 };
 
+/**
+ * Selects all segments in the current transcript or clears selection
+ *
+ * @param state - Current transcript state
+ * @param isSelected - Boolean indicating whether to select all or clear selection
+ * @returns Object with updated selection state
+ */
 export const selectAllSegments = (state: TranscriptState, isSelected: boolean) => {
     return { selectedSegments: isSelected ? selectCurrentSegments(state) : [] };
 };
 
+/**
+ * Updates the selection state for a specific segment
+ * Either adds the segment to selection or removes it based on isSelected parameter
+ *
+ * @param state - Current transcript state
+ * @param segment - The segment to update selection status for
+ * @param isSelected - Boolean indicating whether to select or deselect the segment
+ * @returns Object with updated selection array
+ */
 export const applySelection = (state: TranscriptState, segment: Segment, isSelected: boolean) => {
     return {
         selectedSegments: isSelected
@@ -115,6 +156,13 @@ export const applySelection = (state: TranscriptState, segment: Segment, isSelec
     };
 };
 
+/**
+ * Removes all currently selected segments from the transcript
+ * Filters out selected segments from the transcript and clears selection
+ *
+ * @param state - Current transcript state containing segments and selection info
+ * @returns Object with cleared selection and filtered transcript segments
+ */
 export const removeSelectedSegments = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
     return {
@@ -129,6 +177,15 @@ export const removeSelectedSegments = (state: TranscriptState) => {
     };
 };
 
+/**
+ * Updates a specific segment with partial changes
+ * Identifies segment by its start time and applies provided diff object
+ *
+ * @param state - Current transcript state
+ * @param segmentStart - Start time of the segment to update
+ * @param diff - Partial segment object containing properties to update
+ * @returns Object with updated transcript segments
+ */
 export const updateSegmentWithDiff = (state: TranscriptState, segmentStart: number, diff: Partial<Segment>) => {
     const transcript = selectCurrentTranscript(state)!;
     const segments = transcript.segments.map((seg) => (seg.start === segmentStart ? { ...seg, ...diff } : seg));
@@ -141,6 +198,13 @@ export const updateSegmentWithDiff = (state: TranscriptState, segmentStart: numb
     };
 };
 
+/**
+ * Initializes the transcript store with provided data
+ * Organizes transcripts by volume for easier access
+ *
+ * @param data - Transcript series data containing transcript information
+ * @returns Initial state object for the transcript store
+ */
 export const initStore = (data: TranscriptSeries) => {
     const transcripts: Record<string, Transcript> = {};
 
@@ -155,6 +219,15 @@ export const initStore = (data: TranscriptSeries) => {
     };
 };
 
+/**
+ * Splits a segment at the position of the currently selected token
+ * Creates two separate segments from the original segment
+ * Adds a small time offset to ensure unique keys for rendering
+ * Requires a token to be selected within a valid segment
+ *
+ * @param state - Current transcript state with selected token information
+ * @returns Object with updated transcript segments and cleared token selection, or empty object if conditions not met
+ */
 export const splitSelectedSegment = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
     let segments = transcript.segments;
