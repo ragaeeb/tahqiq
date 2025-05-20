@@ -14,6 +14,13 @@ import { preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+/**
+ * Renders a table row for a transcript segment with editable start/end times, text, and selection controls.
+ *
+ * Allows users to select the segment, edit its timing and text, and interact with the text area for advanced behaviors such as right-to-left input, auto-resizing, and custom paste handling for Arabic text.
+ *
+ * @param segment - The transcript segment to display and edit.
+ */
 function SegmentItem({ segment }: { segment: Segment }) {
     const { setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore.getInitialState();
     const isSelected = useTranscriptStore((state) => state.selectedSegments.includes(segment));

@@ -10,6 +10,11 @@ import { FormatDialog } from './format-dialog';
 import { PreviewDialog } from './preview-dialog';
 import { Button } from './ui/button';
 
+/**
+ * Renders a toolbar for managing transcript segments with actions such as merging, splitting, grouping, marking as completed, deleting, previewing, formatting, and downloading.
+ *
+ * The toolbar displays context-sensitive controls based on the current selection of segments or tokens, enabling efficient transcript editing and management.
+ */
 export default function Toolbar() {
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
     const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);

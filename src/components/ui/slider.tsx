@@ -7,6 +7,18 @@ import { cn } from '@/lib/utils';
 
 type SliderProps = React.ComponentProps<typeof SliderPrimitive.Root>;
 
+/****
+ * Renders a customizable slider component supporting single or multiple thumbs.
+ *
+ * The slider can be controlled or uncontrolled, and adapts its appearance and behavior based on orientation, disabled state, and provided value or defaultValue arrays.
+ *
+ * @param className - Additional class names for custom styling.
+ * @param defaultValue - Initial value(s) for uncontrolled usage.
+ * @param max - Maximum slider value. Defaults to 100.
+ * @param min - Minimum slider value. Defaults to 0.
+ * @param value - Controlled value(s) for the slider.
+ * @returns A styled slider UI element with track, range, and thumb(s).
+ */
 export function Slider({
     className,
     defaultValue: defaultValueProp,
