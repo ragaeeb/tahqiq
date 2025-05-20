@@ -9,6 +9,10 @@
         "lint": "next lint",
         "test": "vitest run"
     },
+    "engines": {
+        "bun": ">=1.2.13",
+        "node": ">=22.x"
+    },
     "dependencies": {
         "@flowdegree/arabic-strings": "^2.0.0",
         "@google/genai": "^1.0.0",

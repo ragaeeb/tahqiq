@@ -1,7 +1,7 @@
 # Tahqiq - Arabic Transcript Editor
 
 [![wakatime](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/cbaed121-0d22-440a-bc93-70f59bcf3bb2.svg)](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/cbaed121-0d22-440a-bc93-70f59bcf3bb2)
-[![Vercel Deploy](https://deploy-badge.vercel.app/vercel/tahqiq)](https://vercel.com/tahqiq)
+[![Vercel Deploy](https://deploy-badge.vercel.app/vercel/tahqiq)](https://tahqiq.vercel.app)
 [![typescript](https://badgen.net/badge/icon/typescript?icon=typescript&label&color=blue)](https://www.typescriptlang.org)
 [![Node.js CI](https://github.com/ragaeeb/tahqiq/actions/workflows/build.yml/badge.svg)](https://github.com/ragaeeb/tahqiq/actions/workflows/build.yml)
 ![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
@@ -35,7 +35,7 @@ Tahqiq is a specialized web application for Arabic transcript editing and manage
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or later)
+- [Node.js](https://nodejs.org/) (v22 or later)
 - [Bun](https://bun.sh/) (recommended) or npm/yarn/pnpm
 
 ### Environment Variables
