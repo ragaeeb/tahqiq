@@ -24,13 +24,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing Google Gemini API key.' }, { status: 500 });
         }
 
+        if (!process.env.GOOGLE_GENAI_MODEL) {
+            console.error('GOOGLE_GENAI_MODEL not set');
+            return NextResponse.json({ error: 'Missing Google Gemini model configuration.' }, { status: 500 });
+        }
+
+        if (!process.env.TRANSLATION_PROMPT) {
+            console.error('TRANSLATION_PROMPT not set');
+            return NextResponse.json({ error: 'Missing translation prompt configuration.' }, { status: 500 });
+        }
+
         const client = new GoogleGenAI({
             apiKey: process.env.GOOGLE_GENAI_API_KEY,
         });
-
-        console.log('issuing', process.env.GOOGLE_GENAI_API_KEY, 'model', process.env.GOOGLE_GENAI_MODEL);
-        console.log('prompt', process.env.TRANSLATION_PROMPT);
-        console.log('text', text);
 
         const result = await client.models.generateContent({
             contents: createUserContent([`${process.env.TRANSLATION_PROMPT}\n\n${text}`]),

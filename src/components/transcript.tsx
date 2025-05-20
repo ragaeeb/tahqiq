@@ -30,9 +30,6 @@ export default function Transcript() {
         return (
             <div className="flex flex-col w-full max-w">
                 <JsonDropZone onFile={(file) => initTranscripts(adaptLegacyTranscripts(file))} />
-                <div className="flex items-center justify-center mb-4">
-                    <p className="text-gray-500 flex">Drag & drop your JSON transcript files anywhere on this page.</p>
-                </div>
             </div>
         );
     }
@@ -49,10 +46,17 @@ export default function Transcript() {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-2 py-1 w-8 text-left">
-                                <Checkbox onCheckedChange={(isSelected) => selectAllSegments(Boolean(isSelected))} />
+                                <Checkbox
+                                    aria-label="Select all segments"
+                                    onCheckedChange={(isSelected) => selectAllSegments(Boolean(isSelected))}
+                                />
                             </th>
-                            <th className="px-2 py-1 w-36 text-left">Time:</th>
-                            <th className="px-4 py-1 text-right">النص</th>
+                            <th aria-label="Timestamp" className="px-2 py-1 w-36 text-left">
+                                Time:
+                            </th>
+                            <th aria-label="Text" className="px-4 py-1 text-right">
+                                Text
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">{segmentItems}</tbody>

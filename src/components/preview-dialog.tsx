@@ -14,10 +14,9 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { selectCurrentTranscript } from '@/stores/selectors';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
-
-import { Textarea } from './ui/textarea';
 
 /**
  * Displays a dialog for previewing, editing, copying, and translating a formatted transcript.
@@ -79,7 +78,6 @@ export function PreviewDialog({
                         disabled={isLoading}
                         onClick={async () => {
                             setIsLoading(true);
-
                             try {
                                 const res = await fetch('/api/translate', {
                                     body: JSON.stringify({ text }),
@@ -88,10 +86,21 @@ export function PreviewDialog({
                                     },
                                     method: 'POST',
                                 });
-
                                 const data = await res.json();
-
-                                setText(res.ok && data.text ? data.text : 'Unable to translate');
+                                if (!res.ok) {
+                                    throw new Error(`Translation failed: ${data.error || 'Unknown error'}`);
+                                }
+                                if (!data.text) {
+                                    throw new Error('Received empty translation response');
+                                }
+                                setText(data.text);
+                            } catch (error) {
+                                console.error('Translation error:', error);
+                                setText(
+                                    `Translation failed: ${
+                                        error instanceof Error ? error.message : 'Network or server error'
+                                    }`,
+                                );
                             } finally {
                                 setIsLoading(false);
                             }

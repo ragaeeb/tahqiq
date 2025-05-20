@@ -99,12 +99,12 @@ describe('mergeSegments function', () => {
                 ],
             },
             {
-                end: 6,
+                end: 7,
                 start: 5,
                 text: 'jumps right',
                 tokens: [
-                    { end: 6, start: 5.5, text: 'jumps' },
-                    { end: 5, start: 5.5, text: 'right' },
+                    { end: 6, start: 5, text: 'jumps' },
+                    { end: 7, start: 6.5, text: 'right' },
                 ],
             },
         ];
@@ -148,12 +148,12 @@ describe('mergeSegments function', () => {
                 ],
             },
             {
-                end: 6,
+                end: 7,
                 start: 5,
                 text: 'jumps right',
                 tokens: [
-                    { end: 6, start: 5.5, text: 'jumps' },
-                    { end: 5, start: 5.5, text: 'right' },
+                    { end: 6, start: 5, text: 'jumps' },
+                    { end: 7, start: 6.5, text: 'right' },
                 ],
             },
         ]);

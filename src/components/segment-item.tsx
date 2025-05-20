@@ -1,6 +1,5 @@
 'use client';
 
-import clsx from 'clsx';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
 
@@ -14,6 +13,11 @@ import { preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+const autoResize = (textArea: HTMLTextAreaElement) => {
+    textArea.style.height = 'auto';
+    textArea.style.height = `${textArea.scrollHeight}px`;
+};
+
 /**
  * Renders a table row for a transcript segment with editable start/end times, text, and selection controls.
  *
@@ -21,17 +25,12 @@ import { useTranscriptStore } from '@/stores/useTranscriptStore';
  *
  * @param segment - The transcript segment to display and edit.
  */
-function SegmentItem({ segment }: { segment: Segment }) {
+const SegmentItem = ({ segment }: { segment: Segment }) => {
     const { setSelectedToken, toggleSegmentSelection, updateSegment } = useTranscriptStore.getInitialState();
     const isSelected = useTranscriptStore((state) => state.selectedSegments.includes(segment));
 
-    const autoResize = (textArea: HTMLTextAreaElement) => {
-        textArea.style.height = 'auto';
-        textArea.style.height = `${textArea.scrollHeight}px`;
-    };
-
     return (
-        <tr className={clsx(segment.status === 'done' && 'bg-green-50')}>
+        <tr>
             <td className="px-2 py-1 align-top">
                 <Checkbox
                     checked={isSelected}
@@ -100,6 +99,6 @@ function SegmentItem({ segment }: { segment: Segment }) {
             </td>
         </tr>
     );
-}
+};
 
 export default React.memo(SegmentItem);

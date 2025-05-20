@@ -7,7 +7,7 @@ import {
     splitSegment,
 } from 'paragrafs';
 
-import type { Segment, Transcript, TranscriptSeries, TranscriptState } from './types';
+import type { Segment, SegmentStatus, Transcript, TranscriptSeries, TranscriptState } from './types';
 
 import { selectCurrentSegments, selectCurrentTranscript } from './selectors';
 
@@ -56,7 +56,7 @@ export const markSelectedDone = (state: TranscriptState) => {
 
     const segments = transcript.segments.map((segment) => {
         if (selectedSegments.includes(segment)) {
-            return { ...segment, status: 'done' };
+            return { ...segment, status: 'done' as SegmentStatus };
         }
 
         return segment;
@@ -158,6 +158,11 @@ export const initStore = (data: TranscriptSeries) => {
 export const splitSelectedSegment = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
     let segments = transcript.segments;
+
+    if (!state.selectedToken) {
+        console.warn('splitSelectedSegment: A token must be selected for splitting.');
+        return {};
+    }
 
     const segmentIndex = segments.findIndex(
         (segment) => state.selectedToken!.start >= segment.start && state.selectedToken!.end <= segment.end,

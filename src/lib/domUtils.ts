@@ -16,6 +16,22 @@ const mapFileNameToMimeType = (fileName: string) => {
         return 'application/json';
     }
 
+    if (fileName.endsWith('.csv')) {
+        return 'text/csv';
+    }
+
+    if (fileName.endsWith('.txt')) {
+        return 'text/plain';
+    }
+
+    if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+        return 'text/html';
+    }
+
+    if (fileName.endsWith('.xml')) {
+        return 'application/xml';
+    }
+
     return 'text/plain';
 };
 
@@ -26,4 +42,9 @@ export const downloadFile = (fileName: string, content: string, mimeType?: strin
     element.download = fileName;
     document.body.appendChild(element); // Required for this to work in FireFox
     element.click();
+
+    setTimeout(() => {
+        URL.revokeObjectURL(element.href);
+        document.body.removeChild(element);
+    }, 0);
 };

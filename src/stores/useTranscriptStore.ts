@@ -56,7 +56,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         selectedSegments: [],
         selectedToken: null,
         setFormattingOptions: (formatOptions: FormatOptions) => {
-            return { formatOptions };
+            return set({ formatOptions });
         },
         setSelectedPart: (selectedPart) => set({ selectedPart, selectedSegments: [] }),
         setSelectedToken: (token: null | Token) => set({ selectedToken: token }),

@@ -35,11 +35,15 @@ export default function Toolbar() {
                 </Button>
             )}
             {selectedSegments.length > 0 && (
-                <Button className="bg-red-200" onClick={removeSegments}>
+                <Button aria-label="Delete selected segments" className="bg-red-200" onClick={removeSegments}>
                     🗑️
                 </Button>
             )}
-            {selectedSegments.length > 0 && <Button onClick={markCompleted}>✅</Button>}
+            {selectedSegments.length > 0 && (
+                <Button aria-label="Mark selected segments as completed" onClick={markCompleted}>
+                    ✅
+                </Button>
+            )}
             {selectedToken && (
                 <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}
@@ -49,7 +53,9 @@ export default function Toolbar() {
             <PreviewDialog>
                 <Button className="bg-blue-500">Preview</Button>
             </PreviewDialog>
-            <Button onClick={groupAndSliceSegments}>🔧</Button>
+            <Button aria-label="Group and slice segments" onClick={groupAndSliceSegments}>
+                🔧
+            </Button>
             <DownloadButton />
         </div>
     );

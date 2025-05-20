@@ -10,11 +10,11 @@ export type FormatOptions = {
     silenceGapThreshold: number;
 };
 
-export type JsonData = Record<string, Record<number | string, unknown> | unknown[]>;
-
 export type Segment = ParagrafsSegment & {
-    status?: string;
+    status?: SegmentStatus;
 };
+
+export type SegmentStatus = 'done';
 
 export type Transcript = {
     readonly segments: Segment[];
@@ -42,8 +42,20 @@ export type TranscriptStateCore = {
 };
 
 type TranscriptActions = {
+    /**
+     * Removes all currently selected segments from the transcript
+     */
     deleteSelectedSegments: () => void;
+
+    /**
+     * Groups and slices transcript segments based on current formatting options
+     */
     groupAndSliceSegments: () => void;
+
+    /**
+     * Initializes the store with transcript data
+     * @param data Object containing transcript information
+     */
     init: (data: TranscriptSeries) => void;
     markCompleted: () => void;
     mergeSegments: () => void;

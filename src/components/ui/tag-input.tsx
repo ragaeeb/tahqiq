@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { Badge } from './badge';
 import { Button } from './button';
 
-// Define the InputProps type
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 type TagInputProps = Omit<InputProps, 'onChange' | 'value'> & {
@@ -22,11 +21,7 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, ref) => {
     useEffect(() => {
         if (pendingDataPoint.includes(',')) {
             // Split by comma and filter/map in one pass
-            const newTags = pendingDataPoint
-                .split(',')
-                .map((x) => x.trim())
-                .filter((x) => x.length > 0)
-                .filter(Boolean) as string[]; // Type assertion to resolve the string | null issue
+            const newTags = pendingDataPoint.split(',').map((x) => x.trim());
 
             // Create a Set to remove duplicates and combine with existing values
             const newDataPoints = new Set([...newTags, ...value]);
@@ -36,8 +31,9 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, ref) => {
     }, [pendingDataPoint, onChange, value]);
 
     const addPendingDataPoint = () => {
-        if (pendingDataPoint) {
-            const newDataPoints = new Set([pendingDataPoint, ...value]);
+        const trimmedDataPoint = pendingDataPoint.trim();
+        if (trimmedDataPoint.length > 0) {
+            const newDataPoints = new Set([trimmedDataPoint, ...value]);
             onChange([...newDataPoints]);
             setPendingDataPoint('');
         }
@@ -46,7 +42,6 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>((props, ref) => {
     return (
         <div
             className={cn(
-                // caveat: :has() variant requires tailwind v3.4 or above: https://tailwindcss.com/blog/tailwindcss-v3-4#new-has-variant
                 'flex min-h-10 w-full flex-wrap gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-neutral-950 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:outline-none dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:has-[:focus-visible]:ring-neutral-300',
                 className,
             )}

@@ -5,6 +5,9 @@ import type { Transcript, TranscriptSeries } from '@/stores/types';
 import { CONTRACT_LATEST } from './constants';
 import { roundToDecimal } from './time';
 
+/**
+ * Represents the legacy 'parts' format structure with transcripts divided into parts.
+ */
 type PartsFormat = {
     parts: {
         part: number;
@@ -15,6 +18,9 @@ type PartsFormat = {
     urls: string[];
 };
 
+/**
+ * Represents the v0.x contract version structure with tokens instead of segments.
+ */
 type TranscriptSeriesV0 = {
     contractVersion: string;
     createdAt: Date;
@@ -74,7 +80,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         };
     }
 
-    throw new Error('Unrecognized transcript format');
+    throw new Error(`Unrecognized transcript format: ${JSON.stringify(input).substring(0, 100)}...`);
 };
 
 export const mapTranscriptsToLatestContract = (transcripts: Transcript[], createdAt: Date): TranscriptSeries => {
