@@ -1,7 +1,7 @@
 'use client';
 
 import { isArabic } from '@flowdegree/arabic-strings';
-import { formatSegmentsToTimestampedTranscript, markAndCombineSegments } from 'paragrafs';
+import { createHints, formatSegmentsToTimestampedTranscript, markAndCombineSegments } from 'paragrafs';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -37,9 +37,9 @@ export function PreviewDialog({
 
     useEffect(() => {
         const markedSegments = markAndCombineSegments(transcript.segments, {
-            fillers: [],
+            fillers: formatOptions.fillers.flatMap((token) => [token, token + '.', token + '؟']),
             gapThreshold: formatOptions.silenceGapThreshold,
-            hints: {},
+            hints: createHints(...formatOptions.hints),
             maxSecondsPerSegment: formatOptions.maxSecondsPerSegment,
             minWordsPerSegment: formatOptions.minWordsPerSegment,
         });
