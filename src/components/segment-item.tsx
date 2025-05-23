@@ -8,15 +8,10 @@ import type { Segment } from '@/stores/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { pasteText } from '@/lib/domUtils';
+import { autoResize, pasteText } from '@/lib/domUtils';
 import { preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
-
-const autoResize = (textArea: HTMLTextAreaElement) => {
-    textArea.style.height = 'auto';
-    textArea.style.height = `${textArea.scrollHeight}px`;
-};
 
 /**
  * Renders a table row for a transcript segment with editable start/end times, text, and selection controls.
@@ -40,7 +35,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">
                 <Input
-                    className="text-xs"
+                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
                     defaultValue={formatSecondsToTimestamp(segment.start)}
                     onBlur={(e) => {
                         const start = timeToSeconds(e.target.value);
@@ -51,6 +46,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                     }}
                 />
                 <Input
+                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
                     defaultValue={formatSecondsToTimestamp(segment.end)}
                     onBlur={(e) => {
                         const end = timeToSeconds(e.target.value);
@@ -65,7 +61,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
 
             <td className="px-4 py-1 align-top">
                 <Textarea
-                    className={segment.status === 'done' ? 'bg-emerald-100' : undefined}
+                    className={`${segment.status === 'done' ? 'bg-emerald-100' : ''} overflow-hidden bg-transparent border-none shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {

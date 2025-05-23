@@ -11,6 +11,7 @@ import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
 import Toolbar from './toolbar';
 import { Checkbox } from './ui/checkbox';
+import UrlField from './url-field';
 
 /**
  * Displays and manages transcript segments with selection and file import capabilities.
@@ -22,8 +23,11 @@ export default function Transcript() {
     const initTranscripts = useTranscriptStore((state) => state.init);
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
     const segments = useTranscriptStore(selectCurrentSegments);
+    console.log('segmentsx', segments);
     const segmentItems = useMemo(() => {
-        return (segments || []).map((segment) => <SegmentItem key={segment.start} segment={segment} />);
+        return (segments || []).map((segment) => (
+            <SegmentItem key={segment.start.toString() + segment.end.toString()} segment={segment} />
+        ));
     }, [segments]);
 
     if (!isInitialized) {
@@ -60,6 +64,13 @@ export default function Transcript() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">{segmentItems}</tbody>
+                    <tfoot>
+                        <tr>
+                            <td className="px-4 py-2" colSpan={3}>
+                                <UrlField />
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

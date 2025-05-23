@@ -156,6 +156,51 @@ export const applySelection = (state: TranscriptState, segment: Segment, isSelec
     };
 };
 
+export const rebuildSegmentFromTokens = (state: TranscriptState) => {
+    const transcript = selectCurrentTranscript(state)!;
+    console.log('segments', transcript.segments);
+    const tokens = transcript.segments.flatMap((s) => s.tokens);
+    console.log('tokens', tokens);
+
+    return {
+        transcripts: {
+            ...state.transcripts,
+            [transcript.volume]: {
+                ...transcript,
+                segments: [
+                    {
+                        end: tokens.at(-1)!.end,
+                        start: tokens[0]!.start + START_DIFF,
+                        text: tokens.map((token) => token.text).join(' '),
+                        tokens,
+                    },
+                ],
+            },
+        },
+    };
+};
+
+/**
+ * Updates the urls property of the current transcript.
+ *
+ * @param state - Current transcript state
+ * @param urls - The urls that were used for the ground truth of this transcript.
+ * @returns Object with updated url for this transcript.
+ */
+export const setUrlsForTranscript = (state: TranscriptState, urls: string[]) => {
+    const transcript = selectCurrentTranscript(state)!;
+
+    return {
+        transcripts: {
+            ...state.transcripts,
+            [transcript.volume]: {
+                ...transcript,
+                urls,
+            },
+        },
+    };
+};
+
 /**
  * Removes all currently selected segments from the transcript
  * Filters out selected segments from the transcript and clears selection

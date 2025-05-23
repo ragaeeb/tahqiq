@@ -18,8 +18,10 @@ import {
     initStore,
     markSelectedDone,
     mergeSelectedSegments,
+    rebuildSegmentFromTokens,
     removeSelectedSegments,
     selectAllSegments,
+    setUrlsForTranscript,
     splitSelectedSegment,
     updateSegmentWithDiff,
 } from './actions';
@@ -56,6 +58,9 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         mergeSegments: () => {
             set(mergeSelectedSegments);
         },
+        rebuildSegmentFromTokens: () => {
+            set(rebuildSegmentFromTokens);
+        },
         selectAllSegments: (isSelected: boolean) => {
             return set((state) => selectAllSegments(state, isSelected));
         },
@@ -73,5 +78,6 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         toggleSegmentSelection: (segment, isSelected) => set((state) => applySelection(state, segment, isSelected)),
         transcripts: {},
         updateSegment: (segmentStart, update) => set((state) => updateSegmentWithDiff(state, segmentStart, update)),
+        updateUrlsForTranscript: (urls) => set((state) => setUrlsForTranscript(state, urls)),
     };
 });
