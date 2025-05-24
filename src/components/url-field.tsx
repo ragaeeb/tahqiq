@@ -14,7 +14,6 @@ export default function UrlField() {
     const transcript = useTranscriptStore(selectCurrentTranscript)!;
     const updateUrlsForTranscript = useTranscriptStore((state) => state.updateUrlsForTranscript);
     const mergedUrls = transcript.urls?.join('\n') || '';
-    console.log('mergedUrls', mergedUrls);
 
     return (
         <Textarea

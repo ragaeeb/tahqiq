@@ -173,9 +173,7 @@ export const applySelection = (state: TranscriptState, segment: Segment, isSelec
 
 export const rebuildSegmentFromTokens = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
-    console.log('segments', transcript.segments);
     const tokens = transcript.segments.flatMap((s) => s.tokens);
-    console.log('tokens', tokens);
 
     return {
         transcripts: {

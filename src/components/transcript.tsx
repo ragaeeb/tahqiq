@@ -25,7 +25,7 @@ export default function Transcript() {
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
     const addTranscripts = useTranscriptStore((state) => state.addTranscripts);
     const segments = useTranscriptStore(selectCurrentSegments);
-    console.log('segmentsx', segments);
+
     const segmentItems = useMemo(() => {
         return (segments || []).map((segment) => (
             <SegmentItem key={segment.start.toString() + segment.end.toString()} segment={segment} />

@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { autoResize, pasteText } from '@/lib/domUtils';
-import { preformatArabicText } from '@/lib/textUtils';
+import { findFirstTokenForText, preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
@@ -59,9 +59,9 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                 />
             </td>
 
-            <td className="px-4 py-1 align-top">
+            <td className={`px-4 py-1 align-top`}>
                 <Textarea
-                    className={`${segment.status === 'done' ? 'bg-emerald-100' : ''} overflow-hidden bg-transparent border-none shadow-none focus:ring-0 focus:outline-none`}
+                    className={`overflow-hidden ${segment.status === 'done' ? 'bg-emerald-100' : 'bg-transparent'} border-none shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {
@@ -77,13 +77,20 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                         pasteText(e.target as HTMLTextAreaElement, text);
                     }}
                     onSelect={(e) => {
-                        const { selectionEnd, selectionStart } = e.currentTarget;
+                        const { selectionEnd, selectionStart, value } = e.currentTarget;
 
-                        setSelectedToken(
-                            selectionStart !== selectionEnd
-                                ? getFirstTokenForSelection(segment, selectionStart, selectionEnd)
-                                : null,
-                        );
+                        if (selectionStart !== selectionEnd) {
+                            const token = getFirstTokenForSelection(segment, selectionStart, selectionEnd);
+
+                            if (token) {
+                                setSelectedToken(token);
+                            } else {
+                                const selectedText = value.substring(selectionStart, selectionEnd);
+                                setSelectedToken(findFirstTokenForText(segment.tokens, selectedText));
+                            }
+                        } else {
+                            setSelectedToken(null);
+                        }
                     }}
                     ref={(el) => {
                         if (el) {
