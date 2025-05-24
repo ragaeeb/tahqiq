@@ -18,6 +18,7 @@ import { Button } from './ui/button';
 export default function Toolbar() {
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
     const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
+    const rebuildSegmentFromTokens = useTranscriptStore((state) => state.rebuildSegmentFromTokens);
     const splitSegment = useTranscriptStore((state) => state.splitSegment);
     const markCompleted = useTranscriptStore((state) => state.markCompleted);
     const removeSegments = useTranscriptStore((state) => state.deleteSelectedSegments);
@@ -54,7 +55,14 @@ export default function Toolbar() {
                 <Button className="bg-blue-500">Preview</Button>
             </PreviewDialog>
             <Button aria-label="Group and slice segments" onClick={groupAndSliceSegments}>
-                🔧
+                🔧 Group & Slice Segments
+            </Button>
+            <Button
+                aria-label="Rebuild Segments from Tokens"
+                className="bg-orange-500"
+                onClick={rebuildSegmentFromTokens}
+            >
+                ♺ Rebuild Segment from Tokens
             </Button>
             <DownloadButton />
         </div>

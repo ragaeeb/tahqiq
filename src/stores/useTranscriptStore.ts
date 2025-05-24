@@ -13,13 +13,16 @@ import {
 import type { FormatOptions, TranscriptState } from './types';
 
 import {
+    addTranscriptsFromFiles,
     applySelection,
     groupAndSliceSegments,
     initStore,
     markSelectedDone,
     mergeSelectedSegments,
+    rebuildSegmentFromTokens,
     removeSelectedSegments,
     selectAllSegments,
+    setUrlsForTranscript,
     splitSelectedSegment,
     updateSegmentWithDiff,
 } from './actions';
@@ -31,8 +34,12 @@ import {
  *
  * @returns A Zustand store with transcript state and actions
  */
-export const useTranscriptStore = create<TranscriptState>((set) => {
+export const useTranscriptStore = create<TranscriptState>((set, get) => {
     return {
+        addTranscripts: async (files) => {
+            const result = await addTranscriptsFromFiles(get(), files);
+            set(result);
+        },
         createdAt: new Date(),
         deleteSelectedSegments: () => {
             set(removeSelectedSegments);
@@ -56,6 +63,9 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         mergeSegments: () => {
             set(mergeSelectedSegments);
         },
+        rebuildSegmentFromTokens: () => {
+            set(rebuildSegmentFromTokens);
+        },
         selectAllSegments: (isSelected: boolean) => {
             return set((state) => selectAllSegments(state, isSelected));
         },
@@ -73,5 +83,6 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         toggleSegmentSelection: (segment, isSelected) => set((state) => applySelection(state, segment, isSelected)),
         transcripts: {},
         updateSegment: (segmentStart, update) => set((state) => updateSegmentWithDiff(state, segmentStart, update)),
+        updateUrlsForTranscript: (urls) => set((state) => setUrlsForTranscript(state, urls)),
     };
 });

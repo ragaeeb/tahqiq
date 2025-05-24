@@ -74,3 +74,8 @@ export const downloadFile = (fileName: string, content: string, mimeType?: strin
         document.body.removeChild(element);
     }, 0);
 };
+
+export const autoResize = (textArea: HTMLTextAreaElement) => {
+    textArea.style.height = 'auto';
+    textArea.style.height = `${textArea.scrollHeight}px`;
+};

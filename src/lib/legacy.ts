@@ -1,32 +1,9 @@
-import type { Segment, Token } from 'paragrafs';
-
 import type { Transcript, TranscriptSeries } from '@/stores/types';
+
+import type { PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 
 import { CONTRACT_LATEST } from './constants';
 import { roundToDecimal } from './time';
-
-/**
- * Represents the legacy 'parts' format structure with transcripts divided into parts.
- */
-type PartsFormat = {
-    parts: {
-        part: number;
-        timestamp: Date;
-        transcripts: Segment[];
-    }[];
-    timestamp: Date;
-    urls: string[];
-};
-
-/**
- * Represents the v0.x contract version structure with tokens instead of segments.
- */
-type TranscriptSeriesV0 = {
-    contractVersion: string;
-    createdAt: Date;
-    lastUpdatedAt: Date;
-    transcripts: { timestamp: Date; tokens: Token[]; urls?: string[]; volume: number }[];
-};
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
     if ((input as TranscriptSeries).contractVersion?.startsWith('v1.')) {
@@ -53,6 +30,30 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                 timestamp: t.timestamp,
                 volume: t.volume,
             })),
+        };
+    }
+
+    if (((input as PartsWordsFormat).parts || [])[0]?.transcripts[0]?.words) {
+        const data = input as PartsWordsFormat;
+
+        return {
+            contractVersion: CONTRACT_LATEST,
+            createdAt: data.timestamp,
+            lastUpdatedAt: data.timestamp,
+            ...(data.postProcessingApp && { postProcessingApps: [data.postProcessingApp] }),
+            transcripts: data.parts.map((part) => {
+                return {
+                    segments: part.transcripts.map((s) => ({
+                        end: s.end,
+                        start: s.start,
+                        text: s.body,
+                        tokens: s.words,
+                    })),
+                    timestamp: part.timestamp,
+                    volume: part.part,
+                    ...(part.urls && { urls: part.urls }),
+                };
+            }),
         };
     }
 

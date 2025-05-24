@@ -8,15 +8,10 @@ import type { Segment } from '@/stores/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { pasteText } from '@/lib/domUtils';
-import { preformatArabicText } from '@/lib/textUtils';
+import { autoResize, pasteText } from '@/lib/domUtils';
+import { findFirstTokenForText, preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
-
-const autoResize = (textArea: HTMLTextAreaElement) => {
-    textArea.style.height = 'auto';
-    textArea.style.height = `${textArea.scrollHeight}px`;
-};
 
 /**
  * Renders a table row for a transcript segment with editable start/end times, text, and selection controls.
@@ -40,7 +35,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">
                 <Input
-                    className="text-xs"
+                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
                     defaultValue={formatSecondsToTimestamp(segment.start)}
                     onBlur={(e) => {
                         const start = timeToSeconds(e.target.value);
@@ -51,6 +46,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                     }}
                 />
                 <Input
+                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
                     defaultValue={formatSecondsToTimestamp(segment.end)}
                     onBlur={(e) => {
                         const end = timeToSeconds(e.target.value);
@@ -63,9 +59,9 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                 />
             </td>
 
-            <td className="px-4 py-1 align-top">
+            <td className={`px-4 py-1 align-top`}>
                 <Textarea
-                    className={segment.status === 'done' ? 'bg-emerald-100' : undefined}
+                    className={`overflow-hidden ${segment.status === 'done' ? 'bg-emerald-100' : 'bg-transparent'} border-none shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {
@@ -81,13 +77,20 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                         pasteText(e.target as HTMLTextAreaElement, text);
                     }}
                     onSelect={(e) => {
-                        const { selectionEnd, selectionStart } = e.currentTarget;
+                        const { selectionEnd, selectionStart, value } = e.currentTarget;
 
-                        setSelectedToken(
-                            selectionStart !== selectionEnd
-                                ? getFirstTokenForSelection(segment, selectionStart, selectionEnd)
-                                : null,
-                        );
+                        if (selectionStart !== selectionEnd) {
+                            const token = getFirstTokenForSelection(segment, selectionStart, selectionEnd);
+
+                            if (token) {
+                                setSelectedToken(token);
+                            } else {
+                                const selectedText = value.substring(selectionStart, selectionEnd);
+                                setSelectedToken(findFirstTokenForText(segment.tokens, selectedText));
+                            }
+                        } else {
+                            setSelectedToken(null);
+                        }
                     }}
                     ref={(el) => {
                         if (el) {

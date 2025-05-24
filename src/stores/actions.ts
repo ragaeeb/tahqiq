@@ -58,6 +58,24 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
     };
 };
 
+export const addTranscriptsFromFiles = async (state: TranscriptState, files: FileList) => {
+    const jsonPromises = Array.from(files)
+        .filter((f) => f.name.endsWith('.json'))
+        .map(async (file) => {
+            return JSON.parse(await file.text()) as Transcript;
+        });
+
+    const transcripts: Record<number, Transcript> = (await Promise.all(jsonPromises)).reduce(
+        (acc, t) => ({ ...acc, [t.volume]: t }),
+        {},
+    );
+
+    return {
+        selectedPart: Object.values(transcripts)[0]!.volume,
+        transcripts: { ...state.transcripts, ...transcripts },
+    };
+};
+
 /**
  * Marks all currently selected segments as 'done' in the transcript
  * Updates segment status while preserving other segment properties
@@ -153,6 +171,49 @@ export const applySelection = (state: TranscriptState, segment: Segment, isSelec
         selectedSegments: isSelected
             ? state.selectedSegments.concat(segment)
             : state.selectedSegments.filter((s) => segment !== s),
+    };
+};
+
+export const rebuildSegmentFromTokens = (state: TranscriptState) => {
+    const transcript = selectCurrentTranscript(state)!;
+    const tokens = transcript.segments.flatMap((s) => s.tokens);
+
+    return {
+        transcripts: {
+            ...state.transcripts,
+            [transcript.volume]: {
+                ...transcript,
+                segments: [
+                    {
+                        end: tokens.at(-1)!.end,
+                        start: tokens[0]!.start + START_DIFF,
+                        text: tokens.map((token) => token.text).join(' '),
+                        tokens,
+                    },
+                ],
+            },
+        },
+    };
+};
+
+/**
+ * Updates the urls property of the current transcript.
+ *
+ * @param state - Current transcript state
+ * @param urls - The urls that were used for the ground truth of this transcript.
+ * @returns Object with updated url for this transcript.
+ */
+export const setUrlsForTranscript = (state: TranscriptState, urls: string[]) => {
+    const transcript = selectCurrentTranscript(state)!;
+
+    return {
+        transcripts: {
+            ...state.transcripts,
+            [transcript.volume]: {
+                ...transcript,
+                urls,
+            },
+        },
     };
 };
 

@@ -20,6 +20,12 @@ export type FormatOptions = {
     silenceGapThreshold: number;
 };
 
+export type PostProcessingApp = {
+    id: string;
+    timestamp?: Date;
+    version: string;
+};
+
 /**
  * Extends the base ParagrafsSegment with additional status information
  */
@@ -54,10 +60,16 @@ export type Transcript = {
 export type TranscriptSeries = {
     /** Version of the contract format used for this transcript series */
     contractVersion: 'v1.0';
+
     /** When this transcript series was initially created */
     createdAt: Date;
+
     /** When this transcript series was last modified */
     lastUpdatedAt: Date;
+
+    /** The apps that was used to edit this transcript */
+    postProcessingApps?: PostProcessingApp[];
+
     /** Array of transcript volumes in this series */
     transcripts: Transcript[];
 };
@@ -89,6 +101,8 @@ export type TranscriptStateCore = {
  * Action functions available for transcript manipulation
  */
 type TranscriptActions = {
+    addTranscripts: (files: FileList) => void;
+
     /**
      * Removes all currently selected segments from the transcript
      */
@@ -114,6 +128,11 @@ type TranscriptActions = {
      * Merges selected segments into a single segment
      */
     mergeSegments: () => void;
+
+    /**
+     * Merges all the tokens from various segments into a single segment.
+     */
+    rebuildSegmentFromTokens: () => void;
 
     /**
      * Sets selection state for all segments
@@ -157,4 +176,10 @@ type TranscriptActions = {
      * @param update Partial segment object with properties to update
      */
     updateSegment: (segmentStart: number, update: Partial<Segment>) => void;
+
+    /**
+     * Updates the urls property for this current transcript.
+     * @param urls The set of urls used.
+     */
+    updateUrlsForTranscript: (urls: string[]) => void;
 };
