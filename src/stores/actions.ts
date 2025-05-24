@@ -70,7 +70,10 @@ export const addTranscriptsFromFiles = async (state: TranscriptState, files: Fil
         {},
     );
 
-    return { selectedPart: Object.keys(transcripts)[0]!, transcripts: { ...state.transcripts, ...transcripts } };
+    return {
+        selectedPart: Object.values(transcripts)[0]!.volume,
+        transcripts: { ...state.transcripts, ...transcripts },
+    };
 };
 
 /**

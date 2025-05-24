@@ -38,7 +38,7 @@ export const useTranscriptStore = create<TranscriptState>((set, get) => {
     return {
         addTranscripts: async (files) => {
             const result = await addTranscriptsFromFiles(get(), files);
-            set(result); // result is assumed to be Partial<TranscriptState>
+            set(result);
         },
         createdAt: new Date(),
         deleteSelectedSegments: () => {
