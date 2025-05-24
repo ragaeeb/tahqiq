@@ -33,7 +33,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         };
     }
 
-    if ((input as PartsWordsFormat).parts[0]?.transcripts[0]?.words) {
+    if (((input as PartsWordsFormat).parts || [])[0]?.transcripts[0]?.words) {
         const data = input as PartsWordsFormat;
 
         return {
