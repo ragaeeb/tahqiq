@@ -101,6 +101,8 @@ export type TranscriptStateCore = {
  * Action functions available for transcript manipulation
  */
 type TranscriptActions = {
+    addTranscripts: (files: FileList) => void;
+
     /**
      * Removes all currently selected segments from the transcript
      */

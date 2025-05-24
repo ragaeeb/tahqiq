@@ -6,6 +6,7 @@ import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/selectors';
 import { useTranscriptStore } from '@/stores/useTranscriptStore';
 
+import { JsonBrowseButton } from './json-browse-button';
 import JsonDropZone from './json-drop-zone';
 import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
@@ -22,6 +23,7 @@ export default function Transcript() {
     const isInitialized = useTranscriptStore((state) => state.selectedPart > 0);
     const initTranscripts = useTranscriptStore((state) => state.init);
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
+    const addTranscripts = useTranscriptStore((state) => state.addTranscripts);
     const segments = useTranscriptStore(selectCurrentSegments);
     console.log('segmentsx', segments);
     const segmentItems = useMemo(() => {
@@ -42,6 +44,7 @@ export default function Transcript() {
         <div className="flex flex-col w-full max-w">
             <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                 <PartSelector />
+                <JsonBrowseButton onFilesSelected={addTranscripts}>+ Parts</JsonBrowseButton>
                 <Toolbar />
             </div>
 

@@ -13,6 +13,7 @@ import {
 import type { FormatOptions, TranscriptState } from './types';
 
 import {
+    addTranscriptsFromFiles,
     applySelection,
     groupAndSliceSegments,
     initStore,
@@ -33,8 +34,12 @@ import {
  *
  * @returns A Zustand store with transcript state and actions
  */
-export const useTranscriptStore = create<TranscriptState>((set) => {
+export const useTranscriptStore = create<TranscriptState>((set, get) => {
     return {
+        addTranscripts: async (files) => {
+            const result = await addTranscriptsFromFiles(get(), files);
+            set(result); // result is assumed to be Partial<TranscriptState>
+        },
         createdAt: new Date(),
         deleteSelectedSegments: () => {
             set(removeSelectedSegments);

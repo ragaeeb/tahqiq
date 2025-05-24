@@ -58,6 +58,21 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
     };
 };
 
+export const addTranscriptsFromFiles = async (state: TranscriptState, files: FileList) => {
+    const jsonPromises = Array.from(files)
+        .filter((f) => f.name.endsWith('.json'))
+        .map(async (file) => {
+            return JSON.parse(await file.text()) as Transcript;
+        });
+
+    const transcripts: Record<number, Transcript> = (await Promise.all(jsonPromises)).reduce(
+        (acc, t) => ({ ...acc, [t.volume]: t }),
+        {},
+    );
+
+    return { selectedPart: Object.keys(transcripts)[0]!, transcripts: { ...state.transcripts, ...transcripts } };
+};
+
 /**
  * Marks all currently selected segments as 'done' in the transcript
  * Updates segment status while preserving other segment properties
