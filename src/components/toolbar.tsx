@@ -3,7 +3,7 @@
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';

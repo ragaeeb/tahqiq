@@ -1,4 +1,4 @@
-import type { Transcript, TranscriptSeries } from '@/stores/types';
+import type { Transcript, TranscriptSeries } from '@/stores/transcriptStore/types';
 
 import type { PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 

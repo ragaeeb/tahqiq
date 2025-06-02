@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 
 import { adaptLegacyTranscripts } from '@/lib/legacy';
-import { selectCurrentSegments } from '@/stores/selectors';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectCurrentSegments } from '@/stores/transcriptStore/selectors';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import { JsonBrowseButton } from './json-browse-button';
 import JsonDropZone from './json-drop-zone';
@@ -35,7 +35,11 @@ export default function Transcript() {
     if (!isInitialized) {
         return (
             <div className="flex flex-col w-full max-w">
-                <JsonDropZone onFile={(file) => initTranscripts(adaptLegacyTranscripts(file))} />
+                <JsonDropZone
+                    onFile={(fileNameToData) =>
+                        initTranscripts(adaptLegacyTranscripts(Object.values(fileNameToData)[0]))
+                    }
+                />
             </div>
         );
     }

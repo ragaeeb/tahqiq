@@ -4,7 +4,7 @@ import React from 'react';
 
 import { downloadFile } from '@/lib/domUtils';
 import { mapTranscriptsToLatestContract } from '@/lib/legacy';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import { Button } from './ui/button';
 

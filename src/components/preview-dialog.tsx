@@ -20,8 +20,8 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { selectCurrentTranscript } from '@/stores/selectors';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';

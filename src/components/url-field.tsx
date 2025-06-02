@@ -4,8 +4,8 @@ import React from 'react';
 
 import { Textarea } from '@/components/ui/textarea';
 import { autoResize } from '@/lib/domUtils';
-import { selectCurrentTranscript } from '@/stores/selectors';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 /**
  * Renders a textarea which has all the URLs that were used to source the ground truth of this transcript.

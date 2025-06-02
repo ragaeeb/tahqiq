@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Transcript } from '@/stores/types';
+import type { Transcript } from '@/stores/transcriptStore/types';
 
 import { CONTRACT_LATEST } from './constants';
 import { adaptLegacyTranscripts, mapTranscriptsToLatestContract } from './legacy';
