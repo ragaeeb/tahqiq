@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import type { ManuscriptState } from './types';
 
-import { initStore } from './actions';
+import { initStore, selectAllPages } from './actions';
 
 /**
  * Creates a Zustand store for managing manuscript state
@@ -14,6 +14,9 @@ export const useManuscriptStore = create<ManuscriptState>((set) => {
     return {
         createdAt: new Date(),
         init: (data) => set(() => initStore(data)),
+        selectAllPages: (isSelected: boolean) => {
+            return set((state) => selectAllPages(state, isSelected));
+        },
         selectedPages: [],
         selectedVolume: 0,
         volumeToPages: {},

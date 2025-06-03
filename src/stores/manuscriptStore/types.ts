@@ -19,8 +19,16 @@ export type ManuscriptStateCore = {
 
 export type Page = {
     id: number;
+    /** Optional status indicating page processing state */
+    status?: PageStatus;
     text: string;
 };
+
+/**
+ * Possible status values for a transcript segment
+ * - 'done': Segment has been reviewed and completed
+ */
+export type PageStatus = 'done' | 'review';
 
 export type RawManuscript = {
     contractVersion: string;
@@ -41,6 +49,12 @@ type ManuscriptActions = {
      * @param data Object containing manuscript information
      */
     init: (data: RawManuscript) => void;
+
+    /**
+     * Sets selection state for all pages
+     * @param isSelected Whether to select or deselect all pages
+     */
+    selectAllPages: (isSelected: boolean) => void;
 };
 
 type TextBlock = {
