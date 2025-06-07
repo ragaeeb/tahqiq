@@ -20,17 +20,29 @@ const correctReferences = (blocks: TextBlock[]) => {
             return b.text.match(arabicFootnoteReferenceRegex) || [];
         });
 
-    const mistakenReference = blocks.find((b) => b.text.includes('()'));
+    const mistakenReferences = blocks.filter((b) => b.text.includes('()'));
 
-    if (mistakenReference && referencesInBody.length > referencesInFootnotes.length && referencesInBody.length > 0) {
-        const missing = referencesInBody.find((r) => !referencesInFootnotes.includes(r));
+    if (
+        mistakenReferences.length > 0 &&
+        referencesInBody.length > referencesInFootnotes.length &&
+        referencesInBody.length > 0
+    ) {
+        for (const mistakenReference of mistakenReferences) {
+            const missing = referencesInBody.find((r) => !referencesInFootnotes.includes(r));
 
-        if (missing) {
-            mistakenReference.text = mistakenReference.text.replace('()', missing);
+            if (missing) {
+                mistakenReference.text = mistakenReference.text.replace('()', missing);
+                referencesInBody.shift();
+            }
         }
     }
 
     return blocks;
+};
+
+const standardizeHijriSymbol = (text: string): string => {
+    // Replace standalone ه with هـ when it appears after Arabic digits (0-9 or ٠-٩) with up to 1 space in between
+    return text.replace(/([\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
 };
 
 /**
@@ -42,20 +54,23 @@ const correctReferences = (blocks: TextBlock[]) => {
  */
 export const initStore = (manuscript: RawManuscript) => {
     const pages: Page[] = manuscript.data.map(({ blocks, page }) => {
+        console.log('page', page);
         const correctedBlocks = correctReferences(blocks);
-        const text = mapTextBlocksToParagraphs(correctedBlocks, '_').replace(/\(\(/g, '«').replace(/\)\)/g, '»');
-        const isEdited = blocks.some((b) => b.isEdited) || text.includes('()');
+        let text = mapTextBlocksToParagraphs(correctedBlocks, '_').replace(/\(\(/g, '«').replace(/\)\)/g, '»');
+        text = standardizeHijriSymbol(text);
+        const errorLines = blocks.flatMap((b, i) => (b.isEdited || b.text.includes('()') ? [i] : []));
 
         return {
             id: page,
             text,
-            ...(isEdited && { status: 'review' }),
+            ...(errorLines.length > 0 && { errorLines }),
         };
     });
 
     return {
         createdAt: manuscript.createdAt,
         selectedVolume: 1,
+        urlTemplate: manuscript.urlTemplate || '',
         volumeToPages: { 1: pages },
     };
 };

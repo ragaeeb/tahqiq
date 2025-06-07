@@ -6,22 +6,10 @@ import type { Page } from '@/stores/manuscriptStore/types';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { autoResize } from '@/lib/domUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
-const getPageColor = (page: Page) => {
-    if (page.status === 'done') {
-        return 'bg-emerald-100';
-    }
-
-    if (page.status === 'review') {
-        return 'bg-red-100';
-    }
-
-    return 'bg-transparent';
-};
+import HighlightableTextarea from './ui/highlightable-textarea';
 
 /**
  * Renders a table row for a transcript page with editable start/end times, text, and selection controls.
@@ -33,6 +21,10 @@ const getPageColor = (page: Page) => {
 const PageItem = ({ page }: { page: Page }) => {
     const { toggleSegmentSelection } = useTranscriptStore.getInitialState();
     const isSelected = useManuscriptStore((state) => state.selectedPages.includes(page));
+    const lineHighlights: { [lineNumber: number]: string } = page.errorLines?.reduce(
+        (acc, e) => ({ ...acc, [e]: 'bg-red-100' }),
+        {} as any,
+    );
 
     return (
         <tr>
@@ -50,16 +42,11 @@ const PageItem = ({ page }: { page: Page }) => {
                 />
             </td>
             <td className={`px-4 py-1 align-top`}>
-                <Textarea
-                    className={`overflow-hidden ${getPageColor(page)} border-none shadow-none focus:ring-0 focus:outline-none`}
+                <HighlightableTextarea
+                    className={`overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={page.text}
                     dir="rtl"
-                    ref={(el) => {
-                        if (el) {
-                            autoResize(el);
-                        }
-                    }}
-                    rows={4}
+                    lineHighlights={lineHighlights}
                 />
             </td>
         </tr>

@@ -19,6 +19,10 @@ export const useManuscriptStore = create<ManuscriptState>((set) => {
         },
         selectedPages: [],
         selectedVolume: 0,
+        setUrlTemplate: (urlTemplate: string) => {
+            return set(() => ({ urlTemplate }));
+        },
+        urlTemplate: '',
         volumeToPages: {},
     };
 });

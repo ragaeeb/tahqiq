@@ -7,6 +7,7 @@ import type { RawManuscript } from '@/stores/manuscriptStore/types';
 import JsonDropZone from '@/components/json-drop-zone';
 import PageItem from '@/components/page-item';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { selectCurrentPages } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
@@ -15,6 +16,8 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
  */
 export default function Book() {
     const selectedVolume = useManuscriptStore((state) => state.selectedVolume);
+    const urlTemplate = useManuscriptStore((state) => state.urlTemplate);
+    const setUrlTemplate = useManuscriptStore((state) => state.setUrlTemplate);
     const isInitialized = selectedVolume > 0;
     const initManuscript = useManuscriptStore((state) => state.init);
     const pages = useManuscriptStore(selectCurrentPages);
@@ -64,6 +67,7 @@ export default function Book() {
                         </thead>
                         <tbody className="divide-y divide-gray-200">{pageItems}</tbody>
                     </table>
+                    <Input defaultValue={urlTemplate} onBlur={(e) => setUrlTemplate(e.target.value)} />
                 </div>
             </div>
         </div>

@@ -13,11 +13,14 @@ export type ManuscriptStateCore = {
     readonly selectedPages: Page[];
     /** Currently selected transcript volume number */
     readonly selectedVolume: number;
+    readonly urlTemplate: string;
+
     /** Map of pages indexed by volume number */
     readonly volumeToPages: Record<number, Page[]>;
 };
 
 export type Page = {
+    errorLines?: number[];
     id: number;
     /** Optional status indicating page processing state */
     status?: PageStatus;
@@ -37,7 +40,9 @@ export type RawManuscript = {
         blocks: TextBlock[];
         page: number;
     }[];
+    groundTruthUrls?: string[];
     lastUpdatedAt: Date;
+    urlTemplate?: string;
 };
 
 /**
@@ -55,6 +60,8 @@ type ManuscriptActions = {
      * @param isSelected Whether to select or deselect all pages
      */
     selectAllPages: (isSelected: boolean) => void;
+
+    setUrlTemplate: (template: string) => void;
 };
 
 type TextBlock = {
