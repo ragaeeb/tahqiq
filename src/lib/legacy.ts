@@ -1,8 +1,9 @@
+import type { Book, ManuscriptState } from '@/stores/manuscriptStore/types';
 import type { Transcript, TranscriptSeries } from '@/stores/transcriptStore/types';
 
 import type { PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 
-import { CONTRACT_LATEST } from './constants';
+import { BOOK_CONTRACT_LATEST, TRANSCRIPT_CONTRACT_LATEST } from './constants';
 import { roundToDecimal } from './time';
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
@@ -14,7 +15,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         const data = input as TranscriptSeriesV0;
 
         return {
-            contractVersion: CONTRACT_LATEST,
+            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
             createdAt: data.createdAt,
             lastUpdatedAt: data.lastUpdatedAt,
             transcripts: data.transcripts.map((t) => ({
@@ -37,7 +38,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         const data = input as PartsWordsFormat;
 
         return {
-            contractVersion: CONTRACT_LATEST,
+            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
             createdAt: data.timestamp,
             lastUpdatedAt: data.timestamp,
             ...(data.postProcessingApp && { postProcessingApps: [data.postProcessingApp] }),
@@ -61,7 +62,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         const data = input as PartsFormat;
 
         return {
-            contractVersion: CONTRACT_LATEST,
+            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
             createdAt: data.timestamp,
             lastUpdatedAt: data.timestamp,
             transcripts: data.parts.map((part) => {
@@ -86,7 +87,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
 
 export const mapTranscriptsToLatestContract = (transcripts: Transcript[], createdAt: Date): TranscriptSeries => {
     return {
-        contractVersion: CONTRACT_LATEST,
+        contractVersion: TRANSCRIPT_CONTRACT_LATEST,
         createdAt,
         lastUpdatedAt: new Date(),
         transcripts: Object.values(transcripts)
@@ -95,5 +96,19 @@ export const mapTranscriptsToLatestContract = (transcripts: Transcript[], create
                 ...t,
                 segments: t.segments.map((s) => ({ ...s, end: roundToDecimal(s.end), start: roundToDecimal(s.start) })),
             })),
+    };
+};
+
+export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
+    return {
+        contractVersion: BOOK_CONTRACT_LATEST,
+        createdAt: manuscriptState.createdAt,
+        lastUpdatedAt: new Date(),
+        pages: Object.entries(manuscriptState.volumeToPages)
+            .toSorted(([a], [b]) => Number(a) - Number(b))
+            .flatMap(([volume, pages]) => {
+                return pages.map((p) => ({ id: p.id, text: p.text, volume: Number(volume) }));
+            }),
+        ...(manuscriptState.urlTemplate && { urlTemplate: manuscriptState.urlTemplate }),
     };
 };

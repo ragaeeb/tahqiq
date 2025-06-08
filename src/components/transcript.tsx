@@ -10,14 +10,14 @@ import { JsonBrowseButton } from './json-browse-button';
 import JsonDropZone from './json-drop-zone';
 import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
-import Toolbar from './toolbar';
+import TranscriptToolbar from './transcript-toolbar';
 import { Checkbox } from './ui/checkbox';
 import UrlField from './url-field';
 
 /**
  * Displays and manages transcript segments with selection and file import capabilities.
  *
- * Renders a transcript viewer that allows users to import transcript files, select transcript parts, and interact with individual segments. If no transcript is loaded, prompts the user to upload a JSON transcript file.
+ * Renders a transcript viewer that allows users to import transcript files, select transcript parts, and interact with individual segments. If no transcript is loaded, prompts the user to * upload a JSON transcript file.
  */
 export default function Transcript() {
     const isInitialized = useTranscriptStore((state) => state.selectedPart > 0);
@@ -49,7 +49,7 @@ export default function Transcript() {
             <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                 <PartSelector />
                 <JsonBrowseButton onFilesSelected={addTranscripts}>+ Parts</JsonBrowseButton>
-                <Toolbar />
+                <TranscriptToolbar />
             </div>
 
             <div className="overflow-auto border rounded">

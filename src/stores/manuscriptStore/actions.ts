@@ -1,49 +1,11 @@
-import { mapTextBlocksToParagraphs, type TextBlock } from 'kokokor';
+import { mapTextBlocksToParagraphs } from 'kokokor';
+
+import { correctReferences } from '@/lib/footnotes';
+import { isBalanced, preformatArabicText } from '@/lib/textUtils';
 
 import type { ManuscriptStateCore, Page, RawManuscript } from './types';
 
 import { selectCurrentPages } from './selectors';
-
-const arabicReferenceRegex = /\([\u0660-\u0669]\)/g;
-const arabicFootnoteReferenceRegex = /^\([\u0660-\u0669]\)/g;
-
-const correctReferences = (blocks: TextBlock[]) => {
-    const referencesInBody = blocks
-        .filter((b) => !b.isFootnote)
-        .flatMap((b) => {
-            return b.text.match(arabicReferenceRegex) || [];
-        });
-
-    const referencesInFootnotes = blocks
-        .filter((b) => b.isFootnote)
-        .flatMap((b) => {
-            return b.text.match(arabicFootnoteReferenceRegex) || [];
-        });
-
-    const mistakenReferences = blocks.filter((b) => b.text.includes('()'));
-
-    if (
-        mistakenReferences.length > 0 &&
-        referencesInBody.length > referencesInFootnotes.length &&
-        referencesInBody.length > 0
-    ) {
-        for (const mistakenReference of mistakenReferences) {
-            const missing = referencesInBody.find((r) => !referencesInFootnotes.includes(r));
-
-            if (missing) {
-                mistakenReference.text = mistakenReference.text.replace('()', missing);
-                referencesInBody.shift();
-            }
-        }
-    }
-
-    return blocks;
-};
-
-const standardizeHijriSymbol = (text: string): string => {
-    // Replace standalone ه with هـ when it appears after Arabic digits (0-9 or ٠-٩) with up to 1 space in between
-    return text.replace(/([\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
-};
 
 /**
  * Initializes the transcript store with provided data
@@ -54,11 +16,12 @@ const standardizeHijriSymbol = (text: string): string => {
  */
 export const initStore = (manuscript: RawManuscript) => {
     const pages: Page[] = manuscript.data.map(({ blocks, page }) => {
-        console.log('page', page);
         const correctedBlocks = correctReferences(blocks);
-        let text = mapTextBlocksToParagraphs(correctedBlocks, '_').replace(/\(\(/g, '«').replace(/\)\)/g, '»');
-        text = standardizeHijriSymbol(text);
-        const errorLines = blocks.flatMap((b, i) => (b.isEdited || b.text.includes('()') ? [i] : []));
+        let text = mapTextBlocksToParagraphs(correctedBlocks, '_');
+        text = preformatArabicText(text);
+        const errorLines = blocks.flatMap((b, i) =>
+            b.isEdited || b.text.includes('()') || !isBalanced(b.text) ? [b.isFootnote ? i + 1 : i] : [],
+        );
 
         return {
             id: page,
@@ -70,7 +33,6 @@ export const initStore = (manuscript: RawManuscript) => {
     return {
         createdAt: manuscript.createdAt,
         selectedVolume: 1,
-        urlTemplate: manuscript.urlTemplate || '',
         volumeToPages: { 1: pages },
     };
 };

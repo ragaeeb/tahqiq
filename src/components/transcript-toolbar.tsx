@@ -15,7 +15,7 @@ import { Button } from './ui/button';
  *
  * The toolbar displays context-sensitive controls based on the current selection of segments or tokens, enabling efficient transcript editing and management.
  */
-export default function Toolbar() {
+export default function TranscriptToolbar() {
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
     const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
     const rebuildSegmentFromTokens = useTranscriptStore((state) => state.rebuildSegmentFromTokens);

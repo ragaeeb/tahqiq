@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 import type { RawManuscript } from '@/stores/manuscriptStore/types';
 
+import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
 import PageItem from '@/components/page-item';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,7 +35,6 @@ export default function Book() {
                     <JsonDropZone
                         description="Drag and drop the manuscript"
                         onFile={(fileNameToData) => {
-                            console.log(fileNameToData);
                             const data = Object.values(fileNameToData)[0]!;
                             initManuscript(data as unknown as RawManuscript);
                         }}
@@ -47,6 +47,10 @@ export default function Book() {
     return (
         <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
             <div className="flex flex-col w-full max-w">
+                <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+                    <BookToolbar />
+                </div>
+
                 <div className="overflow-auto border rounded">
                     <table className="w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">

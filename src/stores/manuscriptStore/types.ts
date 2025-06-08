@@ -1,3 +1,16 @@
+export type Book = {
+    contractVersion: string;
+    createdAt: Date;
+    groundTruthUrls?: string[];
+    lastUpdatedAt: Date;
+    pages: {
+        id: number;
+        text: string;
+        volume: number;
+    }[];
+    urlTemplate?: string;
+};
+
 /**
  * Combined state and actions for transcript management
  */
@@ -40,9 +53,6 @@ export type RawManuscript = {
         blocks: TextBlock[];
         page: number;
     }[];
-    groundTruthUrls?: string[];
-    lastUpdatedAt: Date;
-    urlTemplate?: string;
 };
 
 /**

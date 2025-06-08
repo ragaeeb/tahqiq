@@ -18,4 +18,6 @@ export const DEFAULT_MIN_WORDS_PER_SEGMENT = 10;
 
 export const DEFAULT_SILENCE_GAP_THRESHOLD = 2;
 
-export const CONTRACT_LATEST = 'v1.0';
+export const TRANSCRIPT_CONTRACT_LATEST = 'v1.0';
+
+export const BOOK_CONTRACT_LATEST = 'v1.0';
