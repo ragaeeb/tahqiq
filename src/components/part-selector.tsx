@@ -2,8 +2,8 @@
 
 import React from 'react';
 
-import { selectParts } from '@/stores/selectors';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { selectParts } from '@/stores/transcriptStore/selectors';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 /**
  * Renders a dropdown menu for selecting a transcript part.

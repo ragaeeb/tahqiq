@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+type JsonObject = Record<string, Record<number | string, unknown> | unknown[]>;
+
 type Props = {
-    onFile: (map: Record<string, Record<number | string, unknown> | unknown[]>) => void;
+    description?: string;
+    maxFiles?: number;
+    onFile: (map: Record<string, JsonObject>) => void;
+    title?: string;
 };
 
 /**
@@ -15,7 +20,12 @@ type Props = {
  * @remark
  * Only accepts exactly one file with a `.json` extension. If multiple or non-JSON files are dropped, the callback is not invoked.
  */
-export default function JsonDropZone({ onFile }: Props) {
+export default function JsonDropZone({
+    description = 'Drop your transcript JSON file to start editing',
+    maxFiles = 1,
+    onFile,
+    title = 'Drag & Drop JSON file',
+}: Props) {
     const [isDragging, setIsDragging] = useState(false);
     const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -43,18 +53,24 @@ export default function JsonDropZone({ onFile }: Props) {
 
             const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.name.endsWith('.json'));
 
-            if (files.length !== 1) {
+            if (files.length !== maxFiles) {
                 return;
             }
 
             try {
-                const data = JSON.parse(await files[0]!.text());
-                onFile(data);
+                const result: Record<string, JsonObject> = {};
+
+                for (const file of files) {
+                    const data = JSON.parse(await file.text());
+                    result[file.name] = data;
+                }
+
+                onFile(result);
             } catch (error) {
                 console.error('Error parsing JSON file:', error);
             }
         },
-        [onFile],
+        [onFile, maxFiles],
     );
 
     useEffect(() => {
@@ -98,12 +114,8 @@ export default function JsonDropZone({ onFile }: Props) {
                 >
                     <path d="M19 14v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6M12 4v12M8 8l4-4 4 4" />
                 </svg>
-                <h3 className="mb-2 text-lg font-medium">
-                    {isDragging ? 'Drop JSON file here' : 'Drag & Drop JSON file'}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Drop your transcript JSON file to start editing
-                </p>
+                <h3 className="mb-2 text-lg font-medium">{title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
             </div>
         </div>
     );

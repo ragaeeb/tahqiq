@@ -3,7 +3,7 @@
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
@@ -15,7 +15,7 @@ import { Button } from './ui/button';
  *
  * The toolbar displays context-sensitive controls based on the current selection of segments or tokens, enabling efficient transcript editing and management.
  */
-export default function Toolbar() {
+export default function TranscriptToolbar() {
     const mergeSegments = useTranscriptStore((state) => state.mergeSegments);
     const groupAndSliceSegments = useTranscriptStore((state) => state.groupAndSliceSegments);
     const rebuildSegmentFromTokens = useTranscriptStore((state) => state.rebuildSegmentFromTokens);

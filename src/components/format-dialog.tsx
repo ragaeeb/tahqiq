@@ -17,7 +17,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { TagInput } from '@/components/ui/tag-input';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 /**
  * Renders a dialog interface for editing transcript formatting options.

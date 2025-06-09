@@ -1,6 +1,6 @@
 import type { Segment, Token } from 'paragrafs';
 
-import type { PostProcessingApp } from '@/stores/types';
+import type { PostProcessingApp } from '@/stores/transcriptStore/types';
 
 export type LegacySegment = {
     body: string;

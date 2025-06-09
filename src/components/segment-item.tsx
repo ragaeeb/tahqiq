@@ -3,7 +3,7 @@
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
 
-import type { Segment } from '@/stores/types';
+import type { Segment } from '@/stores/transcriptStore/types';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { autoResize, pasteText } from '@/lib/domUtils';
 import { findFirstTokenForText, preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
-import { useTranscriptStore } from '@/stores/useTranscriptStore';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 /**
  * Renders a table row for a transcript segment with editable start/end times, text, and selection controls.
