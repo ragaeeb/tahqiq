@@ -8,11 +8,11 @@ import type { ManuscriptStateCore, Page, RawManuscript } from './types';
 import { selectCurrentPages } from './selectors';
 
 /**
- * Initializes the transcript store with provided data
- * Organizes transcripts by volume for easier access
+ * Initializes the manuscript store with provided data
+ * Organizes manuscripts by volume for easier access
  *
- * @param data - Transcript series data containing transcript information
- * @returns Initial state object for the transcript store
+ * @param manuscript - Raw manuscript data containing page information
+ * @returns Initial state object for the manuscript store
  */
 export const initStore = (manuscript: RawManuscript) => {
     const pages: Page[] = manuscript.data.map(({ blocks, page }) => {

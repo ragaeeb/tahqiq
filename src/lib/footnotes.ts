@@ -23,18 +23,17 @@ export const correctReferences = (blocks: TextBlock[]): TextBlock[] => {
         referencesInBody.length > referencesInFootnotes.length &&
         referencesInBody.length > 0
     ) {
-        // Create a copy of referencesInBody to avoid mutating the original
-        const availableReferences = [...referencesInBody];
+        const usedReferences = new Set<string>();
 
         return blocks.map((block) => {
             // Only process blocks that contain '()'
             if (block.text.includes('()')) {
-                const missing = availableReferences.find((r) => !referencesInFootnotes.includes(r));
+                const missing = referencesInBody.find(
+                    (r) => !referencesInFootnotes.includes(r) && !usedReferences.has(r),
+                );
 
                 if (missing) {
-                    // Remove the used reference from available references
-                    const index = availableReferences.indexOf(missing);
-                    availableReferences.splice(index, 1);
+                    usedReferences.add(missing);
 
                     // Return a new block with the corrected text
                     return {

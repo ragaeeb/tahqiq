@@ -1,4 +1,6 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+
+import { autoResize } from '@/lib/domUtils';
 
 export interface HighlightableTextareaRef {
     blur: () => void;
@@ -10,11 +12,11 @@ export interface HighlightableTextareaRef {
 }
 
 interface HighlightableTextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> {
-    autoResize?: boolean;
     className?: string;
     defaultValue?: string;
     dir?: 'ltr' | 'rtl';
-    lineHighlights?: { [lineNumber: number]: string }; // lineNumber (1-based) -> CSS color/class
+    enableAutoResize?: boolean;
+    lineHighlights?: { [lineNumber: number]: string }; // lineNumber (0-based) -> CSS color/class
     onChange?: (value: string) => void;
     rows?: number;
     value?: string;
@@ -23,10 +25,10 @@ interface HighlightableTextareaProps extends Omit<React.TextareaHTMLAttributes<H
 const HighlightableTextarea = forwardRef<HighlightableTextareaRef, HighlightableTextareaProps>(
     (
         {
-            autoResize = true,
             className = '',
             defaultValue = '',
             dir = 'ltr',
+            enableAutoResize = true,
             lineHighlights = {},
             onChange,
             rows = 4,
@@ -48,14 +50,14 @@ const HighlightableTextarea = forwardRef<HighlightableTextareaRef, Highlightable
 
         const handleAutoResize = useCallback(
             (element: HTMLTextAreaElement) => {
-                if (!autoResize) return;
+                if (!enableAutoResize) {
+                    return;
+                }
 
-                element.style.height = 'auto';
-                const newHeight = element.scrollHeight;
-                element.style.height = `${newHeight}px`;
-                setTextareaHeight(newHeight);
+                autoResize(element);
+                setTextareaHeight(element.scrollHeight);
             },
-            [autoResize],
+            [enableAutoResize],
         );
 
         const handleChange = useCallback(
@@ -120,14 +122,14 @@ const HighlightableTextarea = forwardRef<HighlightableTextareaRef, Highlightable
 
         // Handle auto-resize on mount and value changes
         useEffect(() => {
-            if (textareaRef.current && autoResize) {
+            if (textareaRef.current && enableAutoResize) {
                 handleAutoResize(textareaRef.current);
             }
             syncStyles();
-        }, [currentValue, handleAutoResize, autoResize, syncStyles]);
+        }, [currentValue, handleAutoResize, enableAutoResize, syncStyles]);
 
         // Generate highlighted content
-        const generateHighlightedContent = useCallback(() => {
+        const highlightedContent = useMemo(() => {
             const lines = currentValue.split('\n');
 
             return lines.map((line, index) => {
@@ -135,21 +137,8 @@ const HighlightableTextarea = forwardRef<HighlightableTextareaRef, Highlightable
 
                 if (highlight) {
                     const isColorValue =
-                        highlight.startsWith('#') ||
-                        highlight.startsWith('rgb') ||
-                        highlight.startsWith('hsl') ||
-                        [
-                            'black',
-                            'blue',
-                            'gray',
-                            'green',
-                            'orange',
-                            'pink',
-                            'purple',
-                            'red',
-                            'white',
-                            'yellow',
-                        ].includes(highlight.toLowerCase());
+                        /^(#|rgb|hsl|var\(--.*?\)|transparent|currentColor|inherit|initial|unset)/i.test(highlight) ||
+                        /^[a-z]+$/i.test(highlight); // Assume single words are color names
 
                     return (
                         <div
@@ -181,7 +170,7 @@ const HighlightableTextarea = forwardRef<HighlightableTextareaRef, Highlightable
             height: textareaHeight ? `${textareaHeight}px` : undefined,
             minHeight: 'auto',
             position: 'relative',
-            resize: autoResize ? 'none' : 'vertical',
+            resize: enableAutoResize ? 'none' : 'vertical',
             width: '100%',
             zIndex: 2,
         };
@@ -213,7 +202,7 @@ const HighlightableTextarea = forwardRef<HighlightableTextareaRef, Highlightable
             <div ref={containerRef} style={containerStyle}>
                 {/* Highlight layer */}
                 <div aria-hidden="true" ref={highlightLayerRef} style={highlightLayerStyle}>
-                    {generateHighlightedContent()}
+                    {highlightedContent}
                 </div>
 
                 {/* Textarea */}

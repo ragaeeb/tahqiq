@@ -12,19 +12,19 @@ export type Book = {
 };
 
 /**
- * Combined state and actions for transcript management
+ * Combined state and actions for manuscript management
  */
 export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
 
 /**
- * Core state properties for transcript management
+ * Core state properties for manuscript management
  */
 export type ManuscriptStateCore = {
-    /** When the transcript store was created */
+    /** When the manuscript store was created */
     readonly createdAt: Date;
-    /** Array of currently selected segments */
+    /** Array of currently selected pages */
     readonly selectedPages: Page[];
-    /** Currently selected transcript volume number */
+    /** Currently selected manuscript volume number */
     readonly selectedVolume: number;
     readonly urlTemplate: string;
 
@@ -41,8 +41,9 @@ export type Page = {
 };
 
 /**
- * Possible status values for a transcript segment
- * - 'done': Segment has been reviewed and completed
+ * Possible status values for a manuscript page
+ * - 'done': Page has been reviewed and completed
+ * - 'review': Page needs review
  */
 export type PageStatus = 'done' | 'review';
 

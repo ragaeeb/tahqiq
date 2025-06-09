@@ -23,7 +23,7 @@ import { isEndingWithPunctuation, type Token } from 'paragrafs';
 
 export const standardizeHijriSymbol = (text: string) => {
     // Replace standalone ه with هـ when it appears after Arabic digits (0-9 or ٠-٩) with up to 1 space in between
-    return text.replace(/([\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
+    return text.replace(/([0-9\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
 };
 
 export const replaceDoubleBrackets = (text: string) => {
@@ -41,8 +41,12 @@ const replaceQuestionAndPeriod = (text: string) => {
  * @returns {string} - The modified text with proper spacing before brackets
  */
 export const ensureSpaceBeforeBrackets = (text: string): string => {
-    // eslint-disable-next-line sonarjs/slow-regex
-    return text.replace(/(\S) *(\([^)]*\))/g, '$1 $2');
+    return (
+        text
+            .replace(/(\S) {2,}(\([^)]*\))/g, '$1 $2') // Multiple spaces to one
+            // eslint-disable-next-line sonarjs/slow-regex
+            .replace(/(\S)(\([^)]*\))/g, '$1 $2')
+    ); // Add space if missing
 };
 
 const pastePipeline = [

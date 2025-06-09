@@ -9,7 +9,8 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 import { Button } from './ui/button';
 
 /**
- * Renders a toolbar for managing book pages.
+ * Renders a toolbar for manuscript management operations.
+ * Currently provides functionality to export the current manuscript state as a JSON file.
  */
 export default function BookToolbar() {
     return (
