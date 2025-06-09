@@ -41,12 +41,8 @@ const replaceQuestionAndPeriod = (text: string) => {
  * @returns {string} - The modified text with proper spacing before brackets
  */
 export const ensureSpaceBeforeBrackets = (text: string): string => {
-    return (
-        text
-            .replace(/(\S) {2,}(\([^)]*\))/g, '$1 $2') // Multiple spaces to one
-            // eslint-disable-next-line sonarjs/slow-regex
-            .replace(/(\S)(\([^)]*\))/g, '$1 $2')
-    ); // Add space if missing
+    // eslint-disable-next-line sonarjs/slow-regex
+    return text.replace(/(\S) *(\([^)]*\))/g, '$1 $2');
 };
 
 const pastePipeline = [
