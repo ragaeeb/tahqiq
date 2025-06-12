@@ -8,6 +8,7 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
 import { PreviewDialog } from './preview-dialog';
+import { SearchDialog } from './search-dialog';
 import { Button } from './ui/button';
 
 /**
@@ -54,6 +55,9 @@ export default function TranscriptToolbar() {
             <PreviewDialog>
                 <Button className="bg-blue-500">Preview</Button>
             </PreviewDialog>
+            <SearchDialog>
+                <Button variant="outline">🔍</Button>
+            </SearchDialog>
             <Button aria-label="Group and slice segments" onClick={groupAndSliceSegments}>
                 🔧 Group & Slice Segments
             </Button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
+import { applyGroundTruthToSegment, formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
 
 import type { Segment } from '@/stores/transcriptStore/types';
@@ -59,7 +59,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                 />
             </td>
 
-            <td className={`px-4 py-1 align-top`}>
+            <td className="px-4 py-1 align-top">
                 <Textarea
                     className={`overflow-hidden ${segment.status === 'done' ? 'bg-emerald-100' : 'bg-transparent'} border-none shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={segment.text}
@@ -74,6 +74,10 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                         e.preventDefault();
 
                         const text = preformatArabicText(e.clipboardData.getData('text'));
+
+                        const newSegment = applyGroundTruthToSegment(segment, text);
+                        console.log('segment', segment);
+                        console.log('newSegment', newSegment);
                         pasteText(e.target as HTMLTextAreaElement, text);
                     }}
                     onSelect={(e) => {

@@ -1,7 +1,8 @@
+import { isBalanced } from 'bitaboom';
 import { mapTextBlocksToParagraphs } from 'kokokor';
 
 import { correctReferences } from '@/lib/footnotes';
-import { isBalanced, preformatArabicText } from '@/lib/textUtils';
+import { preformatArabicText } from '@/lib/textUtils';
 
 import type { ManuscriptStateCore, Page, RawManuscript } from './types';
 
