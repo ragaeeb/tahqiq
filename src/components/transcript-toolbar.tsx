@@ -7,6 +7,7 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
 
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
+import { GroundingDialog } from './grounding-dialog';
 import { PreviewDialog } from './preview-dialog';
 import { SearchDialog } from './search-dialog';
 import { Button } from './ui/button';
@@ -35,6 +36,13 @@ export default function TranscriptToolbar() {
                     {formatSecondsToTimestamp(sortedSegments.at(-1)!.end)} (
                     {formatSecondsToTimestamp(Math.ceil(sortedSegments.at(-1)!.end - sortedSegments[0]!.start))})
                 </Button>
+            )}
+            {selectedSegments.length === 1 && (
+                <GroundingDialog segment={selectedSegments[0]!}>
+                    <Button className="bg-gray-100" onClick={mergeSegments}>
+                        ⚖️
+                    </Button>
+                </GroundingDialog>
             )}
             {selectedSegments.length > 0 && (
                 <Button aria-label="Delete selected segments" className="bg-red-200" onClick={removeSegments}>

@@ -38,7 +38,7 @@ export function SearchDialog({
                 <DialogHeader>
                     <DialogTitle>
                         <div className="flex items-center space-x-2">
-                            <Label htmlFor="groupBySegments">Group by Segments</Label>
+                            <Label>Search Segments</Label>
                         </div>
                     </DialogTitle>
                 </DialogHeader>

@@ -1,6 +1,6 @@
 'use client';
 
-import { applyGroundTruthToSegment, formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
+import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
 
 import type { Segment } from '@/stores/transcriptStore/types';
@@ -74,10 +74,6 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                         e.preventDefault();
 
                         const text = preformatArabicText(e.clipboardData.getData('text'));
-
-                        const newSegment = applyGroundTruthToSegment(segment, text);
-                        console.log('segment', segment);
-                        console.log('newSegment', newSegment);
                         pasteText(e.target as HTMLTextAreaElement, text);
                     }}
                     onSelect={(e) => {

@@ -82,7 +82,8 @@ export const useTranscriptStore = create<TranscriptState>((set, get) => {
         },
         toggleSegmentSelection: (segment, isSelected) => set((state) => applySelection(state, segment, isSelected)),
         transcripts: {},
-        updateSegment: (segmentStart, update) => set((state) => updateSegmentWithDiff(state, segmentStart, update)),
+        updateSegment: (segmentStart, update, forceRefresh) =>
+            set((state) => updateSegmentWithDiff(state, segmentStart, update, forceRefresh)),
         updateUrlsForTranscript: (urls) => set((state) => setUrlsForTranscript(state, urls)),
     };
 });
