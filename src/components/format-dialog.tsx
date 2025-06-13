@@ -5,14 +5,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-    Dialog,
     DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -26,11 +24,7 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
  *
  * @param children - The React node that triggers the dialog when interacted with.
  */
-export function FormatDialog({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
+export function FormatDialog() {
     const formatOptions = useTranscriptStore((state) => state.formatOptions);
     const setFormattingOptions = useTranscriptStore((state) => state.setFormattingOptions);
     const [maxSecondsPerSegment, setMaxSecondsPerSegment] = useState([formatOptions.maxSecondsPerSegment]);
@@ -42,85 +36,70 @@ export function FormatDialog({
     const [fillers, setFillers] = useState(formatOptions.fillers);
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="w-full">
-                <DialogHeader>
-                    <DialogTitle>Formatting Options</DialogTitle>
-                    <DialogDescription>Edit these values to change how the segments get chunked.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            checked={flipPunctuation}
-                            id="flipPunctuation"
-                            onCheckedChange={(isSelected) => setFlipPunctuation(Boolean(isSelected))}
-                        />
-                        <Label htmlFor="flipPunctuation">Flip English to Arabic Punctuation</Label>
-                    </div>
-
-                    <Label className="text-right">Max Seconds Per Segment: {maxSecondsPerSegment}s</Label>
-                    <Slider
-                        max={300}
-                        min={10}
-                        onValueChange={setMaxSecondsPerSegment}
-                        step={10}
-                        value={maxSecondsPerSegment}
+        <DialogContent className="w-full">
+            <DialogHeader>
+                <DialogTitle>Formatting Options</DialogTitle>
+                <DialogDescription>Edit these values to change how the segments get chunked.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        checked={flipPunctuation}
+                        id="flipPunctuation"
+                        onCheckedChange={(isSelected) => setFlipPunctuation(Boolean(isSelected))}
                     />
-
-                    <Label className="text-right">Minimum Words Per Segment: {minWordsPerSegment}</Label>
-                    <Slider
-                        max={30}
-                        min={1}
-                        onValueChange={setMinWordsPerSegment}
-                        step={1}
-                        value={minWordsPerSegment}
-                    />
-
-                    <Label className="text-right">Max Seconds Per Line: {maxSecondsPerLine}</Label>
-                    <Slider
-                        max={300}
-                        min={10}
-                        onValueChange={setMaxSecondsPerLine}
-                        step={10}
-                        value={maxSecondsPerLine}
-                    />
-
-                    <Label className="text-right">Silence Gap Threshold: {silenceGapThreshold}</Label>
-                    <Slider
-                        max={5}
-                        min={0.5}
-                        onValueChange={setSilenceGapThreshold}
-                        step={0.1}
-                        value={silenceGapThreshold}
-                    />
-
-                    <Label className="text-right">Hints:</Label>
-                    <TagInput dir="rtl" onChange={setHints} value={hints} />
-                    <Label className="text-right">Fillers:</Label>
-                    <TagInput dir="rtl" onChange={setFillers} value={fillers} />
+                    <Label htmlFor="flipPunctuation">Flip English to Arabic Punctuation</Label>
                 </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button
-                            onClick={() => {
-                                setFormattingOptions({
-                                    fillers,
-                                    flipPunctuation,
-                                    hints,
-                                    maxSecondsPerLine: maxSecondsPerLine[0]!,
-                                    maxSecondsPerSegment: maxSecondsPerSegment[0]!,
-                                    minWordsPerSegment: minWordsPerSegment[0]!,
-                                    silenceGapThreshold: silenceGapThreshold[0]!,
-                                });
-                            }}
-                            type="submit"
-                        >
-                            Apply
-                        </Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+
+                <Label className="text-right">Max Seconds Per Segment: {maxSecondsPerSegment}s</Label>
+                <Slider
+                    max={300}
+                    min={10}
+                    onValueChange={setMaxSecondsPerSegment}
+                    step={10}
+                    value={maxSecondsPerSegment}
+                />
+
+                <Label className="text-right">Minimum Words Per Segment: {minWordsPerSegment}</Label>
+                <Slider max={30} min={1} onValueChange={setMinWordsPerSegment} step={1} value={minWordsPerSegment} />
+
+                <Label className="text-right">Max Seconds Per Line: {maxSecondsPerLine}</Label>
+                <Slider max={300} min={10} onValueChange={setMaxSecondsPerLine} step={10} value={maxSecondsPerLine} />
+
+                <Label className="text-right">Silence Gap Threshold: {silenceGapThreshold}</Label>
+                <Slider
+                    max={5}
+                    min={0.5}
+                    onValueChange={setSilenceGapThreshold}
+                    step={0.1}
+                    value={silenceGapThreshold}
+                />
+
+                <Label className="text-right">Hints:</Label>
+                <TagInput dir="rtl" onChange={setHints} value={hints} />
+                <Label className="text-right">Fillers:</Label>
+                <TagInput dir="rtl" onChange={setFillers} value={fillers} />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button
+                        onClick={() => {
+                            setFormattingOptions({
+                                fillers,
+                                flipPunctuation,
+                                hints,
+                                maxSecondsPerLine: maxSecondsPerLine[0]!,
+                                maxSecondsPerSegment: maxSecondsPerSegment[0]!,
+                                minWordsPerSegment: minWordsPerSegment[0]!,
+                                silenceGapThreshold: silenceGapThreshold[0]!,
+                            });
+                        }}
+                        type="submit"
+                    >
+                        Apply
+                    </Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
     );
 }
