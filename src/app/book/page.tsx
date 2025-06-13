@@ -2,8 +2,6 @@
 
 import { useMemo } from 'react';
 
-import type { RawManuscript } from '@/stores/manuscriptStore/types';
-
 import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
 import PageItem from '@/components/page-item';
