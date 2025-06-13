@@ -247,9 +247,26 @@ export const removeSelectedSegments = (state: TranscriptState) => {
  * @param diff - Partial segment object containing properties to update
  * @returns Object with updated transcript segments
  */
-export const updateSegmentWithDiff = (state: TranscriptState, segmentStart: number, diff: Partial<Segment>) => {
+export const updateSegmentWithDiff = (
+    state: TranscriptState,
+    segmentStart: number,
+    diff: Partial<Segment>,
+    shouldForceRefresh?: boolean,
+) => {
     const transcript = selectCurrentTranscript(state)!;
-    const segments = transcript.segments.map((seg) => (seg.start === segmentStart ? { ...seg, ...diff } : seg));
+    const segments = transcript.segments.map((seg) => {
+        if (seg.start === segmentStart) {
+            const updated = { ...seg, ...diff };
+
+            if (shouldForceRefresh) {
+                updated.start += START_DIFF;
+            }
+
+            return updated;
+        }
+
+        return seg;
+    });
 
     return {
         transcripts: {

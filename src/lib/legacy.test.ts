@@ -102,10 +102,10 @@ describe('legacy', () => {
                         timestamp,
                         transcripts: [
                             {
+                                body: 'hello world',
                                 end: 10,
                                 start: 0,
-                                text: 'hello world',
-                                tokens: [
+                                words: [
                                     { end: 5, start: 0, text: 'hello' },
                                     { end: 10, start: 5, text: 'world' },
                                 ],

@@ -10,12 +10,15 @@ import {
     condenseEllipsis,
     condensePeriods,
     condenseUnderscores,
+    ensureSpaceBeforeBrackets,
     fixTrailingWow,
     normalizeSlashInReferences,
     normalizeSpaces,
     reduceMultilineBreaksToSingle,
+    removeRedundantPunctuation,
     removeSpaceInsideBrackets,
     removeTatwil,
+    replaceDoubleBracketsWithArrows,
     replaceEnglishPunctuationWithArabic,
     stripZeroWidthCharacters,
 } from 'bitaboom';
@@ -24,25 +27,6 @@ import { isEndingWithPunctuation, type Token } from 'paragrafs';
 export const standardizeHijriSymbol = (text: string) => {
     // Replace standalone ه with هـ when it appears after Arabic digits (0-9 or ٠-٩) with up to 1 space in between
     return text.replace(/([0-9\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
-};
-
-export const replaceDoubleBrackets = (text: string) => {
-    return text.replace(/\(\(\s?/g, '«').replace(/\s?\)\)/g, '»');
-};
-
-const replaceQuestionAndPeriod = (text: string) => {
-    return text.replace(/([؟!])[.،]/g, '$1');
-};
-
-/**
- * Ensures at most 1 space exists before any word before brackets.
- * Adds a space if there isn't one, or reduces multiple spaces to one.
- * @param {string} text - The input text to modify
- * @returns {string} - The modified text with proper spacing before brackets
- */
-export const ensureSpaceBeforeBrackets = (text: string): string => {
-    // eslint-disable-next-line sonarjs/slow-regex
-    return text.replace(/(\S) *(\([^)]*\))/g, '$1 $2');
 };
 
 const pastePipeline = [
@@ -60,10 +44,10 @@ const pastePipeline = [
     condenseUnderscores,
     condenseDashes,
     condenseAsterisks,
-    replaceDoubleBrackets,
+    replaceDoubleBracketsWithArrows,
     condensePeriods,
     condenseEllipsis,
-    replaceQuestionAndPeriod,
+    removeRedundantPunctuation,
     standardizeHijriSymbol,
     reduceMultilineBreaksToSingle,
     cleanMultilines,
@@ -116,39 +100,4 @@ export const findFirstTokenForText = (tokens: Token[], selectedText: string) => 
 
     // Return null if no matching starting word is found
     return null;
-};
-
-export const areQuotesBalanced = (str: string): boolean => {
-    let quoteCount = 0;
-    for (const char of str) {
-        if (char === '"') {
-            quoteCount++;
-        }
-    }
-    return quoteCount % 2 === 0;
-};
-
-const brackets = { '(': ')', '[': ']', '{': '}' };
-const openBrackets = new Set(['(', '[', '{']);
-const closeBrackets = new Set([')', ']', '}']);
-
-export const areBracketsBalanced = (str: string): boolean => {
-    const stack: string[] = [];
-
-    for (const char of str) {
-        if (openBrackets.has(char)) {
-            stack.push(char);
-        } else if (closeBrackets.has(char)) {
-            const lastOpen = stack.pop();
-            if (!lastOpen || brackets[lastOpen as keyof typeof brackets] !== char) {
-                return false;
-            }
-        }
-    }
-
-    return stack.length === 0;
-};
-
-export const isBalanced = (str: string): boolean => {
-    return areQuotesBalanced(str) && areBracketsBalanced(str);
 };

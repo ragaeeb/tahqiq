@@ -7,8 +7,11 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
 
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
+import { GroundingDialog } from './grounding-dialog';
 import { PreviewDialog } from './preview-dialog';
+import { SearchDialog } from './search-dialog';
 import { Button } from './ui/button';
+import { DialogTriggerButton } from './ui/dialog-trigger';
 
 /**
  * Renders a toolbar for managing transcript segments with actions such as merging, splitting, grouping, marking as completed, deleting, previewing, formatting, and downloading.
@@ -35,6 +38,14 @@ export default function TranscriptToolbar() {
                     {formatSecondsToTimestamp(Math.ceil(sortedSegments.at(-1)!.end - sortedSegments[0]!.start))})
                 </Button>
             )}
+            {selectedSegments.length === 1 && (
+                <DialogTriggerButton
+                    className="bg-gray-100"
+                    renderContent={() => <GroundingDialog segment={selectedSegments[0]!} />}
+                >
+                    ⚖️
+                </DialogTriggerButton>
+            )}
             {selectedSegments.length > 0 && (
                 <Button aria-label="Delete selected segments" className="bg-red-200" onClick={removeSegments}>
                     🗑️
@@ -48,12 +59,20 @@ export default function TranscriptToolbar() {
             {selectedToken && (
                 <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}
-            <FormatDialog>
-                <Button variant="outline">⚙️</Button>
-            </FormatDialog>
-            <PreviewDialog>
-                <Button className="bg-blue-500">Preview</Button>
-            </PreviewDialog>
+
+            <DialogTriggerButton
+                aria-label="Formatting options"
+                renderContent={() => <FormatDialog />}
+                variant="outline"
+            >
+                ⚙️
+            </DialogTriggerButton>
+            <DialogTriggerButton aria-label="Preview" className="bg-blue-500" renderContent={() => <PreviewDialog />}>
+                Preview
+            </DialogTriggerButton>
+            <DialogTriggerButton aria-label="Search" renderContent={() => <SearchDialog />} variant="outline">
+                🔍
+            </DialogTriggerButton>
             <Button aria-label="Group and slice segments" onClick={groupAndSliceSegments}>
                 🔧 Group & Slice Segments
             </Button>

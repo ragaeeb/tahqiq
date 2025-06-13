@@ -59,7 +59,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                 />
             </td>
 
-            <td className={`px-4 py-1 align-top`}>
+            <td className="px-4 py-1 align-top">
                 <Textarea
                     className={`overflow-hidden ${segment.status === 'done' ? 'bg-emerald-100' : 'bg-transparent'} border-none shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={segment.text}

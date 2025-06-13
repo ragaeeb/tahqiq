@@ -6,7 +6,7 @@ export type LegacySegment = {
     body: string;
     end: number;
     start: number;
-    words: Token[];
+    words?: Token[];
 };
 
 /**

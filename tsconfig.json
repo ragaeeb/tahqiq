@@ -3,12 +3,10 @@
         "verbatimModuleSyntax": true,
         "moduleDetection": "force",
         "skipDefaultLibCheck": true,
-        "noUncheckedIndexedAccess": true,
-        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": false,
         "target": "ESNext",
         "lib": ["dom", "dom.iterable", "esnext"],
         "skipLibCheck": true,
-        "strict": true,
         "noEmit": true,
         "esModuleInterop": true,
         "module": "esnext",
@@ -25,7 +23,8 @@
         "paths": {
             "@/*": ["./src/*"]
         },
-        "allowJs": true
+        "allowJs": true,
+        "strict": true
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
     "exclude": ["node_modules"]

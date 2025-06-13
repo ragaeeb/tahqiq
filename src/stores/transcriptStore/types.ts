@@ -174,8 +174,9 @@ type TranscriptActions = {
      * Updates properties of a specific segment
      * @param segmentStart Start time of the segment to update
      * @param update Partial segment object with properties to update
+     * @param shouldForceRefresh If this is true, the segment will be re-rendered.
      */
-    updateSegment: (segmentStart: number, update: Partial<Segment>) => void;
+    updateSegment: (segmentStart: number, update: Partial<Segment>, shouldForceRefresh?: boolean) => void;
 
     /**
      * Updates the urls property for this current transcript.

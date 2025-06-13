@@ -5,9 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type JsonObject = Record<string, Record<number | string, unknown> | unknown[]>;
 
 type Props = {
+    /** Comma separated string of extensions */
+    allowedExtensions?: string;
     description?: string;
     maxFiles?: number;
-    onFile: (map: Record<string, JsonObject>) => void;
+    onFiles: (map: Record<string, JsonObject | string>) => void;
     title?: string;
 };
 
@@ -18,12 +20,13 @@ type Props = {
  * @param onFile - Callback invoked with the parsed JSON object when a valid file is dropped.
  *
  * @remark
- * Only accepts exactly one file with a `.json` extension. If multiple or non-JSON files are dropped, the callback is not invoked.
+ * Accepts `.json` extension or the allowed extensions.
  */
 export default function JsonDropZone({
+    allowedExtensions = '.json',
     description = 'Drop your transcript JSON file to start editing',
     maxFiles = 1,
-    onFile,
+    onFiles: onFile,
     title = 'Drag & Drop JSON file',
 }: Props) {
     const [isDragging, setIsDragging] = useState(false);
@@ -51,17 +54,22 @@ export default function JsonDropZone({
             e.preventDefault();
             setIsDragging(false);
 
-            const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.name.endsWith('.json'));
+            const normalizedAllowedExtensions = allowedExtensions.split(',').map((e) => e.trim().toLowerCase());
 
-            if (files.length !== maxFiles) {
+            const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
+                normalizedAllowedExtensions.some((ext) => f.name.toLowerCase().endsWith(ext)),
+            );
+
+            if (files.length === 0 || files.length > maxFiles) {
                 return;
             }
 
             try {
-                const result: Record<string, JsonObject> = {};
+                const result: Record<string, JsonObject | string> = {};
 
                 for (const file of files) {
-                    const data = JSON.parse(await file.text());
+                    const text = await file.text();
+                    const data = file.name.toLowerCase().endsWith('.json') ? JSON.parse(text) : text;
                     result[file.name] = data;
                 }
 
@@ -70,7 +78,7 @@ export default function JsonDropZone({
                 console.error('Error parsing JSON file:', error);
             }
         },
-        [onFile, maxFiles],
+        [onFile, maxFiles, allowedExtensions],
     );
 
     useEffect(() => {

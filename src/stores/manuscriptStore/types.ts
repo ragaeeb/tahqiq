@@ -1,3 +1,5 @@
+import { type BoundingBox, type Observation, type Size, type SuryaPageOcrResult } from 'kokokor';
+
 export type Book = {
     contractVersion: string;
     createdAt: Date;
@@ -47,14 +49,26 @@ export type Page = {
  */
 export type PageStatus = 'done' | 'review';
 
+export type RawInputFiles = {
+    'batch_output.json': Record<string, MacOCR>;
+    'page_size.txt': string;
+    'structures.json': { result: Record<string, StructureMetadata> };
+    'surya.json': Record<string, SuryaPageOcrResult[]>;
+};
+
 export type RawManuscript = {
-    contractVersion: string;
     createdAt: Date;
     data: {
         blocks: TextBlock[];
         page: number;
     }[];
+    metadata: {
+        image: Size;
+        pdf: Size;
+    };
 };
+
+type MacOCR = { observations: Observation[] };
 
 /**
  * Action functions available for transcript manipulation
@@ -64,7 +78,7 @@ type ManuscriptActions = {
      * Initializes the store with manuscript data
      * @param data Object containing manuscript information
      */
-    init: (data: RawManuscript) => void;
+    init: (fileNameToData: RawInputFiles) => void;
 
     /**
      * Sets selection state for all pages
@@ -73,6 +87,12 @@ type ManuscriptActions = {
     selectAllPages: (isSelected: boolean) => void;
 
     setUrlTemplate: (template: string) => void;
+};
+
+type StructureMetadata = {
+    readonly dpi: BoundingBox;
+    readonly horizontal_lines?: BoundingBox[];
+    readonly rectangles?: BoundingBox[];
 };
 
 type TextBlock = {

@@ -1,11 +1,82 @@
-import { mapTextBlocksToParagraphs } from 'kokokor';
+import { isBalanced } from 'bitaboom';
+import {
+    alignAndAdjustObservations,
+    buildTextBlocksFromOCR,
+    calculateDPI,
+    mapSuryaBoundingBox,
+    mapSuryaPageResultToObservations,
+    mapTextBlocksToParagraphs,
+} from 'kokokor';
 
 import { correctReferences } from '@/lib/footnotes';
-import { isBalanced, preformatArabicText } from '@/lib/textUtils';
+import { preformatArabicText } from '@/lib/textUtils';
 
-import type { ManuscriptStateCore, Page, RawManuscript } from './types';
+import type { ManuscriptStateCore, Page, RawInputFiles, RawManuscript } from './types';
 
+import { assertHasRequiredFiles } from './guards';
 import { selectCurrentPages } from './selectors';
+
+const compileRawManuscript = (fileNameToData: RawInputFiles): RawManuscript => {
+    assertHasRequiredFiles(fileNameToData);
+
+    const {
+        ['batch_output.json']: fileToObservations,
+        ['page_size.txt']: pageSizeTxt,
+        ['structures.json']: { result: structures },
+        ['surya.json']: suryaJson,
+    } = fileNameToData;
+
+    const [surya] = Object.values(suryaJson);
+    const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
+
+    const result = Object.entries(fileToObservations)
+        .map(([imageFile, macOCRData]) => {
+            const pageNumber = parseInt(imageFile.split('.')[0]!);
+            const suryaPage = surya.find((s) => s.page === pageNumber);
+
+            if (!suryaPage) {
+                throw new Error(`No Surya page data found for page ${pageNumber} (file: ${imageFile})`);
+            }
+
+            const { height: imageHeight, width: imageWidth } = mapSuryaBoundingBox(suryaPage.image_bbox);
+            const { x: dpiX, y: dpiY } = calculateDPI(
+                { height: imageHeight, width: imageWidth },
+                { height: pdfHeight!, width: pdfWidth! },
+            );
+
+            const { dpi, horizontal_lines: lines, rectangles } = structures[imageFile];
+            const alternateObservations = mapSuryaPageResultToObservations(suryaPage);
+
+            const blocks = buildTextBlocksFromOCR(
+                {
+                    alternateObservations: alignAndAdjustObservations(alternateObservations, {
+                        dpiX,
+                        dpiY,
+                        imageWidth: imageWidth,
+                    }).observations,
+                    dpi,
+                    ...(lines && { horizontalLines: lines }),
+                    ...(rectangles && { rectangles }),
+                    observations: macOCRData.observations,
+                },
+                { log: console.log, typoSymbols: ['ﷺ'] },
+            );
+
+            return { blocks, ...(lines && { lines }), ...(rectangles && { rectangles }), page: pageNumber };
+        })
+        .toSorted((a, b) => a.page - b.page);
+
+    const [struct] = Object.values(structures);
+
+    return {
+        createdAt: new Date(),
+        data: result,
+        metadata: {
+            image: { height: struct!.dpi.height, width: struct!.dpi.width },
+            pdf: { height: pdfHeight!, width: pdfWidth! },
+        },
+    };
+};
 
 /**
  * Initializes the manuscript store with provided data
@@ -14,7 +85,8 @@ import { selectCurrentPages } from './selectors';
  * @param manuscript - Raw manuscript data containing page information
  * @returns Initial state object for the manuscript store
  */
-export const initStore = (manuscript: RawManuscript) => {
+export const initStore = (fileNameToData: RawInputFiles) => {
+    const manuscript = compileRawManuscript(fileNameToData);
     const pages: Page[] = manuscript.data.map(({ blocks, page }) => {
         const correctedBlocks = correctReferences(blocks);
         let text = mapTextBlocksToParagraphs(correctedBlocks, '_');
