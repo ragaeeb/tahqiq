@@ -10,7 +10,18 @@ import { roundToDecimal } from './time';
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
     if ((input as TranscriptSeries).contractVersion?.startsWith('v1.')) {
-        return input;
+        const data = input as TranscriptSeries;
+
+        return {
+            ...data,
+            transcripts: data.transcripts.map((t) => ({
+                ...t,
+                segments: t.segments.map((s) => ({
+                    ...s,
+                    tokens: s.tokens || estimateSegmentFromToken(s).tokens,
+                })),
+            })),
+        };
     }
 
     if ((input as TranscriptSeriesV0).contractVersion?.startsWith('v0.')) {
