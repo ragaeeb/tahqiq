@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/ragaeeb/tahqiq/compare/v1.0.0...v1.1.0) (2025-06-13)
+
+
+### Features
+
+* **search:** Implement search, legacy formats, ground truth updates ([#19](https://github.com/ragaeeb/tahqiq/issues/19)) ([9049e42](https://github.com/ragaeeb/tahqiq/commit/9049e421c9a158af2448fd4d1d109ff1fd8b98d9)), closes [#15](https://github.com/ragaeeb/tahqiq/issues/15) [#16](https://github.com/ragaeeb/tahqiq/issues/16) [#17](https://github.com/ragaeeb/tahqiq/issues/17) [#18](https://github.com/ragaeeb/tahqiq/issues/18)
+
 # 1.0.0 (2025-06-09)
 
 
