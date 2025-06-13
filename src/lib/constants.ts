@@ -1,3 +1,5 @@
+import type { RawInputFiles } from '@/stores/manuscriptStore/types';
+
 export const DEFAULT_HINTS = [
     'احسن الله اليكم',
     'جزاك الله',
@@ -21,3 +23,10 @@ export const DEFAULT_SILENCE_GAP_THRESHOLD = 2;
 export const TRANSCRIPT_CONTRACT_LATEST = 'v1.0';
 
 export const BOOK_CONTRACT_LATEST = 'v1.0';
+
+export const REQUIRED_RAW_INPUT_FILES = [
+    'batch_output.json',
+    'structures.json',
+    'surya.json',
+    'page_size.txt',
+] as const satisfies readonly (keyof RawInputFiles)[];

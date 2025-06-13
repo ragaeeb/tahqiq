@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 
+import type { RawInputFiles } from '@/stores/manuscriptStore/types';
+
 import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
 import PageItem from '@/components/page-item';
@@ -36,7 +38,7 @@ export default function Book() {
                             allowedExtensions=".json,.txt"
                             description="Drag and drop the manuscript"
                             maxFiles={4}
-                            onFiles={initManuscript}
+                            onFiles={(map) => initManuscript(map as unknown as RawInputFiles)}
                         />
                     </div>
                 </div>

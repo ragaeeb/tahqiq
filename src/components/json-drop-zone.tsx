@@ -57,7 +57,7 @@ export default function JsonDropZone({
             const normalizedAllowedExtensions = allowedExtensions.split(',').map((e) => e.trim().toLowerCase());
 
             const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
-                normalizedAllowedExtensions.some((ext) => f.name.endsWith(ext)),
+                normalizedAllowedExtensions.some((ext) => f.name.toLowerCase().endsWith(ext)),
             );
 
             if (files.length === 0 || files.length > maxFiles) {

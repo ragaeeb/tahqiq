@@ -13,13 +13,21 @@ import { preformatArabicText } from '@/lib/textUtils';
 
 import type { ManuscriptStateCore, Page, RawInputFiles, RawManuscript } from './types';
 
+import { assertHasRequiredFiles } from './guards';
 import { selectCurrentPages } from './selectors';
 
 const compileRawManuscript = (fileNameToData: RawInputFiles): RawManuscript => {
-    const fileToObservations = fileNameToData['batch_output.json'];
-    const structures = fileNameToData['structures.json'].result;
-    const [surya] = Object.values(fileNameToData['surya.json']);
-    const [pdfWidth, pdfHeight] = fileNameToData['page_size.txt'].trim().split(' ').map(Number);
+    assertHasRequiredFiles(fileNameToData);
+
+    const {
+        ['batch_output.json']: fileToObservations,
+        ['page_size.txt']: pageSizeTxt,
+        ['structures.json']: { result: structures },
+        ['surya.json']: suryaJson,
+    } = fileNameToData;
+
+    const [surya] = Object.values(suryaJson);
+    const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
 
     const result = Object.entries(fileToObservations)
         .map(([imageFile, macOCRData]) => {
