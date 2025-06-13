@@ -5,9 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type JsonObject = Record<string, Record<number | string, unknown> | unknown[]>;
 
 type Props = {
+    /** Comma separated string of extensions */
+    allowedExtensions?: string;
     description?: string;
     maxFiles?: number;
-    onFile: (map: Record<string, JsonObject>) => void;
+    onFile: (map: Record<string, JsonObject | string>) => void;
     title?: string;
 };
 
@@ -21,6 +23,7 @@ type Props = {
  * Only accepts exactly one file with a `.json` extension. If multiple or non-JSON files are dropped, the callback is not invoked.
  */
 export default function JsonDropZone({
+    allowedExtensions = '.json',
     description = 'Drop your transcript JSON file to start editing',
     maxFiles = 1,
     onFile,
@@ -51,17 +54,20 @@ export default function JsonDropZone({
             e.preventDefault();
             setIsDragging(false);
 
-            const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.name.endsWith('.json'));
+            const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
+                allowedExtensions.split(',').some((ext) => f.name.endsWith(ext)),
+            );
 
             if (files.length !== maxFiles) {
                 return;
             }
 
             try {
-                const result: Record<string, JsonObject> = {};
+                const result: Record<string, JsonObject | string> = {};
 
                 for (const file of files) {
-                    const data = JSON.parse(await file.text());
+                    const text = await file.text();
+                    const data = file.name.endsWith('.json') ? JSON.parse(text) : text;
                     result[file.name] = data;
                 }
 
@@ -70,7 +76,7 @@ export default function JsonDropZone({
                 console.error('Error parsing JSON file:', error);
             }
         },
-        [onFile, maxFiles],
+        [onFile, maxFiles, allowedExtensions],
     );
 
     useEffect(() => {

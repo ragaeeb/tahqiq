@@ -1,3 +1,5 @@
+import type { Size } from 'kokokor';
+
 export type Book = {
     contractVersion: string;
     createdAt: Date;
@@ -48,12 +50,15 @@ export type Page = {
 export type PageStatus = 'done' | 'review';
 
 export type RawManuscript = {
-    contractVersion: string;
     createdAt: Date;
     data: {
         blocks: TextBlock[];
         page: number;
     }[];
+    metadata: {
+        image: Size;
+        pdf: Size;
+    };
 };
 
 /**
@@ -64,7 +69,7 @@ type ManuscriptActions = {
      * Initializes the store with manuscript data
      * @param data Object containing manuscript information
      */
-    init: (data: RawManuscript) => void;
+    init: (fileNameToData: Record<string, any>) => void;
 
     /**
      * Sets selection state for all pages

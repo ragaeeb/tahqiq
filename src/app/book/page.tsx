@@ -35,11 +35,10 @@ export default function Book() {
                 <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                     <div className="flex flex-col w-full max-w">
                         <JsonDropZone
+                            allowedExtensions=".json,.txt"
                             description="Drag and drop the manuscript"
-                            onFile={(fileNameToData) => {
-                                const data = Object.values(fileNameToData)[0]!;
-                                initManuscript(data as unknown as RawManuscript);
-                            }}
+                            maxFiles={4}
+                            onFile={initManuscript}
                         />
                     </div>
                 </div>
