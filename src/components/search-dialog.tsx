@@ -17,11 +17,9 @@ type SearchResult = {
 };
 
 /**
- * Displays a dialog for previewing, editing, copying, and translating a formatted transcript.
+ * Displays a dialog for searching a transcript.
  *
  * The dialog presents the current transcript with configurable formatting, supports right-to-left text direction for Arabic content, and provides options to copy the text or translate it via an API.
- *
- * @param children - The element that triggers the dialog when interacted with.
  */
 export function SearchDialog() {
     const [segmentResults, setSegmentResults] = useState<SearchResult[]>([]);
@@ -40,19 +38,24 @@ export function SearchDialog() {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        const [input] = e.target as any;
+                        const data = new FormData(e.currentTarget);
+                        const query = (data.get('query') as string).trim();
 
-                        const { transcripts } = useTranscriptStore.getState();
-                        const matched = Object.values(transcripts).flatMap((t) =>
-                            t.segments
-                                .filter((s) => s.text.includes(input.value))
-                                .map((s) => ({ start: s.start, text: s.text, volume: t.volume })),
-                        );
+                        if (query) {
+                            const { transcripts } = useTranscriptStore.getState();
+                            const matched = Object.values(transcripts).flatMap((t) =>
+                                t.segments
+                                    .filter((s) => s.text.includes(query))
+                                    .map((s) => ({ start: s.start, text: s.text, volume: t.volume })),
+                            );
 
-                        setSegmentResults(matched);
+                            setSegmentResults(matched);
+                        } else {
+                            setSegmentResults([]);
+                        }
                     }}
                 >
-                    <Input dir="rtl" />
+                    <Input dir="rtl" name="query" />
                 </form>
                 {segmentResults.length > 0 && (
                     <table className="w-full table-auto divide-y divide-gray-200">
@@ -70,7 +73,7 @@ export function SearchDialog() {
                         <tbody className="divide-y divide-gray-200">
                             {segmentResults.map((s) => (
                                 <tr className="px-2 py-1 space-y-1 text-xs align-top" key={s.volume + '/' + s.start}>
-                                    <th aria-label="Volume" className="px-2 py-1 w-36 text-left font-normal">
+                                    <td aria-label="Volume" className="px-2 py-1 w-36 text-left">
                                         <Button
                                             onClick={() => {
                                                 setSelectedPart(s.volume);
@@ -79,13 +82,13 @@ export function SearchDialog() {
                                         >
                                             {s.volume}
                                         </Button>
-                                    </th>
-                                    <th aria-label="Volume" className="px-2 py-1 w-36 text-left font-normal">
+                                    </td>
+                                    <td aria-label="Volume" className="px-2 py-1 w-36 text-left">
                                         {formatSecondsToTimestamp(s.start)}
-                                    </th>
-                                    <th aria-label="Text" className="px-4 py-1 text-right font-normal">
+                                    </td>
+                                    <td aria-label="Text" className="px-4 py-1 text-right">
                                         {s.text}
-                                    </th>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

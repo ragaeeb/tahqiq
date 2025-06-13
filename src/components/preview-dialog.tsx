@@ -22,8 +22,6 @@ import { Label } from './ui/label';
  * Displays a dialog for previewing, editing, copying, and translating a formatted transcript.
  *
  * The dialog presents the current transcript with configurable formatting, supports right-to-left text direction for Arabic content, and provides options to copy the text or translate it via an API.
- *
- * @param children - The element that triggers the dialog when interacted with.
  */
 export function PreviewDialog() {
     const transcript = useTranscriptStore(selectCurrentTranscript)!;
@@ -31,7 +29,6 @@ export function PreviewDialog() {
     const [text, setText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isGroupingBySegments, setIsGroupingBySegments] = useState(false);
-    console.log('preview');
 
     useEffect(() => {
         if (isGroupingBySegments) {

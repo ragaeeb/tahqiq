@@ -36,7 +36,7 @@ export default function Transcript() {
         return (
             <div className="flex flex-col w-full max-w">
                 <JsonDropZone
-                    onFile={(fileNameToData) =>
+                    onFiles={(fileNameToData) =>
                         initTranscripts(adaptLegacyTranscripts(Object.values(fileNameToData)[0]))
                     }
                 />

@@ -9,7 +9,7 @@ type Props = {
     allowedExtensions?: string;
     description?: string;
     maxFiles?: number;
-    onFile: (map: Record<string, JsonObject | string>) => void;
+    onFiles: (map: Record<string, JsonObject | string>) => void;
     title?: string;
 };
 
@@ -20,13 +20,13 @@ type Props = {
  * @param onFile - Callback invoked with the parsed JSON object when a valid file is dropped.
  *
  * @remark
- * Only accepts exactly one file with a `.json` extension. If multiple or non-JSON files are dropped, the callback is not invoked.
+ * Accepts `.json` extension or the allowed extensions.
  */
 export default function JsonDropZone({
     allowedExtensions = '.json',
     description = 'Drop your transcript JSON file to start editing',
     maxFiles = 1,
-    onFile,
+    onFiles: onFile,
     title = 'Drag & Drop JSON file',
 }: Props) {
     const [isDragging, setIsDragging] = useState(false);
@@ -54,11 +54,13 @@ export default function JsonDropZone({
             e.preventDefault();
             setIsDragging(false);
 
+            const normalizedAllowedExtensions = allowedExtensions.split(',').map((e) => e.trim().toLowerCase());
+
             const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
-                allowedExtensions.split(',').some((ext) => f.name.endsWith(ext)),
+                normalizedAllowedExtensions.some((ext) => f.name.endsWith(ext)),
             );
 
-            if (files.length !== maxFiles) {
+            if (files.length === 0 || files.length > maxFiles) {
                 return;
             }
 
@@ -67,7 +69,7 @@ export default function JsonDropZone({
 
                 for (const file of files) {
                     const text = await file.text();
-                    const data = file.name.endsWith('.json') ? JSON.parse(text) : text;
+                    const data = file.name.toLowerCase().endsWith('.json') ? JSON.parse(text) : text;
                     result[file.name] = data;
                 }
 

@@ -7,6 +7,7 @@
  * @param text - The string content to be pasted
  */
 export const pasteText = (input: HTMLTextAreaElement, text: string) => {
+    input.value = text;
     const isSuccess = document.execCommand?.('insertText', false, text);
 
     if (!isSuccess && typeof input.setRangeText === 'function') {

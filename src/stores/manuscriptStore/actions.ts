@@ -1,36 +1,25 @@
 import { isBalanced } from 'bitaboom';
 import {
     alignAndAdjustObservations,
-    type BoundingBox,
     buildTextBlocksFromOCR,
     calculateDPI,
     mapSuryaBoundingBox,
     mapSuryaPageResultToObservations,
     mapTextBlocksToParagraphs,
-    type Observation,
-    type SuryaPageOcrResult,
 } from 'kokokor';
 
 import { correctReferences } from '@/lib/footnotes';
 import { preformatArabicText } from '@/lib/textUtils';
 
-import type { ManuscriptStateCore, Page, RawManuscript } from './types';
+import type { ManuscriptStateCore, Page, RawInputFiles, RawManuscript } from './types';
 
 import { selectCurrentPages } from './selectors';
 
-type MacOCR = { observations: Observation[] };
-
-type Metadata = {
-    readonly dpi: BoundingBox;
-    readonly horizontal_lines?: BoundingBox[];
-    readonly rectangles?: BoundingBox[];
-};
-
-const compileRawManuscript = (fileNameToData: Record<string, any>): RawManuscript => {
-    const fileToObservations: Record<string, MacOCR> = fileNameToData['batch_output.json'];
-    const structures: Record<string, Metadata> = fileNameToData['structures.json'].result;
-    const [surya] = Object.values(fileNameToData['surya.json']) as SuryaPageOcrResult[][];
-    const [pdfWidth, pdfHeight] = (fileNameToData['page_size.txt'] as string).trim().split(' ').map(Number);
+const compileRawManuscript = (fileNameToData: RawInputFiles): RawManuscript => {
+    const fileToObservations = fileNameToData['batch_output.json'];
+    const structures = fileNameToData['structures.json'].result;
+    const [surya] = Object.values(fileNameToData['surya.json']);
+    const [pdfWidth, pdfHeight] = fileNameToData['page_size.txt'].trim().split(' ').map(Number);
 
     const result = Object.entries(fileToObservations)
         .map(([imageFile, macOCRData]) => {
@@ -88,7 +77,7 @@ const compileRawManuscript = (fileNameToData: Record<string, any>): RawManuscrip
  * @param manuscript - Raw manuscript data containing page information
  * @returns Initial state object for the manuscript store
  */
-export const initStore = (fileNameToData: Record<string, any>) => {
+export const initStore = (fileNameToData: RawInputFiles) => {
     const manuscript = compileRawManuscript(fileNameToData);
     const pages: Page[] = manuscript.data.map(({ blocks, page }) => {
         const correctedBlocks = correctReferences(blocks);

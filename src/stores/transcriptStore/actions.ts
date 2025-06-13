@@ -251,14 +251,14 @@ export const updateSegmentWithDiff = (
     state: TranscriptState,
     segmentStart: number,
     diff: Partial<Segment>,
-    forceRefresh?: boolean,
+    shouldForceRefresh?: boolean,
 ) => {
     const transcript = selectCurrentTranscript(state)!;
     const segments = transcript.segments.map((seg) => {
         if (seg.start === segmentStart) {
             const updated = { ...seg, ...diff };
 
-            if (forceRefresh) {
+            if (shouldForceRefresh) {
                 updated.start += START_DIFF;
             }
 

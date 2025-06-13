@@ -21,8 +21,6 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
  * Renders a dialog interface for editing transcript formatting options.
  *
  * Displays controls for adjusting segment timing, word count, punctuation flipping, hints, and fillers. When the user applies changes, the updated formatting options are saved to the global transcript store.
- *
- * @param children - The React node that triggers the dialog when interacted with.
  */
 export function FormatDialog() {
     const formatOptions = useTranscriptStore((state) => state.formatOptions);

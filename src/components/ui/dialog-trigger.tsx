@@ -3,9 +3,9 @@
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger as RadixDialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogTrigger as RadixDialogTrigger } from '@/components/ui/dialog';
 
-interface DialogTriggerButtonProps extends Omit<React.ComponentProps<typeof Button>, 'onClick'> {
+interface DialogTriggerButtonProps extends React.ComponentProps<typeof Button> {
     /**
      * Optional default open state for uncontrolled usage
      */
@@ -78,8 +78,7 @@ export function DialogTrigger({ defaultOpen, onOpenChange, open, renderContent, 
     return (
         <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
             <RadixDialogTrigger asChild>{trigger}</RadixDialogTrigger>
-            {/* Only render content when dialog is open - lazy loading! */}
-            {dialogOpen && <DialogContent>{renderContent()}</DialogContent>}
+            {dialogOpen && renderContent()}
         </Dialog>
     );
 }
@@ -117,9 +116,13 @@ export function DialogTriggerButton({
     return (
         <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
             <RadixDialogTrigger asChild>
-                <Button {...buttonProps} />
+                <Button
+                    {...buttonProps}
+                    onClick={(e) => {
+                        buttonProps.onClick?.(e);
+                    }}
+                />
             </RadixDialogTrigger>
-            {/* Only render content when dialog is open - lazy loading! */}
             {dialogOpen && renderContent()}
         </Dialog>
     );

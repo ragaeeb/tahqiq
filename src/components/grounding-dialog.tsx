@@ -63,15 +63,15 @@ export function GroundingDialog({
                         <tbody className="divide-y divide-gray-200">
                             {groundedSegment.tokens.map((s) => (
                                 <tr className="px-2 py-1 space-y-1 text-xs align-top" key={s.start}>
-                                    <th aria-label="Volume" className="px-2 py-1 w-36 text-left font-normal">
+                                    <td aria-label="Volume" className="px-2 py-1 w-36 text-left font-normal">
                                         {formatSecondsToTimestamp(s.start)}
-                                    </th>
-                                    <th
+                                    </td>
+                                    <td
                                         aria-label="Text"
                                         className={`px-4 py-1 text-right font-normal ${s.isUnknown && 'bg-red-100'}`}
                                     >
                                         {s.text}
-                                    </th>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

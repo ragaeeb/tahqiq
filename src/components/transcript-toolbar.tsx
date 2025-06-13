@@ -60,13 +60,17 @@ export default function TranscriptToolbar() {
                 <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
             )}
 
-            <DialogTriggerButton renderContent={() => <FormatDialog />} variant="outline">
+            <DialogTriggerButton
+                aria-label="Formatting options"
+                renderContent={() => <FormatDialog />}
+                variant="outline"
+            >
                 ⚙️
             </DialogTriggerButton>
-            <DialogTriggerButton className="bg-blue-500" renderContent={() => <PreviewDialog />}>
+            <DialogTriggerButton aria-label="Preview" className="bg-blue-500" renderContent={() => <PreviewDialog />}>
                 Preview
             </DialogTriggerButton>
-            <DialogTriggerButton renderContent={() => <SearchDialog />} variant="outline">
+            <DialogTriggerButton aria-label="Search" renderContent={() => <SearchDialog />} variant="outline">
                 🔍
             </DialogTriggerButton>
             <Button aria-label="Group and slice segments" onClick={groupAndSliceSegments}>

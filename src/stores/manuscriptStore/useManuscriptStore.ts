@@ -14,12 +14,12 @@ export const useManuscriptStore = create<ManuscriptState>((set) => {
     return {
         createdAt: new Date(),
         init: (data) => set(() => initStore(data)),
-        selectAllPages: (isSelected: boolean) => {
+        selectAllPages: (isSelected) => {
             return set((state) => selectAllPages(state, isSelected));
         },
         selectedPages: [],
         selectedVolume: 0,
-        setUrlTemplate: (urlTemplate: string) => {
+        setUrlTemplate: (urlTemplate) => {
             return set(() => ({ urlTemplate }));
         },
         urlTemplate: '',
