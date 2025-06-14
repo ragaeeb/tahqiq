@@ -6,15 +6,29 @@ import {
     mapSuryaBoundingBox,
     mapSuryaPageResultToObservations,
     mapTextBlocksToParagraphs,
+    type Size,
+    type TextBlock,
 } from 'kokokor';
 
 import { correctReferences } from '@/lib/footnotes';
 import { preformatArabicText } from '@/lib/textUtils';
 
-import type { ManuscriptStateCore, Page, RawInputFiles, RawManuscript } from './types';
+import type { Page } from '../bookStore/types';
+import type { RawInputFiles, Sheet } from './types';
 
 import { assertHasRequiredFiles } from './guards';
-import { selectCurrentPages } from './selectors';
+
+type RawManuscript = {
+    createdAt: Date;
+    data: {
+        blocks: TextBlock[];
+        page: number;
+    }[];
+    metadata: {
+        image: Size;
+        pdf: Size;
+    };
+};
 
 const compileRawManuscript = (fileNameToData: RawInputFiles): RawManuscript => {
     assertHasRequiredFiles(fileNameToData);
@@ -78,14 +92,7 @@ const compileRawManuscript = (fileNameToData: RawInputFiles): RawManuscript => {
     };
 };
 
-/**
- * Initializes the manuscript store with provided data
- * Organizes manuscripts by volume for easier access
- *
- * @param manuscript - Raw manuscript data containing page information
- * @returns Initial state object for the manuscript store
- */
-export const initStore = (fileNameToData: RawInputFiles) => {
+const initStore2 = (fileNameToData: RawInputFiles) => {
     const manuscript = compileRawManuscript(fileNameToData);
     const pages: Page[] = manuscript.data.map(({ blocks, page }) => {
         const correctedBlocks = correctReferences(blocks);
@@ -103,19 +110,68 @@ export const initStore = (fileNameToData: RawInputFiles) => {
     });
 
     return {
-        createdAt: manuscript.createdAt,
-        selectedVolume: 1,
-        volumeToPages: { 1: pages },
+        sheets: [],
     };
 };
 
 /**
- * Selects all pages in the current manuscript or clears selection
+ * Initializes the manuscript store with provided data
+ * Organizes manuscripts by volume for easier access
  *
- * @param state - Current manuscript state
- * @param isSelected - Boolean indicating whether to select all or clear selection
- * @returns Object with updated selection state
+ * @param manuscript - Raw manuscript data containing page information
+ * @returns Initial state object for the manuscript store
  */
-export const selectAllPages = (state: ManuscriptStateCore, isSelected: boolean) => {
-    return { selectedPages: isSelected ? selectCurrentPages(state) : [] };
+export const initStore = (fileNameToData: RawInputFiles) => {
+    assertHasRequiredFiles(fileNameToData);
+
+    const {
+        ['batch_output.json']: fileToObservations,
+        ['page_size.txt']: pageSizeTxt,
+        ['structures.json']: { result: structures },
+        ['surya.json']: suryaJson,
+    } = fileNameToData;
+
+    const [surya] = Object.values(suryaJson);
+    const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
+
+    const sheets = Object.entries(fileToObservations)
+        .map(([imageFile, macOCRData]) => {
+            const pageNumber = parseInt(imageFile.split('.')[0]!);
+            const suryaPage = surya.find((s) => s.page === pageNumber);
+
+            if (!suryaPage) {
+                throw new Error(`No Surya page data found for page ${pageNumber} (file: ${imageFile})`);
+            }
+
+            const { height: imageHeight, width: imageWidth } = mapSuryaBoundingBox(suryaPage.image_bbox);
+            const { x: dpiX, y: dpiY } = calculateDPI(
+                { height: imageHeight, width: imageWidth },
+                { height: pdfHeight!, width: pdfWidth! },
+            );
+
+            const { dpi, horizontal_lines: lines, rectangles } = structures[imageFile];
+            const alternateObservations = alignAndAdjustObservations(mapSuryaPageResultToObservations(suryaPage), {
+                dpiX,
+                dpiY,
+                imageWidth: imageWidth,
+            }).observations;
+
+            const sheet: Sheet = {
+                alternateObservations,
+                dpi,
+                page: pageNumber,
+                ...(lines && { horizontalLines: lines }),
+                ...(rectangles && { rectangles }),
+                observations: alignAndAdjustObservations(macOCRData.observations, {
+                    imageWidth: dpi.width,
+                }).observations,
+            };
+
+            return sheet;
+        })
+        .toSorted((a, b) => a.page - b.page);
+
+    return {
+        sheets,
+    };
 };

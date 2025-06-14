@@ -6,28 +6,28 @@ import type { RawInputFiles } from '@/stores/manuscriptStore/types';
 
 import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
-import PageItem from '@/components/page-item';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import VersionFooter from '@/components/version-footer';
-import { selectCurrentPages } from '@/stores/bookStore/selectors';
-import { useBookStore } from '@/stores/bookStore/useBookStore';
+import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 /**
  * Renders the main page layout for displaying manuscript pages.
  */
 export default function Book() {
-    const selectedVolume = useBookStore((state) => state.selectedVolume);
-    const urlTemplate = useBookStore((state) => state.urlTemplate);
-    const setUrlTemplate = useBookStore((state) => state.setUrlTemplate);
-    const isInitialized = selectedVolume > 0;
-    const initManuscript = useBookStore((state) => state.init);
-    const pages = useBookStore(selectCurrentPages);
-    const selectAllPages = useBookStore((state) => state.selectAllPages);
+    const initManuscript = useManuscriptStore((state) => state.init);
+    const sheets = useManuscriptStore((state) => state.sheets);
+    const isInitialized = sheets.length > 0;
 
-    const pageItems = useMemo(() => {
-        return pages.map((page) => <PageItem key={`${selectedVolume}/${page.id}`} page={page} />);
-    }, [pages, selectedVolume]);
+    const rows = useMemo(() => {
+        return sheets.flatMap((sheet) =>
+            sheet.observations.map((o, i) => {
+                return {
+                    text: o.text,
+                    ...(sheet.alternateObservations![i] && { alt: sheet.alternateObservations![i].text }),
+                    page: sheet.page,
+                };
+            }),
+        );
+    }, [sheets]);
 
     if (!isInitialized) {
         return (
@@ -59,33 +59,37 @@ export default function Book() {
                         <table className="w-full table-auto divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-2 py-1 w-8 text-left">
-                                        <Checkbox
-                                            aria-label="Select all pages"
-                                            onCheckedChange={(isSelected) => selectAllPages(Boolean(isSelected))}
-                                        />
-                                    </th>
                                     <th aria-label="Page" className="px-2 py-1 w-36 text-left">
                                         Page
                                     </th>
-                                    <th aria-label="Text" className="px-4 py-1 text-right">
+                                    <th aria-label="Text" className="px-2 py-1 w-8 text-left">
                                         Text
+                                    </th>
+                                    <th aria-label="Support" className="px-4 py-1 text-right">
+                                        Support
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">{pageItems}</tbody>
+                            <tbody className="divide-y divide-gray-200">
+                                {rows.map((r, i) => (
+                                    <tr className="px-2 py-1 space-y-1 text-xl align-top" key={r.page + '/' + i}>
+                                        <td aria-label="Page" className="px-2 py-1 w-36 text-left">
+                                            {r.page}
+                                        </td>
+                                        <td aria-label="Text" className="px-2 text-xl py-1 w-full text-right" dir="rtl">
+                                            {r.text}
+                                        </td>
+                                        <td
+                                            aria-label="Support"
+                                            className={`px-4 text-xl py-1 w-full text-right ${!r.alt && 'bg-red-100'}`}
+                                            dir="rtl"
+                                        >
+                                            {r.alt || 'X'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
                         </table>
-                    </div>
-                    <div className="mt-4 p-4 border rounded">
-                        <label className="block text-sm font-medium mb-2" htmlFor="url-template">
-                            URL Template
-                        </label>
-                        <Input
-                            defaultValue={urlTemplate}
-                            id="url-template"
-                            onBlur={(e) => setUrlTemplate(e.target.value)}
-                            placeholder="Enter URL template for manuscript pages"
-                        />
                     </div>
                 </div>
             </div>

@@ -1,17 +1,4 @@
-import { type BoundingBox, type Observation, type Size, type SuryaPageOcrResult } from 'kokokor';
-
-export type Book = {
-    contractVersion: string;
-    createdAt: Date;
-    groundTruthUrls?: string[];
-    lastUpdatedAt: Date;
-    pages: {
-        id: number;
-        text: string;
-        volume: number;
-    }[];
-    urlTemplate?: string;
-};
+import { type BoundingBox, type Observation, type OcrResult, type SuryaPageOcrResult } from 'kokokor';
 
 /**
  * Combined state and actions for manuscript management
@@ -22,32 +9,8 @@ export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
  * Core state properties for manuscript management
  */
 export type ManuscriptStateCore = {
-    /** When the manuscript store was created */
-    readonly createdAt: Date;
-    /** Array of currently selected pages */
-    readonly selectedPages: Page[];
-    /** Currently selected manuscript volume number */
-    readonly selectedVolume: number;
-    readonly urlTemplate: string;
-
-    /** Map of pages indexed by volume number */
-    readonly volumeToPages: Record<number, Page[]>;
+    sheets: Sheet[];
 };
-
-export type Page = {
-    errorLines?: number[];
-    id: number;
-    /** Optional status indicating page processing state */
-    status?: PageStatus;
-    text: string;
-};
-
-/**
- * Possible status values for a manuscript page
- * - 'done': Page has been reviewed and completed
- * - 'review': Page needs review
- */
-export type PageStatus = 'done' | 'review';
 
 export type RawInputFiles = {
     'batch_output.json': Record<string, MacOCR>;
@@ -56,16 +19,8 @@ export type RawInputFiles = {
     'surya.json': Record<string, SuryaPageOcrResult[]>;
 };
 
-export type RawManuscript = {
-    createdAt: Date;
-    data: {
-        blocks: TextBlock[];
-        page: number;
-    }[];
-    metadata: {
-        image: Size;
-        pdf: Size;
-    };
+export type Sheet = OcrResult & {
+    page: number;
 };
 
 type MacOCR = { observations: Observation[] };
@@ -79,31 +34,10 @@ type ManuscriptActions = {
      * @param data Object containing manuscript information
      */
     init: (fileNameToData: RawInputFiles) => void;
-
-    /**
-     * Sets selection state for all pages
-     * @param isSelected Whether to select or deselect all pages
-     */
-    selectAllPages: (isSelected: boolean) => void;
-
-    setUrlTemplate: (template: string) => void;
 };
 
 type StructureMetadata = {
     readonly dpi: BoundingBox;
     readonly horizontal_lines?: BoundingBox[];
     readonly rectangles?: BoundingBox[];
-};
-
-type TextBlock = {
-    /** If the text is centered on the page. This is true if there is at least some padding around the text and it does not span up to the margins. */
-    readonly isCentered?: boolean;
-    /** If any of the observations in this block had a typo that was automatically patched, this will be set to true */
-    readonly isEdited?: boolean;
-    /** If this text is a footnote. This is generally associated with texts appearing below the last horizontal line. */
-    readonly isFootnote?: boolean;
-    /** If the text represents a heading. This is generally associated with texts that are surrounded in rectangles. */
-    readonly isHeading?: boolean;
-    /** The text associated with this text block */
-    readonly text: string;
 };

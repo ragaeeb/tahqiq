@@ -1,6 +1,6 @@
 import memoizeOne from 'memoize-one';
 
-import type { ManuscriptStateCore, Page } from './types';
+import type { BookStateCore, Page } from './types';
 
 const getVolumes = memoizeOne((volumeToPages: Record<string, Page[]>) =>
     Object.keys(volumeToPages)
@@ -15,11 +15,11 @@ const getPages = memoizeOne((pages?: Page[]) => pages || []);
  * @param state The manuscript state
  * @returns Array of part numbers
  */
-export const selectVolumes = (state: ManuscriptStateCore): number[] => getVolumes(state.volumeToPages);
+export const selectVolumes = (state: BookStateCore): number[] => getVolumes(state.volumeToPages);
 
 /**
  * Selects pages from the currently active manuscript volume.
  * @param state The manuscript state
  * @returns Array of pages or empty array if no volume is selected
  */
-export const selectCurrentPages = (state: ManuscriptStateCore) => getPages(state.volumeToPages[state.selectedVolume]);
+export const selectCurrentPages = (state: BookStateCore) => getPages(state.volumeToPages[state.selectedVolume]);
