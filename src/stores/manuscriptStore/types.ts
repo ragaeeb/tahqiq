@@ -1,4 +1,4 @@
-import { type BoundingBox, type Observation, type OcrResult, type SuryaPageOcrResult } from 'kokokor';
+import { type BoundingBox, type Observation, type SuryaPageOcrResult } from 'kokokor';
 
 /**
  * Combined state and actions for manuscript management
@@ -34,6 +34,34 @@ type ManuscriptActions = {
      * @param data Object containing manuscript information
      */
     init: (fileNameToData: RawInputFiles) => void;
+
+    mergeWithAbove: (page: number, index: number) => void;
+
+    splitAltAtLineBreak: (page: number, index: number, alt: string) => void;
+};
+
+type OcrResult = {
+    /**
+     * Matching observations extracted from surya for typo corrections.
+     */
+    readonly alternateObservations: Observation[];
+    /**
+     * The dimensions and DPI information of the document.
+     */
+    readonly dpi: BoundingBox;
+    /**
+     * Optional array of horizontal lines detected in the document.
+     * Often used for identifying page breaks, section separators, or footers.
+     */
+    readonly horizontalLines?: BoundingBox[];
+    /**
+     * Array of text observations extracted from the document.
+     */
+    readonly observations: Observation[];
+    /**
+     * Optional array of rectangle coordinates to process chapter titles.
+     */
+    readonly rectangles?: BoundingBox[];
 };
 
 type StructureMetadata = {

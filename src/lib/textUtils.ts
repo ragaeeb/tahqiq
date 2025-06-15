@@ -101,3 +101,17 @@ export const findFirstTokenForText = (tokens: Token[], selectedText: string) => 
     // Return null if no matching starting word is found
     return null;
 };
+
+export const parsePageRanges = (pageInput: string): number[] => {
+    if (pageInput.includes('-')) {
+        const [start, end] = pageInput.split('-').map(Number);
+
+        if (start > end) {
+            throw new Error('Start page cannot be greater than end page');
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    } else {
+        return pageInput.split(',').map(Number);
+    }
+};
