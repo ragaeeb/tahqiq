@@ -2,7 +2,15 @@ import { create } from 'zustand';
 
 import type { ManuscriptState } from './types';
 
-import { initStore, mergeWithAbove, splitAltAtLineBreak } from './actions';
+import {
+    applySupportToOriginal,
+    fixTypos,
+    initStore,
+    mergeObservationsToParagraphs,
+    mergeWithAbove,
+    setPoetry,
+    splitAltAtLineBreak,
+} from './actions';
 
 /**
  * Creates a Zustand store for managing manuscript state
@@ -12,9 +20,13 @@ import { initStore, mergeWithAbove, splitAltAtLineBreak } from './actions';
  */
 export const useManuscriptStore = create<ManuscriptState>((set) => {
     return {
+        applySupportToOriginal: (page, id) => set((state) => applySupportToOriginal(state, page, id)),
+        fixTypos: (ids) => set((state) => fixTypos(state, ids)),
         init: (data) => set(() => initStore(data)),
-        mergeWithAbove: (page, index) => set((state) => mergeWithAbove(state, page, index)),
+        mergePageObservationsToParagraphs: (page) => set((state) => mergeObservationsToParagraphs(state, page)),
+        mergeWithAbove: (page, id) => set((state) => mergeWithAbove(state, page, id)),
+        setPoetry: (pageToPoeticIds) => set((state) => setPoetry(state, pageToPoeticIds)),
         sheets: [],
-        splitAltAtLineBreak: (page, index, alt) => set((state) => splitAltAtLineBreak(state, page, index, alt)),
+        splitAltAtLineBreak: (page, id, alt) => set((state) => splitAltAtLineBreak(state, page, id, alt)),
     };
 });

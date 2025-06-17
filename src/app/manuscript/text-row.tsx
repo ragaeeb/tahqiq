@@ -1,20 +1,32 @@
+import React from 'react';
+
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type TextRowProps = {
     data: SheetLine;
+    isSelected: boolean;
+    onSelectionChange: (id: number, selected: boolean) => void;
 };
 
-export default function TextRow({ data }: TextRowProps) {
+function TextRow({ data, isSelected, onSelectionChange }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
+    const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
 
     return (
         <tr className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
+            <td aria-label="Select" className="w-12 px-4 py-4 text-center border-r border-green-100">
+                <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onSelectionChange(data.id, Boolean(checked))}
+                />
+            </td>
             <td
                 aria-label="Page"
                 className={`w-20 px-4 py-4 text-left text-sm font-medium text-gray-900 border-r border-gray-100 ${data.hasInvalidFootnotes && 'bg-red-200'}`}
@@ -27,7 +39,7 @@ export default function TextRow({ data }: TextRowProps) {
                 dir="rtl"
             >
                 <Input
-                    className={`w-full !text-xl text-right leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                    className={`w-full !text-xl ${data.isPoetic && 'italic'} text-right leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     defaultValue={data.text}
                     dir="rtl"
                     style={{ fontFamily: 'inherit' }}
@@ -37,7 +49,7 @@ export default function TextRow({ data }: TextRowProps) {
             <td
                 aria-label="Support"
                 className={`w-1/2 px-4 py-4 text-xl text-right leading-relaxed ${
-                    data.alt && data.isSimilar ? 'text-gray-800 bg-green-50' : 'text-red-600 bg-red-50'
+                    data.isSimilar ? 'text-gray-800 bg-green-50' : 'text-red-600 bg-red-50'
                 } transition-colors duration-150`}
                 dir="rtl"
             >
@@ -45,6 +57,7 @@ export default function TextRow({ data }: TextRowProps) {
                     <Button
                         aria-label="Mark as supported"
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                        onClick={() => applySupportToOriginal(data.page, data.id)}
                     >
                         ✓
                     </Button>
@@ -81,3 +94,5 @@ export default function TextRow({ data }: TextRowProps) {
         </tr>
     );
 }
+
+export default React.memo(TextRow);

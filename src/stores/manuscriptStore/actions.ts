@@ -1,11 +1,16 @@
 import {
     alignAndAdjustObservations,
     calculateDPI,
+    fixTypo,
+    flattenObservationsToParagraphs,
+    isPoeticLayout,
     mapSuryaBoundingBox,
     mapSuryaPageResultToObservations,
     type Observation,
     type SuryaPageOcrResult,
 } from 'kokokor';
+
+import { SWS_SYMBOL } from '@/lib/constants';
 
 import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata } from './types';
 
@@ -13,31 +18,35 @@ import { assertHasRequiredFiles } from './guards';
 
 let ID_COUNTER = 0;
 
+const filterNoisyObservations = (o: Observation) => o.text?.length > 1;
+
 const createSheet = (
     page: number,
-    observations: Observation[],
+    macObservations: Observation[],
     alternateObservations: Observation[],
     { dpi, horizontal_lines: lines, rectangles }: StructureMetadata,
 ): Sheet => {
+    const { groups, observations } = alignAndAdjustObservations(macObservations, {
+        imageWidth: dpi.width,
+    });
+
     const altObservations = alternateObservations.map((o) => ({ id: ID_COUNTER++, text: o.text }));
+    const isPoetic = isPoeticLayout(groups);
 
     return {
         alt: altObservations,
         dpi,
         horizontalLines: lines,
         observations: observations
-            .map((o, i) => {
-                const alt = altObservations[i].text;
-
+            .map(({ confidence, ...o }) => {
                 return {
                     ...o,
-                    hasInvalidFootnotes: Boolean(o.text?.includes('()')),
                     id: ID_COUNTER++,
-                    includesHonorifics: Boolean(alt?.includes('ﷺ')),
-                    isMerged: Boolean(o.confidence && o.confidence < 1),
+                    isMerged: Boolean(confidence && confidence < 1),
+                    isPoetic,
                 };
             })
-            .filter((o) => o.text),
+            .filter(filterNoisyObservations),
         page,
         rectangles,
     };
@@ -54,7 +63,7 @@ const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, p
         dpiX,
         dpiY,
         imageWidth,
-    }).observations.filter((o) => o.text?.length > 1);
+    }).observations.filter(filterNoisyObservations);
 
     return alternateObservations;
 };
@@ -90,11 +99,12 @@ export const initStore = (fileNameToData: RawInputFiles) => {
 
             const alternateObservations = getSuryaObservations(suryaPage, pdfWidth, pdfHeight);
 
-            const observations = alignAndAdjustObservations(macOCRData.observations, {
-                imageWidth: structures[imageFile].dpi.width,
-            }).observations;
-
-            const sheet = createSheet(pageNumber, observations, alternateObservations, structures[imageFile]);
+            const sheet = createSheet(
+                pageNumber,
+                macOCRData.observations,
+                alternateObservations,
+                structures[imageFile],
+            );
 
             return sheet;
         })
@@ -173,4 +183,98 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
         ...state,
         sheets: newSheets,
     };
+};
+
+export const applySupportToOriginal = (state: ManuscriptStateCore, page: number, id: number) => {
+    const newSheets = [...state.sheets];
+    const sheetIndex = newSheets.findIndex((s) => s.page === page);
+    const sheet = newSheets[sheetIndex];
+    const index = sheet.observations.findIndex((o) => o.id === id);
+    const updatedObservation = { ...sheet.observations[index], id: ++ID_COUNTER, text: sheet.alt[index].text };
+
+    const newObservations = [
+        ...sheet.observations.slice(0, index),
+        updatedObservation,
+        ...sheet.observations.slice(index + 1),
+    ];
+
+    newSheets[sheetIndex] = {
+        ...sheet,
+        observations: newObservations,
+    };
+
+    return {
+        ...state,
+        sheets: newSheets,
+    };
+};
+
+export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
+    const idsSet = new Set(ids);
+    const options = { typoSymbols: [SWS_SYMBOL] };
+
+    const newSheets = state.sheets.map((sheet) => {
+        const newObservations = sheet.observations.map((observation, index) => {
+            if (idsSet.has(observation.id)) {
+                return {
+                    ...observation,
+                    id: ++ID_COUNTER,
+                    text: fixTypo(observation.text, sheet.alt[index].text, options),
+                };
+            }
+
+            // Return unchanged observation if not in ids list or no alt text available
+            return observation;
+        });
+
+        // Only create a new sheet object if observations actually changed
+        if (newObservations.some((obs, index) => obs !== sheet.observations[index])) {
+            return {
+                ...sheet,
+                observations: newObservations,
+            };
+        }
+
+        return sheet;
+    });
+
+    return {
+        ...state,
+        sheets: newSheets,
+    };
+};
+
+export const mergeObservationsToParagraphs = (state: ManuscriptStateCore, page: number) => {
+    const sheetIndex = state.sheets.findIndex((s) => s.page === page)!;
+    const newSheet = {
+        ...state.sheets[sheetIndex],
+        observations: flattenObservationsToParagraphs(state.sheets[sheetIndex].observations).map((o) => ({
+            ...o,
+            id: ++ID_COUNTER,
+        })),
+    };
+    const sheets = [...state.sheets];
+    sheets[sheetIndex] = newSheet;
+
+    return { sheets };
+};
+
+export const setPoetry = (state: ManuscriptStateCore, pageToPoeticIds: Record<number, number[]>) => {
+    const sheets = [...state.sheets];
+
+    for (let i = 0; i < sheets.length; i++) {
+        const sheet = sheets[i];
+        const ids = pageToPoeticIds[sheet.page];
+
+        if (ids) {
+            const observations = sheet.observations.map((o) => ({
+                ...o,
+                isPoetic: ids.includes(o.id),
+            }));
+
+            sheets[i] = { ...sheet, observations };
+        }
+    }
+
+    return { sheets };
 };

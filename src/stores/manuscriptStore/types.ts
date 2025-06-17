@@ -25,6 +25,8 @@ export type Sheet = OcrData & {
 
 export type SheetLine = TextLine & {
     alt: string;
+    hasInvalidFootnotes?: boolean;
+    includesHonorifics?: boolean;
     isSimilar?: boolean;
     page: number;
 };
@@ -36,10 +38,9 @@ export type StructureMetadata = {
 };
 
 export type TextLine = Observation & {
-    hasInvalidFootnotes?: boolean;
     id: number;
-    includesHonorifics?: boolean;
     isMerged?: boolean;
+    isPoetic?: boolean;
 };
 
 type AltText = {
@@ -53,15 +54,23 @@ type MacOCR = { observations: Observation[] };
  * Action functions available for transcript manipulation
  */
 type ManuscriptActions = {
+    applySupportToOriginal: (page: number, id: number) => void;
+
+    fixTypos: (ids: number[]) => void;
+
     /**
      * Initializes the store with manuscript data
      * @param data Object containing manuscript information
      */
     init: (fileNameToData: RawInputFiles) => void;
 
+    mergePageObservationsToParagraphs: (page: number) => void;
+
     mergeWithAbove: (page: number, id: number) => void;
 
-    splitAltAtLineBreak: (page: number, index: number, alt: string) => void;
+    setPoetry: (pageToPoeticIds: Record<number, number[]>) => void;
+
+    splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 };
 
 type OcrData = {

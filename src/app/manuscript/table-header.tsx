@@ -3,24 +3,38 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { SWS_SYMBOL } from '@/lib/constants';
 import { parsePageRanges } from '@/lib/textUtils';
+import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {
     honorifics: [boolean, Dispatch<SetStateAction<boolean>>];
+    onSelectAll: (selected: boolean) => void;
     pagesFilter: [number[], Dispatch<SetStateAction<number[]>>];
     rows: SheetLine[];
+    selectedRows: number[];
 };
 
 export default function ManuscriptTableHeader({
     honorifics: [isHonorificsRowsOn, setIsHonorificsRowsOn],
+    onSelectAll,
     pagesFilter: [, setFilterByPages],
     rows,
+    selectedRows,
 }: ManuscriptTableHeaderProps) {
     const altCount = rows.filter((r) => r.alt).length;
+    const isAllSelected = rows.length > 0 && selectedRows.length === rows.length;
 
     return (
         <tr>
+            <th
+                aria-label="Select All"
+                className="w-12 px-4 py-3 text-center text-sm font-semibold text-gray-700 uppercase tracking-wide"
+            >
+                <Checkbox checked={isAllSelected} onCheckedChange={(checked) => onSelectAll(!!checked)} />
+            </th>
             <th
                 aria-label="Page"
                 className="w-20 px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide"
@@ -59,25 +73,34 @@ export default function ManuscriptTableHeader({
             >
                 <div className="flex items-center justify-between">
                     <Button
-                        aria-label="Support actions"
+                        aria-label="Filter Misaligned Observations"
                         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                         onClick={() => {
                             const pages = new Set(rows.filter((r) => !r.alt).map((r) => r.page));
                             setFilterByPages([...pages]);
                         }}
+                        variant="destructive"
                     >
-                        ♻
+                        ✗
                     </Button>
                     <Button
-                        aria-label="Support actions"
+                        aria-label="Fix Typos"
                         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                         onClick={() => {
-                            // TODO: We need to handle ﷻ symbol as well and also false positives for radi Allahu 'anhu and rahimahullah
                             setIsHonorificsRowsOn((prev) => !prev);
                         }}
-                        variant={isHonorificsRowsOn ? 'destructive' : 'ghost'}
+                        variant={isHonorificsRowsOn ? 'outline' : 'ghost'}
                     >
-                        ﷺ
+                        {SWS_SYMBOL}
+                    </Button>
+                    <Button
+                        aria-label="Poetic"
+                        onClick={() => {
+                            const pages = new Set(rows.filter((r) => r.isPoetic).map((r) => r.page));
+                            setFilterByPages([...pages]);
+                        }}
+                    >
+                        Poetic
                     </Button>
                     <div className="text-right">Support ({altCount})</div>
                 </div>
