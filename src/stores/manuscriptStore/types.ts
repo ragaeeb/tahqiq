@@ -1,4 +1,4 @@
-import { type BoundingBox, type Observation, type SuryaPageOcrResult } from 'kokokor';
+import type { BoundingBox, Observation, SuryaPageOcrResult } from 'kokokor';
 
 /**
  * Combined state and actions for manuscript management
@@ -19,8 +19,32 @@ export type RawInputFiles = {
     'surya.json': Record<string, SuryaPageOcrResult[]>;
 };
 
-export type Sheet = OcrResult & {
+export type Sheet = OcrData & {
     page: number;
+};
+
+export type SheetLine = TextLine & {
+    alt: string;
+    isSimilar?: boolean;
+    page: number;
+};
+
+export type StructureMetadata = {
+    readonly dpi: BoundingBox;
+    readonly horizontal_lines?: BoundingBox[];
+    readonly rectangles?: BoundingBox[];
+};
+
+export type TextLine = Observation & {
+    hasInvalidFootnotes?: boolean;
+    id: number;
+    includesHonorifics?: boolean;
+    isMerged?: boolean;
+};
+
+type AltText = {
+    readonly id: number;
+    readonly text: string;
 };
 
 type MacOCR = { observations: Observation[] };
@@ -35,16 +59,16 @@ type ManuscriptActions = {
      */
     init: (fileNameToData: RawInputFiles) => void;
 
-    mergeWithAbove: (page: number, index: number) => void;
+    mergeWithAbove: (page: number, id: number) => void;
 
     splitAltAtLineBreak: (page: number, index: number, alt: string) => void;
 };
 
-type OcrResult = {
+type OcrData = {
     /**
      * Matching observations extracted from surya for typo corrections.
      */
-    readonly alternateObservations: Observation[];
+    readonly alt: AltText[];
     /**
      * The dimensions and DPI information of the document.
      */
@@ -55,17 +79,12 @@ type OcrResult = {
      */
     readonly horizontalLines?: BoundingBox[];
     /**
-     * Array of text observations extracted from the document.
+     * Matching observations extracted from surya for typo corrections.
      */
-    readonly observations: Observation[];
+    readonly observations: TextLine[];
+
     /**
      * Optional array of rectangle coordinates to process chapter titles.
      */
-    readonly rectangles?: BoundingBox[];
-};
-
-type StructureMetadata = {
-    readonly dpi: BoundingBox;
-    readonly horizontal_lines?: BoundingBox[];
     readonly rectangles?: BoundingBox[];
 };

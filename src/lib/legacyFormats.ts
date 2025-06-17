@@ -2,6 +2,17 @@ import type { Segment, Token } from 'paragrafs';
 
 import type { PostProcessingApp } from '@/stores/transcriptStore/types';
 
+export type BookTranscriptFormat = {
+    pages: {
+        body: string;
+        part: number;
+        words: Token[];
+    }[];
+    postProcessingApp: PostProcessingApp;
+    timestamp: Date;
+    urls: string[];
+};
+
 export type LegacySegment = {
     body: string;
     end: number;
