@@ -1,22 +1,22 @@
-import type { TextBlock } from 'kokokor';
+import type { TextLine } from '@/stores/manuscriptStore/types';
 
 const arabicReferenceRegex = /\([\u0660-\u0669]\)/g;
 const arabicFootnoteReferenceRegex = /^\([\u0660-\u0669]\)/g;
 
-export const correctReferences = (blocks: TextBlock[]): TextBlock[] => {
-    const referencesInBody = blocks
+export const correctReferences = (lines: TextLine[]): TextLine[] => {
+    const referencesInBody = lines
         .filter((b) => !b.isFootnote)
         .flatMap((b) => {
             return b.text.match(arabicReferenceRegex) || [];
         });
 
-    const referencesInFootnotes = blocks
+    const referencesInFootnotes = lines
         .filter((b) => b.isFootnote)
         .flatMap((b) => {
             return b.text.match(arabicFootnoteReferenceRegex) || [];
         });
 
-    const mistakenReferences = blocks.filter((b) => b.text.includes('()'));
+    const mistakenReferences = lines.filter((b) => b.text.includes('()'));
 
     if (
         mistakenReferences.length > 0 &&
@@ -25,9 +25,9 @@ export const correctReferences = (blocks: TextBlock[]): TextBlock[] => {
     ) {
         const usedReferences = new Set<string>();
 
-        return blocks.map((block) => {
+        return lines.map((line) => {
             // Only process blocks that contain '()'
-            if (block.text.includes('()')) {
+            if (line.text.includes('()')) {
                 const missing = referencesInBody.find(
                     (r) => !referencesInFootnotes.includes(r) && !usedReferences.has(r),
                 );
@@ -37,17 +37,17 @@ export const correctReferences = (blocks: TextBlock[]): TextBlock[] => {
 
                     // Return a new block with the corrected text
                     return {
-                        ...block,
-                        text: block.text.replace('()', missing),
+                        ...line,
+                        text: line.text.replace('()', missing),
                     };
                 }
             }
 
             // Return the original block unchanged
-            return block;
+            return line;
         });
     }
 
     // If no corrections are needed, return the original array
-    return blocks;
+    return lines;
 };

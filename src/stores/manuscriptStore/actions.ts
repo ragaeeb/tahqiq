@@ -12,6 +12,7 @@ import {
 } from 'kokokor';
 
 import { SWS_SYMBOL } from '@/lib/constants';
+import { correctReferences } from '@/lib/footnotes';
 
 import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata } from './types';
 
@@ -279,6 +280,24 @@ export const setPoetry = (state: ManuscriptStateCore, pageToPoeticIds: Record<nu
             }));
 
             sheets[i] = { ...sheet, observations };
+        }
+    }
+
+    return { sheets };
+};
+
+export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]) => {
+    const sheets = [...state.sheets];
+
+    for (let i = 0; i < sheets.length; i++) {
+        const sheet = sheets[i];
+
+        if (pages.includes(sheet.page)) {
+            const corrected = correctReferences(sheet.observations);
+
+            if (corrected !== sheet.observations) {
+                sheets[i] = { ...sheet, observations: corrected.map((o) => ({ ...o, id: ++ID_COUNTER })) };
+            }
         }
     }
 

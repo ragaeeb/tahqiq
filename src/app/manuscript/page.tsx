@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import type { RawInputFiles } from '@/stores/manuscriptStore/types';
+import type { RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
 import VersionFooter from '@/components/version-footer';
@@ -22,7 +22,7 @@ export default function Manuscript() {
     const isInitialized = sheetLines.length > 0;
     const pagesFilter = useState<number[]>([]);
     const honorifics = useState(false);
-    const selection = useState<number[]>([]);
+    const selection = useState<SheetLine[]>([]);
     const [filterByPages] = pagesFilter;
     const [isHonorificsRowsOn] = honorifics;
     const [selectedRows, setSelectedRows] = selection;
@@ -34,20 +34,20 @@ export default function Manuscript() {
     }, [sheetLines, filterByPages, isHonorificsRowsOn]);
 
     const handleSelectionChange = useCallback(
-        (id: number, selected: boolean) => {
+        (item: SheetLine, selected: boolean) => {
             setSelectedRows((prev) => {
                 if (selected) {
-                    return [...prev, id];
+                    return [...prev, item];
                 }
 
-                return prev.filter((p) => p !== id);
+                return prev.filter((p) => p !== item);
             });
         },
         [setSelectedRows],
     );
 
     const handleSelectAll = (selected: boolean) => {
-        setSelectedRows(selected ? rows.map((row) => row.id) : []);
+        setSelectedRows(selected ? rows : []);
     };
 
     if (!isInitialized) {
@@ -98,7 +98,7 @@ export default function Manuscript() {
                                 {rows.map((r) => (
                                     <TextRow
                                         data={r}
-                                        isSelected={selectedRows.includes(r.id)}
+                                        isSelected={selectedRows.includes(r)}
                                         key={r.id}
                                         onSelectionChange={handleSelectionChange}
                                     />

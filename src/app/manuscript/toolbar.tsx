@@ -2,6 +2,8 @@
 
 import React, { type Dispatch, type SetStateAction } from 'react';
 
+import type { SheetLine } from '@/stores/manuscriptStore/types';
+
 import { Button } from '@/components/ui/button';
 import { SWS_SYMBOL } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
@@ -9,7 +11,7 @@ import { mapManuscriptToBook } from '@/lib/legacy';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ToolbarProps = {
-    selection: [number[], Dispatch<SetStateAction<number[]>>];
+    selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>];
 };
 
 /**
@@ -18,6 +20,7 @@ type ToolbarProps = {
  */
 export default function Toolbar({ selection: [selectedRows, setSelectedRows] }: ToolbarProps) {
     const fixTypos = useManuscriptStore((state) => state.fixTypos);
+    const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
 
     return (
         <div className="flex space-x-2">
@@ -35,12 +38,23 @@ export default function Toolbar({ selection: [selectedRows, setSelectedRows] }: 
             {selectedRows.length > 0 && (
                 <Button
                     onClick={() => {
-                        fixTypos(selectedRows);
+                        fixTypos(selectedRows.map((s) => s.id));
                         setSelectedRows([]);
                     }}
                     variant="outline"
                 >
                     {SWS_SYMBOL}
+                </Button>
+            )}
+            {selectedRows.length > 0 && (
+                <Button
+                    onClick={() => {
+                        autoCorrectFootnotes(Array.from(new Set(selectedRows.map((r) => r.page))));
+                        setSelectedRows([]);
+                    }}
+                    variant="outline"
+                >
+                    Autocorrect Footnotes
                 </Button>
             )}
             {selectedRows.length > 0 && <Button className="bg-purple-200">Mark As Poetry</Button>}

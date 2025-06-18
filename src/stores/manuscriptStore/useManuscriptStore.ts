@@ -4,6 +4,7 @@ import type { ManuscriptState } from './types';
 
 import {
     applySupportToOriginal,
+    autoCorrectFootnotes,
     fixTypos,
     initStore,
     mergeObservationsToParagraphs,
@@ -21,6 +22,7 @@ import {
 export const useManuscriptStore = create<ManuscriptState>((set) => {
     return {
         applySupportToOriginal: (page, id) => set((state) => applySupportToOriginal(state, page, id)),
+        autoCorrectFootnotes: (pages) => set((state) => autoCorrectFootnotes(state, pages)),
         fixTypos: (ids) => set((state) => fixTypos(state, ids)),
         init: (data) => set(() => initStore(data)),
         mergePageObservationsToParagraphs: (page) => set((state) => mergeObservationsToParagraphs(state, page)),

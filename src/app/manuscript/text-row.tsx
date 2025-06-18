@@ -11,7 +11,7 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 type TextRowProps = {
     data: SheetLine;
     isSelected: boolean;
-    onSelectionChange: (id: number, selected: boolean) => void;
+    onSelectionChange: (row: SheetLine, selected: boolean) => void;
 };
 
 function TextRow({ data, isSelected, onSelectionChange }: TextRowProps) {
@@ -24,7 +24,7 @@ function TextRow({ data, isSelected, onSelectionChange }: TextRowProps) {
             <td aria-label="Select" className="w-12 px-4 py-4 text-center border-r border-green-100">
                 <Checkbox
                     checked={isSelected}
-                    onCheckedChange={(checked) => onSelectionChange(data.id, Boolean(checked))}
+                    onCheckedChange={(checked) => onSelectionChange(data, Boolean(checked))}
                 />
             </td>
             <td
@@ -39,7 +39,7 @@ function TextRow({ data, isSelected, onSelectionChange }: TextRowProps) {
                 dir="rtl"
             >
                 <Input
-                    className={`w-full !text-xl ${data.isPoetic && 'italic'} text-right leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                    className={`w-full ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isPoetic && 'italic'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     defaultValue={data.text}
                     dir="rtl"
                     style={{ fontFamily: 'inherit' }}
@@ -72,7 +72,7 @@ function TextRow({ data, isSelected, onSelectionChange }: TextRowProps) {
                         ↑
                     </Button>
                     <Textarea
-                        className="text-right flex-1 mr-2 !text-xl leading-relaxed bg-transparent border-none outline-none focus:bg-white focus:rounded resize-none overflow-hidden min-h-[1.5em] px-1 py-1 transition-colors duration-150"
+                        className={`flex-1 mr-2 ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed bg-transparent border-none outline-none focus:bg-white focus:rounded resize-none overflow-hidden min-h-[1.5em] px-1 py-1 transition-colors duration-150`}
                         dir="rtl"
                         onChange={(e) => {
                             if (e.target.value !== data.alt) {

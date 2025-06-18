@@ -13,7 +13,7 @@ type ManuscriptTableHeaderProps = {
     onSelectAll: (selected: boolean) => void;
     pagesFilter: [number[], Dispatch<SetStateAction<number[]>>];
     rows: SheetLine[];
-    selectedRows: number[];
+    selectedRows: SheetLine[];
 };
 
 export default function ManuscriptTableHeader({
@@ -71,17 +71,19 @@ export default function ManuscriptTableHeader({
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
-                    <Button
-                        aria-label="Filter Misaligned Observations"
-                        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
-                        onClick={() => {
-                            const pages = new Set(rows.filter((r) => !r.alt).map((r) => r.page));
-                            setFilterByPages([...pages]);
-                        }}
-                        variant="destructive"
-                    >
-                        ✗
-                    </Button>
+                    {altCount !== rows.length && (
+                        <Button
+                            aria-label="Filter Misaligned Observations"
+                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                const pages = new Set(rows.filter((r) => !r.alt).map((r) => r.page));
+                                setFilterByPages([...pages]);
+                            }}
+                            variant="destructive"
+                        >
+                            ✗
+                        </Button>
+                    )}
                     <Button
                         aria-label="Fix Typos"
                         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
