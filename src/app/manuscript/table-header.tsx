@@ -9,22 +9,29 @@ import { SWS_SYMBOL } from '@/lib/constants';
 import { parsePageRanges } from '@/lib/textUtils';
 
 type ManuscriptTableHeaderProps = {
-    honorifics: [boolean, Dispatch<SetStateAction<boolean>>];
+    idsFilter: [number[], Dispatch<SetStateAction<number[]>>];
     onSelectAll: (selected: boolean) => void;
-    pagesFilter: [number[], Dispatch<SetStateAction<number[]>>];
     rows: SheetLine[];
-    selectedRows: SheetLine[];
+    selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>];
 };
 
 export default function ManuscriptTableHeader({
-    honorifics: [isHonorificsRowsOn, setIsHonorificsRowsOn],
+    idsFilter: [, setFilterByIds],
     onSelectAll,
-    pagesFilter: [, setFilterByPages],
     rows,
-    selectedRows,
+    selection: [selectedRows],
 }: ManuscriptTableHeaderProps) {
     const altCount = rows.filter((r) => r.alt).length;
     const isAllSelected = rows.length > 0 && selectedRows.length === rows.length;
+    const hasHonorifcsApplied = rows.some((o) => o.text.includes(SWS_SYMBOL));
+    const hasMissingHonorifics = rows.some((o) => o.includesHonorifics);
+    const includesPoetry = rows.some((o) => o.isPoetic);
+    const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
+
+    const filterByPages = (rows: SheetLine[]) => {
+        const pages = new Set(rows.map((r) => r.page));
+        setFilterByIds(rows.filter((r) => pages.has(r.page)).map((r) => r.id));
+    };
 
     return (
         <tr>
@@ -38,25 +45,23 @@ export default function ManuscriptTableHeader({
                 aria-label="Page"
                 className="w-20 px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide"
             >
-                <Input
-                    className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
-                    onBlur={(e) => {
-                        setFilterByPages((prev) => {
-                            if (!e.target.value) {
-                                return [];
-                            }
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
 
-                            const pageRanges = parsePageRanges(e.target.value);
+                        const data = new FormData(e.currentTarget);
+                        const query = (data.get('range') as string).trim();
 
-                            if (pageRanges.toString() !== prev.toString()) {
-                                return pageRanges;
-                            }
-
-                            return prev;
-                        });
+                        const pages = new Set(parsePageRanges(query));
+                        setFilterByIds(rows.filter((r) => pages.has(r.page)).map((r) => r.id));
                     }}
-                    placeholder="Page"
-                />
+                >
+                    <Input
+                        className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                        name="range"
+                        placeholder="Page"
+                    />
+                </form>
             </th>
             <th
                 aria-label="Text"
@@ -76,43 +81,58 @@ export default function ManuscriptTableHeader({
                             aria-label="Filter Misaligned Observations"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
-                                const pages = new Set(rows.filter((r) => !r.alt).map((r) => r.page));
-                                setFilterByPages([...pages]);
+                                filterByPages(rows.filter((r) => !r.alt));
                             }}
                             variant="destructive"
                         >
                             ✗
                         </Button>
                     )}
-                    <Button
-                        aria-label="Fix Typos"
-                        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
-                        onClick={() => {
-                            setIsHonorificsRowsOn((prev) => !prev);
-                        }}
-                        variant={isHonorificsRowsOn ? 'outline' : 'ghost'}
-                    >
-                        {SWS_SYMBOL}
-                    </Button>
-                    <Button
-                        aria-label="Poetic"
-                        onClick={() => {
-                            const pages = new Set(rows.filter((r) => r.isPoetic).map((r) => r.page));
-                            setFilterByPages([...pages]);
-                        }}
-                    >
-                        Poetic
-                    </Button>
-                    <Button
-                        aria-label="Invalid Footnotes"
-                        onClick={() => {
-                            const pages = new Set(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
-                            setFilterByPages([...pages]);
-                        }}
-                        variant="outline"
-                    >
-                        ()
-                    </Button>
+                    {hasMissingHonorifics && (
+                        <Button
+                            aria-label="Fix Typos"
+                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                setFilterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
+                            }}
+                            variant="ghost"
+                        >
+                            {SWS_SYMBOL}
+                        </Button>
+                    )}
+                    {hasHonorifcsApplied && (
+                        <Button
+                            aria-label="Correct Wrong Honorifics"
+                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                setFilterByIds(rows.filter((r) => r.text.includes(SWS_SYMBOL)).map((r) => r.id));
+                            }}
+                            variant="ghost"
+                        >
+                            (AZW)
+                        </Button>
+                    )}
+                    {includesPoetry && (
+                        <Button
+                            aria-label="Poetic"
+                            onClick={() => {
+                                filterByPages(rows.filter((r) => r.isPoetic));
+                            }}
+                        >
+                            Poetic
+                        </Button>
+                    )}
+                    {hasInvalidFootnotes && (
+                        <Button
+                            aria-label="Invalid Footnotes"
+                            onClick={() => {
+                                filterByPages(rows.filter((r) => r.hasInvalidFootnotes));
+                            }}
+                            variant="outline"
+                        >
+                            ()
+                        </Button>
+                    )}
                     <div className="text-right">Support ({altCount})</div>
                 </div>
             </th>

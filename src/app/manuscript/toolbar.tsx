@@ -11,6 +11,7 @@ import { mapManuscriptToBook } from '@/lib/legacy';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ToolbarProps = {
+    idsFilter: [number[], Dispatch<SetStateAction<number[]>>];
     selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>];
 };
 
@@ -18,9 +19,13 @@ type ToolbarProps = {
  * Renders a toolbar for manuscript management operations.
  * Currently provides functionality to export the current manuscript state as a JSON file.
  */
-export default function Toolbar({ selection: [selectedRows, setSelectedRows] }: ToolbarProps) {
+export default function ManuscriptToolbar({
+    idsFilter: [filterByIds, setFilterByIds],
+    selection: [selectedRows, setSelectedRows],
+}: ToolbarProps) {
     const fixTypos = useManuscriptStore((state) => state.fixTypos);
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
+    const toggleFootnotes = useManuscriptStore((state) => state.toggleFootnotes);
 
     return (
         <div className="flex space-x-2">
@@ -35,6 +40,16 @@ export default function Toolbar({ selection: [selectedRows, setSelectedRows] }: 
             >
                 💾
             </Button>
+            {filterByIds.length > 0 && (
+                <Button
+                    onClick={() => {
+                        setFilterByIds([]);
+                    }}
+                    variant="destructive"
+                >
+                    🔁
+                </Button>
+            )}
             {selectedRows.length > 0 && (
                 <Button
                     onClick={() => {
@@ -55,6 +70,28 @@ export default function Toolbar({ selection: [selectedRows, setSelectedRows] }: 
                     variant="outline"
                 >
                     Autocorrect Footnotes
+                </Button>
+            )}
+            {selectedRows.length > 0 && (
+                <Button
+                    onClick={() => {
+                        toggleFootnotes(selectedRows.map((r) => r.id));
+                        setSelectedRows([]);
+                    }}
+                    variant="outline"
+                >
+                    Toggle Footnotes
+                </Button>
+            )}
+            {selectedRows.length > 0 && (
+                <Button
+                    onClick={() => {
+                        toggleFootnotes(selectedRows.map((r) => r.id));
+                        setSelectedRows([]);
+                    }}
+                    variant="outline"
+                >
+                    (AZW)
                 </Button>
             )}
             {selectedRows.length > 0 && <Button className="bg-purple-200">Mark As Poetry</Button>}

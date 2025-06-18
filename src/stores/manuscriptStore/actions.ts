@@ -75,13 +75,6 @@ const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, p
     return alternateObservations;
 };
 
-/**
- * Initializes the manuscript store with provided data
- * Organizes manuscripts by volume for easier access
- *
- * @param manuscript - Raw manuscript data containing page information
- * @returns Initial state object for the manuscript store
- */
 export const initStore = (fileNameToData: RawInputFiles) => {
     assertHasRequiredFiles(fileNameToData);
 
@@ -124,9 +117,7 @@ export const initStore = (fileNameToData: RawInputFiles) => {
 };
 
 export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id: number, alt: string) => {
-    const newSheets = [...state.sheets];
-    const sheetIndex = newSheets.findIndex((s) => s.page === page);
-    const sheet = newSheets[sheetIndex];
+    const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
 
     const [firstLine, secondLine] = alt.split('\n');
@@ -142,28 +133,11 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
         text: secondLine,
     };
 
-    const newAlternateObservations = [
-        ...sheet.alt.slice(0, index),
-        altObservation,
-        nextObservation,
-        ...sheet.alt.slice(index + 1),
-    ];
-
-    newSheets[sheetIndex] = {
-        ...sheet,
-        alt: newAlternateObservations,
-    };
-
-    return {
-        ...state,
-        sheets: newSheets,
-    };
+    sheet.alt.splice(index, 1, altObservation, nextObservation);
 };
 
 export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: number) => {
-    const newSheets = [...state.sheets];
-    const sheetIndex = newSheets.findIndex((s) => s.page === page);
-    const sheet = newSheets[sheetIndex];
+    const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
 
     const above = sheet.alt[index - 1];
@@ -175,145 +149,87 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
         text: `${above.text} ${current.text}`.trim(),
     };
 
-    const newAlternateObservations = [
-        ...sheet.alt.slice(0, index - 1),
-        mergedObservation,
-        ...sheet.alt.slice(index + 1),
-    ];
-
-    newSheets[sheetIndex] = {
-        ...sheet,
-        alt: newAlternateObservations,
-    };
-
-    return {
-        ...state,
-        sheets: newSheets,
-    };
+    sheet.alt.splice(index - 1, 2, mergedObservation);
 };
 
 export const applySupportToOriginal = (state: ManuscriptStateCore, page: number, id: number) => {
-    const newSheets = [...state.sheets];
-    const sheetIndex = newSheets.findIndex((s) => s.page === page);
-    const sheet = newSheets[sheetIndex];
+    const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
-    const updatedObservation = { ...sheet.observations[index], id: ++ID_COUNTER, text: sheet.alt[index].text };
 
-    const newObservations = [
-        ...sheet.observations.slice(0, index),
-        updatedObservation,
-        ...sheet.observations.slice(index + 1),
-    ];
-
-    newSheets[sheetIndex] = {
-        ...sheet,
-        observations: newObservations,
+    sheet.observations[index] = {
+        ...sheet.observations[index],
+        id: ++ID_COUNTER,
+        text: sheet.alt[index].text,
     };
+};
 
-    return {
-        ...state,
-        sheets: newSheets,
-    };
+export const deleteSupport = (state: ManuscriptStateCore, page: number, id: number) => {
+    const sheet = state.sheets.find((s) => s.page === page)!;
+    const index = sheet.observations.findIndex((o) => o.id === id);
+
+    sheet.alt.splice(index, 1);
 };
 
 export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
     const idsSet = new Set(ids);
     const options = { typoSymbols: [SWS_SYMBOL] };
 
-    const newSheets = state.sheets.map((sheet) => {
-        const newObservations = sheet.observations.map((observation, index) => {
+    state.sheets.forEach((sheet) => {
+        sheet.observations.forEach((observation, index) => {
             if (idsSet.has(observation.id)) {
-                return {
-                    ...observation,
-                    id: ++ID_COUNTER,
-                    text: fixTypo(observation.text, sheet.alt[index].text, options),
-                };
+                observation.id = ++ID_COUNTER;
+                observation.text = fixTypo(observation.text, sheet.alt[index].text, options);
             }
-
-            // Return unchanged observation if not in ids list or no alt text available
-            return observation;
         });
-
-        // Only create a new sheet object if observations actually changed
-        if (newObservations.some((obs, index) => obs !== sheet.observations[index])) {
-            return {
-                ...sheet,
-                observations: newObservations,
-            };
-        }
-
-        return sheet;
     });
-
-    return {
-        ...state,
-        sheets: newSheets,
-    };
 };
 
 export const mergeObservationsToParagraphs = (state: ManuscriptStateCore, page: number) => {
-    const sheetIndex = state.sheets.findIndex((s) => s.page === page)!;
-    const newSheet = {
-        ...state.sheets[sheetIndex],
-        observations: flattenObservationsToParagraphs(state.sheets[sheetIndex].observations).map((o) => ({
-            ...o,
-            id: ++ID_COUNTER,
-        })),
-    };
-    const sheets = [...state.sheets];
-    sheets[sheetIndex] = newSheet;
+    const sheet = state.sheets.find((s) => s.page === page)!;
 
-    return { sheets };
+    sheet.observations = flattenObservationsToParagraphs(sheet.observations).map((o) => ({
+        ...o,
+        id: ++ID_COUNTER,
+    }));
 };
 
 export const setPoetry = (state: ManuscriptStateCore, pageToPoeticIds: Record<number, number[]>) => {
-    const sheets = [...state.sheets];
-
-    for (let i = 0; i < sheets.length; i++) {
-        const sheet = sheets[i];
+    state.sheets.forEach((sheet) => {
         const ids = pageToPoeticIds[sheet.page];
 
         if (ids) {
-            const observations = sheet.observations.map((o) => ({
-                ...o,
-                isPoetic: ids.includes(o.id),
-            }));
-
-            sheets[i] = { ...sheet, observations };
+            sheet.observations.forEach((observation) => {
+                observation.isPoetic = ids.includes(observation.id);
+            });
         }
-    }
-
-    return { sheets };
+    });
 };
 
 export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]) => {
-    const sheets = [...state.sheets];
-
-    for (let i = 0; i < sheets.length; i++) {
-        const sheet = sheets[i];
-
+    state.sheets.forEach((sheet) => {
         if (pages.includes(sheet.page)) {
             const corrected = correctReferences(sheet.observations);
 
             if (corrected !== sheet.observations) {
-                sheets[i] = { ...sheet, observations: corrected.map((o) => ({ ...o, id: ++ID_COUNTER })) };
+                sheet.observations = corrected.map((o) => ({ ...o, id: ++ID_COUNTER }));
             }
         }
-    }
+    });
+};
 
-    return { sheets };
+export const toggleFootnotes = (state: ManuscriptStateCore, ids: number[]) => {
+    state.sheets.forEach((sheet) => {
+        sheet.observations.forEach((o) => {
+            if (ids.includes(o.id)) {
+                o.isFootnote = !Boolean(o.isFootnote);
+            }
+        });
+    });
 };
 
 export const updateText = (state: ManuscriptStateCore, page: number, id: number, text: string) => {
-    const sheets = [...state.sheets];
+    const sheet = state.sheets.find((s) => s.page === page)!;
+    const observation = sheet.observations.find((o) => o.id === id)!;
 
-    for (let i = 0; i < sheets.length; i++) {
-        const sheet = sheets[i];
-
-        if (sheet.page === page) {
-            sheets[i] = { ...sheet, observations: sheet.observations.map((o) => (o.id === id ? { ...o, text } : o)) };
-        }
-    }
-
-    return { sheets };
+    observation.text = text;
 };

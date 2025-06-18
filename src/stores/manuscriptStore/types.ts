@@ -59,6 +59,8 @@ type ManuscriptActions = {
 
     autoCorrectFootnotes: (pages: number[]) => void;
 
+    deleteSupport: (page: number, id: number) => void;
+
     fixTypos: (ids: number[]) => void;
 
     /**
@@ -74,6 +76,8 @@ type ManuscriptActions = {
     setPoetry: (pageToPoeticIds: Record<number, number[]>) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
+
+    toggleFootnotes: (ids: number[]) => void;
 
     updateText: (page: number, id: number, text: string) => void;
 };
@@ -95,7 +99,7 @@ type OcrData = {
     /**
      * Matching observations extracted from surya for typo corrections.
      */
-    readonly observations: TextLine[];
+    observations: TextLine[];
 
     /**
      * Optional array of rectangle coordinates to process chapter titles.

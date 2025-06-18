@@ -19,6 +19,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
+    const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
     const updateText = useManuscriptStore((state) => state.updateText);
 
     return (
@@ -46,6 +47,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                     className={`w-full ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isPoetic && 'italic'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     defaultValue={data.text}
                     dir="rtl"
+                    key={data.id}
                     onBlur={(e) => {
                         updateText(data.page, data.id, e.target.value);
                     }}
@@ -62,11 +64,19 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
             >
                 <div className="flex items-center justify-between">
                     <Button
-                        aria-label="Mark as supported"
+                        aria-label="Accept Support"
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         onClick={() => applySupportToOriginal(data.page, data.id)}
                     >
                         ✓
+                    </Button>
+                    <Button
+                        aria-label="Delete Support"
+                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                        onClick={() => deleteSupport(data.page, data.id)}
+                        variant="ghost"
+                    >
+                        🗑️
                     </Button>
                     <Button
                         aria-label="Merge With Above"
