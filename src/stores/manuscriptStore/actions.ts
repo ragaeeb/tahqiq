@@ -3,6 +3,7 @@ import {
     calculateDPI,
     fixTypo,
     flattenObservationsToParagraphs,
+    getObservationLayoutInfo,
     isPoeticLayout,
     mapSuryaBoundingBox,
     mapSuryaPageResultToObservations,
@@ -26,7 +27,7 @@ const createSheet = (
     alternateObservations: Observation[],
     { dpi, horizontal_lines: lines, rectangles }: StructureMetadata,
 ): Sheet => {
-    const { groups, observations } = alignAndAdjustObservations(macObservations, {
+    const { groups, observations } = alignAndAdjustObservations(macObservations.filter(filterNoisyObservations), {
         imageWidth: dpi.width,
     });
 
@@ -37,16 +38,21 @@ const createSheet = (
         alt: altObservations,
         dpi,
         horizontalLines: lines,
-        observations: observations
-            .map(({ confidence, ...o }) => {
-                return {
-                    ...o,
-                    id: ID_COUNTER++,
-                    isMerged: Boolean(confidence && confidence < 1),
-                    isPoetic,
-                };
-            })
-            .filter(filterNoisyObservations),
+        observations: observations.map(({ confidence, ...o }) => {
+            const layoutInfo = getObservationLayoutInfo(o, {
+                horizontalLines: lines,
+                imageWidth: dpi.width,
+                rectangles,
+            });
+
+            return {
+                ...o,
+                id: ID_COUNTER++,
+                isMerged: Boolean(confidence && confidence < 1),
+                isPoetic,
+                ...layoutInfo,
+            };
+        }),
         page,
         rectangles,
     };

@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { SWS_SYMBOL } from '@/lib/constants';
 import { parsePageRanges } from '@/lib/textUtils';
-import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {
     honorifics: [boolean, Dispatch<SetStateAction<boolean>>];
@@ -33,7 +32,7 @@ export default function ManuscriptTableHeader({
                 aria-label="Select All"
                 className="w-12 px-4 py-3 text-center text-sm font-semibold text-gray-700 uppercase tracking-wide"
             >
-                <Checkbox checked={isAllSelected} onCheckedChange={(checked) => onSelectAll(!!checked)} />
+                <Checkbox checked={isAllSelected} onCheckedChange={(checked) => onSelectAll(Boolean(checked))} />
             </th>
             <th
                 aria-label="Page"
@@ -101,6 +100,16 @@ export default function ManuscriptTableHeader({
                         }}
                     >
                         Poetic
+                    </Button>
+                    <Button
+                        aria-label="Invalid Footnotes"
+                        onClick={() => {
+                            const pages = new Set(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
+                            setFilterByPages([...pages]);
+                        }}
+                        variant="outline"
+                    >
+                        ()
                     </Button>
                     <div className="text-right">Support ({altCount})</div>
                 </div>

@@ -1,4 +1,4 @@
-import type { BoundingBox, Observation, SuryaPageOcrResult } from 'kokokor';
+import type { BoundingBox, Observation, ObservationLayoutInfo, SuryaPageOcrResult } from 'kokokor';
 
 /**
  * Combined state and actions for manuscript management
@@ -37,11 +37,12 @@ export type StructureMetadata = {
     readonly rectangles?: BoundingBox[];
 };
 
-export type TextLine = Observation & {
-    id: number;
-    isMerged?: boolean;
-    isPoetic?: boolean;
-};
+export type TextLine = Observation &
+    ObservationLayoutInfo & {
+        id: number;
+        isMerged?: boolean;
+        isPoetic?: boolean;
+    };
 
 type AltText = {
     readonly id: number;
@@ -55,6 +56,8 @@ type MacOCR = { observations: Observation[] };
  */
 type ManuscriptActions = {
     applySupportToOriginal: (page: number, id: number) => void;
+
+    autoCorrectFootnotes: (pages: number[]) => void;
 
     fixTypos: (ids: number[]) => void;
 
