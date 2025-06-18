@@ -11,6 +11,7 @@ import {
     mergeWithAbove,
     setPoetry,
     splitAltAtLineBreak,
+    updateText,
 } from './actions';
 
 /**
@@ -30,5 +31,6 @@ export const useManuscriptStore = create<ManuscriptState>((set) => {
         setPoetry: (pageToPoeticIds) => set((state) => setPoetry(state, pageToPoeticIds)),
         sheets: [],
         splitAltAtLineBreak: (page, id, alt) => set((state) => splitAltAtLineBreak(state, page, id, alt)),
+        updateText: (page, id, text) => set((state) => updateText(state, page, id, text)),
     };
 });

@@ -19,6 +19,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
+    const updateText = useManuscriptStore((state) => state.updateText);
 
     return (
         <tr
@@ -45,6 +46,9 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                     className={`w-full ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isPoetic && 'italic'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     defaultValue={data.text}
                     dir="rtl"
+                    onBlur={(e) => {
+                        updateText(data.page, data.id, e.target.value);
+                    }}
                     style={{ fontFamily: 'inherit' }}
                     type="text"
                 />

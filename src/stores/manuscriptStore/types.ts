@@ -74,6 +74,8 @@ type ManuscriptActions = {
     setPoetry: (pageToPoeticIds: Record<number, number[]>) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
+
+    updateText: (page: number, id: number, text: string) => void;
 };
 
 type OcrData = {

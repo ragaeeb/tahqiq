@@ -303,3 +303,17 @@ export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]
 
     return { sheets };
 };
+
+export const updateText = (state: ManuscriptStateCore, page: number, id: number, text: string) => {
+    const sheets = [...state.sheets];
+
+    for (let i = 0; i < sheets.length; i++) {
+        const sheet = sheets[i];
+
+        if (sheet.page === page) {
+            sheets[i] = { ...sheet, observations: sheet.observations.map((o) => (o.id === id ? { ...o, text } : o)) };
+        }
+    }
+
+    return { sheets };
+};
