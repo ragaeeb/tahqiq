@@ -10,17 +10,20 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 
 type TextRowProps = {
     data: SheetLine;
+    isNewPage?: boolean;
     isSelected: boolean;
     onSelectionChange: (row: SheetLine, selected: boolean) => void;
 };
 
-function TextRow({ data, isSelected, onSelectionChange }: TextRowProps) {
+function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
 
     return (
-        <tr className="hover:bg-gray-50 transition-colors duration-150 ease-in-out">
+        <tr
+            className={`hover:bg-gray-50 transition-colors duration-150 ease-in-out ${isNewPage ? 'border-t-4 border-t-blue-200' : ''}`}
+        >
             <td aria-label="Select" className="w-12 px-4 py-4 text-center border-r border-green-100">
                 <Checkbox
                     checked={isSelected}

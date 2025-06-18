@@ -95,9 +95,10 @@ export default function Manuscript() {
                                 />
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
-                                {rows.map((r) => (
+                                {rows.map((r, index, arr) => (
                                     <TextRow
                                         data={r}
+                                        isNewPage={index > 0 ? arr[index - 1].page !== r.page : false}
                                         isSelected={selectedRows.includes(r)}
                                         key={r.id}
                                         onSelectionChange={handleSelectionChange}
