@@ -1,11 +1,14 @@
+import { flattenObservationsToParagraphs, mapTextBlocksToParagraphs } from 'kokokor';
 import { estimateSegmentFromToken } from 'paragrafs';
 
+import type { Book } from '@/stores/bookStore/types';
 import type { ManuscriptState } from '@/stores/manuscriptStore/types';
 import type { Transcript, TranscriptSeries } from '@/stores/transcriptStore/types';
 
 import type { BookTranscriptFormat, PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 
 import { BOOK_CONTRACT_LATEST, TRANSCRIPT_CONTRACT_LATEST } from './constants';
+import { preformatArabicText } from './textUtils';
 import { roundToDecimal } from './time';
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
@@ -174,15 +177,18 @@ export const mapTranscriptsToLatestContract = (transcripts: Transcript[], create
 };
 
 export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
+    const pages = manuscriptState.sheets.map((s) => {
+        const body = flattenObservationsToParagraphs(s.observations.filter((s) => !s.isFootnote));
+        const footnotes = flattenObservationsToParagraphs(s.observations.filter((s) => s.isFootnote));
+
+        const text = mapTextBlocksToParagraphs(body.concat(footnotes), '_');
+        return { id: s.page, text: preformatArabicText(text, true), volume: 1 };
+    });
+
     return {
         contractVersion: BOOK_CONTRACT_LATEST,
-        createdAt: manuscriptState.createdAt,
+        createdAt: new Date(),
         lastUpdatedAt: new Date(),
-        pages: Object.entries(manuscriptState.volumeToPages)
-            .toSorted(([a], [b]) => Number(a) - Number(b))
-            .flatMap(([volume, pages]) => {
-                return pages.map((p) => ({ id: p.id, text: p.text, volume: Number(volume) }));
-            }),
-        ...(manuscriptState.urlTemplate && { urlTemplate: manuscriptState.urlTemplate }),
+        pages,
     };
 };

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 
-import type { RawInputFiles } from '@/stores/manuscriptStore/types';
+import type { Book } from '@/stores/bookStore/types';
 
 import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
@@ -21,7 +21,7 @@ export default function Book() {
     const urlTemplate = useBookStore((state) => state.urlTemplate);
     const setUrlTemplate = useBookStore((state) => state.setUrlTemplate);
     const isInitialized = selectedVolume > 0;
-    const initManuscript = useBookStore((state) => state.init);
+    const initBook = useBookStore((state) => state.init);
     const pages = useBookStore(selectCurrentPages);
     const selectAllPages = useBookStore((state) => state.selectAllPages);
 
@@ -38,7 +38,7 @@ export default function Book() {
                             allowedExtensions=".json,.txt"
                             description="Drag and drop the manuscript"
                             maxFiles={4}
-                            onFiles={(map) => initManuscript(map as unknown as RawInputFiles)}
+                            onFiles={(map) => initBook(map as unknown as Record<string, Book>)}
                         />
                     </div>
                 </div>

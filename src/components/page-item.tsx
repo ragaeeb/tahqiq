@@ -2,11 +2,11 @@
 
 import React from 'react';
 
-import type { Page } from '@/stores/manuscriptStore/types';
+import type { Page } from '@/stores/bookStore/types';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
+import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import HighlightableTextarea from './ui/highlightable-textarea';
@@ -20,7 +20,7 @@ import HighlightableTextarea from './ui/highlightable-textarea';
  */
 const PageItem = ({ page }: { page: Page }) => {
     const toggleSegmentSelection = useTranscriptStore((state) => state.toggleSegmentSelection);
-    const isSelected = useManuscriptStore((state) => state.selectedPages.includes(page));
+    const isSelected = useBookStore((state) => state.selectedPages.includes(page));
     const lineHighlights: { [lineNumber: number]: string } = {};
     if (page.errorLines) {
         for (const line of page.errorLines) {

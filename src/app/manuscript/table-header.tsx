@@ -2,10 +2,11 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
+import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { SWS_SYMBOL } from '@/lib/constants';
+import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { parsePageRanges } from '@/lib/textUtils';
 
 type ManuscriptTableHeaderProps = {
@@ -45,30 +46,29 @@ export default function ManuscriptTableHeader({
                 aria-label="Page"
                 className="w-20 px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide"
             >
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-
-                        const data = new FormData(e.currentTarget);
-                        const query = (data.get('range') as string).trim();
-
-                        const pages = new Set(parsePageRanges(query));
+                <SubmittableInput
+                    className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                    name="range"
+                    onSubmit={(range) => {
+                        const pages = new Set(parsePageRanges(range));
                         setFilterByIds(rows.filter((r) => pages.has(r.page)).map((r) => r.id));
                     }}
-                >
-                    <Input
-                        className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
-                        name="range"
-                        placeholder="Page"
-                    />
-                </form>
+                    placeholder="Page"
+                />
             </th>
             <th
                 aria-label="Text"
                 className="w-1/2 px-4 py-3 text-right text-sm font-semibold text-gray-700 uppercase tracking-wide"
                 dir="rtl"
             >
-                Text ({rows.length})
+                <SubmittableInput
+                    className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                    name="query"
+                    onSubmit={(query) => {
+                        setFilterByIds(rows.filter((r) => r.text.includes(query)).map((r) => r.id));
+                    }}
+                    placeholder={`Text (${rows.length})`}
+                />
             </th>
             <th
                 aria-label="Support"
@@ -103,13 +103,13 @@ export default function ManuscriptTableHeader({
                     {hasHonorifcsApplied && (
                         <Button
                             aria-label="Correct Wrong Honorifics"
-                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
                             onClick={() => {
                                 setFilterByIds(rows.filter((r) => r.text.includes(SWS_SYMBOL)).map((r) => r.id));
                             }}
                             variant="ghost"
                         >
-                            (AZW)
+                            {AZW_SYMBOL}
                         </Button>
                     )}
                     {includesPoetry && (

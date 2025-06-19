@@ -1,4 +1,4 @@
-import type { BookStateCore } from './types';
+import type { Book, BookStateCore, Page } from './types';
 
 import { selectCurrentPages } from './selectors';
 
@@ -11,4 +11,22 @@ import { selectCurrentPages } from './selectors';
  */
 export const selectAllPages = (state: BookStateCore, isSelected: boolean) => {
     return { selectedPages: isSelected ? selectCurrentPages(state) : [] };
+};
+
+export const initStore = (fileToBook: Record<string, Book>) => {
+    const volumeToPages: Record<number, Page[]> = {};
+
+    Object.entries(fileToBook).forEach(([file, book]) => {
+        const volume = Number(file.split('.')[0]);
+
+        book.pages.forEach((p) => {
+            if (!volumeToPages[volume]) {
+                volumeToPages[volume] = [];
+            }
+
+            volumeToPages[volume].push({ id: p.id, text: p.text });
+        });
+    });
+
+    return { selectedVolume: 1, volumeToPages };
 };

@@ -11,7 +11,7 @@ import {
     type SuryaPageOcrResult,
 } from 'kokokor';
 
-import { SWS_SYMBOL } from '@/lib/constants';
+import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { correctReferences } from '@/lib/footnotes';
 
 import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata } from './types';
@@ -39,7 +39,7 @@ const createSheet = (
         alt: altObservations,
         dpi,
         horizontalLines: lines,
-        observations: observations.map(({ confidence, ...o }) => {
+        observations: observations.map((o) => {
             const layoutInfo = getObservationLayoutInfo(o, {
                 horizontalLines: lines,
                 imageWidth: dpi.width,
@@ -49,7 +49,6 @@ const createSheet = (
             return {
                 ...o,
                 id: ID_COUNTER++,
-                isMerged: Boolean(confidence && confidence < 1),
                 isPoetic,
                 ...layoutInfo,
             };
@@ -232,4 +231,15 @@ export const updateText = (state: ManuscriptStateCore, page: number, id: number,
     const observation = sheet.observations.find((o) => o.id === id)!;
 
     observation.text = text;
+};
+
+export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], from = SWS_SYMBOL, to = AZW_SYMBOL) => {
+    state.sheets.forEach((sheet) => {
+        sheet.observations.forEach((o) => {
+            if (ids.includes(o.id)) {
+                o.text = o.text.replaceAll(from, to);
+                o.id = ++ID_COUNTER;
+            }
+        });
+    });
 };

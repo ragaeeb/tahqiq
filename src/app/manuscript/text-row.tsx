@@ -40,7 +40,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
             </td>
             <td
                 aria-label="Text"
-                className={`w-1/2 px-4 py-4 text-xl text-right leading-relaxed text-gray-800 border-r border-gray-100 ${data.isMerged && 'bg-red-300'}`}
+                className={`w-1/2 px-4 py-4 text-xl text-right leading-relaxed text-gray-800 border-r border-gray-100`}
                 dir="rtl"
             >
                 <Input

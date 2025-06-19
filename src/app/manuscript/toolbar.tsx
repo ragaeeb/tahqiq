@@ -5,7 +5,7 @@ import React, { type Dispatch, type SetStateAction } from 'react';
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 import { Button } from '@/components/ui/button';
-import { SWS_SYMBOL } from '@/lib/constants';
+import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { mapManuscriptToBook } from '@/lib/legacy';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
@@ -26,6 +26,7 @@ export default function ManuscriptToolbar({
     const fixTypos = useManuscriptStore((state) => state.fixTypos);
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
     const toggleFootnotes = useManuscriptStore((state) => state.toggleFootnotes);
+    const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
 
     return (
         <div className="flex space-x-2">
@@ -86,12 +87,12 @@ export default function ManuscriptToolbar({
             {selectedRows.length > 0 && (
                 <Button
                     onClick={() => {
-                        toggleFootnotes(selectedRows.map((r) => r.id));
+                        replaceHonorifics(selectedRows.map((r) => r.id));
                         setSelectedRows([]);
                     }}
                     variant="outline"
                 >
-                    (AZW)
+                    {AZW_SYMBOL}→{SWS_SYMBOL}
                 </Button>
             )}
             {selectedRows.length > 0 && <Button className="bg-purple-200">Mark As Poetry</Button>}

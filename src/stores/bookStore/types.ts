@@ -51,6 +51,8 @@ export type PageStatus = 'done' | 'review';
  * Action functions available for transcript manipulation
  */
 type BookActions = {
+    init: (fileToBook: Record<string, Book>) => void;
+
     /**
      * Sets selection state for all pages
      * @param isSelected Whether to select or deselect all pages

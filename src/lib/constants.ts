@@ -32,3 +32,5 @@ export const REQUIRED_RAW_INPUT_FILES = [
 ] as const satisfies readonly (keyof RawInputFiles)[];
 
 export const SWS_SYMBOL = 'ﷺ';
+
+export const AZW_SYMBOL = 'ﷻ';

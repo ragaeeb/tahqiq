@@ -14,6 +14,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         init: (data) => set(() => actions.initStore(data)),
         mergePageObservationsToParagraphs: (page) => set((state) => actions.mergeObservationsToParagraphs(state, page)),
         mergeWithAbove: (page, id) => set((state) => actions.mergeWithAbove(state, page, id)),
+        replaceHonorifics: (ids, from, to) => set((state) => actions.replaceHonorifics(state, ids, from, to)),
         setPoetry: (pageToPoeticIds) => set((state) => actions.setPoetry(state, pageToPoeticIds)),
         sheets: [],
         splitAltAtLineBreak: (page, id, alt) => set((state) => actions.splitAltAtLineBreak(state, page, id, alt)),

@@ -40,7 +40,6 @@ export type StructureMetadata = {
 export type TextLine = Observation &
     ObservationLayoutInfo & {
         id: number;
-        isMerged?: boolean;
         isPoetic?: boolean;
     };
 
@@ -72,6 +71,8 @@ type ManuscriptActions = {
     mergePageObservationsToParagraphs: (page: number) => void;
 
     mergeWithAbove: (page: number, id: number) => void;
+
+    replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
 
     setPoetry: (pageToPoeticIds: Record<number, number[]>) => void;
 

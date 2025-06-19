@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import type { BookState } from './types';
 
-import { selectAllPages } from './actions';
+import * as actions from './actions';
 
 /**
  * Creates a Zustand store for managing manuscript state
@@ -13,8 +13,9 @@ import { selectAllPages } from './actions';
 export const useBookStore = create<BookState>((set) => {
     return {
         createdAt: new Date(),
+        init: (data) => set(() => actions.initStore(data)),
         selectAllPages: (isSelected) => {
-            return set((state) => selectAllPages(state, isSelected));
+            return set((state) => actions.selectAllPages(state, isSelected));
         },
         selectedPages: [],
         selectedVolume: 0,
