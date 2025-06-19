@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { type Dispatch, type SetStateAction } from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -27,6 +28,8 @@ export default function ManuscriptToolbar({
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
     const toggleFootnotes = useManuscriptStore((state) => state.toggleFootnotes);
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
+    const setPoetry = useManuscriptStore((state) => state.setPoetry);
+    const deleteLines = useManuscriptStore((state) => state.deleteLines);
 
     return (
         <div className="flex space-x-2">
@@ -41,6 +44,9 @@ export default function ManuscriptToolbar({
             >
                 💾
             </Button>
+            <Link href="/book">
+                <Button className="bg-blue-500">📦</Button>
+            </Link>
             {filterByIds.length > 0 && (
                 <Button
                     onClick={() => {
@@ -59,7 +65,7 @@ export default function ManuscriptToolbar({
                     }}
                     variant="outline"
                 >
-                    {SWS_SYMBOL}
+                    Apply {SWS_SYMBOL}
                 </Button>
             )}
             {selectedRows.length > 0 && (
@@ -95,7 +101,36 @@ export default function ManuscriptToolbar({
                     {AZW_SYMBOL}→{SWS_SYMBOL}
                 </Button>
             )}
-            {selectedRows.length > 0 && <Button className="bg-purple-200">Mark As Poetry</Button>}
+            {selectedRows.length > 0 && (
+                <Button
+                    className="bg-purple-400"
+                    onClick={() => {
+                        const pageToIds: Record<number, number[]> = {};
+
+                        selectedRows.forEach((row) => {
+                            if (!pageToIds[row.page]) {
+                                pageToIds[row.page] = [];
+                            }
+
+                            pageToIds[row.page].push(row.id);
+                        });
+
+                        setPoetry(pageToIds);
+                    }}
+                >
+                    Mark As Poetry
+                </Button>
+            )}
+            {selectedRows.length > 0 && (
+                <Button
+                    onClick={() => {
+                        deleteLines(selectedRows.map((row) => row.id));
+                    }}
+                    variant="destructive"
+                >
+                    ✘
+                </Button>
+            )}
         </div>
     );
 }

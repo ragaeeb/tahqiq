@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import type { Book } from '@/stores/bookStore/types';
 
@@ -10,8 +10,10 @@ import PageItem from '@/components/page-item';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import VersionFooter from '@/components/version-footer';
+import { mapManuscriptToBook } from '@/lib/legacy';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
+import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 /**
  * Renders the main page layout for displaying manuscript pages.
@@ -24,6 +26,13 @@ export default function Book() {
     const initBook = useBookStore((state) => state.init);
     const pages = useBookStore(selectCurrentPages);
     const selectAllPages = useBookStore((state) => state.selectAllPages);
+
+    useEffect(() => {
+        if (useManuscriptStore.getState().sheets.length > 0) {
+            const book = mapManuscriptToBook(useManuscriptStore.getState());
+            initBook({ '1.json': book });
+        }
+    }, [initBook]);
 
     const pageItems = useMemo(() => {
         return pages.map((page) => <PageItem key={`${selectedVolume}/${page.id}`} page={page} />);

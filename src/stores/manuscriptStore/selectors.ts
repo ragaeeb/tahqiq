@@ -2,6 +2,7 @@ import { areSimilarAfterNormalization } from 'kokokor';
 import memoizeOne from 'memoize-one';
 
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { hasInvalidFootnotes } from '@/lib/footnotes';
 
 import type { ManuscriptStateCore, SheetLine } from './types';
 
@@ -13,7 +14,7 @@ export const selectAllSheetLines = memoizeOne((state: ManuscriptStateCore): Shee
             return {
                 ...o,
                 alt,
-                hasInvalidFootnotes: Boolean(o.text.includes('()')),
+                hasInvalidFootnotes: hasInvalidFootnotes(o.text),
                 includesHonorifics: Boolean(
                     alt.includes(SWS_SYMBOL) && !(o.text.includes(SWS_SYMBOL) || o.text.includes(AZW_SYMBOL)),
                 ),

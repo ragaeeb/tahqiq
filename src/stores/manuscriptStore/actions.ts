@@ -2,7 +2,6 @@ import {
     alignAndAdjustObservations,
     calculateDPI,
     fixTypo,
-    flattenObservationsToParagraphs,
     getObservationLayoutInfo,
     isPoeticLayout,
     mapSuryaBoundingBox,
@@ -50,6 +49,7 @@ const createSheet = (
                 ...o,
                 id: ID_COUNTER++,
                 isPoetic,
+                lastUpdate: Date.now(),
                 ...layoutInfo,
             };
         }),
@@ -122,13 +122,14 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
     const [firstLine, secondLine] = alt.split('\n');
     const altObservation = {
         ...sheet.alt[index],
-        id: ++ID_COUNTER,
+        lastUpdate: Date.now(),
         text: firstLine,
     };
 
     const nextObservation = {
         ...sheet.alt[index],
         id: ++ID_COUNTER,
+        lastUpdate: Date.now(),
         text: secondLine,
     };
 
@@ -144,7 +145,7 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
 
     const mergedObservation = {
         ...above,
-        id: ++ID_COUNTER,
+        lastUpdate: Date.now(),
         text: `${above.text} ${current.text}`.trim(),
     };
 
@@ -157,7 +158,7 @@ export const applySupportToOriginal = (state: ManuscriptStateCore, page: number,
 
     sheet.observations[index] = {
         ...sheet.observations[index],
-        id: ++ID_COUNTER,
+        lastUpdate: Date.now(),
         text: sheet.alt[index].text,
     };
 };
@@ -176,20 +177,11 @@ export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
     state.sheets.forEach((sheet) => {
         sheet.observations.forEach((observation, index) => {
             if (idsSet.has(observation.id)) {
-                observation.id = ++ID_COUNTER;
+                observation.lastUpdate = Date.now();
                 observation.text = fixTypo(observation.text, sheet.alt[index].text, options);
             }
         });
     });
-};
-
-export const mergeObservationsToParagraphs = (state: ManuscriptStateCore, page: number) => {
-    const sheet = state.sheets.find((s) => s.page === page)!;
-
-    sheet.observations = flattenObservationsToParagraphs(sheet.observations).map((o) => ({
-        ...o,
-        id: ++ID_COUNTER,
-    }));
 };
 
 export const setPoetry = (state: ManuscriptStateCore, pageToPoeticIds: Record<number, number[]>) => {
@@ -210,7 +202,7 @@ export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]
             const corrected = correctReferences(sheet.observations);
 
             if (corrected !== sheet.observations) {
-                sheet.observations = corrected.map((o) => ({ ...o, id: ++ID_COUNTER }));
+                sheet.observations = corrected.map((o) => ({ ...o, lastUpdate: Date.now() }));
             }
         }
     });
@@ -238,8 +230,20 @@ export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], fro
         sheet.observations.forEach((o) => {
             if (ids.includes(o.id)) {
                 o.text = o.text.replaceAll(from, to);
-                o.id = ++ID_COUNTER;
+                o.lastUpdate = Date.now();
             }
         });
+    });
+};
+
+export const deleteLines = (state: ManuscriptStateCore, ids: number[]) => {
+    const idsSet = new Set(ids);
+
+    state.sheets.forEach((sheet) => {
+        const filtered = sheet.observations.filter((observation) => !idsSet.has(observation.id));
+
+        if (filtered.length !== sheet.observations.length) {
+            sheet.observations = filtered;
+        }
     });
 };

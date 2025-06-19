@@ -41,6 +41,7 @@ export type TextLine = Observation &
     ObservationLayoutInfo & {
         id: number;
         isPoetic?: boolean;
+        lastUpdate: number;
     };
 
 type AltText = {
@@ -58,6 +59,8 @@ type ManuscriptActions = {
 
     autoCorrectFootnotes: (pages: number[]) => void;
 
+    deleteLines: (ids: number[]) => void;
+
     deleteSupport: (page: number, id: number) => void;
 
     fixTypos: (ids: number[]) => void;
@@ -67,8 +70,6 @@ type ManuscriptActions = {
      * @param data Object containing manuscript information
      */
     init: (fileNameToData: RawInputFiles) => void;
-
-    mergePageObservationsToParagraphs: (page: number) => void;
 
     mergeWithAbove: (page: number, id: number) => void;
 

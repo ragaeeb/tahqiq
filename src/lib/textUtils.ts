@@ -35,47 +35,11 @@ export const standardizeAhHijriSymbol = (text: string) => {
     return text.replace(/(^|\s|[^\u0600-\u06FF])اه(?=\s|$|[^\u0600-\u06FF])/g, '$1اهـ');
 };
 
-export const fixBasmalahTypos = (text: string) => {
-    // Correct Basmalah
-    const correctBasmalah = 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ';
-
-    // More robust pattern to handle OCR variations:
-    const basmalahPattern = /(^|\n)([^\n]{1,80}?)(?=\n|$)/gm;
-
-    return text.replace(basmalahPattern, (match, prefix, content) => {
-        const cleanContent = content.trim();
-
-        // Skip if too short or too long
-        if (cleanContent.length < 10 || cleanContent.length > 80) {
-            return match;
-        }
-
-        // Check for basmalah indicators:
-        const hasBasmStart = /^[بيتن][ِسْصشع]*[مت][ِ]?\s/.test(cleanContent); // ب + س/ص/ش + م variations
-        const hasAllah = /الل[َّهِة\s]*/.test(cleanContent); // Allah variations (الله، اللة، etc.)
-        const hasRahman = /[رنمل][َّحجخ]*[منت][نمت]/.test(cleanContent); // Rahman variations
-        const hasRaheem = /[رنمل][َّحجخ]*[يحجخ]*[متمن]/.test(cleanContent); // Raheem variations
-
-        // Must have basmalah start + Allah + at least one of Rahman/Raheem
-        const isLikelyBasmalah = hasBasmStart && hasAllah && (hasRahman || hasRaheem);
-
-        // Additional check: should have 3-4 main word groups (بسم الله الرحمن الرحيم)
-        const wordCount = cleanContent.split(/\s+/).length;
-        const hasReasonableWordCount = wordCount >= 3 && wordCount <= 6;
-
-        if (isLikelyBasmalah && hasReasonableWordCount) {
-            return prefix + correctBasmalah;
-        }
-
-        return match;
-    });
-};
-
 const fixBracketTypos = (text: string) => {
     return text.replace(/\(«/g, '«').replace(/»\)/g, '»');
 };
 
-const autoCorrectPipeline = [standardizeHijriSymbol, standardizeAhHijriSymbol, fixBasmalahTypos, fixBracketTypos];
+const autoCorrectPipeline = [standardizeHijriSymbol, standardizeAhHijriSymbol, fixBracketTypos];
 
 const pastePipeline = [
     stripZeroWidthCharacters,

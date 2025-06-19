@@ -5,7 +5,6 @@ import type { SheetLine } from '@/stores/manuscriptStore/types';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { parsePageRanges } from '@/lib/textUtils';
 

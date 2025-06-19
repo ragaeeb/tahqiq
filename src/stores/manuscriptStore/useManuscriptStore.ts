@@ -9,10 +9,10 @@ export const useManuscriptStore = create<ManuscriptState>()(
     mutative((set) => ({
         applySupportToOriginal: (page, id) => set((state) => actions.applySupportToOriginal(state, page, id)),
         autoCorrectFootnotes: (pages) => set((state) => actions.autoCorrectFootnotes(state, pages)),
+        deleteLines: (ids) => set((state) => actions.deleteLines(state, ids)),
         deleteSupport: (page, id) => set((state) => actions.deleteSupport(state, page, id)),
         fixTypos: (ids) => set((state) => actions.fixTypos(state, ids)),
         init: (data) => set(() => actions.initStore(data)),
-        mergePageObservationsToParagraphs: (page) => set((state) => actions.mergeObservationsToParagraphs(state, page)),
         mergeWithAbove: (page, id) => set((state) => actions.mergeWithAbove(state, page, id)),
         replaceHonorifics: (ids, from, to) => set((state) => actions.replaceHonorifics(state, ids, from, to)),
         setPoetry: (pageToPoeticIds) => set((state) => actions.setPoetry(state, pageToPoeticIds)),
