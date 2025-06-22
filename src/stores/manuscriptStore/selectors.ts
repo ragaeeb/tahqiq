@@ -1,4 +1,4 @@
-import { areSimilarAfterNormalization } from 'kokokor';
+import { areSimilarAfterNormalization } from 'baburchi';
 import memoizeOne from 'memoize-one';
 
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';

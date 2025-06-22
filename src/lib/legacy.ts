@@ -1,4 +1,4 @@
-import { flattenObservationsToParagraphs, mapTextBlocksToParagraphs } from 'kokokor';
+import { formatTextBlocks, mapTextLinesToParagraphs } from 'kokokor';
 import { estimateSegmentFromToken } from 'paragrafs';
 
 import type { Book } from '@/stores/bookStore/types';
@@ -178,10 +178,8 @@ export const mapTranscriptsToLatestContract = (transcripts: Transcript[], create
 
 export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
     const pages = manuscriptState.sheets.map((s) => {
-        const body = flattenObservationsToParagraphs(s.observations.filter((s) => !s.isFootnote));
-        const footnotes = flattenObservationsToParagraphs(s.observations.filter((s) => s.isFootnote));
-
-        const text = mapTextBlocksToParagraphs(body.concat(footnotes), '_');
+        const paragraphs = mapTextLinesToParagraphs(s.observations);
+        const text = formatTextBlocks(paragraphs, '_');
         return { id: s.page, text: preformatArabicText(text, true), volume: 1 };
     });
 

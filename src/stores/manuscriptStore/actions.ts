@@ -1,77 +1,70 @@
+import { fixTypo } from 'baburchi';
 import {
-    alignAndAdjustObservations,
     calculateDPI,
-    fixTypo,
-    getObservationLayoutInfo,
-    isPoeticLayout,
-    mapSuryaBoundingBox,
-    mapSuryaPageResultToObservations,
+    flipAndAlignObservations,
+    mapMatrixToBoundingBox,
+    mapObservationsToTextLines,
     type Observation,
-    type SuryaPageOcrResult,
 } from 'kokokor';
 
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { correctReferences } from '@/lib/footnotes';
 
-import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata } from './types';
+import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata, SuryaPageOcrResult } from './types';
 
 import { assertHasRequiredFiles } from './guards';
 
 let ID_COUNTER = 0;
 
-const filterNoisyObservations = (o: Observation) => o.text?.length > 1;
+/**
+ * Converts Surya OCR page results to standardized Observation format.
+ * Maps each text line from Surya format to the common Observation structure
+ * used throughout the application.
+ *
+ * @param surya - Surya OCR page result containing text lines with bounding boxes
+ * @returns Array of observations in standardized format
+ */
+const mapSuryaPageResultToObservations = (surya: SuryaPageOcrResult): Observation[] => {
+    return surya.text_lines.map((line) => ({
+        bbox: mapMatrixToBoundingBox(line.bbox),
+        text: line.text.replace(/<\/?[a-z][^>]*?>/gi, ' '),
+    }));
+};
 
 const createSheet = (
     page: number,
     macObservations: Observation[],
     alternateObservations: Observation[],
-    { dpi, horizontal_lines: lines, rectangles }: StructureMetadata,
+    struct: StructureMetadata,
 ): Sheet => {
-    const { groups, observations } = alignAndAdjustObservations(macObservations.filter(filterNoisyObservations), {
-        imageWidth: dpi.width,
+    const textLines = mapObservationsToTextLines(macObservations, struct.dpi, {
+        horizontalLines: struct.horizontal_lines,
+        rectangles: struct.rectangles,
     });
 
     const altObservations = alternateObservations.map((o) => ({ id: ID_COUNTER++, text: o.text }));
-    const isPoetic = isPoeticLayout(groups);
 
     return {
         alt: altObservations,
-        dpi,
-        horizontalLines: lines,
-        observations: observations.map((o) => {
-            const layoutInfo = getObservationLayoutInfo(o, {
-                horizontalLines: lines,
-                imageWidth: dpi.width,
-                rectangles,
-            });
-
+        observations: textLines.map((o) => {
             return {
                 ...o,
                 id: ID_COUNTER++,
-                isPoetic,
                 lastUpdate: Date.now(),
-                ...layoutInfo,
             };
         }),
         page,
-        rectangles,
     };
 };
 
 const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, pdfHeight: number) => {
-    const { height: imageHeight, width: imageWidth } = mapSuryaBoundingBox(suryaPage.image_bbox);
-    const { x: dpiX, y: dpiY } = calculateDPI(
+    const { height: imageHeight, width: imageWidth } = mapMatrixToBoundingBox(suryaPage.image_bbox);
+    const { x: dpiX } = calculateDPI(
         { height: imageHeight, width: imageWidth },
         { height: pdfHeight, width: pdfWidth },
     );
 
-    const alternateObservations = alignAndAdjustObservations(mapSuryaPageResultToObservations(suryaPage), {
-        dpiX,
-        dpiY,
-        imageWidth,
-    }).observations.filter(filterNoisyObservations);
-
-    return alternateObservations;
+    return flipAndAlignObservations(mapSuryaPageResultToObservations(suryaPage), imageWidth, dpiX);
 };
 
 export const initStore = (fileNameToData: RawInputFiles) => {
@@ -88,6 +81,7 @@ export const initStore = (fileNameToData: RawInputFiles) => {
     const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
 
     const sheets = Object.entries(fileToObservations)
+        .filter(([, macOCRData]) => macOCRData.observations.length > 0)
         .map(([imageFile, macOCRData]) => {
             const pageNumber = parseInt(imageFile.split('.')[0]!);
             const suryaPage = surya.find((s) => s.page === pageNumber);

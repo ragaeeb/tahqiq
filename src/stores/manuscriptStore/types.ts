@@ -1,4 +1,4 @@
-import type { BoundingBox, Observation, ObservationLayoutInfo, SuryaPageOcrResult } from 'kokokor';
+import type { BoundingBox, Observation, TextBlock } from 'kokokor';
 
 /**
  * Combined state and actions for manuscript management
@@ -37,12 +37,27 @@ export type StructureMetadata = {
     readonly rectangles?: BoundingBox[];
 };
 
-export type TextLine = Observation &
-    ObservationLayoutInfo & {
-        id: number;
-        isPoetic?: boolean;
-        lastUpdate: number;
-    };
+export type SuryaPageOcrResult = {
+    /** The bbox for the image in (x1, y1, x2, y2) format. (x1, y1) is the top left corner, and (x2, y2) is the bottom right corner. All line bboxes will be contained within this bbox. */
+    readonly image_bbox: [number, number, number, number];
+
+    /** The page number in the file */
+    readonly page: number;
+
+    /** The detected text and bounding boxes for each line */
+    readonly text_lines: {
+        /** the axis-aligned rectangle for the text line in (x1, y1, x2, y2) format. (x1, y1) is the top left corner, and (x2, y2) is the bottom right corner. */
+        readonly bbox: [number, number, number, number];
+
+        /** the text in the line */
+        readonly text: string;
+    }[];
+};
+
+export type TextLine = TextBlock & {
+    id: number;
+    lastUpdate: number;
+};
 
 type AltText = {
     readonly id: number;
@@ -89,22 +104,9 @@ type OcrData = {
      * Matching observations extracted from surya for typo corrections.
      */
     readonly alt: AltText[];
-    /**
-     * The dimensions and DPI information of the document.
-     */
-    readonly dpi: BoundingBox;
-    /**
-     * Optional array of horizontal lines detected in the document.
-     * Often used for identifying page breaks, section separators, or footers.
-     */
-    readonly horizontalLines?: BoundingBox[];
+
     /**
      * Matching observations extracted from surya for typo corrections.
      */
     observations: TextLine[];
-
-    /**
-     * Optional array of rectangle coordinates to process chapter titles.
-     */
-    readonly rectangles?: BoundingBox[];
 };
