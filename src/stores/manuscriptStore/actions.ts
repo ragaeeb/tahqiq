@@ -49,6 +49,9 @@ const createSheet = (
         horizontalLines: struct.horizontal_lines,
         rectangles: struct.rectangles,
         ...(shouldLog && { log: console.log }),
+        poetryDetectionOptions: {
+            minWidthRatioForMerged: null,
+        },
     });
 
     const altObservations = alternateObservations.map((o) => ({ id: ID_COUNTER++, text: o.text }));
@@ -187,15 +190,13 @@ export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
     });
 };
 
-export const setPoetry = (state: ManuscriptStateCore, pageToPoeticIds: Record<number, number[]>) => {
+export const setPoetry = (state: ManuscriptStateCore, ids: number[], isPoetry: boolean) => {
     state.sheets.forEach((sheet) => {
-        const ids = pageToPoeticIds[sheet.page];
-
-        if (ids) {
-            sheet.observations.forEach((observation) => {
-                observation.isPoetic = ids.includes(observation.id);
-            });
-        }
+        sheet.observations.forEach((observation) => {
+            if (ids.includes(observation.id)) {
+                observation.isPoetic = isPoetry;
+            }
+        });
     });
 };
 

@@ -95,7 +95,7 @@ type ManuscriptActions = {
 
     replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
 
-    setPoetry: (pageToPoeticIds: Record<number, number[]>) => void;
+    setPoetry: (ids: number[], isPoetry: boolean) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 

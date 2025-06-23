@@ -127,7 +127,16 @@ export default function ManuscriptTableHeader({
                             ()
                         </Button>
                     )}
-                    <div className="text-right">Support ({altCount})</div>
+                    <div className="text-right w-full">
+                        <SubmittableInput
+                            className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                            name="query"
+                            onSubmit={(query) => {
+                                filterByIds(rows.filter((r) => r.alt.includes(query)).map((r) => r.id));
+                            }}
+                            placeholder={`Support (${altCount})`}
+                        />
+                    </div>
                 </div>
             </th>
         </tr>

@@ -103,20 +103,27 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                 <Button
                     className="bg-purple-400"
                     onClick={() => {
-                        const pageToIds: Record<number, number[]> = {};
-
-                        selectedRows.forEach((row) => {
-                            if (!pageToIds[row.page]) {
-                                pageToIds[row.page] = [];
-                            }
-
-                            pageToIds[row.page].push(row.id);
-                        });
-
-                        setPoetry(pageToIds);
+                        setPoetry(
+                            selectedRows.map((r) => r.id),
+                            true,
+                        );
                     }}
                 >
-                    Mark As Poetry
+                    + Poetry
+                </Button>
+            )}
+            {selectedRows.length > 0 && (
+                <Button
+                    className="bg-purple-200"
+                    onClick={() => {
+                        setPoetry(
+                            selectedRows.map((r) => r.id),
+                            false,
+                        );
+                    }}
+                    variant="outline"
+                >
+                    - Poetry
                 </Button>
             )}
             {selectedRows.length > 0 && (
