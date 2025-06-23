@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 
@@ -18,16 +18,10 @@ import ManuscriptToolbar from './toolbar';
  */
 export default function Manuscript() {
     const initManuscript = useManuscriptStore((state) => state.init);
-    const sheetLines = useManuscriptStore(selectAllSheetLines);
-    const isInitialized = sheetLines.length > 0;
-    const idsFilter = useState<number[]>([]);
+    const rows = useManuscriptStore(selectAllSheetLines);
+    const isInitialized = rows.length > 0;
     const selection = useState<SheetLine[]>([]);
-    const [filterByIds] = idsFilter;
     const [selectedRows, setSelectedRows] = selection;
-
-    const rows = useMemo(() => {
-        return sheetLines.filter((s) => filterByIds.length === 0 || filterByIds.includes(s.id));
-    }, [sheetLines, filterByIds]);
 
     const handleSelectionChange = useCallback(
         (item: SheetLine, selected: boolean) => {
@@ -41,6 +35,14 @@ export default function Manuscript() {
         },
         [setSelectedRows],
     );
+
+    useEffect(() => {
+        const sessionData = sessionStorage.getItem('rawInputs');
+
+        if (sessionData) {
+            initManuscript(JSON.parse(sessionData) as unknown as RawInputFiles);
+        }
+    }, [initManuscript]);
 
     const handleSelectAll = (selected: boolean) => {
         setSelectedRows(selected ? rows : []);
@@ -57,6 +59,8 @@ export default function Manuscript() {
                             maxFiles={4}
                             onFiles={(map) => {
                                 initManuscript(map as unknown as RawInputFiles);
+
+                                sessionStorage.setItem('rawInputs', JSON.stringify(map));
                             }}
                         />
                     </div>
@@ -71,7 +75,7 @@ export default function Manuscript() {
             <div className="min-h-screen flex flex-col font-[family-name:var(--font-geist-sans)]">
                 <div className="flex flex-col w-full">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
-                        <ManuscriptToolbar idsFilter={idsFilter} selection={selection} />
+                        <ManuscriptToolbar selection={selection} />
                         {selectedRows.length > 0 && (
                             <div className="text-sm text-gray-600">
                                 {selectedRows.length} row{selectedRows.length !== 1 ? 's' : ''} selected
@@ -84,7 +88,6 @@ export default function Manuscript() {
                             <table className="w-full table-fixed">
                                 <thead>
                                     <ManuscriptTableHeader
-                                        idsFilter={idsFilter}
                                         onSelectAll={handleSelectAll}
                                         rows={rows}
                                         selection={selection}

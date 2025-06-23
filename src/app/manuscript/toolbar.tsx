@@ -12,7 +12,6 @@ import { mapManuscriptToBook } from '@/lib/legacy';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ToolbarProps = {
-    idsFilter: [number[], Dispatch<SetStateAction<number[]>>];
     selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>];
 };
 
@@ -20,16 +19,15 @@ type ToolbarProps = {
  * Renders a toolbar for manuscript management operations.
  * Currently provides functionality to export the current manuscript state as a JSON file.
  */
-export default function ManuscriptToolbar({
-    idsFilter: [filterByIds, setFilterByIds],
-    selection: [selectedRows, setSelectedRows],
-}: ToolbarProps) {
+export default function ManuscriptToolbar({ selection: [selectedRows, setSelectedRows] }: ToolbarProps) {
     const fixTypos = useManuscriptStore((state) => state.fixTypos);
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
     const toggleFootnotes = useManuscriptStore((state) => state.toggleFootnotes);
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
     const setPoetry = useManuscriptStore((state) => state.setPoetry);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
+    const filterByIds = useManuscriptStore((state) => state.filterByIds);
+    const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
 
     return (
         <div className="flex space-x-2">
@@ -47,10 +45,10 @@ export default function ManuscriptToolbar({
             <Link href="/book">
                 <Button className="bg-blue-500">📦</Button>
             </Link>
-            {filterByIds.length > 0 && (
+            {isFilterSet && (
                 <Button
                     onClick={() => {
-                        setFilterByIds([]);
+                        filterByIds([]);
                     }}
                     variant="destructive"
                 >

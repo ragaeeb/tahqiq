@@ -7,31 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { parsePageRanges } from '@/lib/textUtils';
+import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {
-    idsFilter: [number[], Dispatch<SetStateAction<number[]>>];
     onSelectAll: (selected: boolean) => void;
     rows: SheetLine[];
     selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>];
 };
 
 export default function ManuscriptTableHeader({
-    idsFilter: [, setFilterByIds],
     onSelectAll,
     rows,
     selection: [selectedRows],
 }: ManuscriptTableHeaderProps) {
+    const filterByIds = useManuscriptStore((state) => state.filterByIds);
+    const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const altCount = rows.filter((r) => r.alt).length;
     const isAllSelected = rows.length > 0 && selectedRows.length === rows.length;
     const hasHonorifcsApplied = rows.some((o) => o.text.includes(SWS_SYMBOL));
     const hasMissingHonorifics = rows.some((o) => o.includesHonorifics);
     const includesPoetry = rows.some((o) => o.isPoetic);
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
-
-    const filterByPages = (rows: SheetLine[]) => {
-        const pages = new Set(rows.map((r) => r.page));
-        setFilterByIds(rows.filter((r) => pages.has(r.page)).map((r) => r.id));
-    };
 
     return (
         <tr>
@@ -49,8 +45,7 @@ export default function ManuscriptTableHeader({
                     className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     name="range"
                     onSubmit={(range) => {
-                        const pages = new Set(parsePageRanges(range));
-                        setFilterByIds(rows.filter((r) => pages.has(r.page)).map((r) => r.id));
+                        filterByPages(parsePageRanges(range));
                     }}
                     placeholder="Page"
                 />
@@ -64,7 +59,7 @@ export default function ManuscriptTableHeader({
                     className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     name="query"
                     onSubmit={(query) => {
-                        setFilterByIds(rows.filter((r) => r.text.includes(query)).map((r) => r.id));
+                        filterByIds(rows.filter((r) => r.text.includes(query)).map((r) => r.id));
                     }}
                     placeholder={`Text (${rows.length})`}
                 />
@@ -80,7 +75,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Filter Misaligned Observations"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
-                                filterByPages(rows.filter((r) => !r.alt));
+                                filterByPages(rows.filter((r) => !r.alt).map((r) => r.page));
                             }}
                             variant="destructive"
                         >
@@ -92,7 +87,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Fix Typos"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
-                                setFilterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
+                                filterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
                             }}
                             variant="ghost"
                         >
@@ -104,7 +99,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Correct Wrong Honorifics"
                             className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
                             onClick={() => {
-                                setFilterByIds(rows.filter((r) => r.text.includes(SWS_SYMBOL)).map((r) => r.id));
+                                filterByIds(rows.filter((r) => r.text.includes(SWS_SYMBOL)).map((r) => r.id));
                             }}
                             variant="ghost"
                         >
@@ -115,7 +110,7 @@ export default function ManuscriptTableHeader({
                         <Button
                             aria-label="Poetic"
                             onClick={() => {
-                                filterByPages(rows.filter((r) => r.isPoetic));
+                                filterByPages(rows.filter((r) => r.isPoetic).map((r) => r.page));
                             }}
                         >
                             Poetic
@@ -125,7 +120,7 @@ export default function ManuscriptTableHeader({
                         <Button
                             aria-label="Invalid Footnotes"
                             onClick={() => {
-                                filterByPages(rows.filter((r) => r.hasInvalidFootnotes));
+                                filterByPages(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
                             }}
                             variant="outline"
                         >

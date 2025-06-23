@@ -6,8 +6,8 @@ import { hasInvalidFootnotes } from '@/lib/footnotes';
 
 import type { ManuscriptStateCore, SheetLine } from './types';
 
-export const selectAllSheetLines = memoizeOne((state: ManuscriptStateCore): SheetLine[] => {
-    const lines = state.sheets.flatMap((sheet) => {
+export const selectAllSheetLines = memoizeOne(({ idsFilter, sheets }: ManuscriptStateCore): SheetLine[] => {
+    const lines = sheets.flatMap((sheet) => {
         return sheet.observations.map((o, i) => {
             const alt = sheet.alt[i]?.text || '';
 
@@ -23,6 +23,10 @@ export const selectAllSheetLines = memoizeOne((state: ManuscriptStateCore): Shee
             };
         });
     });
+
+    if (idsFilter.size > 0) {
+        return lines.filter((line) => idsFilter.has(line.id));
+    }
 
     return lines;
 });

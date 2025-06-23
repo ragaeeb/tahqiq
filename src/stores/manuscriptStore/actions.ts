@@ -31,15 +31,24 @@ const mapSuryaPageResultToObservations = (surya: SuryaPageOcrResult): Observatio
     }));
 };
 
+const PAGES_TO_LOG: number[] = [] as const;
+
 const createSheet = (
     page: number,
     macObservations: Observation[],
     alternateObservations: Observation[],
     struct: StructureMetadata,
 ): Sheet => {
+    const shouldLog = PAGES_TO_LOG.includes(page);
+
+    if (shouldLog) {
+        console.log('page', page, struct);
+    }
+
     const textLines = mapObservationsToTextLines(macObservations, struct.dpi, {
         horizontalLines: struct.horizontal_lines,
         rectangles: struct.rectangles,
+        ...(shouldLog && { log: console.log }),
     });
 
     const altObservations = alternateObservations.map((o) => ({ id: ID_COUNTER++, text: o.text }));
@@ -240,4 +249,19 @@ export const deleteLines = (state: ManuscriptStateCore, ids: number[]) => {
             sheet.observations = filtered;
         }
     });
+};
+
+export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: number[]) => {
+    const idsFilter = new Set<number>();
+    const pages = new Set(pagesToFilterBy);
+
+    state.sheets.forEach((sheet) => {
+        if (pages.has(sheet.page)) {
+            sheet.observations.forEach((o) => {
+                idsFilter.add(o.id);
+            });
+        }
+    });
+
+    return { idsFilter };
 };

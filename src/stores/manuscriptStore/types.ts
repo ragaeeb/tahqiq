@@ -9,6 +9,7 @@ export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
  * Core state properties for manuscript management
  */
 export type ManuscriptStateCore = {
+    idsFilter: Set<number>;
     sheets: Sheet[];
 };
 
@@ -77,6 +78,10 @@ type ManuscriptActions = {
     deleteLines: (ids: number[]) => void;
 
     deleteSupport: (page: number, id: number) => void;
+
+    filterByIds: (ids: number[]) => void;
+
+    filterByPages: (pages: number[]) => void;
 
     fixTypos: (ids: number[]) => void;
 

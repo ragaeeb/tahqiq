@@ -19,6 +19,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
+    const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
     const updateText = useManuscriptStore((state) => state.updateText);
 
@@ -36,7 +37,9 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                 aria-label="Page"
                 className={`w-20 px-4 py-4 text-left text-sm font-medium text-gray-900 border-r border-gray-100 ${data.hasInvalidFootnotes && 'bg-red-200'}`}
             >
-                {data.page}
+                <Button onClick={() => filterByPages([data.page])} variant="ghost">
+                    {data.page}
+                </Button>
             </td>
             <td
                 aria-label="Text"
@@ -44,7 +47,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                 dir="rtl"
             >
                 <Input
-                    className={`w-full ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isPoetic && 'italic'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                    className={`w-full ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isPoetic && 'italic'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} ${data.isPoetic && 'bg-purple-100'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     defaultValue={data.text}
                     dir="rtl"
                     key={data.id + '/' + data.lastUpdate}
