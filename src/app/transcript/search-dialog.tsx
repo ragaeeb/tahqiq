@@ -3,12 +3,11 @@
 import { formatSecondsToTimestamp } from 'paragrafs';
 import { useState } from 'react';
 
+import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import SubmittableInput from './submittable-input';
 
 type SearchResult = {
     start: number;

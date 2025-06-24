@@ -10,14 +10,13 @@ import { useState } from 'react';
 
 import type { Segment } from '@/stores/transcriptStore/types';
 
+import { Button } from '@/components/ui/button';
 import { DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { pasteText } from '@/lib/domUtils';
 import { preformatArabicText } from '@/lib/textUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import { Button } from './ui/button';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 
 export function GroundingDialog({
     segment,

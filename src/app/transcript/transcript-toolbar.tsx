@@ -3,6 +3,8 @@
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
+import { Button } from '@/components/ui/button';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import DownloadButton from './download-button';
@@ -10,8 +12,6 @@ import { FormatDialog } from './format-dialog';
 import { GroundingDialog } from './grounding-dialog';
 import { PreviewDialog } from './preview-dialog';
 import { SearchDialog } from './search-dialog';
-import { Button } from './ui/button';
-import { DialogTriggerButton } from './ui/dialog-trigger';
 
 /**
  * Renders a toolbar for managing transcript segments with actions such as merging, splitting, grouping, marking as completed, deleting, previewing, formatting, and downloading.

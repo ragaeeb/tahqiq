@@ -1,14 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import React, { type Dispatch, type SetStateAction } from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 import { Button } from '@/components/ui/button';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
-import { downloadFile } from '@/lib/domUtils';
-import { mapManuscriptToBook } from '@/lib/legacy';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ToolbarProps = {
@@ -31,20 +28,6 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
 
     return (
         <div className="flex space-x-2">
-            <Button
-                className="bg-emerald-500"
-                onClick={() => {
-                    downloadFile(
-                        `${Date.now()}.json`,
-                        JSON.stringify(mapManuscriptToBook(useManuscriptStore.getState()), null, 2),
-                    );
-                }}
-            >
-                💾
-            </Button>
-            <Link href="/book">
-                <Button className="bg-blue-500">📦</Button>
-            </Link>
             {isFilterSet && (
                 <Button
                     onClick={() => {

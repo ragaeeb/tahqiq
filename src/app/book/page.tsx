@@ -4,9 +4,7 @@ import { useEffect, useMemo } from 'react';
 
 import type { Book } from '@/stores/bookStore/types';
 
-import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
-import PageItem from '@/components/page-item';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import VersionFooter from '@/components/version-footer';
@@ -14,6 +12,9 @@ import { mapManuscriptToBook } from '@/lib/legacy';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
+
+import BookToolbar from './book-toolbar';
+import PageItem from './page-item';
 
 /**
  * Renders the main page layout for displaying manuscript pages.

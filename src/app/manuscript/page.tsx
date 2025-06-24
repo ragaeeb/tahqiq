@@ -1,11 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
+import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
+import { downloadFile } from '@/lib/domUtils';
+import { mapManuscriptToBook } from '@/lib/legacy';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
@@ -76,11 +80,22 @@ export default function Manuscript() {
                 <div className="flex flex-col w-full">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
                         <ManuscriptToolbar selection={selection} />
-                        {selectedRows.length > 0 && (
-                            <div className="text-sm text-gray-600">
-                                {selectedRows.length} row{selectedRows.length !== 1 ? 's' : ''} selected
-                            </div>
-                        )}
+                        <div className="space-x-2">
+                            <Button
+                                className="bg-emerald-500"
+                                onClick={() => {
+                                    downloadFile(
+                                        `${Date.now()}.json`,
+                                        JSON.stringify(mapManuscriptToBook(useManuscriptStore.getState()), null, 2),
+                                    );
+                                }}
+                            >
+                                💾
+                            </Button>
+                            <Link href="/book">
+                                <Button className="bg-blue-500">📦</Button>
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="w-full border-t border-gray-300">

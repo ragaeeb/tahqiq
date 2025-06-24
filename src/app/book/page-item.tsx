@@ -5,11 +5,10 @@ import React from 'react';
 import type { Page } from '@/stores/bookStore/types';
 
 import { Checkbox } from '@/components/ui/checkbox';
+import HighlightableTextarea from '@/components/ui/highlightable-textarea';
 import { Input } from '@/components/ui/input';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import HighlightableTextarea from './ui/highlightable-textarea';
 
 /**
  * Renders a table row for a manuscript page with editable ID, text, and selection controls.

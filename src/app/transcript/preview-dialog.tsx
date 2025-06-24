@@ -10,13 +10,12 @@ import {
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import { Checkbox } from './ui/checkbox';
-import { Label } from './ui/label';
 
 /**
  * Displays a dialog for previewing, editing, copying, and translating a formatted transcript.
