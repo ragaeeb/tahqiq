@@ -76,6 +76,9 @@ export default function Book() {
                                         />
                                     </th>
                                     <th aria-label="Page" className="px-2 py-1 w-36 text-left">
+                                        ID
+                                    </th>
+                                    <th aria-label="Page" className="px-2 py-1 w-36 text-left">
                                         Page
                                     </th>
                                     <th aria-label="Text" className="px-4 py-1 text-right">

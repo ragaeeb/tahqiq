@@ -11,6 +11,8 @@ import { BOOK_CONTRACT_LATEST, TRANSCRIPT_CONTRACT_LATEST } from './constants';
 import { preformatArabicText } from './textUtils';
 import { roundToDecimal } from './time';
 
+const FOOTNOTE_DIVIDER = '____________';
+
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
     if ((input as TranscriptSeries).contractVersion?.startsWith('v1.')) {
         const data = input as TranscriptSeries;
@@ -179,8 +181,15 @@ export const mapTranscriptsToLatestContract = (transcripts: Transcript[], create
 export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
     const pages = manuscriptState.sheets.map((s) => {
         const paragraphs = mapTextLinesToParagraphs(s.observations);
-        const text = formatTextBlocks(paragraphs, '_');
-        return { id: s.page, text: preformatArabicText(text, true), volume: 1 };
+        const text = formatTextBlocks(paragraphs, FOOTNOTE_DIVIDER);
+        const [body, footnotes] = text.split(FOOTNOTE_DIVIDER);
+
+        return {
+            id: s.page,
+            text: preformatArabicText(body, true),
+            volume: 1,
+            ...(footnotes && { footnotes: preformatArabicText(footnotes, true) }),
+        };
     });
 
     return {
@@ -188,5 +197,6 @@ export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
         createdAt: new Date(),
         lastUpdatedAt: new Date(),
         pages,
+        type: 'book',
     };
 };

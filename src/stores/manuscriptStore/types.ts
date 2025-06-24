@@ -102,6 +102,12 @@ type ManuscriptActions = {
     toggleFootnotes: (ids: number[]) => void;
 
     updateText: (page: number, id: number, text: string) => void;
+
+    updateTextLines: (
+        ids: number,
+        diff: Omit<Partial<TextLine>, 'id' | 'lastUpdate'>,
+        updateLastUpdated?: boolean,
+    ) => void;
 };
 
 type OcrData = {

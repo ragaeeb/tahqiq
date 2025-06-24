@@ -10,7 +10,14 @@ import {
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { correctReferences } from '@/lib/footnotes';
 
-import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata, SuryaPageOcrResult } from './types';
+import type {
+    ManuscriptStateCore,
+    RawInputFiles,
+    Sheet,
+    StructureMetadata,
+    SuryaPageOcrResult,
+    TextLine,
+} from './types';
 
 import { assertHasRequiredFiles } from './guards';
 
@@ -190,14 +197,8 @@ export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
     });
 };
 
-export const setPoetry = (state: ManuscriptStateCore, ids: number[], isPoetry: boolean) => {
-    state.sheets.forEach((sheet) => {
-        sheet.observations.forEach((observation) => {
-            if (ids.includes(observation.id)) {
-                observation.isPoetic = isPoetry;
-            }
-        });
-    });
+export const setPoetry = (state: ManuscriptStateCore, ids: number[], isPoetic: boolean) => {
+    updateTextLines(state, ids, { isPoetic });
 };
 
 export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]) => {
@@ -213,13 +214,7 @@ export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]
 };
 
 export const toggleFootnotes = (state: ManuscriptStateCore, ids: number[]) => {
-    state.sheets.forEach((sheet) => {
-        sheet.observations.forEach((o) => {
-            if (ids.includes(o.id)) {
-                o.isFootnote = !o.isFootnote;
-            }
-        });
-    });
+    updateTextLines(state, ids, (o) => (o.isFootnote = !o.isFootnote));
 };
 
 export const updateText = (state: ManuscriptStateCore, page: number, id: number, text: string) => {
@@ -229,14 +224,32 @@ export const updateText = (state: ManuscriptStateCore, page: number, id: number,
     observation.text = text;
 };
 
-export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], from = SWS_SYMBOL, to = AZW_SYMBOL) => {
+export const updateTextLines = (
+    state: ManuscriptStateCore,
+    ids: number[],
+    payload: ((o: TextLine) => void) | Omit<Partial<TextLine>, 'id' | 'lastUpdate'>,
+    updateLastUpdated = true,
+) => {
     state.sheets.forEach((sheet) => {
         sheet.observations.forEach((o) => {
             if (ids.includes(o.id)) {
-                o.text = o.text.replaceAll(from, to);
-                o.lastUpdate = Date.now();
+                if (typeof payload === 'function') {
+                    payload(o);
+                } else {
+                    Object.assign(o, payload);
+                }
+
+                if (updateLastUpdated) {
+                    o.lastUpdate = Date.now();
+                }
             }
         });
+    });
+};
+
+export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], from = SWS_SYMBOL, to = AZW_SYMBOL) => {
+    updateTextLines(state, ids, (o) => {
+        o.text = o.text.replaceAll(from, to);
     });
 };
 

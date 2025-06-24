@@ -28,6 +28,8 @@ export default function ManuscriptTableHeader({
     const hasMissingHonorifics = rows.some((o) => o.includesHonorifics);
     const includesPoetry = rows.some((o) => o.isPoetic);
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
+    const hasHeadings = rows.some((o) => o.isHeading);
+    const hasCenteredContent = rows.some((o) => o.isCentered);
 
     return (
         <tr>
@@ -92,6 +94,30 @@ export default function ManuscriptTableHeader({
                             variant="ghost"
                         >
                             {SWS_SYMBOL}
+                        </Button>
+                    )}
+                    {hasCenteredContent && (
+                        <Button
+                            aria-label="Centered Content"
+                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                filterByIds(rows.filter((r) => r.isCentered).map((r) => r.id));
+                            }}
+                            variant="ghost"
+                        >
+                            ☰
+                        </Button>
+                    )}
+                    {hasHeadings && (
+                        <Button
+                            aria-label="Centered Content"
+                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                filterByIds(rows.filter((r) => r.isHeading).map((r) => r.id));
+                            }}
+                            variant="ghost"
+                        >
+                            🏷️
                         </Button>
                     )}
                     {hasHonorifcsApplied && (

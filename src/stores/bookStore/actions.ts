@@ -24,7 +24,7 @@ export const initStore = (fileToBook: Record<string, Book>) => {
                 volumeToPages[volume] = [];
             }
 
-            volumeToPages[volume].push({ id: p.id, text: p.text });
+            volumeToPages[volume].push(p);
         });
     });
 

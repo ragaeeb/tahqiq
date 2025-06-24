@@ -1,13 +1,14 @@
 export type Book = {
     contractVersion: string;
     createdAt: Date;
-    groundTruthUrls?: string[];
-    lastUpdatedAt: Date;
-    pages: {
-        id: number;
-        text: string;
-        volume: number;
+    index?: {
+        level: number;
+        page: number;
+        title: string;
     }[];
+    lastUpdatedAt: Date;
+    pages: Page[];
+    type: 'book';
     urlTemplate?: string;
 };
 
@@ -33,11 +34,12 @@ export type BookStateCore = {
 };
 
 export type Page = {
-    errorLines?: number[];
+    footnotes?: string;
     id: number;
-    /** Optional status indicating page processing state */
+    page?: number;
     status?: PageStatus;
     text: string;
+    volume: number;
 };
 
 /**
