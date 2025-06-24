@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/ragaeeb/tahqiq/compare/v1.1.0...v1.2.0) (2025-06-24)
+
+
+### Features
+
+* **manuscript:** Manuscript editor ([#20](https://github.com/ragaeeb/tahqiq/issues/20)) ([2afb608](https://github.com/ragaeeb/tahqiq/commit/2afb608da53ef6a267af1e7e0f253d4e9a519258)), closes [#22](https://github.com/ragaeeb/tahqiq/issues/22) [#23](https://github.com/ragaeeb/tahqiq/issues/23) [#23](https://github.com/ragaeeb/tahqiq/issues/23)
+
 # [1.1.0](https://github.com/ragaeeb/tahqiq/compare/v1.0.0...v1.1.0) (2025-06-13)
 
 
