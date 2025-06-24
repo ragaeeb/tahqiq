@@ -14,6 +14,7 @@ type TextRowProps = {
     isNewPage?: boolean;
     isSelected: boolean;
     onSelectionChange: (row: SheetLine, selected: boolean) => void;
+    style?: React.CSSProperties; // Add style prop for virtualization
 };
 
 const getTextInputClassName = (data: SheetLine) => {
@@ -38,7 +39,7 @@ const getAltTextAreaClassName = (data: SheetLine) => {
     );
 };
 
-function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProps) {
+function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
@@ -49,6 +50,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
     return (
         <tr
             className={`hover:bg-gray-50 transition-colors duration-150 ease-in-out ${isNewPage ? 'border-t-4 border-t-blue-200' : ''}`}
+            style={style} // Apply virtualization styles
         >
             <td aria-label="Select" className="w-12 px-4 py-4 text-center border-r border-green-100">
                 <Checkbox
