@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -13,6 +14,28 @@ type TextRowProps = {
     isNewPage?: boolean;
     isSelected: boolean;
     onSelectionChange: (row: SheetLine, selected: boolean) => void;
+};
+
+const getTextInputClassName = (data: SheetLine) => {
+    return clsx(
+        'w-full leading-relaxed text-gray-800 border-none outline-none px-1 py-1 transition-colors duration-150',
+        data.isFootnote ? '!text-sm' : '!text-xl',
+        data.isPoetic && 'italic bg-purple-100',
+        data.isCentered ? 'text-center' : 'text-right',
+        data.isHeading && 'font-bold',
+        data.includesHonorifics ? 'bg-red-200' : 'bg-transparent',
+        'focus:bg-gray-50 focus:rounded',
+    );
+};
+
+const getAltTextAreaClassName = (data: SheetLine) => {
+    return clsx(
+        `flex-1 mr-2 leading-relaxed bg-transparent border-none outline-none resize-none overflow-hidden min-h-[1.5em] px-1 py-1 transition-colors duration-150`,
+        data.isFootnote ? '!text-sm' : '!text-xl',
+        data.isCentered ? 'text-center' : 'text-right',
+        data.isHeading && 'font-bold',
+        'focus:bg-white focus:rounded',
+    );
 };
 
 function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProps) {
@@ -47,7 +70,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                 dir="rtl"
             >
                 <Input
-                    className={`w-full ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isPoetic && 'italic'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed text-gray-800 ${data.includesHonorifics ? 'bg-red-200' : 'bg-transparent'} ${data.isPoetic && 'bg-purple-100'} border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                    className={getTextInputClassName(data)}
                     defaultValue={data.text}
                     dir="rtl"
                     key={data.id + '/' + data.lastUpdate}
@@ -75,7 +98,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                     </Button>
                     <Button
                         aria-label="Delete Support"
-                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
                         onClick={() => deleteSupport(data.page, data.id)}
                         variant="ghost"
                     >
@@ -92,7 +115,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange }: TextRowProp
                         ↑
                     </Button>
                     <Textarea
-                        className={`flex-1 mr-2 ${data.isFootnote ? '!text-sm' : '!text-xl'} ${data.isCentered ? 'text-center' : 'text-right'} ${data.isHeading && 'font-bold'} leading-relaxed bg-transparent border-none outline-none focus:bg-white focus:rounded resize-none overflow-hidden min-h-[1.5em] px-1 py-1 transition-colors duration-150`}
+                        className={getAltTextAreaClassName(data)}
                         dir="rtl"
                         onChange={(e) => {
                             if (e.target.value !== data.alt) {

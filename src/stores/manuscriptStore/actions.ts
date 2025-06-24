@@ -216,7 +216,7 @@ export const toggleFootnotes = (state: ManuscriptStateCore, ids: number[]) => {
     state.sheets.forEach((sheet) => {
         sheet.observations.forEach((o) => {
             if (ids.includes(o.id)) {
-                o.isFootnote = !Boolean(o.isFootnote);
+                o.isFootnote = !o.isFootnote;
             }
         });
     });

@@ -5,10 +5,10 @@ import type { BookState } from './types';
 import * as actions from './actions';
 
 /**
- * Creates a Zustand store for managing manuscript state
- * Provides actions for manipulating manuscript data, pages, and selection
+ * Creates a Zustand store for managing book state
+ * Provides actions for manipulating book data, pages, and selection
  *
- * @returns A Zustand store with manuscript state and actions
+ * @returns A Zustand store with book state and actions
  */
 export const useBookStore = create<BookState>((set) => {
     return {

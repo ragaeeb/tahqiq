@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
 
 /**
- * Renders the main page layout containing the {@link Transcript} component.
+ * Renders the main page layout with navigation to Book, Manuscript, and Transcript pages.
  */
 export default function Home() {
     return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import type { Book } from '@/stores/bookStore/types';
+import type { Book as BookType } from '@/stores/bookStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,7 +48,7 @@ export default function Book() {
                             allowedExtensions=".json,.txt"
                             description="Drag and drop the manuscript"
                             maxFiles={4}
-                            onFiles={(map) => initBook(map as unknown as Record<string, Book>)}
+                            onFiles={(map) => initBook(map as unknown as Record<string, BookType>)}
                         />
                     </div>
                 </div>

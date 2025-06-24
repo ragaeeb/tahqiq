@@ -2,7 +2,7 @@ import memoizeOne from 'memoize-one';
 
 import type { BookStateCore, Page } from './types';
 
-const getVolumes = memoizeOne((volumeToPages: Record<string, Page[]>) =>
+const getVolumes = memoizeOne((volumeToPages: Record<number, Page[]>) =>
     Object.keys(volumeToPages)
         .map((p) => parseInt(p, 10))
         .sort((a, b) => a - b),
