@@ -30,3 +30,12 @@ export const REQUIRED_RAW_INPUT_FILES = [
     'surya.json',
     'page_size.txt',
 ] as const satisfies readonly (keyof RawInputFiles)[];
+
+/**
+ * Honorific symbols frequently encountered in Arabic texts.
+ * SWS: ﷺ (صلى الله عليه وسلم)
+ * AZW: ﷻ (عز وجل)
+ */
+export const SWS_SYMBOL = 'ﷺ';
+
+export const AZW_SYMBOL = 'ﷻ';

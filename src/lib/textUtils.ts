@@ -29,6 +29,18 @@ export const standardizeHijriSymbol = (text: string) => {
     return text.replace(/([0-9\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
 };
 
+export const standardizeAhHijriSymbol = (text: string) => {
+    // Replace standalone اه with اهـ when it appears as a whole word
+    // Ensures it's preceded by start/whitespace/non-Arabic AND followed by end/whitespace/non-Arabic
+    return text.replace(/(^|\s|[^\u0600-\u06FF])اه(?=\s|$|[^\u0600-\u06FF])/g, '$1اهـ');
+};
+
+const fixBracketTypos = (text: string) => {
+    return text.replace(/\(«/g, '«').replace(/»\)/g, '»');
+};
+
+const autoCorrectPipeline = [standardizeHijriSymbol, standardizeAhHijriSymbol, fixBracketTypos];
+
 const pastePipeline = [
     stripZeroWidthCharacters,
     cleanSpacesBeforePeriod,
@@ -48,7 +60,6 @@ const pastePipeline = [
     condensePeriods,
     condenseEllipsis,
     removeRedundantPunctuation,
-    standardizeHijriSymbol,
     reduceMultilineBreaksToSingle,
     cleanMultilines,
     cleanSpacesBeforePeriod,
@@ -57,10 +68,15 @@ const pastePipeline = [
     normalizeSpaces,
 ];
 
-export const preformatArabicText = (text: string) => {
+export const preformatArabicText = (text: string, autoCorrect = false) => {
     let result = text;
+    const pipeline = [...pastePipeline];
 
-    pastePipeline.forEach((func) => {
+    if (autoCorrect) {
+        pipeline.push(...autoCorrectPipeline);
+    }
+
+    pipeline.forEach((func) => {
         result = func(result);
     });
 
@@ -100,4 +116,18 @@ export const findFirstTokenForText = (tokens: Token[], selectedText: string) => 
 
     // Return null if no matching starting word is found
     return null;
+};
+
+export const parsePageRanges = (pageInput: string): number[] => {
+    if (pageInput.includes('-')) {
+        const [start, end] = pageInput.split('-').map(Number);
+
+        if (start > end) {
+            throw new Error('Start page cannot be greater than end page');
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    } else {
+        return pageInput.split(',').map(Number);
+    }
 };

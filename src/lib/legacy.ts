@@ -1,11 +1,14 @@
+import { formatTextBlocks, mapTextLinesToParagraphs } from 'kokokor';
 import { estimateSegmentFromToken } from 'paragrafs';
 
-import type { Book, ManuscriptState } from '@/stores/manuscriptStore/types';
+import type { Book } from '@/stores/bookStore/types';
+import type { ManuscriptState } from '@/stores/manuscriptStore/types';
 import type { Transcript, TranscriptSeries } from '@/stores/transcriptStore/types';
 
-import type { PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
+import type { BookTranscriptFormat, PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 
 import { BOOK_CONTRACT_LATEST, TRANSCRIPT_CONTRACT_LATEST } from './constants';
+import { preformatArabicText } from './textUtils';
 import { roundToDecimal } from './time';
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
@@ -44,6 +47,41 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                 timestamp: t.timestamp,
                 volume: t.volume,
             })),
+        };
+    }
+
+    if (((input as BookTranscriptFormat).pages || [])[0]?.words[0]) {
+        const data = input as BookTranscriptFormat;
+
+        const partToPages = Object.groupBy(data.pages, (p) => p.part);
+        const transcripts: Transcript[] = [];
+
+        Object.keys(partToPages)
+            .map((part) => Number(part))
+            .toSorted()
+            .forEach((volume) => {
+                const pages = partToPages[volume]!;
+
+                transcripts.push({
+                    segments: [
+                        {
+                            end: 10,
+                            start: 0,
+                            text: pages.map((p) => p.body).join('\n'),
+                            tokens: pages.flatMap((p) => p.words),
+                        },
+                    ],
+                    timestamp: data.timestamp,
+                    volume,
+                });
+            });
+
+        return {
+            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+            createdAt: data.timestamp,
+            lastUpdatedAt: data.timestamp,
+            postProcessingApps: [data.postProcessingApp],
+            transcripts,
         };
     }
 
@@ -139,15 +177,16 @@ export const mapTranscriptsToLatestContract = (transcripts: Transcript[], create
 };
 
 export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
+    const pages = manuscriptState.sheets.map((s) => {
+        const paragraphs = mapTextLinesToParagraphs(s.observations);
+        const text = formatTextBlocks(paragraphs, '_');
+        return { id: s.page, text: preformatArabicText(text, true), volume: 1 };
+    });
+
     return {
         contractVersion: BOOK_CONTRACT_LATEST,
-        createdAt: manuscriptState.createdAt,
+        createdAt: new Date(),
         lastUpdatedAt: new Date(),
-        pages: Object.entries(manuscriptState.volumeToPages)
-            .toSorted(([a], [b]) => Number(a) - Number(b))
-            .flatMap(([volume, pages]) => {
-                return pages.map((p) => ({ id: p.id, text: p.text, volume: Number(volume) }));
-            }),
-        ...(manuscriptState.urlTemplate && { urlTemplate: manuscriptState.urlTemplate }),
+        pages,
     };
 };

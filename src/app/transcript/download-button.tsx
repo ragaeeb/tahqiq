@@ -2,11 +2,10 @@
 
 import React from 'react';
 
+import { Button } from '@/components/ui/button';
 import { downloadFile } from '@/lib/domUtils';
 import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import { Button } from './ui/button';
 
 /**
  * Renders a button that downloads the current transcripts as a formatted JSON file.

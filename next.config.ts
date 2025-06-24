@@ -1,7 +1,13 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
-    /* config options here */
+import path from 'path';
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    experimental: {
+        // Allow Turbopack to resolve modules outside the project root
+        outputFileTracingRoot: path.join(__dirname, '../'),
+    },
 };
 
 export default nextConfig;

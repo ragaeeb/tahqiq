@@ -3,12 +3,11 @@
 import { formatSecondsToTimestamp } from 'paragrafs';
 import { useState } from 'react';
 
+import SubmittableInput from '@/components/submittable-input';
+import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
 
 type SearchResult = {
     start: number;
@@ -35,12 +34,10 @@ export function SearchDialog() {
                 </DialogTitle>
             </DialogHeader>
             <div className="flex-1 overflow-auto">
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        const data = new FormData(e.currentTarget);
-                        const query = (data.get('query') as string).trim();
-
+                <SubmittableInput
+                    dir="rtl"
+                    name="query"
+                    onSubmit={(query) => {
                         if (query) {
                             const { transcripts } = useTranscriptStore.getState();
                             const matched = Object.values(transcripts).flatMap((t) =>
@@ -54,9 +51,7 @@ export function SearchDialog() {
                             setSegmentResults([]);
                         }
                     }}
-                >
-                    <Input dir="rtl" name="query" />
-                </form>
+                />
                 {segmentResults.length > 0 && (
                     <table className="w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">

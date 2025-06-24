@@ -1,29 +1,39 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import type { RawInputFiles } from '@/stores/manuscriptStore/types';
+import type { Book as BookType } from '@/stores/bookStore/types';
 
-import BookToolbar from '@/components/book-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
-import PageItem from '@/components/page-item';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import VersionFooter from '@/components/version-footer';
-import { selectCurrentPages } from '@/stores/manuscriptStore/selectors';
+import { mapManuscriptToBook } from '@/lib/legacy';
+import { selectCurrentPages } from '@/stores/bookStore/selectors';
+import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
+
+import BookToolbar from './book-toolbar';
+import PageItem from './page-item';
 
 /**
  * Renders the main page layout for displaying manuscript pages.
  */
 export default function Book() {
-    const selectedVolume = useManuscriptStore((state) => state.selectedVolume);
-    const urlTemplate = useManuscriptStore((state) => state.urlTemplate);
-    const setUrlTemplate = useManuscriptStore((state) => state.setUrlTemplate);
+    const selectedVolume = useBookStore((state) => state.selectedVolume);
+    const urlTemplate = useBookStore((state) => state.urlTemplate);
+    const setUrlTemplate = useBookStore((state) => state.setUrlTemplate);
     const isInitialized = selectedVolume > 0;
-    const initManuscript = useManuscriptStore((state) => state.init);
-    const pages = useManuscriptStore(selectCurrentPages);
-    const selectAllPages = useManuscriptStore((state) => state.selectAllPages);
+    const initBook = useBookStore((state) => state.init);
+    const pages = useBookStore(selectCurrentPages);
+    const selectAllPages = useBookStore((state) => state.selectAllPages);
+
+    useEffect(() => {
+        if (useManuscriptStore.getState().sheets.length > 0) {
+            const book = mapManuscriptToBook(useManuscriptStore.getState());
+            initBook({ '1.json': book });
+        }
+    }, [initBook]);
 
     const pageItems = useMemo(() => {
         return pages.map((page) => <PageItem key={`${selectedVolume}/${page.id}`} page={page} />);
@@ -38,7 +48,7 @@ export default function Book() {
                             allowedExtensions=".json,.txt"
                             description="Drag and drop the manuscript"
                             maxFiles={4}
-                            onFiles={(map) => initManuscript(map as unknown as RawInputFiles)}
+                            onFiles={(map) => initBook(map as unknown as Record<string, BookType>)}
                         />
                     </div>
                 </div>

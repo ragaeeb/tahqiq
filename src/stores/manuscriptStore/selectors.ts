@@ -1,25 +1,32 @@
+import { areSimilarAfterNormalization } from 'baburchi';
 import memoizeOne from 'memoize-one';
 
-import type { ManuscriptStateCore, Page } from './types';
+import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { hasInvalidFootnotes } from '@/lib/footnotes';
 
-const getVolumes = memoizeOne((volumeToPages: Record<string, Page[]>) =>
-    Object.keys(volumeToPages)
-        .map((p) => parseInt(p, 10))
-        .sort((a, b) => a - b),
-);
+import type { ManuscriptStateCore, SheetLine } from './types';
 
-const getPages = memoizeOne((pages?: Page[]) => pages || []);
+export const selectAllSheetLines = memoizeOne(({ idsFilter, sheets }: ManuscriptStateCore): SheetLine[] => {
+    const lines = sheets.flatMap((sheet) => {
+        return sheet.observations.map((o, i) => {
+            const alt = sheet.alt[i]?.text || '';
 
-/**
- * Selects all manuscript volume numbers from state, sorted in ascending order.
- * @param state The manuscript state
- * @returns Array of part numbers
- */
-export const selectVolumes = (state: ManuscriptStateCore): number[] => getVolumes(state.volumeToPages);
+            return {
+                ...o,
+                alt,
+                hasInvalidFootnotes: hasInvalidFootnotes(o.text),
+                includesHonorifics: Boolean(
+                    alt.includes(SWS_SYMBOL) && !(o.text.includes(SWS_SYMBOL) || o.text.includes(AZW_SYMBOL)),
+                ),
+                isSimilar: Boolean(alt && areSimilarAfterNormalization(o.text, alt, 0.6)),
+                page: sheet.page,
+            };
+        });
+    });
 
-/**
- * Selects pages from the currently active manuscript volume.
- * @param state The manuscript state
- * @returns Array of pages or empty array if no volume is selected
- */
-export const selectCurrentPages = (state: ManuscriptStateCore) => getPages(state.volumeToPages[state.selectedVolume]);
+    if (idsFilter.size > 0) {
+        return lines.filter((line) => idsFilter.has(line.id));
+    }
+
+    return lines;
+});

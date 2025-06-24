@@ -2,11 +2,10 @@
 
 import React from 'react';
 
+import { Button } from '@/components/ui/button';
 import { downloadFile } from '@/lib/domUtils';
 import { mapManuscriptToBook } from '@/lib/legacy';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
-
-import { Button } from './ui/button';
 
 /**
  * Renders a toolbar for manuscript management operations.
