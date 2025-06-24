@@ -56,46 +56,41 @@ function ManuscriptTableBody({ onSelectionChange, rows, selectedRows }: Manuscri
 
     return (
         <div className="w-full overflow-auto" ref={parentRef} style={{ height: 'calc(100vh - 120px)' }}>
-            <div
-                style={{
-                    height: `${virtualizer.getTotalSize()}px`,
-                    position: 'relative',
-                    width: '100%',
-                }}
-            >
-                {virtualizer.getVirtualItems().map((virtualItem) => {
-                    const row = rows[virtualItem.index];
+            <table className="w-full table-fixed">
+                <tbody 
+                    className="bg-white divide-y divide-gray-100"
+                    style={{
+                        height: `${virtualizer.getTotalSize()}px`,
+                        position: 'relative',
+                        width: '100%',
+                    }}
+                >
+                    {virtualizer.getVirtualItems().map((virtualItem) => {
+                        const row = rows[virtualItem.index];
 
-                    return (
-                        <div
-                            key={virtualItem.key}
-                            style={{
-                                height: `${virtualItem.size}px`,
-                                left: 0,
-                                position: 'absolute',
-                                top: 0,
-                                transform: `translateY(${virtualItem.start}px)`,
-                                width: '100%',
-                            }}
-                        >
-                            <table className="w-full table-fixed">
-                                <tbody className="bg-white divide-y divide-gray-100">
-                                    <TextRow
-                                        data={row}
-                                        isNewPage={
-                                            virtualItem.index > 0
-                                                ? row.page !== rows[virtualItem.index - 1].page
-                                                : false
-                                        }
-                                        isSelected={selectedRows.includes(row)}
-                                        onSelectionChange={onSelectionChange}
-                                    />
-                                </tbody>
-                            </table>
-                        </div>
-                    );
-                })}
-            </div>
+                        return (
+                            <TextRow
+                                key={virtualItem.key}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    transform: `translateY(${virtualItem.start}px)`,
+                                    height: `${virtualItem.size}px`,
+                                    width: '100%',
+                                }}
+                                data={row}
+                                isNewPage={
+                                    virtualItem.index > 0
+                                        ? row.page !== rows[virtualItem.index - 1].page
+                                        : false
+                                }
+                                isSelected={selectedRows.includes(row)}
+                                onSelectionChange={onSelectionChange}
+                            />
+                        );
+                    })}
+                </tbody>
+            </table>
         </div>
     );
 }
