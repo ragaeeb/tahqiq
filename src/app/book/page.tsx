@@ -6,6 +6,7 @@ import type { Juz } from '@/stores/bookStore/types';
 
 import { FormattingToolbar } from '@/components/formatting-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
@@ -84,10 +85,31 @@ export default function Book() {
                             </thead>
                             <tbody className="divide-y divide-gray-200">{pageItems}</tbody>
                         </table>
-                        <FormattingToolbar />
                     </div>
                 </div>
             </div>
+            <FormattingToolbar>
+                {(applyFormat) => [
+                    <Button key="bold" onClick={() => applyFormat((text) => `**${text}**`)} variant="outline">
+                        Bold
+                    </Button>,
+
+                    <div
+                        className="px-3 py-2 bg-purple-500 text-white rounded cursor-pointer"
+                        key="titleCase"
+                        onClick={() =>
+                            applyFormat((text) => {
+                                return text
+                                    .split(' ')
+                                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                    .join(' ');
+                            })
+                        }
+                    >
+                        Title Case
+                    </div>,
+                ]}
+            </FormattingToolbar>
             <VersionFooter />
         </>
     );

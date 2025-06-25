@@ -1,41 +1,49 @@
 import React, { useCallback } from 'react';
 
-import { applyFormattingOnSelection, updateElementValue } from '@/lib/domUtils';
-import { type TextAreaElement, type ToolbarAction, useToolbarStore } from '@/stores/useToolbarStore';
+import { updateElementValue } from '@/lib/domUtils';
+import { type TextAreaElement, useToolbarStore } from '@/stores/useToolbarStore';
 
-import { Button } from './ui/button';
+type ApplyFormatCallback = (formatter: (text: string) => string) => void;
 
 type FormattingToolbarProps = {
-    actions?: ToolbarAction[];
+    children: (applyFormat: ApplyFormatCallback) => React.ReactNode;
     className?: string;
     onChange?: (e: React.ChangeEvent<TextAreaElement>) => void;
 };
 
-const defaultActions: ToolbarAction[] = [
-    {
-        formatter: (text: string) => text.replace(/\d/g, ''),
-        id: 'removeNumbers',
-        label: '1̶2̶3̶',
-    },
-];
-
-export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
-    actions = defaultActions,
-    className = '',
-    onChange,
-}) => {
+export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({ children, className = '', onChange }) => {
     const { toolbarState } = useToolbarStore();
     const { activeElement, isVisible, position } = toolbarState;
 
-    const handleAction = useCallback(
-        (action: ToolbarAction) => {
+    const applyFormat = useCallback(
+        (formatter: (text: string) => string) => {
             if (!activeElement) {
                 console.warn('No active element found for formatting');
                 return;
             }
 
-            const newValue = applyFormattingOnSelection(activeElement, action.formatter);
-            updateElementValue(activeElement, newValue, onChange);
+            // Get current selection or entire text
+            const selectionStart = activeElement.selectionStart || 0;
+            const selectionEnd = activeElement.selectionEnd || 0;
+            const fullText = activeElement.value;
+
+            // Use selected text if there's a selection, otherwise use full text
+            const textToFormat =
+                selectionStart !== selectionEnd ? fullText.substring(selectionStart, selectionEnd) : fullText;
+
+            // Call the formatter with the text and get formatted result
+            const formattedText = formatter(textToFormat);
+
+            // Update the element with the formatted text
+            if (selectionStart !== selectionEnd) {
+                // Replace selected text
+                const newValue =
+                    fullText.substring(0, selectionStart) + formattedText + fullText.substring(selectionEnd);
+                updateElementValue(activeElement, newValue, onChange);
+            } else {
+                // Replace entire text
+                updateElementValue(activeElement, formattedText, onChange);
+            }
 
             // Keep focus on the element after formatting
             activeElement.focus();
@@ -59,11 +67,7 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
                 top: position.y,
             }}
         >
-            {actions.map((action) => (
-                <Button key={action.id} onClick={() => handleAction(action)}>
-                    {action.label}
-                </Button>
-            ))}
+            {children(applyFormat)}
         </div>
     );
 };

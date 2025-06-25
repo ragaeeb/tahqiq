@@ -19,11 +19,17 @@ export const withFormattingToolbar = <P extends WithFormattingToolbarProps>(Comp
         };
 
         const handleBlurEvent = (e: React.FocusEvent<TextInputElement>) => {
-            handleBlur(e);
+            handleBlur();
             props.onBlur?.(e);
         };
 
-        return <Component {...props} onBlur={handleBlurEvent} onFocus={handleFocusEvent} ref={ref} />;
+        // Use React.createElement to avoid prop spreading issues
+        return React.createElement(Component, {
+            ...props,
+            onBlur: handleBlurEvent,
+            onFocus: handleFocusEvent,
+            ref,
+        } as P & { ref: React.ForwardedRef<TextInputElement> });
     });
 
     WrappedComponent.displayName = `withFormattingToolbar(${Component.displayName || Component.name})`;
