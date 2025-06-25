@@ -1,17 +1,7 @@
 import type { ManuscriptStateCore } from '../manuscriptStore/types';
 
-export type Book = {
-    contractVersion: string;
-    createdAt: Date;
-    index?: Bookmark[];
-    lastUpdatedAt: Date;
-    pages: BookPage[];
-    type: 'book';
-};
-
 export type Bookmark = {
-    level: number;
-    pageId: number;
+    page: number;
     title: string;
     volume?: number;
 };
@@ -40,7 +30,7 @@ export type BookStateCore = {
 
 export type Juz = {
     contractVersion: 'v1.0';
-    index?: BookIndex[];
+    index: BookIndex[];
     sheets: {
         footnotes?: string;
         page: number;
@@ -48,6 +38,15 @@ export type Juz = {
     }[];
     timestamp: Date;
     type: 'juz';
+};
+
+export type Kitab = {
+    contractVersion: string;
+    createdAt: Date;
+    index: Bookmark[];
+    lastUpdatedAt: Date;
+    pages: BookPage[];
+    type: 'book';
 };
 
 export type Page = BookPage & {
@@ -80,7 +79,11 @@ type BookActions = {
      */
     selectAllPages: (isSelected: boolean) => void;
 
-    shiftValues: (startingPageId: number, key: keyof Pick<Page, 'page' | 'volumePage'>) => void;
+    shiftValues: (
+        startingPageId: number,
+        startingPageValue: number,
+        key: keyof Pick<Page, 'page' | 'volumePage'>,
+    ) => void;
 
     updatePages: (ids: number[], diff: Omit<Partial<Page>, 'id' | 'lastUpdate'>, updateLastUpdated?: boolean) => void;
 };

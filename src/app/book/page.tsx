@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 
 import type { Juz } from '@/stores/bookStore/types';
 
+import { FormattingToolbar } from '@/components/formatting-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
@@ -83,6 +84,7 @@ export default function Book() {
                             </thead>
                             <tbody className="divide-y divide-gray-200">{pageItems}</tbody>
                         </table>
+                        <FormattingToolbar />
                     </div>
                 </div>
             </div>

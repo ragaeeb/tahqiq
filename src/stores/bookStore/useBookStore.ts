@@ -22,10 +22,10 @@ export const useBookStore = create<BookState>()(
         },
         selectedPages: [],
         selectedVolume: 0,
-        setUrlTemplate: (urlTemplate) => {
-            return set(() => ({ urlTemplate }));
-        },
+        shiftValues: (...args) => set((state) => actions.shiftValues(state, ...args)),
+        updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),
         urlTemplate: '',
+        volumeToIndex: {},
         volumeToPages: {},
     })),
 );

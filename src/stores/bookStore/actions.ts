@@ -41,3 +41,62 @@ export const initFromManuscript = (manuscript: ManuscriptStateCore) => {
     const juz = mapManuscriptToJuz(manuscript);
     return initStore({ '1.json': juz });
 };
+
+export const shiftValues = (
+    state: BookStateCore,
+    startingPageId: number,
+    startingPageValue: number,
+    key: keyof Pick<Page, 'page' | 'volumePage'>,
+) => {
+    const pages = selectCurrentPages(state);
+    const startingIndex = pages.findIndex((p) => p.id === startingPageId);
+
+    const startingPage = pages[startingIndex];
+    startingPage[key] = startingPageValue;
+    startingPage.lastUpdate = Date.now();
+
+    let counter = startingPageValue + 1;
+
+    for (let i = startingIndex + 1; i < pages.length; i++) {
+        const page = pages[i];
+        page[key] = counter;
+        page.lastUpdate = Date.now();
+
+        counter++;
+    }
+};
+
+const getPagesById = (state: BookStateCore, pageIds: number[]) => {
+    const result: Page[] = [];
+    const pages = selectCurrentPages(state);
+    const ids = new Set(pageIds);
+
+    for (const page of pages) {
+        if (ids.has(page.id)) {
+            result.push(page);
+        }
+    }
+
+    return result;
+};
+
+export const updatePages = (
+    state: BookStateCore,
+    ids: number[],
+    payload: ((p: Page) => void) | Omit<Partial<Page>, 'id' | 'lastUpdate'>,
+    updateLastUpdated?: boolean,
+) => {
+    const pages = getPagesById(state, ids);
+
+    for (const page of pages) {
+        if (typeof payload === 'function') {
+            payload(page);
+        } else {
+            Object.assign(page, payload);
+        }
+
+        if (updateLastUpdated) {
+            page.lastUpdate = Date.now();
+        }
+    }
+};

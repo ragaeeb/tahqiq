@@ -27,9 +27,9 @@ export const mapManuscriptToJuz = (manuscriptState: ManuscriptStateCore): Juz =>
 
     return {
         contractVersion: LatestContractVersion.Juz,
-        timestamp: new Date(),
-        ...(index.length && { index }),
+        index,
         sheets,
+        timestamp: new Date(),
         type: 'juz',
     };
 };
