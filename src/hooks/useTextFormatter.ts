@@ -1,33 +1,23 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
 import { type TextAreaElement, useToolbarStore } from '@/stores/useToolbarStore';
 
-const BLUR_DELAY = 500;
-
 export const useTextFormatter = () => {
-    const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const { clearToolbar, setToolbarVisible } = useToolbarStore();
+    const { cancelScheduledHide, scheduleHide, setToolbarVisible } = useToolbarStore();
 
     const handleFocus = useCallback(
         (e: React.FocusEvent<TextAreaElement>) => {
-            // Clear any pending blur timeout
-            if (blurTimeoutRef.current) {
-                clearTimeout(blurTimeoutRef.current);
-                blurTimeoutRef.current = null;
-            }
-
+            // Cancel any pending hide and show toolbar immediately
+            cancelScheduledHide();
             setToolbarVisible(true, e.target);
         },
-        [setToolbarVisible],
+        [setToolbarVisible, cancelScheduledHide],
     );
 
     const handleBlur = useCallback(() => {
-        // Delay hiding toolbar to allow clicking on toolbar buttons
-        blurTimeoutRef.current = setTimeout(() => {
-            clearToolbar();
-            blurTimeoutRef.current = null;
-        }, BLUR_DELAY);
-    }, [clearToolbar]);
+        // Schedule hide with delay
+        scheduleHide();
+    }, [scheduleHide]);
 
     return { handleBlur, handleFocus };
 };
