@@ -10,6 +10,12 @@ export const DEFAULT_HINTS = [
     'جزاكم الله خيرا',
 ];
 
+export const LatestContractVersion = {
+    Book: 'v1.0',
+    Juz: 'v1.0',
+    Transcript: 'v1.0',
+} as const;
+
 export const DEFAULT_FILLER_WORDS = ['آآ', 'اه', 'ايه', 'وآآ', 'فآآ', 'مم', 'ها'];
 
 export const DEFAULT_MAX_SECONDS_PER_SEGMENT = 240;
@@ -19,10 +25,6 @@ export const DEFAULT_MAX_SECONDS_PER_LINE = 30;
 export const DEFAULT_MIN_WORDS_PER_SEGMENT = 10;
 
 export const DEFAULT_SILENCE_GAP_THRESHOLD = 2;
-
-export const TRANSCRIPT_CONTRACT_LATEST = 'v1.0';
-
-export const BOOK_CONTRACT_LATEST = 'v1.0';
 
 export const REQUIRED_RAW_INPUT_FILES = [
     'batch_output.json',

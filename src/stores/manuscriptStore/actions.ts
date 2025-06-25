@@ -7,6 +7,7 @@ import {
     type Observation,
 } from 'kokokor';
 
+import { getNextId } from '@/lib/common';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { correctReferences } from '@/lib/footnotes';
 
@@ -20,8 +21,6 @@ import type {
 } from './types';
 
 import { assertHasRequiredFiles } from './guards';
-
-let ID_COUNTER = 0;
 
 /**
  * Converts Surya OCR page results to standardized Observation format.
@@ -61,14 +60,14 @@ const createSheet = (
         },
     });
 
-    const altObservations = alternateObservations.map((o) => ({ id: ID_COUNTER++, text: o.text }));
+    const altObservations = alternateObservations.map((o) => ({ id: getNextId(), text: o.text }));
 
     return {
         alt: altObservations,
         observations: textLines.map((o) => {
             return {
                 ...o,
-                id: ID_COUNTER++,
+                id: getNextId(),
                 lastUpdate: Date.now(),
             };
         }),
@@ -143,7 +142,7 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
 
         const nextObservation = {
             ...sheet.alt[index],
-            id: ++ID_COUNTER,
+            id: getNextId(),
             lastUpdate: Date.now(),
             text: secondLine,
         };

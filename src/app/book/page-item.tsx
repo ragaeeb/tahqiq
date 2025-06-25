@@ -4,10 +4,17 @@ import React from 'react';
 
 import type { Page } from '@/stores/bookStore/types';
 
+import SubmittableInput from '@/components/submittable-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
+
+type PageItemProps = {
+    isSelected: boolean;
+    onSelectionChange: (row: Page, selected: boolean) => void;
+    page: Page;
+};
 
 /**
  * Renders a table row for a manuscript page with editable ID, text, and selection controls.
@@ -16,8 +23,8 @@ import { useBookStore } from '@/stores/bookStore/useBookStore';
  *
  * @param page - The transcript page to display and edit.
  */
-const PageItem = ({ page }: { page: Page }) => {
-    const isSelected = useBookStore((state) => state.selectedPages.includes(page));
+const PageItem = ({ isSelected, page }: PageItemProps) => {
+    const updatePages = useBookStore((state) => state.updatePages);
 
     return (
         <tr className="border-2 border-blue-100">
@@ -26,26 +33,34 @@ const PageItem = ({ page }: { page: Page }) => {
             </td>
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">
-                <Input
+                <SubmittableInput
                     className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
-                    defaultValue={page.id.toString()}
+                    defaultValue={page.page.toString()}
+                    key={page.id + '/' + page.lastUpdate}
+                    name="page_id"
+                    onBlur={(e) => {
+                        if (e.target.value !== page.page.toString()) {
+                            updatePages([page.id], { page: Number(e.target.value) }, false);
+                        }
+                    }}
+                    onSubmit={(pageNumber) => {}}
                 />
             </td>
             <td className="px-2 py-1 space-y-1 text-xs align-top">
                 <Input
                     className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
-                    defaultValue={page.id.toString()}
+                    defaultValue={page.volumePage?.toString()}
                 />
             </td>
             <td className={`px-4 py-1 align-top`}>
                 <Textarea
-                    className={`leading-relaxed resize-none overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none`}
+                    className={`leading-relaxed resize-none overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none text-lg`}
                     defaultValue={page.text}
                     dir="rtl"
                 />
                 <hr />
                 <Textarea
-                    className={`overflow-hidden border-none resize-none shadow-none focus:ring-0 focus:outline-none text-xs`}
+                    className={`overflow-hidden border-none resize-none shadow-none focus:ring-0 focus:outline-none text-sm`}
                     defaultValue={page.footnotes}
                     dir="rtl"
                 />

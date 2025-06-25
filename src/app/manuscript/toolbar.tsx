@@ -1,5 +1,6 @@
 'use client';
 
+import { UndoIcon } from 'lucide-react';
 import React, { type Dispatch, type SetStateAction } from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -35,7 +36,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     }}
                     variant="destructive"
                 >
-                    🔁
+                    <UndoIcon />
                 </Button>
             )}
             <ManuscriptMenu

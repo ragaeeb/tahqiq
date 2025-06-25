@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { mutative } from 'zustand-mutative';
 
 import type { BookState } from './types';
 
@@ -10,10 +11,12 @@ import * as actions from './actions';
  *
  * @returns A Zustand store with book state and actions
  */
-export const useBookStore = create<BookState>((set) => {
-    return {
+
+export const useBookStore = create<BookState>()(
+    mutative((set) => ({
         createdAt: new Date(),
         init: (data) => set(() => actions.initStore(data)),
+        initFromManuscript: (data) => set(() => actions.initFromManuscript(data)),
         selectAllPages: (isSelected) => {
             return set((state) => actions.selectAllPages(state, isSelected));
         },
@@ -24,5 +27,5 @@ export const useBookStore = create<BookState>((set) => {
         },
         urlTemplate: '',
         volumeToPages: {},
-    };
-});
+    })),
+);

@@ -3,9 +3,8 @@
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { downloadFile } from '@/lib/domUtils';
-import { mapManuscriptToBook } from '@/lib/legacy';
-import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
+
+import TocMenu from './toc-menu';
 
 /**
  * Renders a toolbar for manuscript management operations.
@@ -14,17 +13,8 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 export default function BookToolbar() {
     return (
         <div className="flex space-x-2">
-            <Button
-                className="bg-emerald-500"
-                onClick={() => {
-                    downloadFile(
-                        `${Date.now()}.json`,
-                        JSON.stringify(mapManuscriptToBook(useManuscriptStore.getState()), null, 2),
-                    );
-                }}
-            >
-                💾
-            </Button>
+            <Button className="bg-emerald-500">💾</Button>
+            <TocMenu onBookmarkClicked={() => {}} />
         </div>
     );
 }

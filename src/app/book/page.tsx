@@ -2,13 +2,11 @@
 
 import { useEffect, useMemo } from 'react';
 
-import type { Book as BookType } from '@/stores/bookStore/types';
+import type { Juz } from '@/stores/bookStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import VersionFooter from '@/components/version-footer';
-import { mapManuscriptToBook } from '@/lib/legacy';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
@@ -21,19 +19,17 @@ import PageItem from './page-item';
  */
 export default function Book() {
     const selectedVolume = useBookStore((state) => state.selectedVolume);
-    const urlTemplate = useBookStore((state) => state.urlTemplate);
-    const setUrlTemplate = useBookStore((state) => state.setUrlTemplate);
     const isInitialized = selectedVolume > 0;
     const initBook = useBookStore((state) => state.init);
+    const initFromManuscript = useBookStore((state) => state.initFromManuscript);
     const pages = useBookStore(selectCurrentPages);
     const selectAllPages = useBookStore((state) => state.selectAllPages);
 
     useEffect(() => {
         if (useManuscriptStore.getState().sheets.length > 0) {
-            const book = mapManuscriptToBook(useManuscriptStore.getState());
-            initBook({ '1.json': book });
+            initFromManuscript(useManuscriptStore.getState());
         }
-    }, [initBook]);
+    }, [initFromManuscript]);
 
     const pageItems = useMemo(() => {
         return pages.map((page) => <PageItem key={`${selectedVolume}/${page.id}`} page={page} />);
@@ -45,10 +41,9 @@ export default function Book() {
                 <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                     <div className="flex flex-col w-full max-w">
                         <JsonDropZone
-                            allowedExtensions=".json,.txt"
-                            description="Drag and drop the manuscript"
-                            maxFiles={4}
-                            onFiles={(map) => initBook(map as unknown as Record<string, BookType>)}
+                            allowedExtensions=".json"
+                            description="Drag and drop the parts"
+                            onFiles={(map) => initBook(map as unknown as Record<string, Juz>)}
                         />
                     </div>
                 </div>
@@ -88,17 +83,6 @@ export default function Book() {
                             </thead>
                             <tbody className="divide-y divide-gray-200">{pageItems}</tbody>
                         </table>
-                    </div>
-                    <div className="mt-4 p-4 border rounded">
-                        <label className="block text-sm font-medium mb-2" htmlFor="url-template">
-                            URL Template
-                        </label>
-                        <Input
-                            defaultValue={urlTemplate}
-                            id="url-template"
-                            onBlur={(e) => setUrlTemplate(e.target.value)}
-                            placeholder="Enter URL template for manuscript pages"
-                        />
                     </div>
                 </div>
             </div>

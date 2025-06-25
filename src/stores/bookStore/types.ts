@@ -1,15 +1,19 @@
+import type { ManuscriptStateCore } from '../manuscriptStore/types';
+
 export type Book = {
     contractVersion: string;
     createdAt: Date;
-    index?: {
-        level: number;
-        page: number;
-        title: string;
-    }[];
+    index?: Bookmark[];
     lastUpdatedAt: Date;
-    pages: Page[];
+    pages: BookPage[];
     type: 'book';
-    urlTemplate?: string;
+};
+
+export type Bookmark = {
+    level: number;
+    pageId: number;
+    title: string;
+    volume?: number;
 };
 
 /**
@@ -27,19 +31,28 @@ export type BookStateCore = {
     readonly selectedPages: Page[];
     /** Currently selected manuscript volume number */
     readonly selectedVolume: number;
-    readonly urlTemplate: string;
+
+    readonly volumeToIndex: Record<number, TableOfContents[]>;
 
     /** Map of pages indexed by volume number */
     readonly volumeToPages: Record<number, Page[]>;
 };
 
-export type Page = {
-    footnotes?: string;
+export type Juz = {
+    contractVersion: 'v1.0';
+    index?: BookIndex[];
+    sheets: {
+        footnotes?: string;
+        page: number;
+        text: string;
+    }[];
+    timestamp: Date;
+    type: 'juz';
+};
+
+export type Page = BookPage & {
     id: number;
-    page?: number;
-    status?: PageStatus;
-    text: string;
-    volume: number;
+    lastUpdate: number;
 };
 
 /**
@@ -49,11 +62,17 @@ export type Page = {
  */
 export type PageStatus = 'done' | 'review';
 
+export type TableOfContents = BookIndex & {
+    id: number;
+};
+
 /**
  * Action functions available for transcript manipulation
  */
 type BookActions = {
-    init: (fileToBook: Record<string, Book>) => void;
+    init: (fileToJuz: Record<string, Juz>) => void;
+
+    initFromManuscript: (manuscript: ManuscriptStateCore) => void;
 
     /**
      * Sets selection state for all pages
@@ -61,5 +80,21 @@ type BookActions = {
      */
     selectAllPages: (isSelected: boolean) => void;
 
-    setUrlTemplate: (template: string) => void;
+    shiftValues: (startingPageId: number, key: keyof Pick<Page, 'page' | 'volumePage'>) => void;
+
+    updatePages: (ids: number[], diff: Omit<Partial<Page>, 'id' | 'lastUpdate'>, updateLastUpdated?: boolean) => void;
+};
+
+type BookIndex = {
+    page: number;
+    title: string;
+};
+
+type BookPage = {
+    footnotes?: string;
+    page: number;
+    status?: PageStatus;
+    text: string;
+    volume?: number;
+    volumePage?: number;
 };

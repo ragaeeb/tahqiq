@@ -1,5 +1,6 @@
 'use client';
 
+import { BoxIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -9,7 +10,7 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
-import { mapManuscriptToBook } from '@/lib/legacy';
+import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
@@ -84,16 +85,22 @@ export default function Manuscript() {
                             <Button
                                 className="bg-emerald-500"
                                 onClick={() => {
-                                    downloadFile(
-                                        `${Date.now()}.json`,
-                                        JSON.stringify(mapManuscriptToBook(useManuscriptStore.getState()), null, 2),
-                                    );
+                                    const name = prompt('Enter output file name');
+
+                                    if (name) {
+                                        downloadFile(
+                                            name.endsWith('.json') ? name : `${name}.json`,
+                                            JSON.stringify(mapManuscriptToJuz(useManuscriptStore.getState()), null, 2),
+                                        );
+                                    }
                                 }}
                             >
-                                💾
+                                <SaveIcon />
                             </Button>
                             <Link href="/book">
-                                <Button className="bg-blue-500">📦</Button>
+                                <Button className="bg-blue-500">
+                                    <BoxIcon />
+                                </Button>
                             </Link>
                         </div>
                     </div>

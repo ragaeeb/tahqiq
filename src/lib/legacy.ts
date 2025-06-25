@@ -1,17 +1,11 @@
-import { formatTextBlocks, mapTextLinesToParagraphs } from 'kokokor';
 import { estimateSegmentFromToken } from 'paragrafs';
 
-import type { Book } from '@/stores/bookStore/types';
-import type { ManuscriptState } from '@/stores/manuscriptStore/types';
 import type { Transcript, TranscriptSeries } from '@/stores/transcriptStore/types';
 
 import type { BookTranscriptFormat, PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 
-import { BOOK_CONTRACT_LATEST, TRANSCRIPT_CONTRACT_LATEST } from './constants';
-import { preformatArabicText } from './textUtils';
+import { LatestContractVersion } from './constants';
 import { roundToDecimal } from './time';
-
-const FOOTNOTE_DIVIDER = '____________';
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
     if ((input as TranscriptSeries).contractVersion?.startsWith('v1.')) {
@@ -33,7 +27,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         const data = input as TranscriptSeriesV0;
 
         return {
-            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+            contractVersion: LatestContractVersion.Transcript,
             createdAt: data.createdAt,
             lastUpdatedAt: data.lastUpdatedAt,
             transcripts: data.transcripts.map((t) => ({
@@ -79,7 +73,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
             });
 
         return {
-            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+            contractVersion: LatestContractVersion.Transcript,
             createdAt: data.timestamp,
             lastUpdatedAt: data.timestamp,
             postProcessingApps: [data.postProcessingApp],
@@ -92,7 +86,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
 
         if (data.parts[0]?.transcripts[0]?.words) {
             return {
-                contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+                contractVersion: LatestContractVersion.Transcript,
                 createdAt: data.timestamp,
                 lastUpdatedAt: data.timestamp,
                 ...(data.postProcessingApp && { postProcessingApps: [data.postProcessingApp] }),
@@ -114,7 +108,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
 
         // the transcripts are very short 1-5s segments, almost tokens themselves
         return {
-            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+            contractVersion: LatestContractVersion.Transcript,
             createdAt: data.timestamp,
             lastUpdatedAt: data.timestamp,
             transcripts: data.parts.map((part) => {
@@ -141,7 +135,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
         const data = input as PartsFormat;
 
         return {
-            contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+            contractVersion: LatestContractVersion.Transcript,
             createdAt: data.timestamp,
             lastUpdatedAt: data.timestamp,
             transcripts: data.parts.map((part) => {
@@ -166,7 +160,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
 
 export const mapTranscriptsToLatestContract = (transcripts: Transcript[], createdAt: Date): TranscriptSeries => {
     return {
-        contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+        contractVersion: LatestContractVersion.Transcript,
         createdAt,
         lastUpdatedAt: new Date(),
         transcripts: Object.values(transcripts)
@@ -175,28 +169,5 @@ export const mapTranscriptsToLatestContract = (transcripts: Transcript[], create
                 ...t,
                 segments: t.segments.map((s) => ({ ...s, end: roundToDecimal(s.end), start: roundToDecimal(s.start) })),
             })),
-    };
-};
-
-export const mapManuscriptToBook = (manuscriptState: ManuscriptState): Book => {
-    const pages = manuscriptState.sheets.map((s) => {
-        const paragraphs = mapTextLinesToParagraphs(s.observations);
-        const text = formatTextBlocks(paragraphs, FOOTNOTE_DIVIDER);
-        const [body, footnotes] = text.split(FOOTNOTE_DIVIDER);
-
-        return {
-            id: s.page,
-            text: preformatArabicText(body, true),
-            volume: 1,
-            ...(footnotes && { footnotes: preformatArabicText(footnotes, true) }),
-        };
-    });
-
-    return {
-        contractVersion: BOOK_CONTRACT_LATEST,
-        createdAt: new Date(),
-        lastUpdatedAt: new Date(),
-        pages,
-        type: 'book',
     };
 };
