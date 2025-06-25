@@ -49,7 +49,7 @@ export const useToolbarStore = create<ToolbarStore>((set) => ({
                 isVisible: visible,
                 position: element
                     ? {
-                          x: element.getBoundingClientRect().right + 10,
+                          x: element.getBoundingClientRect().left,
                           y: element.getBoundingClientRect().top,
                       }
                     : state.toolbarState.position,
