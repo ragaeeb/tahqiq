@@ -39,6 +39,11 @@ const buttonVariants = cva(
     },
 );
 
+export type ButtonPropsType = React.ComponentProps<'button'> &
+    VariantProps<typeof buttonVariants> & {
+        asChild?: boolean;
+    };
+
 /**
  * Renders a customizable button with variant-based styling and optional slot behavior.
  *
@@ -51,16 +56,7 @@ const buttonVariants = cva(
  *
  * @remark When {@link asChild} is true, the button's children are rendered as the Slot's content, allowing for advanced composition.
  */
-function Button({
-    asChild = false,
-    className,
-    size,
-    variant,
-    ...props
-}: React.ComponentProps<'button'> &
-    VariantProps<typeof buttonVariants> & {
-        asChild?: boolean;
-    }) {
+function Button({ asChild = false, className, size, variant, ...props }: ButtonPropsType) {
     const Comp = asChild ? Slot : 'button';
 
     return <Comp className={cn(buttonVariants({ className, size, variant }))} data-slot="button" {...props} />;

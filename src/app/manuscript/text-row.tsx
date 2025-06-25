@@ -20,7 +20,7 @@ type TextRowProps = {
 const getTextInputClassName = (data: SheetLine) => {
     return clsx(
         'w-full leading-relaxed text-gray-800 border-none outline-none px-1 py-1 transition-colors duration-150',
-        data.isFootnote ? '!text-sm' : '!text-xl',
+        data.isFootnote ? 'text-sm' : 'text-xl',
         data.isPoetic && 'italic bg-purple-100',
         data.isCentered ? 'text-center' : 'text-right',
         data.isHeading && 'font-bold',
@@ -32,7 +32,7 @@ const getTextInputClassName = (data: SheetLine) => {
 const getAltTextAreaClassName = (data: SheetLine) => {
     return clsx(
         `flex-1 mr-2 leading-relaxed bg-transparent border-none outline-none resize-none overflow-hidden min-h-[1.5em] px-1 py-1 transition-colors duration-150`,
-        data.isFootnote ? '!text-sm' : '!text-xl',
+        data.isFootnote ? 'text-sm' : 'text-xl',
         data.isCentered ? 'text-center' : 'text-right',
         data.isHeading && 'font-bold',
         'focus:bg-white focus:rounded',
@@ -45,7 +45,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
-    const updateText = useManuscriptStore((state) => state.updateText);
+    const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
 
     return (
         <tr
@@ -77,7 +77,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                     dir="rtl"
                     key={data.id + '/' + data.lastUpdate}
                     onBlur={(e) => {
-                        updateText(data.page, data.id, e.target.value);
+                        updateTextLines([data.id], { text: e.target.value }, false);
                     }}
                     style={{ fontFamily: 'inherit' }}
                     type="text"
