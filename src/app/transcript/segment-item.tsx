@@ -1,5 +1,4 @@
-'use client';
-
+import { record } from 'nanolytics';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
 
@@ -41,6 +40,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                         const start = timeToSeconds(e.target.value);
 
                         if (start !== segment.start) {
+                            record('UpdateSegmentStart');
                             updateSegment(segment.start, { start });
                         }
                     }}
@@ -52,6 +52,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                         const end = timeToSeconds(e.target.value);
 
                         if (end !== segment.end) {
+                            record('UpdateSegmentEnd');
                             updateSegment(segment.start, { end });
                         }
                     }}
@@ -67,6 +68,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                     onBlur={(e) => {
                         if (e.target.value !== segment.text) {
                             autoResize(e.currentTarget);
+                            record('UpdateSegmentText');
                             updateSegment(segment.start, { text: e.target.value });
                         }
                     }}

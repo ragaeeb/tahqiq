@@ -1,14 +1,23 @@
 'use client';
 
+import { record } from 'nanolytics';
 import React from 'react';
 
 import type { Page } from '@/stores/bookStore/types';
 
+import SubmittableInput from '@/components/submittable-input';
 import { Checkbox } from '@/components/ui/checkbox';
-import HighlightableTextarea from '@/components/ui/highlightable-textarea';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { withFormattingToolbar } from '@/components/withFormattingToolbar';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
-import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
+
+type PageItemProps = {
+    isSelected: boolean;
+    onSelectionChange: (row: Page, selected: boolean) => void;
+    page: Page;
+};
+
+const TextareaWithToolbar = withFormattingToolbar(Textarea);
 
 /**
  * Renders a table row for a manuscript page with editable ID, text, and selection controls.
@@ -17,37 +26,80 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
  *
  * @param page - The transcript page to display and edit.
  */
-const PageItem = ({ page }: { page: Page }) => {
-    const toggleSegmentSelection = useTranscriptStore((state) => state.toggleSegmentSelection);
-    const isSelected = useBookStore((state) => state.selectedPages.includes(page));
-    const lineHighlights: { [lineNumber: number]: string } = {};
-    if (page.errorLines) {
-        for (const line of page.errorLines) {
-            lineHighlights[line] = 'bg-red-100';
-        }
-    }
+const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
+    const updatePages = useBookStore((state) => state.updatePages);
+    const shiftValues = useBookStore((state) => state.shiftValues);
 
     return (
-        <tr>
+        <tr className="border-2 border-blue-100">
             <td className="px-2 py-1 align-top">
                 <Checkbox
                     checked={isSelected}
-                    onCheckedChange={(isSelected) => toggleSegmentSelection(page as any, Boolean(isSelected))}
+                    onCheckedChange={(checked) => onSelectionChange(page, Boolean(checked))}
                 />
             </td>
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">
-                <Input
+                <SubmittableInput
                     className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
-                    defaultValue={page.id.toString()}
+                    defaultValue={page.page.toString()}
+                    key={page.id + '/' + page.lastUpdate + '/page'}
+                    name="page_id"
+                    onBlur={(e) => {
+                        if (e.target.value !== page.page.toString()) {
+                            record('UpdatePageNumber');
+                            updatePages([page.id], { page: Number(e.target.value) }, false);
+                        }
+                    }}
+                    onSubmit={(pageNumber) => {
+                        record('ShiftPageNumbers');
+                        shiftValues(page.id, Number(pageNumber), 'page');
+                    }}
+                />
+            </td>
+            <td className="px-2 py-1 space-y-1 text-xs align-top">
+                <SubmittableInput
+                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
+                    defaultValue={page.volumePage?.toString()}
+                    key={page.id + '/' + page.lastUpdate + '/volumePage'}
+                    name="volume_page"
+                    onBlur={(e) => {
+                        if (e.target.value !== page.volumePage?.toString()) {
+                            record('UpdateVolumePage');
+                            updatePages([page.id], { volumePage: Number(e.target.value) }, false);
+                        }
+                    }}
+                    onSubmit={(pageNumber) => {
+                        record('ShiftVolumePages');
+                        shiftValues(page.id, Number(pageNumber), 'volumePage');
+                    }}
                 />
             </td>
             <td className={`px-4 py-1 align-top`}>
-                <HighlightableTextarea
-                    className={`overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none`}
+                <TextareaWithToolbar
+                    className={`leading-relaxed resize-none overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none text-lg`}
                     defaultValue={page.text}
                     dir="rtl"
-                    lineHighlights={lineHighlights}
+                    key={page.id + '/' + page.lastUpdate + '/text'}
+                    onBlur={(e) => {
+                        if (e.target.value !== page.text.toString()) {
+                            record('UpdatePageText');
+                            updatePages([page.id], { text: e.target.value }, false);
+                        }
+                    }}
+                />
+                <hr />
+                <TextareaWithToolbar
+                    className={`overflow-hidden border-none resize-none shadow-none focus:ring-0 focus:outline-none text-sm`}
+                    defaultValue={page.footnotes}
+                    dir="rtl"
+                    key={page.id + '/' + page.lastUpdate + '/footnotes'}
+                    onBlur={(e) => {
+                        if (e.target.value !== page.footnotes?.toString()) {
+                            record('UpdatePageFootnote');
+                            updatePages([page.id], { footnotes: e.target.value }, false);
+                        }
+                    }}
                 />
             </td>
         </tr>

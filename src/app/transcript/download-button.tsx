@@ -1,5 +1,5 @@
-'use client';
-
+import { SaveIcon } from 'lucide-react';
+import { record } from 'nanolytics';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -13,20 +13,25 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
  * When clicked, the button generates a JSON file containing the transcripts mapped to the latest contract format and initiates a download with a timestamped filename.
  */
 export default function DownloadButton() {
-    const transcripts = useTranscriptStore((state) => state.transcripts);
-    const createdAt = useTranscriptStore((state) => state.createdAt);
-
     return (
         <Button
             className="bg-emerald-500"
             onClick={() => {
-                downloadFile(
-                    `${Date.now()}.json`,
-                    JSON.stringify(mapTranscriptsToLatestContract(Object.values(transcripts), createdAt), null, 2),
-                );
+                const name = prompt('Enter output file name');
+
+                if (name) {
+                    record('DownloadTranscript', name);
+
+                    const { createdAt, transcripts } = useTranscriptStore.getState();
+
+                    downloadFile(
+                        name.endsWith('.json') ? name : `${name}.json`,
+                        JSON.stringify(mapTranscriptsToLatestContract(Object.values(transcripts), createdAt), null, 2),
+                    );
+                }
             }}
         >
-            💾
+            <SaveIcon />
         </Button>
     );
 }

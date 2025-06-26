@@ -1,5 +1,4 @@
-'use client';
-
+import { record } from 'nanolytics';
 import {
     applyGroundTruthToSegment,
     formatSecondsToTimestamp,
@@ -41,6 +40,8 @@ export function GroundingDialog({
                     defaultValue={segment.text}
                     dir="rtl"
                     onPaste={(e) => {
+                        record('OnPasteIntoGroundingTruth');
+
                         e.preventDefault();
                         const text = preformatArabicText(e.clipboardData.getData('text'));
 
@@ -82,6 +83,8 @@ export function GroundingDialog({
                     <Button
                         disabled={!groundedSegment}
                         onClick={() => {
+                            record('AcceptGroundTruth');
+
                             const grounded = applyGroundTruthToSegment(segment, groundedSegment!.text);
                             updateSegment(segment.start, grounded, true);
                             selectAllSegments(false);

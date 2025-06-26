@@ -36,7 +36,7 @@ export const standardizeAhHijriSymbol = (text: string) => {
 };
 
 const fixBracketTypos = (text: string) => {
-    return text.replace(/\(«/g, '«').replace(/»\)/g, '»');
+    return text.replace(/\(«|\( \(/g, '«').replace(/»\)|\) \)/g, '»');
 };
 
 const autoCorrectPipeline = [standardizeHijriSymbol, standardizeAhHijriSymbol, fixBracketTypos];

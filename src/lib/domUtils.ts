@@ -87,3 +87,43 @@ export const autoResize = (textArea: HTMLTextAreaElement) => {
     textArea.style.height = 'auto';
     textArea.style.height = `${textArea.scrollHeight}px`;
 };
+
+export const updateElementValue = (
+    element: HTMLInputElement | HTMLTextAreaElement,
+    newValue: string,
+    onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void,
+) => {
+    // Update the element value
+    element.value = newValue;
+
+    // Trigger onChange event if provided
+    if (onChange) {
+        const syntheticEvent = {
+            currentTarget: element,
+            target: element,
+        } as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
+
+        onChange(syntheticEvent);
+    }
+};
+
+export const applyFormattingOnSelection = (
+    element: HTMLInputElement | HTMLTextAreaElement,
+    formatter: (text: string) => string,
+): string => {
+    const selectionEnd = element.selectionEnd ?? 0;
+    const selectionStart = element.selectionStart ?? 0;
+    const value = element.value ?? '';
+
+    if (selectionEnd > selectionStart) {
+        // Format only selected text
+        const before = value.substring(0, selectionStart);
+        const selected = value.substring(selectionStart, selectionEnd);
+        const after = value.substring(selectionEnd);
+
+        return before + formatter(selected) + after;
+    }
+
+    // Format entire text if no selection
+    return formatter(value);
+};

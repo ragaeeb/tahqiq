@@ -62,7 +62,7 @@ export type TextLine = TextBlock & {
 
 type AltText = {
     readonly id: number;
-    readonly text: string;
+    text: string;
 };
 
 type MacOCR = { observations: Observation[] };
@@ -95,13 +95,13 @@ type ManuscriptActions = {
 
     replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
 
-    setPoetry: (ids: number[], isPoetry: boolean) => void;
-
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 
-    toggleFootnotes: (ids: number[]) => void;
-
-    updateText: (page: number, id: number, text: string) => void;
+    updateTextLines: (
+        ids: number[],
+        diff: Omit<Partial<TextLine>, 'id' | 'lastUpdate'>,
+        updateLastUpdated?: boolean,
+    ) => void;
 };
 
 type OcrData = {

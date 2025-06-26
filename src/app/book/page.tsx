@@ -1,19 +1,24 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { replaceLineBreaksWithSpaces } from 'bitaboom';
+import { record } from 'nanolytics';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { Book as BookType } from '@/stores/bookStore/types';
+import type { Juz, Page } from '@/stores/bookStore/types';
 
+import { FormattingToolbar } from '@/components/formatting-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import VersionFooter from '@/components/version-footer';
-import { mapManuscriptToBook } from '@/lib/legacy';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import BookToolbar from './book-toolbar';
+
+import '@/lib/analytics';
+
 import PageItem from './page-item';
 
 /**
@@ -21,23 +26,39 @@ import PageItem from './page-item';
  */
 export default function Book() {
     const selectedVolume = useBookStore((state) => state.selectedVolume);
-    const urlTemplate = useBookStore((state) => state.urlTemplate);
-    const setUrlTemplate = useBookStore((state) => state.setUrlTemplate);
     const isInitialized = selectedVolume > 0;
     const initBook = useBookStore((state) => state.init);
+    const initFromManuscript = useBookStore((state) => state.initFromManuscript);
+    const deletePages = useBookStore((state) => state.deletePages);
     const pages = useBookStore(selectCurrentPages);
-    const selectAllPages = useBookStore((state) => state.selectAllPages);
+    const [selectedPages, setSelectedPages] = useState<Page[]>([]);
 
     useEffect(() => {
         if (useManuscriptStore.getState().sheets.length > 0) {
-            const book = mapManuscriptToBook(useManuscriptStore.getState());
-            initBook({ '1.json': book });
+            initFromManuscript(useManuscriptStore.getState());
         }
-    }, [initBook]);
+    }, [initFromManuscript]);
+
+    const handleSelectionChange = useCallback((item: Page, selected: boolean) => {
+        setSelectedPages((prev) => {
+            if (selected) {
+                return [...prev, item];
+            }
+
+            return prev.filter((p) => p !== item);
+        });
+    }, []);
 
     const pageItems = useMemo(() => {
-        return pages.map((page) => <PageItem key={`${selectedVolume}/${page.id}`} page={page} />);
-    }, [pages, selectedVolume]);
+        return pages.map((page) => (
+            <PageItem
+                isSelected={selectedPages.includes(page)}
+                key={`${selectedVolume}/${page.id}`}
+                onSelectionChange={handleSelectionChange}
+                page={page}
+            />
+        ));
+    }, [pages, selectedVolume, selectedPages, handleSelectionChange]);
 
     if (!isInitialized) {
         return (
@@ -45,10 +66,12 @@ export default function Book() {
                 <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                     <div className="flex flex-col w-full max-w">
                         <JsonDropZone
-                            allowedExtensions=".json,.txt"
-                            description="Drag and drop the manuscript"
-                            maxFiles={4}
-                            onFiles={(map) => initBook(map as unknown as Record<string, BookType>)}
+                            allowedExtensions=".json"
+                            description="Drag and drop the parts"
+                            onFiles={(map) => {
+                                record('InitBookFromJuz');
+                                initBook(map as unknown as Record<string, Juz>);
+                            }}
                         />
                     </div>
                 </div>
@@ -62,7 +85,16 @@ export default function Book() {
             <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                 <div className="flex flex-col w-full max-w">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-                        <BookToolbar />
+                        <BookToolbar
+                            onDeleteSelectedPages={
+                                selectedPages.length > 0
+                                    ? () => {
+                                          record('DeletePagesFromBook', selectedPages.length.toString());
+                                          deletePages(selectedPages.map((p) => p.id));
+                                      }
+                                    : undefined
+                            }
+                        />
                     </div>
 
                     <div className="overflow-auto border rounded">
@@ -72,8 +104,15 @@ export default function Book() {
                                     <th className="px-2 py-1 w-8 text-left">
                                         <Checkbox
                                             aria-label="Select all pages"
-                                            onCheckedChange={(isSelected) => selectAllPages(Boolean(isSelected))}
+                                            checked={selectedPages.length === pages.length && pages.length > 0}
+                                            onCheckedChange={(isSelected) => {
+                                                record(isSelected ? 'SelectAllPages' : 'ClearAllPages');
+                                                setSelectedPages(isSelected ? pages : []);
+                                            }}
                                         />
+                                    </th>
+                                    <th aria-label="Page" className="px-2 py-1 w-36 text-left">
+                                        ID
                                     </th>
                                     <th aria-label="Page" className="px-2 py-1 w-36 text-left">
                                         Page
@@ -86,19 +125,24 @@ export default function Book() {
                             <tbody className="divide-y divide-gray-200">{pageItems}</tbody>
                         </table>
                     </div>
-                    <div className="mt-4 p-4 border rounded">
-                        <label className="block text-sm font-medium mb-2" htmlFor="url-template">
-                            URL Template
-                        </label>
-                        <Input
-                            defaultValue={urlTemplate}
-                            id="url-template"
-                            onBlur={(e) => setUrlTemplate(e.target.value)}
-                            placeholder="Enter URL template for manuscript pages"
-                        />
-                    </div>
                 </div>
             </div>
+            <FormattingToolbar>
+                {(applyFormat) => (
+                    <>
+                        <Button
+                            key="replaceLineBreaksWithSpaces"
+                            onClick={() => {
+                                record('FormatToolBar', 'lineBreaksToSpaces');
+                                applyFormat(replaceLineBreaksWithSpaces);
+                            }}
+                            variant="outline"
+                        >
+                            ↩̶
+                        </Button>
+                    </>
+                )}
+            </FormattingToolbar>
             <VersionFooter />
         </>
     );

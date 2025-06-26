@@ -15,6 +15,8 @@ import SegmentItem from './segment-item';
 import TranscriptToolbar from './transcript-toolbar';
 import UrlField from './url-field';
 
+import '@/lib/analytics';
+
 /**
  * Displays and manages transcript segments with selection and file import capabilities.
  *

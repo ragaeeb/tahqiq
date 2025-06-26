@@ -1,5 +1,6 @@
 'use client';
 
+import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
@@ -32,7 +33,12 @@ export default function TranscriptToolbar() {
     return (
         <div className="flex space-x-2">
             {selectedSegments.length === 2 && (
-                <Button onClick={mergeSegments}>
+                <Button
+                    onClick={() => {
+                        record('MergeTranscripts');
+                        mergeSegments();
+                    }}
+                >
                     🔗 {formatSecondsToTimestamp(sortedSegments[0]!.start)} -{' '}
                     {formatSecondsToTimestamp(sortedSegments.at(-1)!.end)} (
                     {formatSecondsToTimestamp(Math.ceil(sortedSegments.at(-1)!.end - sortedSegments[0]!.start))})
@@ -41,45 +47,94 @@ export default function TranscriptToolbar() {
             {selectedSegments.length === 1 && (
                 <DialogTriggerButton
                     className="bg-gray-100"
+                    onClick={() => {
+                        record('OpenGroundTruth');
+                    }}
                     renderContent={() => <GroundingDialog segment={selectedSegments[0]!} />}
                 >
                     ⚖️
                 </DialogTriggerButton>
             )}
             {selectedSegments.length > 0 && (
-                <Button aria-label="Delete selected segments" className="bg-red-200" onClick={removeSegments}>
+                <Button
+                    aria-label="Delete selected segments"
+                    className="bg-red-200"
+                    onClick={() => {
+                        record('RemoveSelectedSegments');
+                        removeSegments();
+                    }}
+                >
                     🗑️
                 </Button>
             )}
             {selectedSegments.length > 0 && (
-                <Button aria-label="Mark selected segments as completed" onClick={markCompleted}>
+                <Button
+                    aria-label="Mark selected segments as completed"
+                    onClick={() => {
+                        record('MarkTranscriptsCompleted', selectedSegments.length.toString());
+                        markCompleted();
+                    }}
+                >
                     ✅
                 </Button>
             )}
             {selectedToken && (
-                <Button onClick={() => splitSegment()}>✂️ at {formatSecondsToTimestamp(selectedToken.start)}</Button>
+                <Button
+                    onClick={() => {
+                        record('SplitSegment');
+                        splitSegment();
+                    }}
+                >
+                    ✂️ at {formatSecondsToTimestamp(selectedToken.start)}
+                </Button>
             )}
 
             <DialogTriggerButton
                 aria-label="Formatting options"
+                onClick={() => {
+                    record('TranscriptFormatSettings');
+                }}
                 renderContent={() => <FormatDialog />}
                 variant="outline"
             >
                 ⚙️
             </DialogTriggerButton>
-            <DialogTriggerButton aria-label="Preview" className="bg-blue-500" renderContent={() => <PreviewDialog />}>
+            <DialogTriggerButton
+                aria-label="Preview"
+                className="bg-blue-500"
+                onClick={() => {
+                    record('OpenTranscriptPreview');
+                }}
+                renderContent={() => <PreviewDialog />}
+            >
                 Preview
             </DialogTriggerButton>
-            <DialogTriggerButton aria-label="Search" renderContent={() => <SearchDialog />} variant="outline">
+            <DialogTriggerButton
+                aria-label="Search"
+                onClick={() => {
+                    record('OpenTranscriptSearch');
+                }}
+                renderContent={() => <SearchDialog />}
+                variant="outline"
+            >
                 🔍
             </DialogTriggerButton>
-            <Button aria-label="Group and slice segments" onClick={groupAndSliceSegments}>
+            <Button
+                aria-label="Group and slice segments"
+                onClick={() => {
+                    record('GroupAndSliceSegments');
+                    groupAndSliceSegments();
+                }}
+            >
                 🔧 Group & Slice Segments
             </Button>
             <Button
                 aria-label="Rebuild Segments from Tokens"
                 className="bg-orange-500"
-                onClick={rebuildSegmentFromTokens}
+                onClick={() => {
+                    record('RebuildSegmentFromTokens');
+                    rebuildSegmentFromTokens();
+                }}
             >
                 ♺ Rebuild Segment from Tokens
             </Button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { isArabic } from '@flowdegree/arabic-strings';
+import { record } from 'nanolytics';
 import {
     createHints,
     formatSecondsToTimestamp,
@@ -56,7 +57,10 @@ export function PreviewDialog() {
                         <Checkbox
                             checked={isGroupingBySegments}
                             id="groupBySegments"
-                            onCheckedChange={(isSelected) => setIsGroupingBySegments(Boolean(isSelected))}
+                            onCheckedChange={(isSelected) => {
+                                record('GroupTranscriptBySegments', isSelected.toString());
+                                setIsGroupingBySegments(Boolean(isSelected));
+                            }}
                         />
                         <Label htmlFor="groupBySegments">Group by Segments</Label>
                     </div>
@@ -66,7 +70,10 @@ export function PreviewDialog() {
                 <Textarea
                     className="w-full h-full resize-none"
                     dir={isArabic(text) ? 'rtl' : undefined}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                        record('EditTranscriptInPreviewDialog');
+                        setText(e.target.value);
+                    }}
                     value={text}
                 />
             </div>
@@ -74,6 +81,7 @@ export function PreviewDialog() {
                 <DialogClose asChild>
                     <Button
                         onClick={() => {
+                            record('CopyTranscriptToClipboard');
                             navigator.clipboard.writeText(text);
                         }}
                         type="submit"
@@ -85,6 +93,7 @@ export function PreviewDialog() {
                     className="bg-blue-500"
                     disabled={isLoading}
                     onClick={async () => {
+                        record('TranslateTranscript');
                         setIsLoading(true);
                         try {
                             const res = await fetch('/api/translate', {
@@ -101,8 +110,12 @@ export function PreviewDialog() {
                             if (!data.text) {
                                 throw new Error('Received empty translation response');
                             }
+
+                            record('TranscriptTranslationSuccess');
                             setText(data.text);
                         } catch (error) {
+                            record('TranscriptTranslationFailure');
+
                             console.error('Translation error:', error);
                             setText(
                                 `Translation failed: ${

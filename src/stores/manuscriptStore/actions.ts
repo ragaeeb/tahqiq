@@ -7,14 +7,20 @@ import {
     type Observation,
 } from 'kokokor';
 
+import { getNextId } from '@/lib/common';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { correctReferences } from '@/lib/footnotes';
 
-import type { ManuscriptStateCore, RawInputFiles, Sheet, StructureMetadata, SuryaPageOcrResult } from './types';
+import type {
+    ManuscriptStateCore,
+    RawInputFiles,
+    Sheet,
+    StructureMetadata,
+    SuryaPageOcrResult,
+    TextLine,
+} from './types';
 
 import { assertHasRequiredFiles } from './guards';
-
-let ID_COUNTER = 0;
 
 /**
  * Converts Surya OCR page results to standardized Observation format.
@@ -54,14 +60,14 @@ const createSheet = (
         },
     });
 
-    const altObservations = alternateObservations.map((o) => ({ id: ID_COUNTER++, text: o.text }));
+    const altObservations = alternateObservations.map((o) => ({ id: getNextId(), text: o.text }));
 
     return {
         alt: altObservations,
         observations: textLines.map((o) => {
             return {
                 ...o,
-                id: ID_COUNTER++,
+                id: getNextId(),
                 lastUpdate: Date.now(),
             };
         }),
@@ -126,20 +132,25 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
     const index = sheet.observations.findIndex((o) => o.id === id);
 
     const [firstLine, secondLine] = alt.split('\n');
-    const altObservation = {
-        ...sheet.alt[index],
-        lastUpdate: Date.now(),
-        text: firstLine,
-    };
 
-    const nextObservation = {
-        ...sheet.alt[index],
-        id: ++ID_COUNTER,
-        lastUpdate: Date.now(),
-        text: secondLine,
-    };
+    if (secondLine) {
+        const altObservation = {
+            ...sheet.alt[index],
+            lastUpdate: Date.now(),
+            text: firstLine,
+        };
 
-    sheet.alt.splice(index, 1, altObservation, nextObservation);
+        const nextObservation = {
+            ...sheet.alt[index],
+            id: getNextId(),
+            lastUpdate: Date.now(),
+            text: secondLine,
+        };
+
+        sheet.alt.splice(index, 1, altObservation, nextObservation);
+    } else {
+        sheet.alt[index].text = alt;
+    }
 };
 
 export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: number) => {
@@ -190,53 +201,74 @@ export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
     });
 };
 
-export const setPoetry = (state: ManuscriptStateCore, ids: number[], isPoetry: boolean) => {
-    state.sheets.forEach((sheet) => {
-        sheet.observations.forEach((observation) => {
-            if (ids.includes(observation.id)) {
-                observation.isPoetic = isPoetry;
-            }
-        });
-    });
-};
-
 export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]) => {
-    state.sheets.forEach((sheet) => {
-        if (pages.includes(sheet.page)) {
-            const corrected = correctReferences(sheet.observations);
+    const sheets = getSheets(state, pages);
 
-            if (corrected !== sheet.observations) {
-                sheet.observations = corrected.map((o) => ({ ...o, lastUpdate: Date.now() }));
-            }
+    for (const sheet of sheets) {
+        const corrected = correctReferences(sheet.observations);
+
+        if (corrected !== sheet.observations) {
+            sheet.observations = corrected.map((o) => ({ ...o, lastUpdate: Date.now() }));
         }
-    });
-};
-
-export const toggleFootnotes = (state: ManuscriptStateCore, ids: number[]) => {
-    state.sheets.forEach((sheet) => {
-        sheet.observations.forEach((o) => {
-            if (ids.includes(o.id)) {
-                o.isFootnote = !o.isFootnote;
-            }
-        });
-    });
+    }
 };
 
 export const updateText = (state: ManuscriptStateCore, page: number, id: number, text: string) => {
-    const sheet = state.sheets.find((s) => s.page === page)!;
-    const observation = sheet.observations.find((o) => o.id === id)!;
+    updateTextLines(state, [id], { text }, false);
+};
 
-    observation.text = text;
+const getTextLines = (state: ManuscriptStateCore, observationIds: number[]) => {
+    const result: TextLine[] = [];
+    const ids = new Set(observationIds);
+
+    for (const sheet of state.sheets) {
+        for (const o of sheet.observations) {
+            if (ids.has(o.id)) {
+                result.push(o);
+            }
+        }
+    }
+
+    return result;
+};
+
+const getSheets = (state: ManuscriptStateCore, pages: number[]) => {
+    const result: Sheet[] = [];
+    const ids = new Set(pages);
+
+    for (const sheet of state.sheets) {
+        if (ids.has(sheet.page)) {
+            result.push(sheet);
+        }
+    }
+
+    return result;
+};
+
+export const updateTextLines = (
+    state: ManuscriptStateCore,
+    ids: number[],
+    payload: ((o: TextLine) => void) | Omit<Partial<TextLine>, 'id' | 'lastUpdate'>,
+    updateLastUpdated = true,
+) => {
+    const observations = getTextLines(state, ids);
+
+    for (const o of observations) {
+        if (typeof payload === 'function') {
+            payload(o);
+        } else {
+            Object.assign(o, payload);
+        }
+
+        if (updateLastUpdated) {
+            o.lastUpdate = Date.now();
+        }
+    }
 };
 
 export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], from = SWS_SYMBOL, to = AZW_SYMBOL) => {
-    state.sheets.forEach((sheet) => {
-        sheet.observations.forEach((o) => {
-            if (ids.includes(o.id)) {
-                o.text = o.text.replaceAll(from, to);
-                o.lastUpdate = Date.now();
-            }
-        });
+    updateTextLines(state, ids, (o) => {
+        o.text = o.text.replaceAll(from, to);
     });
 };
 
@@ -254,15 +286,13 @@ export const deleteLines = (state: ManuscriptStateCore, ids: number[]) => {
 
 export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: number[]) => {
     const idsFilter = new Set<number>();
-    const pages = new Set(pagesToFilterBy);
+    const sheets = getSheets(state, pagesToFilterBy);
 
-    state.sheets.forEach((sheet) => {
-        if (pages.has(sheet.page)) {
-            sheet.observations.forEach((o) => {
-                idsFilter.add(o.id);
-            });
+    for (const sheet of sheets) {
+        for (const o of sheet.observations) {
+            idsFilter.add(o.id);
         }
-    });
+    }
 
     return { idsFilter };
 };

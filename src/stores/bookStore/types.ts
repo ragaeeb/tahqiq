@@ -1,14 +1,9 @@
-export type Book = {
-    contractVersion: string;
-    createdAt: Date;
-    groundTruthUrls?: string[];
-    lastUpdatedAt: Date;
-    pages: {
-        id: number;
-        text: string;
-        volume: number;
-    }[];
-    urlTemplate?: string;
+import type { ManuscriptStateCore } from '../manuscriptStore/types';
+
+export type Bookmark = {
+    page: number;
+    title: string;
+    volume?: number;
 };
 
 /**
@@ -22,22 +17,40 @@ export type BookState = BookActions & BookStateCore;
 export type BookStateCore = {
     /** When the manuscript store was created */
     readonly createdAt: Date;
-    /** Array of currently selected pages */
-    readonly selectedPages: Page[];
+
     /** Currently selected manuscript volume number */
     readonly selectedVolume: number;
-    readonly urlTemplate: string;
+
+    readonly volumeToIndex: Record<number, TableOfContents[]>;
 
     /** Map of pages indexed by volume number */
     readonly volumeToPages: Record<number, Page[]>;
 };
 
-export type Page = {
-    errorLines?: number[];
+export type Juz = {
+    contractVersion: 'v1.0';
+    index: BookIndex[];
+    sheets: {
+        footnotes?: string;
+        page: number;
+        text: string;
+    }[];
+    timestamp: Date;
+    type: 'juz';
+};
+
+export type Kitab = {
+    contractVersion: string;
+    createdAt: Date;
+    index: Bookmark[];
+    lastUpdatedAt: Date;
+    pages: BookPage[];
+    type: 'book';
+};
+
+export type Page = BookPage & {
     id: number;
-    /** Optional status indicating page processing state */
-    status?: PageStatus;
-    text: string;
+    lastUpdate: number;
 };
 
 /**
@@ -47,17 +60,38 @@ export type Page = {
  */
 export type PageStatus = 'done' | 'review';
 
+export type TableOfContents = BookIndex & {
+    id: number;
+};
+
 /**
  * Action functions available for transcript manipulation
  */
 type BookActions = {
-    init: (fileToBook: Record<string, Book>) => void;
+    deletePages: (pageIds: number[]) => void;
+    init: (fileToJuz: Record<string, Juz>) => void;
 
-    /**
-     * Sets selection state for all pages
-     * @param isSelected Whether to select or deselect all pages
-     */
-    selectAllPages: (isSelected: boolean) => void;
+    initFromManuscript: (manuscript: ManuscriptStateCore) => void;
 
-    setUrlTemplate: (template: string) => void;
+    shiftValues: (
+        startingPageId: number,
+        startingPageValue: number,
+        key: keyof Pick<Page, 'page' | 'volumePage'>,
+    ) => void;
+
+    updatePages: (ids: number[], diff: Omit<Partial<Page>, 'id' | 'lastUpdate'>, updateLastUpdated?: boolean) => void;
+};
+
+type BookIndex = {
+    page: number;
+    title: string;
+};
+
+type BookPage = {
+    footnotes?: string;
+    page: number;
+    status?: PageStatus;
+    text: string;
+    volume?: number;
+    volumePage?: number;
 };
