@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/ragaeeb/tahqiq/compare/v1.2.0...v1.3.0) (2025-06-26)
+
+
+### Features
+
+* **analytics:** Add analytics, books flow, formatting toolbar and refactor code ([#25](https://github.com/ragaeeb/tahqiq/issues/25)) ([2001917](https://github.com/ragaeeb/tahqiq/commit/2001917160402dd57e532e987f1229c5ec3ffc07))
+
 # [1.2.0](https://github.com/ragaeeb/tahqiq/compare/v1.1.0...v1.2.0) (2025-06-24)
 
 
