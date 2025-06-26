@@ -2,6 +2,10 @@ import { useCallback } from 'react';
 
 import { type TextAreaElement, useToolbarStore } from '@/stores/useToolbarStore';
 
+/**
+ * Custom hook for handling text formatter toolbar visibility on focus/blur events
+ * @returns Object containing handleFocus and handleBlur event handlers
+ */
 export const useTextFormatter = () => {
     const { cancelScheduledHide, scheduleHide, setToolbarVisible } = useToolbarStore();
 

@@ -83,11 +83,27 @@ export const downloadFile = (fileName: string, content: string, mimeType?: strin
     }, 0);
 };
 
+/**
+ * Automatically resizes a textarea element to fit its content
+ * Sets the height to 'auto' first, then adjusts to the scroll height
+ * Prevents textarea from having scrollbars when content fits
+ *
+ * @param textArea - The HTML textarea element to resize
+ */
 export const autoResize = (textArea: HTMLTextAreaElement) => {
     textArea.style.height = 'auto';
     textArea.style.height = `${textArea.scrollHeight}px`;
 };
 
+/**
+ * Updates the value of an input or textarea element and optionally triggers onChange event
+ * Creates a synthetic React change event if onChange callback is provided
+ * Useful for programmatically updating form elements while maintaining React state consistency
+ *
+ * @param element - The HTML input or textarea element to update
+ * @param newValue - The new string value to set on the element
+ * @param onChange - Optional React onChange event handler to call after updating the value
+ */
 export const updateElementValue = (
     element: HTMLInputElement | HTMLTextAreaElement,
     newValue: string,
@@ -107,6 +123,16 @@ export const updateElementValue = (
     }
 };
 
+/**
+ * Applies a formatting function to either selected text or entire content of an element
+ * If text is selected (selectionStart !== selectionEnd), formats only the selected portion
+ * If no text is selected, formats the entire content of the element
+ * Returns the formatted result without modifying the original element
+ *
+ * @param element - The HTML input or textarea element containing the text
+ * @param formatter - Function that takes a string and returns a formatted version
+ * @returns The formatted text with either selected portion or entire content transformed
+ */
 export const applyFormattingOnSelection = (
     element: HTMLInputElement | HTMLTextAreaElement,
     formatter: (text: string) => string,

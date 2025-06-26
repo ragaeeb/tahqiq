@@ -24,11 +24,21 @@ import {
 } from 'bitaboom';
 import { isEndingWithPunctuation, type Token } from 'paragrafs';
 
+/**
+ * Standardizes standalone Hijri symbol ه to هـ when following Arabic digits
+ * @param text - Input text to process
+ * @returns Text with standardized Hijri symbols
+ */
 export const standardizeHijriSymbol = (text: string) => {
     // Replace standalone ه with هـ when it appears after Arabic digits (0-9 or ٠-٩) with up to 1 space in between
     return text.replace(/([0-9\u0660-\u0669])\s?ه(?=\s|$|[^\u0600-\u06FF])/g, '$1 هـ');
 };
 
+/**
+ * Standardizes standalone اه to اهـ when appearing as whole word
+ * @param text - Input text to process
+ * @returns Text with standardized AH Hijri symbols
+ */
 export const standardizeAhHijriSymbol = (text: string) => {
     // Replace standalone اه with اهـ when it appears as a whole word
     // Ensures it's preceded by start/whitespace/non-Arabic AND followed by end/whitespace/non-Arabic
@@ -68,6 +78,12 @@ const pastePipeline = [
     normalizeSpaces,
 ];
 
+/**
+ * Applies text formatting pipeline with optional auto-correction
+ * @param text - Input text to format
+ * @param autoCorrect - Whether to apply auto-correction transformations
+ * @returns Formatted Arabic text
+ */
 export const preformatArabicText = (text: string, autoCorrect = false) => {
     let result = text;
     const pipeline = [...pastePipeline];
@@ -83,6 +99,12 @@ export const preformatArabicText = (text: string, autoCorrect = false) => {
     return result;
 };
 
+/**
+ * Finds first token matching the beginning of selected text
+ * @param tokens - Array of tokenized text objects
+ * @param selectedText - Text selection to match against tokens
+ * @returns First matching token or null if not found
+ */
 export const findFirstTokenForText = (tokens: Token[], selectedText: string) => {
     // Split the selectedText into individual words
     const selectedWords = selectedText.split(' ');
@@ -118,6 +140,12 @@ export const findFirstTokenForText = (tokens: Token[], selectedText: string) => 
     return null;
 };
 
+/**
+ * Parses page input string into array of page numbers, supporting ranges and lists
+ * @param pageInput - Page specification string (e.g., "1-5" or "1,3,5")
+ * @returns Array of page numbers
+ * @throws Error when start page exceeds end page in range
+ */
 export const parsePageRanges = (pageInput: string): number[] => {
     if (pageInput.includes('-')) {
         const [start, end] = pageInput.split('-').map(Number);
