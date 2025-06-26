@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { replaceLineBreaksWithSpaces } from 'bitaboom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { Juz } from '@/stores/bookStore/types';
+import type { Juz, Page } from '@/stores/bookStore/types';
 
 import { FormattingToolbar } from '@/components/formatting-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
@@ -24,8 +25,9 @@ export default function Book() {
     const isInitialized = selectedVolume > 0;
     const initBook = useBookStore((state) => state.init);
     const initFromManuscript = useBookStore((state) => state.initFromManuscript);
+    const deletePages = useBookStore((state) => state.deletePages);
     const pages = useBookStore(selectCurrentPages);
-    const selectAllPages = useBookStore((state) => state.selectAllPages);
+    const [selectedPages, setSelectedPages] = useState<Page[]>([]);
 
     useEffect(() => {
         if (useManuscriptStore.getState().sheets.length > 0) {
@@ -33,9 +35,26 @@ export default function Book() {
         }
     }, [initFromManuscript]);
 
+    const handleSelectionChange = useCallback((item: Page, selected: boolean) => {
+        setSelectedPages((prev) => {
+            if (selected) {
+                return [...prev, item];
+            }
+
+            return prev.filter((p) => p !== item);
+        });
+    }, []);
+
     const pageItems = useMemo(() => {
-        return pages.map((page) => <PageItem key={`${selectedVolume}/${page.id}`} page={page} />);
-    }, [pages, selectedVolume]);
+        return pages.map((page) => (
+            <PageItem
+                isSelected={selectedPages.includes(page)}
+                key={`${selectedVolume}/${page.id}`}
+                onSelectionChange={handleSelectionChange}
+                page={page}
+            />
+        ));
+    }, [pages, selectedVolume, selectedPages, handleSelectionChange]);
 
     if (!isInitialized) {
         return (
@@ -59,7 +78,15 @@ export default function Book() {
             <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                 <div className="flex flex-col w-full max-w">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-                        <BookToolbar />
+                        <BookToolbar
+                            onDeleteSelectedPages={
+                                selectedPages.length > 0
+                                    ? () => {
+                                          deletePages(selectedPages.map((p) => p.id));
+                                      }
+                                    : undefined
+                            }
+                        />
                     </div>
 
                     <div className="overflow-auto border rounded">
@@ -69,7 +96,9 @@ export default function Book() {
                                     <th className="px-2 py-1 w-8 text-left">
                                         <Checkbox
                                             aria-label="Select all pages"
-                                            onCheckedChange={(isSelected) => selectAllPages(Boolean(isSelected))}
+                                            onCheckedChange={(isSelected) =>
+                                                isSelected ? setSelectedPages(pages) : setSelectedPages([])
+                                            }
                                         />
                                     </th>
                                     <th aria-label="Page" className="px-2 py-1 w-36 text-left">
@@ -89,26 +118,17 @@ export default function Book() {
                 </div>
             </div>
             <FormattingToolbar>
-                {(applyFormat) => [
-                    <Button key="bold" onClick={() => applyFormat((text) => `**${text}**`)} variant="outline">
-                        Bold
-                    </Button>,
-
-                    <div
-                        className="px-3 py-2 bg-purple-500 text-white rounded cursor-pointer"
-                        key="titleCase"
-                        onClick={() =>
-                            applyFormat((text) => {
-                                return text
-                                    .split(' ')
-                                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                                    .join(' ');
-                            })
-                        }
-                    >
-                        Title Case
-                    </div>,
-                ]}
+                {(applyFormat) => (
+                    <>
+                        <Button
+                            key="replaceLineBreaksWithSpaces"
+                            onClick={() => applyFormat(replaceLineBreaksWithSpaces)}
+                            variant="outline"
+                        >
+                            ↩̶
+                        </Button>
+                    </>
+                )}
             </FormattingToolbar>
             <VersionFooter />
         </>

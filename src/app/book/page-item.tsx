@@ -25,14 +25,17 @@ const TextareaWithToolbar = withFormattingToolbar(Textarea);
  *
  * @param page - The transcript page to display and edit.
  */
-const PageItem = ({ isSelected, page }: PageItemProps) => {
+const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
     const updatePages = useBookStore((state) => state.updatePages);
     const shiftValues = useBookStore((state) => state.shiftValues);
 
     return (
         <tr className="border-2 border-blue-100">
             <td className="px-2 py-1 align-top">
-                <Checkbox checked={isSelected} />
+                <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onSelectionChange(page, Boolean(checked))}
+                />
             </td>
 
             <td className="px-2 py-1 space-y-1 text-xs align-top">

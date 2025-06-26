@@ -6,17 +6,6 @@ import type { BookStateCore, Juz, Page, TableOfContents } from './types';
 
 import { selectCurrentPages } from './selectors';
 
-/**
- * Selects all pages in the current manuscript or clears selection
- *
- * @param state - Current manuscript state
- * @param isSelected - Boolean indicating whether to select all or clear selection
- * @returns Object with updated selection state
- */
-export const selectAllPages = (state: BookStateCore, isSelected: boolean) => {
-    return { selectedPages: isSelected ? selectCurrentPages(state) : [] };
-};
-
 export const initStore = (fileToJuz: Record<string, Juz>) => {
     const volumeToPages: Record<number, Page[]> = {};
     const volumeToIndex: Record<number, TableOfContents[]> = {};
@@ -99,4 +88,10 @@ export const updatePages = (
             page.lastUpdate = Date.now();
         }
     }
+};
+
+export const deletePages = (state: BookStateCore, ids: number[]) => {
+    state.volumeToPages[state.selectedVolume] = state.volumeToPages[state.selectedVolume].filter(
+        (p) => !ids.includes(p.id),
+    );
 };

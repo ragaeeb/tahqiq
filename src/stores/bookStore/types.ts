@@ -17,8 +17,7 @@ export type BookState = BookActions & BookStateCore;
 export type BookStateCore = {
     /** When the manuscript store was created */
     readonly createdAt: Date;
-    /** Array of currently selected pages */
-    readonly selectedPages: Page[];
+
     /** Currently selected manuscript volume number */
     readonly selectedVolume: number;
 
@@ -69,15 +68,10 @@ export type TableOfContents = BookIndex & {
  * Action functions available for transcript manipulation
  */
 type BookActions = {
+    deletePages: (pageIds: number[]) => void;
     init: (fileToJuz: Record<string, Juz>) => void;
 
     initFromManuscript: (manuscript: ManuscriptStateCore) => void;
-
-    /**
-     * Sets selection state for all pages
-     * @param isSelected Whether to select or deselect all pages
-     */
-    selectAllPages: (isSelected: boolean) => void;
 
     shiftValues: (
         startingPageId: number,

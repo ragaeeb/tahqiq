@@ -15,16 +15,12 @@ import * as actions from './actions';
 export const useBookStore = create<BookState>()(
     mutative((set) => ({
         createdAt: new Date(),
+        deletePages: (...args) => set((state) => actions.deletePages(state, ...args)),
         init: (data) => set(() => actions.initStore(data)),
         initFromManuscript: (data) => set(() => actions.initFromManuscript(data)),
-        selectAllPages: (isSelected) => {
-            return set((state) => actions.selectAllPages(state, isSelected));
-        },
-        selectedPages: [],
         selectedVolume: 0,
         shiftValues: (...args) => set((state) => actions.shiftValues(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),
-        urlTemplate: '',
         volumeToIndex: {},
         volumeToPages: {},
     })),

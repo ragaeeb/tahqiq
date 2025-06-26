@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, SaveIcon } from 'lucide-react';
+import { DownloadIcon, SaveIcon, TrashIcon } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,15 @@ import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 import TocMenu from './toc-menu';
 
+type BookToolbarProps = {
+    onDeleteSelectedPages?: () => void;
+};
+
 /**
  * Renders a toolbar for manuscript management operations.
  * Currently provides functionality to export the current manuscript state as a JSON file.
  */
-export default function BookToolbar() {
+export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps) {
     return (
         <div className="flex space-x-2">
             <Button
@@ -47,6 +51,11 @@ export default function BookToolbar() {
                 <DownloadIcon /> Legacy
             </Button>
             <TocMenu onBookmarkClicked={() => {}} />
+            {onDeleteSelectedPages && (
+                <Button onClick={onDeleteSelectedPages} variant="destructive">
+                    <TrashIcon />
+                </Button>
+            )}
         </div>
     );
 }
