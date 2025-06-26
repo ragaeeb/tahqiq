@@ -4,28 +4,24 @@ import { useTextFormatter } from '@/hooks/useTextFormatter';
 
 type TextInputElement = HTMLInputElement | HTMLTextAreaElement;
 
-// Generic approach that preserves all original component props
 export const withFormattingToolbar = <P extends Record<string, any>>(Component: React.ComponentType<P>) => {
     const WrappedComponent = forwardRef<TextInputElement, P>((props, ref) => {
         const { handleBlur, handleFocus } = useTextFormatter();
 
         const handleFocusEvent = (e: React.FocusEvent<TextInputElement>) => {
             handleFocus(e);
-            // Call original onFocus if it exists
-            if ('onFocus' in props && typeof props.onFocus === 'function') {
+            if (props.onFocus && typeof props.onFocus === 'function') {
                 props.onFocus(e);
             }
         };
 
         const handleBlurEvent = (e: React.FocusEvent<TextInputElement>) => {
             handleBlur();
-            // Call original onBlur if it exists
-            if ('onBlur' in props && typeof props.onBlur === 'function') {
+            if (props.onBlur && typeof props.onBlur === 'function') {
                 props.onBlur(e);
             }
         };
 
-        // Create enhanced props with our handlers
         const enhancedProps = {
             ...props,
             onBlur: handleBlurEvent,

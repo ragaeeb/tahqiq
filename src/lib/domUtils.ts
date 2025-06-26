@@ -111,19 +111,9 @@ export const applyFormattingOnSelection = (
     element: HTMLInputElement | HTMLTextAreaElement,
     formatter: (text: string) => string,
 ): string => {
-    let { selectionEnd, selectionStart, value } = element;
-
-    if (!selectionEnd) {
-        selectionEnd = 0;
-    }
-
-    if (!selectionStart) {
-        selectionStart = 0;
-    }
-
-    if (!value) {
-        value = '';
-    }
+    const selectionEnd = element.selectionEnd ?? 0;
+    const selectionStart = element.selectionStart ?? 0;
+    const value = element.value ?? '';
 
     if (selectionEnd > selectionStart) {
         // Format only selected text

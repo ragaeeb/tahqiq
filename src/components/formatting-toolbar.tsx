@@ -23,8 +23,8 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({ children, 
             }
 
             // Get current selection or entire text
-            const selectionStart = activeElement.selectionStart || 0;
-            const selectionEnd = activeElement.selectionEnd || 0;
+            const selectionStart = activeElement.selectionStart ?? 0;
+            const selectionEnd = activeElement.selectionEnd ?? 0;
             const fullText = activeElement.value;
 
             // Use selected text if there's a selection, otherwise use full text

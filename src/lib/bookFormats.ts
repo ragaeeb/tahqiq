@@ -22,7 +22,7 @@ export const mapBookStateToKitab = (state: BookStateCore): Kitab => {
 
 export const mapKitabToLegacyFormat = (kitab: Kitab) => {
     return {
-        bookmarks: kitab.index.map((b) => b),
+        bookmarks: kitab.index,
         pages: kitab.pages.map((p) => ({
             body: [p.text, p.footnotes].filter(Boolean).join('_\n'),
             page: p.page,

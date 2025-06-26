@@ -104,6 +104,7 @@ export default function Book() {
                                     <th className="px-2 py-1 w-8 text-left">
                                         <Checkbox
                                             aria-label="Select all pages"
+                                            checked={selectedPages.length === pages.length && pages.length > 0}
                                             onCheckedChange={(isSelected) => {
                                                 record(isSelected ? 'SelectAllPages' : 'ClearAllPages');
                                                 setSelectedPages(isSelected ? pages : []);

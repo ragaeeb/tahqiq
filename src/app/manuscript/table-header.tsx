@@ -117,9 +117,10 @@ export default function ManuscriptTableHeader({
                     )}
                     {hasHeadings && (
                         <Button
-                            aria-label="Centered Content"
+                            aria-label="Headings"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
+                                record('FilterByHeadings');
                                 filterByIds(rows.filter((r) => r.isHeading).map((r) => r.id));
                             }}
                             variant="ghost"
