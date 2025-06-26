@@ -1,6 +1,7 @@
 'use client';
 
 import { DownloadIcon, SaveIcon, TrashIcon } from 'lucide-react';
+import { record } from 'nanolytics';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps)
                     const name = prompt('Enter output file name');
 
                     if (name) {
+                        record('DownloadBook', name);
+
                         downloadFile(
                             name.endsWith('.json') ? name : `${name}.json`,
                             JSON.stringify(mapBookStateToKitab(useBookStore.getState()), null, 2),
@@ -41,6 +44,8 @@ export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps)
                     const name = prompt('Enter output file name');
 
                     if (name) {
+                        record('DownloadLegacyBook', name);
+
                         const kitab = mapBookStateToKitab(useBookStore.getState());
                         const legacy = mapKitabToLegacyFormat(kitab);
 
@@ -50,7 +55,11 @@ export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps)
             >
                 <DownloadIcon /> Legacy
             </Button>
-            <TocMenu onBookmarkClicked={() => {}} />
+            <TocMenu
+                onBookmarkClicked={() => {
+                    record('BookmarkClicked');
+                }}
+            />
             {onDeleteSelectedPages && (
                 <Button onClick={onDeleteSelectedPages} variant="destructive">
                     <TrashIcon />

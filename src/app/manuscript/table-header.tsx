@@ -1,5 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import { record } from 'nanolytics';
+
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 import SubmittableInput from '@/components/submittable-input';
@@ -47,6 +49,7 @@ export default function ManuscriptTableHeader({
                     className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     name="range"
                     onSubmit={(range) => {
+                        record('FilterByPages', range);
                         filterByPages(parsePageRanges(range));
                     }}
                     placeholder="Page"
@@ -61,6 +64,7 @@ export default function ManuscriptTableHeader({
                     className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                     name="query"
                     onSubmit={(query) => {
+                        record('QueryObservations');
                         filterByIds(rows.filter((r) => r.text.includes(query)).map((r) => r.id));
                     }}
                     placeholder={`Text (${rows.length})`}
@@ -77,6 +81,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Filter Misaligned Observations"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
+                                record('FilterByMissingAlt');
                                 filterByPages(rows.filter((r) => !r.alt).map((r) => r.page));
                             }}
                             variant="destructive"
@@ -89,6 +94,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Fix Typos"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
+                                record('FilterByHonorifics');
                                 filterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
                             }}
                             variant="ghost"
@@ -101,6 +107,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Centered Content"
                             className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
+                                record('FilterByCentered');
                                 filterByIds(rows.filter((r) => r.isCentered).map((r) => r.id));
                             }}
                             variant="ghost"
@@ -125,6 +132,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Correct Wrong Honorifics"
                             className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
                             onClick={() => {
+                                record('FilterByHonorificsInObservation');
                                 filterByIds(rows.filter((r) => r.text.includes(SWS_SYMBOL)).map((r) => r.id));
                             }}
                             variant="ghost"
@@ -136,6 +144,7 @@ export default function ManuscriptTableHeader({
                         <Button
                             aria-label="Poetic"
                             onClick={() => {
+                                record('FilterByPoetic');
                                 filterByPages(rows.filter((r) => r.isPoetic).map((r) => r.page));
                             }}
                         >
@@ -146,6 +155,7 @@ export default function ManuscriptTableHeader({
                         <Button
                             aria-label="Invalid Footnotes"
                             onClick={() => {
+                                record('FilterByInvalidFootnotes');
                                 filterByPages(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
                             }}
                             variant="outline"
@@ -158,6 +168,7 @@ export default function ManuscriptTableHeader({
                             className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
                             name="query"
                             onSubmit={(query) => {
+                                record('QueryAlt');
                                 filterByIds(rows.filter((r) => r.alt.includes(query)).map((r) => r.id));
                             }}
                             placeholder={`Support (${altCount})`}

@@ -1,6 +1,7 @@
 'use client';
 
 import { UndoIcon } from 'lucide-react';
+import { record } from 'nanolytics';
 import React, { type Dispatch, type SetStateAction } from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -32,6 +33,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
             {isFilterSet && (
                 <Button
                     onClick={() => {
+                        record('ResetManuscriptFilter');
                         filterByIds([]);
                     }}
                     variant="destructive"
@@ -41,14 +43,17 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
             )}
             <ManuscriptMenu
                 autoCorrectFootnotes={() => {
+                    record('AutocorrectFootnotes');
                     autoCorrectFootnotes(Array.from(new Set(selectedRows.map((r) => r.page))));
                     setSelectedRows([]);
                 }}
                 deleteLines={() => {
+                    record('DeleteLines', selectedRows.length.toString());
                     deleteLines(selectedRows.map((row) => row.id));
                     setSelectedRows([]);
                 }}
                 markAsFootnotes={(isFootnote) => {
+                    record('MarkAsFootnotes', isFootnote.toString());
                     updateTextLines(
                         selectedRows.map((r) => r.id),
                         { isFootnote },
@@ -56,6 +61,8 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     setSelectedRows([]);
                 }}
                 markAsHeading={(isHeading) => {
+                    record('MarkAsHeading', isHeading.toString());
+
                     updateTextLines(
                         selectedRows.map((r) => r.id),
                         { isHeading },
@@ -63,6 +70,8 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     setSelectedRows([]);
                 }}
                 markAsPoetry={(isPoetic) => {
+                    record('MarkAsPoetry', isPoetic.toString());
+
                     updateTextLines(
                         selectedRows.map((r) => r.id),
                         { isPoetic },
@@ -70,10 +79,14 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     setSelectedRows([]);
                 }}
                 onFixSwsSymbol={() => {
+                    record('FixSwsSymbol');
+
                     fixTypos(selectedRows.map((s) => s.id));
                     setSelectedRows([]);
                 }}
                 onReplaceSwsWithAzw={() => {
+                    record('ReplaceSwsWithAzw', selectedRows.length.toString());
+
                     replaceHonorifics(selectedRows.map((r) => r.id));
                     setSelectedRows([]);
                 }}

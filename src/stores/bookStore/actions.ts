@@ -1,3 +1,5 @@
+import { rawReturn } from 'mutative';
+
 import { getNextId } from '@/lib/common';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 
@@ -23,7 +25,7 @@ export const initStore = (fileToJuz: Record<string, Juz>) => {
         volumeToIndex[volume] = (juz.index || []).map((bookmark) => ({ ...bookmark, id: getNextId() }));
     });
 
-    return { selectedVolume: 1, volumeToIndex, volumeToPages };
+    return rawReturn({ selectedVolume: 1, volumeToIndex, volumeToPages });
 };
 
 export const initFromManuscript = (manuscript: ManuscriptStateCore) => {

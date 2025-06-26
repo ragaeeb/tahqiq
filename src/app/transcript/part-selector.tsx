@@ -1,5 +1,6 @@
 'use client';
 
+import { record } from 'nanolytics';
 import React from 'react';
 
 import { selectParts } from '@/stores/transcriptStore/selectors';
@@ -17,7 +18,10 @@ export default function PartSelector() {
     return (
         <select
             className="p-2 border rounded"
-            onChange={(e) => setSelectedPart(parseInt(e.target.value))}
+            onChange={(e) => {
+                record('SetTranscriptPart', e.target.value);
+                setSelectedPart(parseInt(e.target.value));
+            }}
             value={selectedPart}
         >
             {parts.map((p) => (

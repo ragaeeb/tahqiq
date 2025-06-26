@@ -1,6 +1,7 @@
 'use client';
 
 import { BoxIcon, SaveIcon } from 'lucide-react';
+import { record } from 'nanolytics';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -16,6 +17,9 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 
 import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
+
+import '@/lib/analytics';
+
 import ManuscriptToolbar from './toolbar';
 
 /**
@@ -45,13 +49,18 @@ export default function Manuscript() {
         const sessionData = sessionStorage.getItem('rawInputs');
 
         if (sessionData) {
+            record('RestoreManuscriptFromSession');
             initManuscript(JSON.parse(sessionData) as unknown as RawInputFiles);
         }
     }, [initManuscript]);
 
-    const handleSelectAll = (selected: boolean) => {
-        setSelectedRows(selected ? rows : []);
-    };
+    const handleSelectAll = useCallback(
+        (selected: boolean) => {
+            record(selected ? 'SelectAllLines' : 'ClearAllLines');
+            setSelectedRows(selected ? rows : []);
+        },
+        [rows, setSelectedRows],
+    );
 
     if (!isInitialized) {
         return (
@@ -63,6 +72,7 @@ export default function Manuscript() {
                             description="Drag and drop the manuscript"
                             maxFiles={4}
                             onFiles={(map) => {
+                                record('LoadManuscriptsFromInputFiles');
                                 initManuscript(map as unknown as RawInputFiles);
 
                                 sessionStorage.setItem('rawInputs', JSON.stringify(map));
@@ -88,6 +98,8 @@ export default function Manuscript() {
                                     const name = prompt('Enter output file name');
 
                                     if (name) {
+                                        record('DownloadManuscriptJuz', name);
+
                                         downloadFile(
                                             name.endsWith('.json') ? name : `${name}.json`,
                                             JSON.stringify(mapManuscriptToJuz(useManuscriptStore.getState()), null, 2),
@@ -98,7 +110,12 @@ export default function Manuscript() {
                                 <SaveIcon />
                             </Button>
                             <Link href="/book">
-                                <Button className="bg-blue-500">
+                                <Button
+                                    className="bg-blue-500"
+                                    onClick={() => {
+                                        record('MigrateManuscriptToBook');
+                                    }}
+                                >
                                     <BoxIcon />
                                 </Button>
                             </Link>

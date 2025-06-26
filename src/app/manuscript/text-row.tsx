@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { record } from 'nanolytics';
 import React from 'react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -62,7 +63,13 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 aria-label="Page"
                 className={`w-20 px-4 py-4 text-left text-sm font-medium text-gray-900 border-r border-gray-100 ${data.hasInvalidFootnotes && 'bg-red-200'}`}
             >
-                <Button onClick={() => filterByPages([data.page])} variant="ghost">
+                <Button
+                    onClick={() => {
+                        record('FilterByPageOfLine');
+                        filterByPages([data.page]);
+                    }}
+                    variant="ghost"
+                >
                     {data.page}
                 </Button>
             </td>
@@ -77,7 +84,10 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                     dir="rtl"
                     key={data.id + '/' + data.lastUpdate}
                     onBlur={(e) => {
-                        updateTextLines([data.id], { text: e.target.value }, false);
+                        if (data.text !== e.target.value) {
+                            record('UpdateObservationText');
+                            updateTextLines([data.id], { text: e.target.value }, false);
+                        }
                     }}
                     style={{ fontFamily: 'inherit' }}
                     type="text"
@@ -94,14 +104,20 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                     <Button
                         aria-label="Accept Support"
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                        onClick={() => applySupportToOriginal(data.page, data.id)}
+                        onClick={() => {
+                            record('ApplyAltToAsl');
+                            applySupportToOriginal(data.page, data.id);
+                        }}
                     >
                         ✓
                     </Button>
                     <Button
                         aria-label="Delete Support"
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                        onClick={() => deleteSupport(data.page, data.id)}
+                        onClick={() => {
+                            record('DeleteAlt');
+                            deleteSupport(data.page, data.id);
+                        }}
                         variant="ghost"
                     >
                         🗑️
@@ -110,6 +126,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                         aria-label="Merge With Above"
                         className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         onClick={() => {
+                            record('MergeAltWithAbove');
                             mergeWithAbove(data.page, data.id);
                         }}
                         variant="outline"
@@ -121,6 +138,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                         dir="rtl"
                         onChange={(e) => {
                             if (e.target.value !== data.alt) {
+                                record('EditAltText');
                                 splitAltAtLineBreak(data.page, data.id, e.target.value);
                             }
                         }}

@@ -1,5 +1,4 @@
-'use client';
-
+import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import { useState } from 'react';
 
@@ -39,6 +38,8 @@ export function SearchDialog() {
                     name="query"
                     onSubmit={(query) => {
                         if (query) {
+                            record('SearchTranscripts');
+
                             const { transcripts } = useTranscriptStore.getState();
                             const matched = Object.values(transcripts).flatMap((t) =>
                                 t.segments
@@ -48,6 +49,7 @@ export function SearchDialog() {
 
                             setSegmentResults(matched);
                         } else {
+                            record('ClearSearchTranscripts');
                             setSegmentResults([]);
                         }
                     }}
@@ -71,6 +73,7 @@ export function SearchDialog() {
                                     <td aria-label="Volume" className="px-2 py-1 w-36 text-left">
                                         <Button
                                             onClick={() => {
+                                                record('SelectPartSearchTranscript');
                                                 setSelectedPart(s.volume);
                                             }}
                                             variant="outline"

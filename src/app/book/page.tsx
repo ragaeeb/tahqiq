@@ -1,6 +1,7 @@
 'use client';
 
 import { replaceLineBreaksWithSpaces } from 'bitaboom';
+import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { Juz, Page } from '@/stores/bookStore/types';
@@ -15,6 +16,9 @@ import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import BookToolbar from './book-toolbar';
+
+import '@/lib/analytics';
+
 import PageItem from './page-item';
 
 /**
@@ -64,7 +68,10 @@ export default function Book() {
                         <JsonDropZone
                             allowedExtensions=".json"
                             description="Drag and drop the parts"
-                            onFiles={(map) => initBook(map as unknown as Record<string, Juz>)}
+                            onFiles={(map) => {
+                                record('InitBookFromJuz');
+                                initBook(map as unknown as Record<string, Juz>);
+                            }}
                         />
                     </div>
                 </div>
@@ -82,6 +89,7 @@ export default function Book() {
                             onDeleteSelectedPages={
                                 selectedPages.length > 0
                                     ? () => {
+                                          record('DeletePagesFromBook', selectedPages.length.toString());
                                           deletePages(selectedPages.map((p) => p.id));
                                       }
                                     : undefined
@@ -96,9 +104,10 @@ export default function Book() {
                                     <th className="px-2 py-1 w-8 text-left">
                                         <Checkbox
                                             aria-label="Select all pages"
-                                            onCheckedChange={(isSelected) =>
-                                                isSelected ? setSelectedPages(pages) : setSelectedPages([])
-                                            }
+                                            onCheckedChange={(isSelected) => {
+                                                record(isSelected ? 'SelectAllPages' : 'ClearAllPages');
+                                                setSelectedPages(isSelected ? pages : []);
+                                            }}
                                         />
                                     </th>
                                     <th aria-label="Page" className="px-2 py-1 w-36 text-left">
@@ -122,7 +131,10 @@ export default function Book() {
                     <>
                         <Button
                             key="replaceLineBreaksWithSpaces"
-                            onClick={() => applyFormat(replaceLineBreaksWithSpaces)}
+                            onClick={() => {
+                                record('FormatToolBar', 'lineBreaksToSpaces');
+                                applyFormat(replaceLineBreaksWithSpaces);
+                            }}
                             variant="outline"
                         >
                             ↩̶

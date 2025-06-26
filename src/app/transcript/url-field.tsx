@@ -1,5 +1,6 @@
 'use client';
 
+import { record } from 'nanolytics';
 import React from 'react';
 
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +23,7 @@ export default function UrlField() {
             key={transcript.volume.toString()}
             onBlur={(e) => {
                 if (e.target.value !== mergedUrls) {
+                    record('UpdateUrlsForTranscript');
                     autoResize(e.currentTarget);
                     updateUrlsForTranscript(Array.from(new Set(e.target.value.split('\n'))));
                 }

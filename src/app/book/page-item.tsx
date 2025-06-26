@@ -1,5 +1,6 @@
 'use client';
 
+import { record } from 'nanolytics';
 import React from 'react';
 
 import type { Page } from '@/stores/bookStore/types';
@@ -46,10 +47,12 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     name="page_id"
                     onBlur={(e) => {
                         if (e.target.value !== page.page.toString()) {
+                            record('UpdatePageNumber');
                             updatePages([page.id], { page: Number(e.target.value) }, false);
                         }
                     }}
                     onSubmit={(pageNumber) => {
+                        record('ShiftPageNumbers');
                         shiftValues(page.id, Number(pageNumber), 'page');
                     }}
                 />
@@ -62,10 +65,12 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     name="volume_page"
                     onBlur={(e) => {
                         if (e.target.value !== page.page.toString()) {
+                            record('UpdateVolumePage');
                             updatePages([page.id], { volumePage: Number(e.target.value) }, false);
                         }
                     }}
                     onSubmit={(pageNumber) => {
+                        record('ShiftVolumePages');
                         shiftValues(page.id, Number(pageNumber), 'volumePage');
                     }}
                 />
@@ -78,6 +83,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     key={page.id + '/' + page.lastUpdate + '/text'}
                     onBlur={(e) => {
                         if (e.target.value !== page.page.toString()) {
+                            record('UpdatePageText');
                             updatePages([page.id], { text: e.target.value }, false);
                         }
                     }}
@@ -90,6 +96,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     key={page.id + '/' + page.lastUpdate + '/footnotes'}
                     onBlur={(e) => {
                         if (e.target.value !== page.page.toString()) {
+                            record('UpdatePageFootnote');
                             updatePages([page.id], { footnotes: e.target.value }, false);
                         }
                     }}

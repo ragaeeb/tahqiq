@@ -1,5 +1,4 @@
-'use client';
-
+import { record } from 'nanolytics';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -44,7 +43,10 @@ export function FormatDialog() {
                     <Checkbox
                         checked={flipPunctuation}
                         id="flipPunctuation"
-                        onCheckedChange={(isSelected) => setFlipPunctuation(Boolean(isSelected))}
+                        onCheckedChange={(isSelected) => {
+                            record('TranscriptFlipPuncutation');
+                            setFlipPunctuation(Boolean(isSelected));
+                        }}
                     />
                     <Label htmlFor="flipPunctuation">Flip English to Arabic Punctuation</Label>
                 </div>
@@ -53,35 +55,75 @@ export function FormatDialog() {
                 <Slider
                     max={300}
                     min={10}
-                    onValueChange={setMaxSecondsPerSegment}
+                    onValueChange={(value) => {
+                        record('MaxSecondsPerSegment', value.toString());
+                        setMaxSecondsPerSegment(value);
+                    }}
                     step={10}
                     value={maxSecondsPerSegment}
                 />
 
                 <Label className="text-right">Minimum Words Per Segment: {minWordsPerSegment}</Label>
-                <Slider max={30} min={1} onValueChange={setMinWordsPerSegment} step={1} value={minWordsPerSegment} />
+                <Slider
+                    max={30}
+                    min={1}
+                    onValueChange={(value) => {
+                        record('MinWordsPerSegment', value.toString());
+                        setMinWordsPerSegment(value);
+                    }}
+                    step={1}
+                    value={minWordsPerSegment}
+                />
 
                 <Label className="text-right">Max Seconds Per Line: {maxSecondsPerLine}</Label>
-                <Slider max={300} min={10} onValueChange={setMaxSecondsPerLine} step={10} value={maxSecondsPerLine} />
+                <Slider
+                    max={300}
+                    min={10}
+                    onValueChange={(value) => {
+                        record('MaxSecondsPerLine', value.toString());
+                        setMaxSecondsPerLine(value);
+                    }}
+                    step={10}
+                    value={maxSecondsPerLine}
+                />
 
                 <Label className="text-right">Silence Gap Threshold: {silenceGapThreshold}</Label>
                 <Slider
                     max={5}
                     min={0.5}
-                    onValueChange={setSilenceGapThreshold}
+                    onValueChange={(value) => {
+                        record('SilenceGapThreshold', value.toString());
+                        setSilenceGapThreshold(value);
+                    }}
                     step={0.1}
                     value={silenceGapThreshold}
                 />
 
                 <Label className="text-right">Hints:</Label>
-                <TagInput dir="rtl" onChange={setHints} value={hints} />
+                <TagInput
+                    dir="rtl"
+                    onChange={(value) => {
+                        record('Hints', value.toString());
+                        setHints(value);
+                    }}
+                    value={hints}
+                />
                 <Label className="text-right">Fillers:</Label>
-                <TagInput dir="rtl" onChange={setFillers} value={fillers} />
+                <TagInput
+                    dir="rtl"
+                    onChange={(value) => {
+                        record('Fillers', value.toString());
+                        setFillers(value);
+                    }}
+                    value={fillers}
+                />
             </div>
             <DialogFooter>
                 <DialogClose asChild>
                     <Button
                         onClick={() => {
+                            record('ApplyFormattingOptions');
+
                             setFormattingOptions({
                                 fillers,
                                 flipPunctuation,
