@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Transcript } from '@/stores/transcriptStore/types';
 
-import { TRANSCRIPT_CONTRACT_LATEST } from './constants';
+import { LatestContractVersion } from './constants';
 import { adaptLegacyTranscripts, mapTranscriptsToLatestContract } from './legacy';
 
 describe('legacy', () => {
@@ -44,7 +44,7 @@ describe('legacy', () => {
             };
 
             const expected = {
-                contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+                contractVersion: LatestContractVersion.Transcript,
                 createdAt: timestamp,
                 lastUpdatedAt: timestamp,
                 transcripts: [
@@ -118,7 +118,7 @@ describe('legacy', () => {
             };
 
             const expected = {
-                contractVersion: TRANSCRIPT_CONTRACT_LATEST,
+                contractVersion: LatestContractVersion.Transcript,
                 createdAt: timestamp,
                 lastUpdatedAt: timestamp,
                 transcripts: [
@@ -186,7 +186,7 @@ describe('legacy', () => {
 
             const result = mapTranscriptsToLatestContract(transcripts, createdAt);
 
-            expect(result.contractVersion).toBe(TRANSCRIPT_CONTRACT_LATEST);
+            expect(result.contractVersion).toBe(LatestContractVersion.Transcript);
             expect(result.createdAt).toBe(createdAt);
             expect(result.lastUpdatedAt).toBeInstanceOf(Date);
 
@@ -205,7 +205,7 @@ describe('legacy', () => {
             const createdAt = new Date('2023-01-01');
             const result = mapTranscriptsToLatestContract([], createdAt);
 
-            expect(result.contractVersion).toBe(TRANSCRIPT_CONTRACT_LATEST);
+            expect(result.contractVersion).toBe(LatestContractVersion.Transcript);
             expect(result.transcripts).toEqual([]);
         });
     });
