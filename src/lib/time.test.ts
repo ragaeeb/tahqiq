@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 
 import { roundToDecimal, timeToSeconds } from './time';
 
-describe('Time Module', () => {
+describe('time', () => {
     describe('timeToSeconds', () => {
         it('should convert HH:MM:SS format correctly', () => {
             expect(timeToSeconds('01:30:45')).toBe(5445); // 1h + 30m + 45s

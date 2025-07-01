@@ -1,8 +1,8 @@
 import { areSimilarAfterNormalization } from 'baburchi';
+import { hasInvalidFootnotes } from 'baburchi';
 import memoizeOne from 'memoize-one';
 
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
-import { hasInvalidFootnotes } from '@/lib/footnotes';
 
 import type { ManuscriptStateCore, SheetLine } from './types';
 

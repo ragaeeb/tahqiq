@@ -4,7 +4,7 @@ import { replaceLineBreaksWithSpaces } from 'bitaboom';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { Juz, Page } from '@/stores/bookStore/types';
+import type { Juz, Kitab, Page } from '@/stores/bookStore/types';
 
 import { FormattingToolbar } from '@/components/formatting-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
@@ -70,7 +70,7 @@ export default function Book() {
                             description="Drag and drop the parts"
                             onFiles={(map) => {
                                 record('InitBookFromJuz');
-                                initBook(map as unknown as Record<string, Juz>);
+                                initBook(map as unknown as Record<string, Juz | Kitab>);
                             }}
                         />
                     </div>

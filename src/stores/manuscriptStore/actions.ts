@@ -1,4 +1,4 @@
-import { fixTypo } from 'baburchi';
+import { correctReferences, fixTypo } from 'baburchi';
 import {
     calculateDPI,
     flipAndAlignObservations,
@@ -6,10 +6,10 @@ import {
     mapObservationsToTextLines,
     type Observation,
 } from 'kokokor';
+import { original } from 'mutative';
 
 import { getNextId } from '@/lib/common';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
-import { correctReferences } from '@/lib/footnotes';
 
 import type {
     ManuscriptStateCore,
@@ -59,6 +59,7 @@ const createSheet = (
             minWidthRatioForMerged: null,
         },
     });
+    console.log('textLines', page, textLines);
 
     const altObservations = alternateObservations.map((o) => ({ id: getNextId(), text: o.text }));
 
@@ -205,6 +206,7 @@ export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]
     const sheets = getSheets(state, pages);
 
     for (const sheet of sheets) {
+        console.log('correctReferences(sheet.observations', original(sheet.observations));
         const corrected = correctReferences(sheet.observations);
 
         if (corrected !== sheet.observations) {
