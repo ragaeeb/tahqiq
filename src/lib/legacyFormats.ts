@@ -1,6 +1,6 @@
 import type { Segment, Token } from 'paragrafs';
 
-import type { PostProcessingApp } from '@/stores/transcriptStore/types';
+import type { PostProcessingApp } from '@/stores/commonTypes';
 
 export type BookTranscriptFormat = {
     pages: {
