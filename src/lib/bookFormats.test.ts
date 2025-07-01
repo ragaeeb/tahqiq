@@ -35,6 +35,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {
                     1: [
@@ -92,6 +93,7 @@ describe('bookFormats', () => {
                         volumePage: 10,
                     },
                 ],
+                postProcessingApps: [{ id: 'tahqiq', timestamp: expect.any(Date), version: expect.any(String) }],
                 type: 'book',
             });
         });
@@ -100,6 +102,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {
                     1: [
@@ -164,6 +167,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {},
                 volumeToPages: {},
@@ -177,6 +181,7 @@ describe('bookFormats', () => {
                 index: [],
                 lastUpdatedAt: mockDate,
                 pages: [],
+                postProcessingApps: [{ id: 'tahqiq', timestamp: expect.any(Date), version: expect.any(String) }],
                 type: 'book',
             });
         });
@@ -185,6 +190,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {
                     1: [
@@ -209,6 +215,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {},
                 volumeToPages: {

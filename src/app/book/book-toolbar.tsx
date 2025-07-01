@@ -25,14 +25,15 @@ export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps)
             <Button
                 className="bg-emerald-500"
                 onClick={() => {
-                    const name = prompt('Enter output file name');
+                    const state = useBookStore.getState();
+                    const name = prompt('Enter output file name', state.inputFileName);
 
                     if (name) {
                         record('DownloadBook', name);
 
                         downloadFile(
                             name.endsWith('.json') ? name : `${name}.json`,
-                            JSON.stringify(mapBookStateToKitab(useBookStore.getState()), null, 2),
+                            JSON.stringify(mapBookStateToKitab(state), null, 2),
                         );
                     }
                 }}

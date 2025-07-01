@@ -1,5 +1,7 @@
 import { type Segment as ParagrafsSegment, type Token } from 'paragrafs';
 
+import type { PostProcessingApp } from '../commonTypes';
+
 /**
  * Configuration options for formatting transcript segments
  */
@@ -18,12 +20,6 @@ export type FormatOptions = {
     minWordsPerSegment: number;
     /** Threshold in seconds for identifying silence gaps between segments */
     silenceGapThreshold: number;
-};
-
-export type PostProcessingApp = {
-    id: string;
-    timestamp?: Date;
-    version: string;
 };
 
 /**

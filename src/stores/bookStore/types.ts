@@ -1,3 +1,4 @@
+import type { PostProcessingApp } from '../commonTypes';
 import type { ManuscriptStateCore } from '../manuscriptStore/types';
 
 /**
@@ -27,7 +28,11 @@ export type BookState = BookActions & BookStateCore;
  */
 export type BookStateCore = {
     /** Timestamp indicating when the book store was created */
-    readonly createdAt: Date;
+    createdAt: Date;
+
+    inputFileName?: string;
+
+    postProcessingApps: PostProcessingApp[];
 
     /** Currently selected manuscript volume number for editing/viewing */
     readonly selectedVolume: number;
@@ -89,6 +94,8 @@ export type Kitab = {
     lastUpdatedAt: Date;
     /** All pages that comprise this book */
     pages: BookPage[];
+    /** The apps that was used to edit this book */
+    postProcessingApps?: PostProcessingApp[];
     /** Type identifier for this data structure */
     type: 'book';
 };
@@ -143,7 +150,7 @@ type BookActions = {
      *
      * @param fileToJuz - Mapping of file names to their corresponding Juz data
      */
-    init: (fileToJuz: Record<string, Juz>) => void;
+    init: (fileToJuz: Record<string, Juz | Kitab>) => void;
 
     /**
      * Initializes the book store from existing manuscript data.

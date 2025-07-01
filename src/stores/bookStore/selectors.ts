@@ -25,5 +25,5 @@ export const selectVolumes = (state: BookStateCore): number[] => getVolumes(stat
 export const selectCurrentPages = (state: BookStateCore) => getPages(state.volumeToPages[state.selectedVolume]);
 
 export const selectTableOfContents = memoizeOne(({ selectedVolume, volumeToIndex }: BookStateCore) => {
-    return volumeToIndex[selectedVolume];
+    return volumeToIndex[selectedVolume] || [];
 });

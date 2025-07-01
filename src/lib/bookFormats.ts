@@ -1,5 +1,7 @@
 import type { BookStateCore, Kitab } from '@/stores/bookStore/types';
 
+import packageJson from '@/../package.json';
+
 import { LatestContractVersion } from './constants';
 
 /**
@@ -43,6 +45,11 @@ export const mapBookStateToKitab = (state: BookStateCore): Kitab => {
         pages: Object.entries(state.volumeToPages).flatMap(([, pages]) => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             return pages.map(({ id, lastUpdate, ...p }) => ({ ...p }));
+        }),
+        postProcessingApps: state.postProcessingApps.concat({
+            id: packageJson.name,
+            timestamp: new Date(),
+            version: packageJson.version,
         }),
         type: 'book',
     };

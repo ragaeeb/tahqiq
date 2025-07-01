@@ -4,28 +4,71 @@ import { getNextId } from '@/lib/common';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 
 import type { ManuscriptStateCore } from '../manuscriptStore/types';
-import type { BookStateCore, Juz, Page, TableOfContents } from './types';
+import type { BookStateCore, Juz, Kitab, Page, TableOfContents } from './types';
 
 import { selectCurrentPages } from './selectors';
 
-export const initStore = (fileToJuz: Record<string, Juz>) => {
+const extractPagesFromJuz = (file: string, juz: Juz) => {
+    const volume = Number(file.split('.')[0]);
+    const pages = juz.sheets.map((s) => ({
+        ...s,
+        id: getNextId(),
+        lastUpdate: Date.now(),
+        volume,
+        volumePage: s.page,
+    }));
+
+    const index = (juz.index || []).map((bookmark) => ({ ...bookmark, id: getNextId() }));
+
+    return { index, pages, volume };
+};
+
+export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
     const volumeToPages: Record<number, Page[]> = {};
     const volumeToIndex: Record<number, TableOfContents[]> = {};
+    const result: Partial<BookStateCore> = { volumeToIndex, volumeToPages };
+    let inputFileName: string | undefined;
 
-    Object.entries(fileToJuz).forEach(([file, juz]) => {
-        const volume = Number(file.split('.')[0]);
-        volumeToPages[volume] = juz.sheets.map((s) => ({
-            ...s,
-            id: getNextId(),
-            lastUpdate: Date.now(),
-            volume,
-            volumePage: s.page,
-        }));
+    Object.entries(fileToJuzOrKitab).forEach(([file, juzOrKitab]) => {
+        if (juzOrKitab.type === 'juz') {
+            const { index, pages, volume } = extractPagesFromJuz(file, juzOrKitab);
+            volumeToIndex[volume] = index;
+            volumeToPages[volume] = pages;
+        } else if (juzOrKitab.type === 'book') {
+            juzOrKitab.pages.forEach((p) => {
+                const volume = p.volume || 1;
 
-        volumeToIndex[volume] = (juz.index || []).map((bookmark) => ({ ...bookmark, id: getNextId() }));
+                if (!volumeToPages[volume]) {
+                    volumeToPages[volume] = [];
+                }
+
+                volumeToPages[p.volume || 1].push({ ...p, id: getNextId(), lastUpdate: Date.now() });
+            });
+
+            juzOrKitab.index.forEach((p) => {
+                const volume = p.volume || 1;
+
+                if (!volumeToIndex[volume]) {
+                    volumeToIndex[volume] = [];
+                }
+
+                volumeToIndex[volume].push({ ...p, id: getNextId() });
+            });
+
+            result.createdAt = juzOrKitab.createdAt;
+            inputFileName = file;
+
+            if (juzOrKitab.postProcessingApps) {
+                result.postProcessingApps = [...juzOrKitab.postProcessingApps];
+            }
+        }
     });
 
-    return rawReturn({ selectedVolume: 1, volumeToIndex, volumeToPages });
+    return rawReturn({
+        ...result,
+        selectedVolume: Object.keys(volumeToPages).map(Number).sort()[0],
+        ...(inputFileName && { inputFileName }),
+    });
 };
 
 export const initFromManuscript = (manuscript: ManuscriptStateCore) => {
