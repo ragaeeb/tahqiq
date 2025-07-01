@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/ragaeeb/tahqiq/compare/v1.3.0...v1.4.0) (2025-07-01)
+
+
+### Features
+
+* **book:** Implement book loading, footnote autocorrection improvements ([#26](https://github.com/ragaeeb/tahqiq/issues/26)) ([1d555b2](https://github.com/ragaeeb/tahqiq/commit/1d555b20612560c4623f119e2df7ed9a3107fc4d))
+
 # [1.3.0](https://github.com/ragaeeb/tahqiq/compare/v1.2.0...v1.3.0) (2025-06-26)
 
 
