@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, SaveIcon, TextCursorInputIcon, TrashIcon } from 'lucide-react';
+import { BotIcon, DownloadIcon, SaveIcon, TextCursorInputIcon, TrashIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -65,12 +65,12 @@ export default function BookToolbar({ onDeleteSelectedPages, onReformatSelectedP
                 }}
             />
             {onDeleteSelectedPages && (
-                <Button onClick={onDeleteSelectedPages} variant="destructive">
+                <Button aria-label="Delete selected pages" onClick={onDeleteSelectedPages} variant="destructive">
                     <TrashIcon />
                 </Button>
             )}
-            {onDeleteSelectedPages && (
-                <Button onClick={onReformatSelectedPages}>
+            {onReformatSelectedPages && (
+                <Button aria-label="Reformat selected pages" onClick={onReformatSelectedPages}>
                     <TextCursorInputIcon />
                 </Button>
             )}
@@ -82,7 +82,7 @@ export default function BookToolbar({ onDeleteSelectedPages, onReformatSelectedP
                 renderContent={() => <TranslateDialog />}
                 variant="outline"
             >
-                🤖
+                <BotIcon />
             </DialogTriggerButton>
         </div>
     );
