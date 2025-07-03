@@ -93,7 +93,7 @@ export const mapKitabToLegacyFormat = (kitab: Kitab) => {
     return {
         bookmarks: kitab.index,
         pages: kitab.pages.map((p) => ({
-            body: [p.text, p.footnotes].filter(Boolean).join('_\n'),
+            body: [p.text, p.footnotes].filter(Boolean).join('\n_\n'),
             page: p.page,
             part: p.volume,
             pp: p.volumePage,
