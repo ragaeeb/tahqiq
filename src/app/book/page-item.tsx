@@ -1,14 +1,16 @@
 'use client';
 
+import { withFormattingToolbar } from 'blumbaben';
+import { DyeLight } from 'dyelight';
 import { record } from 'nanolytics';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import type { Page } from '@/stores/bookStore/types';
 
 import SubmittableInput from '@/components/submittable-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { withFormattingToolbar } from '@/components/withFormattingToolbar';
+import { getCharacterErrorHighlights } from '@/lib/styling';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 type PageItemProps = {
@@ -17,7 +19,9 @@ type PageItemProps = {
     page: Page;
 };
 
-const TextareaWithToolbar = withFormattingToolbar(Textarea);
+const HTAWithToolbar = withFormattingToolbar(DyeLight);
+
+const TextAreaWithToolbar = withFormattingToolbar(Textarea);
 
 /**
  * Renders a table row for a manuscript page with editable ID, text, and selection controls.
@@ -29,6 +33,19 @@ const TextareaWithToolbar = withFormattingToolbar(Textarea);
 const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
     const updatePages = useBookStore((state) => state.updatePages);
     const shiftValues = useBookStore((state) => state.shiftValues);
+
+    const bodyCharacterHighlights = useMemo(() => {
+        const result = getCharacterErrorHighlights(page.text);
+        return result.length > 0 && result;
+    }, [page.text]);
+
+    const footnoteCharacterHighlights = useMemo(() => {
+        const result = page.footnotes && getCharacterErrorHighlights(page.footnotes);
+        return result?.length && result;
+    }, [page.footnotes]);
+
+    const BodyTextArea = bodyCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
+    const FooterTextArea = footnoteCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
 
     return (
         <tr className="border-2 border-blue-100">
@@ -76,7 +93,8 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                 />
             </td>
             <td className={`px-4 py-1 align-top`}>
-                <TextareaWithToolbar
+                <BodyTextArea
+                    {...(bodyCharacterHighlights && { highlights: bodyCharacterHighlights })}
                     className={`leading-relaxed resize-none overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none text-lg`}
                     defaultValue={page.text}
                     dir="rtl"
@@ -88,19 +106,24 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                         }
                     }}
                 />
-                <hr />
-                <TextareaWithToolbar
-                    className={`overflow-hidden border-none resize-none shadow-none focus:ring-0 focus:outline-none text-sm`}
-                    defaultValue={page.footnotes}
-                    dir="rtl"
-                    key={page.id + '/' + page.lastUpdate + '/footnotes'}
-                    onBlur={(e) => {
-                        if (e.target.value !== page.footnotes?.toString()) {
-                            record('UpdatePageFootnote');
-                            updatePages([page.id], { footnotes: e.target.value }, false);
-                        }
-                    }}
-                />
+                {page.footnotes && (
+                    <>
+                        <hr />
+                        <FooterTextArea
+                            className={`overflow-hidden border-none resize-none shadow-none focus:ring-0 focus:outline-none text-sm`}
+                            defaultValue={page.footnotes}
+                            dir="rtl"
+                            key={page.id + '/' + page.lastUpdate + '/footnotes'}
+                            {...(footnoteCharacterHighlights && { highlights: footnoteCharacterHighlights })}
+                            onBlur={(e) => {
+                                if (e.target.value !== page.footnotes?.toString()) {
+                                    record('UpdatePageFootnote');
+                                    updatePages([page.id], { footnotes: e.target.value }, false);
+                                }
+                            }}
+                        />
+                    </>
+                )}
             </td>
         </tr>
     );

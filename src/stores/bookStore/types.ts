@@ -161,6 +161,12 @@ type BookActions = {
     initFromManuscript: (manuscript: ManuscriptStateCore) => void;
 
     /**
+     * Applies formatting on the selected pages from the book.
+     * @param pageIds - Array of page IDs to reformat.
+     */
+    reformatPages: (pageIds: number[]) => void;
+
+    /**
      * Shifts page or volume page numbers starting from a specific page.
      * This is useful for renumbering pages when inserting or removing content.
      *

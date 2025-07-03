@@ -1,10 +1,10 @@
 'use client';
 
+import { autoResize } from 'dyelight';
 import { record } from 'nanolytics';
 import React from 'react';
 
 import { Textarea } from '@/components/ui/textarea';
-import { autoResize } from '@/lib/domUtils';
 import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 

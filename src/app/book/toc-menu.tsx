@@ -19,6 +19,10 @@ type TableOfContentsMenuProps = ButtonPropsType & {
 function TableOfContentsMenu({ onBookmarkClicked, ...props }: TableOfContentsMenuProps) {
     const tableOfContents = useBookStore(selectTableOfContents);
 
+    if (!tableOfContents.length) {
+        return null;
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
