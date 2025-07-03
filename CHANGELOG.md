@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/ragaeeb/tahqiq/compare/v1.5.0...v1.5.1) (2025-07-03)
+
+
+### Bug Fixes
+
+* **legacy:** Fix legacy book being exported with incorrect footnote separation ([7f1fa8f](https://github.com/ragaeeb/tahqiq/commit/7f1fa8f758e952942bf3b2481e31d2f34c56075d))
+
 # [1.5.0](https://github.com/ragaeeb/tahqiq/compare/v1.4.0...v1.5.0) (2025-07-03)
 
 
