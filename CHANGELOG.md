@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/ragaeeb/tahqiq/compare/v1.4.0...v1.5.0) (2025-07-03)
+
+
+### Features
+
+* **reformat:** Add ability to reformat pages ([#27](https://github.com/ragaeeb/tahqiq/issues/27)) ([c67e129](https://github.com/ragaeeb/tahqiq/commit/c67e129d1fde643357e4395db612ef0dc02a03bf))
+
 # [1.4.0](https://github.com/ragaeeb/tahqiq/compare/v1.3.0...v1.4.0) (2025-07-01)
 
 
