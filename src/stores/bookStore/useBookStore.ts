@@ -19,6 +19,7 @@ export const useBookStore = create<BookState>()(
         init: (data) => set(() => actions.initStore(data)),
         initFromManuscript: (data) => set(() => actions.initFromManuscript(data)),
         postProcessingApps: [],
+        reformatPages: (...args) => set((state) => actions.reformatPages(state, ...args)),
         selectedVolume: 0,
         shiftValues: (...args) => set((state) => actions.shiftValues(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),

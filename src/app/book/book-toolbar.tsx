@@ -1,25 +1,28 @@
 'use client';
 
-import { DownloadIcon, SaveIcon, TrashIcon } from 'lucide-react';
+import { DownloadIcon, SaveIcon, TextCursorInputIcon, TrashIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { mapBookStateToKitab, mapKitabToLegacyFormat } from '@/lib/bookFormats';
 import { downloadFile } from '@/lib/domUtils';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 import TocMenu from './toc-menu';
+import { TranslateDialog } from './translate-dialog';
 
 type BookToolbarProps = {
     onDeleteSelectedPages?: () => void;
+    onReformatSelectedPages?: () => void;
 };
 
 /**
  * Renders a toolbar for manuscript management operations.
  * Currently provides functionality to export the current manuscript state as a JSON file.
  */
-export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps) {
+export default function BookToolbar({ onDeleteSelectedPages, onReformatSelectedPages }: BookToolbarProps) {
     return (
         <div className="flex space-x-2">
             <Button
@@ -66,6 +69,21 @@ export default function BookToolbar({ onDeleteSelectedPages }: BookToolbarProps)
                     <TrashIcon />
                 </Button>
             )}
+            {onDeleteSelectedPages && (
+                <Button onClick={onReformatSelectedPages}>
+                    <TextCursorInputIcon />
+                </Button>
+            )}
+            <DialogTriggerButton
+                aria-label="Translate Book"
+                onClick={() => {
+                    record('TranslateBook');
+                }}
+                renderContent={() => <TranslateDialog />}
+                variant="outline"
+            >
+                🤖
+            </DialogTriggerButton>
         </div>
     );
 }

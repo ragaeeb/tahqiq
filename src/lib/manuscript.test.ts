@@ -43,9 +43,9 @@ describe('manuscript', () => {
                 ],
                 sheets: [
                     {
-                        footnotes: '\nF',
+                        footnotes: 'F',
                         page: 1,
-                        text: 'T\n',
+                        text: 'T',
                     },
                 ],
                 timestamp: expect.any(Date),

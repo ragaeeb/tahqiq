@@ -1,24 +1,23 @@
 'use client';
 
 import { replaceLineBreaksWithSpaces } from 'bitaboom';
+import { FormattingToolbar } from 'blumbaben';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { Juz, Kitab, Page } from '@/stores/bookStore/types';
 
-import { FormattingToolbar } from '@/components/formatting-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
+import { preformatArabicText } from '@/lib/textUtils';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
-
-import BookToolbar from './book-toolbar';
-
 import '@/lib/analytics';
 
+import BookToolbar from './book-toolbar';
 import PageItem from './page-item';
 
 /**
@@ -30,6 +29,7 @@ export default function Book() {
     const initBook = useBookStore((state) => state.init);
     const initFromManuscript = useBookStore((state) => state.initFromManuscript);
     const deletePages = useBookStore((state) => state.deletePages);
+    const reformatPages = useBookStore((state) => state.reformatPages);
     const pages = useBookStore(selectCurrentPages);
     const [selectedPages, setSelectedPages] = useState<Page[]>([]);
 
@@ -94,6 +94,14 @@ export default function Book() {
                                       }
                                     : undefined
                             }
+                            onReformatSelectedPages={
+                                selectedPages.length > 0
+                                    ? () => {
+                                          record('ReformatPages', selectedPages.length.toString());
+                                          reformatPages(selectedPages.map((p) => p.id));
+                                      }
+                                    : undefined
+                            }
                         />
                     </div>
 
@@ -139,6 +147,15 @@ export default function Book() {
                             variant="outline"
                         >
                             ↩̶
+                        </Button>
+                        <Button
+                            key="reformat"
+                            onClick={() => {
+                                record('Reformat');
+                                applyFormat(preformatArabicText);
+                            }}
+                        >
+                            Reformat
                         </Button>
                     </>
                 )}

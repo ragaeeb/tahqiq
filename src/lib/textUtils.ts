@@ -96,7 +96,7 @@ export const preformatArabicText = (text: string, autoCorrect = false) => {
         result = func(result);
     });
 
-    return result;
+    return result.trim();
 };
 
 /**

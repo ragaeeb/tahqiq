@@ -1,3 +1,4 @@
+import { autoResize } from 'dyelight';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
@@ -7,7 +8,7 @@ import type { Segment } from '@/stores/transcriptStore/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { autoResize, pasteText } from '@/lib/domUtils';
+import { pasteText } from '@/lib/domUtils';
 import { findFirstTokenForText, preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';

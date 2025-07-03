@@ -6,7 +6,7 @@ import {
     mapObservationsToTextLines,
     type Observation,
 } from 'kokokor';
-import { original } from 'mutative';
+import { rawReturn } from 'mutative';
 
 import { getNextId } from '@/lib/common';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
@@ -59,7 +59,6 @@ const createSheet = (
             minWidthRatioForMerged: null,
         },
     });
-    console.log('textLines', page, textLines);
 
     const altObservations = alternateObservations.map((o) => ({ id: getNextId(), text: o.text }));
 
@@ -123,9 +122,9 @@ export const initStore = (fileNameToData: RawInputFiles) => {
         .filter((s) => s.observations.length > 0)
         .toSorted((a, b) => a.page - b.page);
 
-    return {
+    return rawReturn({
         sheets,
-    };
+    });
 };
 
 export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id: number, alt: string) => {
@@ -206,7 +205,6 @@ export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]
     const sheets = getSheets(state, pages);
 
     for (const sheet of sheets) {
-        console.log('correctReferences(sheet.observations', original(sheet.observations));
         const corrected = correctReferences(sheet.observations);
 
         if (corrected !== sheet.observations) {
@@ -296,5 +294,5 @@ export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: numbe
         }
     }
 
-    return { idsFilter };
+    return rawReturn({ idsFilter });
 };

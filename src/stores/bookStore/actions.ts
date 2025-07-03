@@ -2,6 +2,7 @@ import { rawReturn } from 'mutative';
 
 import { getNextId } from '@/lib/common';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
+import { preformatArabicText } from '@/lib/textUtils';
 
 import type { ManuscriptStateCore } from '../manuscriptStore/types';
 import type { BookStateCore, Juz, Kitab, Page, TableOfContents } from './types';
@@ -133,6 +134,21 @@ export const updatePages = (
             page.lastUpdate = Date.now();
         }
     }
+};
+
+export const reformatPages = (state: BookStateCore, ids: number[]) => {
+    updatePages(
+        state,
+        ids,
+        (p) => {
+            p.text = preformatArabicText(p.text);
+
+            if (p.footnotes) {
+                p.footnotes = preformatArabicText(p.footnotes);
+            }
+        },
+        true,
+    );
 };
 
 export const deletePages = (state: BookStateCore, ids: number[]) => {
