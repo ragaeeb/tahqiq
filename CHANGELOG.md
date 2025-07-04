@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/ragaeeb/tahqiq/compare/v1.5.1...v1.6.0) (2025-07-04)
+
+
+### Bug Fixes
+
+* **footnotes:** Fix build ([bef8ba2](https://github.com/ragaeeb/tahqiq/commit/bef8ba24e32e2ae65cae5b3a6b80a789892b8fe3))
+
+
+### Features
+
+* **merge:** Implement merging matn with footnotes ([c18601e](https://github.com/ragaeeb/tahqiq/commit/c18601e3d0fb845e4fad974ab5881e721b77f65c))
+
 ## [1.5.1](https://github.com/ragaeeb/tahqiq/compare/v1.5.0...v1.5.1) (2025-07-03)
 
 
