@@ -1,6 +1,14 @@
 'use client';
 
-import { BotIcon, DownloadIcon, MergeIcon, SaveIcon, TextCursorInputIcon, TrashIcon } from 'lucide-react';
+import {
+    BotIcon,
+    DownloadIcon,
+    MergeIcon,
+    SaveIcon,
+    SquareDashedIcon,
+    TextCursorInputIcon,
+    TrashIcon,
+} from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -17,6 +25,7 @@ type BookToolbarProps = {
     onDeleteSelectedPages?: () => void;
     onMergeFootnotes?: () => void;
     onReformatSelectedPages?: () => void;
+    onSelectEmptyPages?: () => void;
 };
 
 /**
@@ -27,6 +36,7 @@ export default function BookToolbar({
     onDeleteSelectedPages,
     onMergeFootnotes,
     onReformatSelectedPages,
+    onSelectEmptyPages,
 }: BookToolbarProps) {
     return (
         <div className="flex space-x-2">
@@ -82,6 +92,11 @@ export default function BookToolbar({
             {onMergeFootnotes && (
                 <Button aria-label="Merge Footnotes" className="bg-purple-500" onClick={onMergeFootnotes}>
                     <MergeIcon />
+                </Button>
+            )}
+            {onSelectEmptyPages && (
+                <Button aria-label="Select Blank pages" className="bg-red-400" onClick={onSelectEmptyPages}>
+                    <SquareDashedIcon />
                 </Button>
             )}
             <DialogTriggerButton

@@ -105,8 +105,11 @@ export type Kitab = {
  * Extends BookPage with tracking information for change management.
  */
 export type Page = BookPage & {
+    /** Has a header */
+    hasHeader?: boolean;
     /** Unique identifier for this page within the system */
     id: number;
+
     /** Timestamp of the last modification to this page */
     lastUpdate: number;
 };

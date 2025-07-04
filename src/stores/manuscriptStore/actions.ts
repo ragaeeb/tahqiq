@@ -99,9 +99,17 @@ export const initStore = (fileNameToData: RawInputFiles) => {
     const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
 
     const sheets = Object.entries(fileToObservations)
-        .filter(([, macOCRData]) => macOCRData.observations.length > 0)
         .map(([imageFile, macOCRData]) => {
             const pageNumber = parseInt(imageFile.split('.')[0]!);
+
+            if (!macOCRData.observations.length) {
+                return {
+                    alt: [],
+                    observations: [],
+                    page: pageNumber,
+                };
+            }
+
             const suryaPage = surya.find((s) => s.page === pageNumber);
 
             if (!suryaPage) {
@@ -119,7 +127,6 @@ export const initStore = (fileNameToData: RawInputFiles) => {
 
             return sheet;
         })
-        .filter((s) => s.observations.length > 0)
         .toSorted((a, b) => a.page - b.page);
 
     return rawReturn({
@@ -153,20 +160,33 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
     }
 };
 
-export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: number) => {
+export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: number, mergeAsl = false) => {
     const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
 
     const above = sheet.alt[index - 1];
     const current = sheet.alt[index];
 
-    const mergedObservation = {
+    const mergedAlt = {
         ...above,
         lastUpdate: Date.now(),
         text: `${above.text} ${current.text}`.trim(),
     };
 
-    sheet.alt.splice(index - 1, 2, mergedObservation);
+    sheet.alt.splice(index - 1, 2, mergedAlt);
+
+    if (mergeAsl) {
+        const aboveObservation = sheet.observations[index - 1];
+        const currentObservation = sheet.observations[index];
+
+        const mergedObservation = {
+            ...aboveObservation,
+            lastUpdate: Date.now(),
+            text: `${aboveObservation.text} ${currentObservation.text}`.trim(),
+        };
+
+        sheet.observations.splice(index - 1, 2, mergedObservation);
+    }
 };
 
 export const applySupportToOriginal = (state: ManuscriptStateCore, page: number, id: number) => {

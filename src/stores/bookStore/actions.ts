@@ -66,6 +66,18 @@ export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
         }
     });
 
+    const indexKeys = new Set(
+        Object.entries(volumeToIndex).flatMap(([volume, indices]) => indices.map((i) => `${volume}/${i.page}`)),
+    );
+
+    Object.values(volumeToPages)
+        .flat()
+        .forEach((p) => {
+            if (indexKeys.has(`${p.volume}/${p.page}`)) {
+                p.hasHeader = true;
+            }
+        });
+
     return rawReturn({
         ...result,
         selectedVolume: Object.keys(volumeToPages).map(Number).sort()[0],

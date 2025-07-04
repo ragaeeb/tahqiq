@@ -24,6 +24,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
+    const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
     const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
@@ -77,6 +78,10 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                         { isPoetic },
                     );
                     setSelectedRows([]);
+                }}
+                mergeWithAbove={() => {
+                    record('MergeAslWithAbove');
+                    mergeWithAbove(selectedRows[0].page, selectedRows[0].id, true);
                 }}
                 onFixSwsSymbol={() => {
                     record('FixSwsSymbol');

@@ -21,6 +21,7 @@ import {
     replaceDoubleBracketsWithArrows,
     replaceEnglishPunctuationWithArabic,
     stripZeroWidthCharacters,
+    trimSpaceInsideQuotes,
 } from 'bitaboom';
 import { isEndingWithPunctuation, type Token } from 'paragrafs';
 
@@ -45,20 +46,76 @@ export const standardizeAhHijriSymbol = (text: string) => {
     return text.replace(/(^|\s|[^\u0600-\u06FF])اه(?=\s|$|[^\u0600-\u06FF])/g, '$1اهـ');
 };
 
-const fixBracketTypos = (text: string) => {
-    return text.replace(/\(«|\( \(/g, '«').replace(/»\)|\) \)/g, '»');
+/**
+ * Ensures at most 1 space exists before any word before Arabic quotation marks.
+ * Adds a space if there isn't one, or reduces multiple spaces to one.
+ * @param {string} text - The input text to modify
+ * @returns {string} - The modified text with proper spacing before Arabic quotes
+ */
+export const ensureSpaceBeforeQuotes = (text: string) => {
+    // eslint-disable-next-line sonarjs/slow-regex
+    return text.replace(/(\S) *(«[^»]*»)/g, '$1 $2');
 };
 
-const autoCorrectPipeline = [standardizeHijriSymbol, standardizeAhHijriSymbol, fixBracketTypos];
+export const fixMismatchedQuotationMarks = (text: string) => {
+    return (
+        text
+            // Matches mismatched quotation marks: « followed by content and closed with )
+            // eslint-disable-next-line sonarjs/slow-regex
+            .replace(/«([^»)]+)\)/g, '«$1»')
+            // Fix reverse mismatched ( content » to « content »
+            .replace(/\(([^()]+)»/g, '«$1»')
+            // Matches any unclosed « quotation marks at end of content
+            // eslint-disable-next-line sonarjs/slow-regex
+            .replace(/«([^»]+)(?=\s*$|$)/g, '«$1»')
+    );
+};
+
+export const fixCurlyBraces = (text: string) => {
+    // Process each mismatch type separately to avoid interference
+    let result = text;
+
+    // Fix ( content } to { content }
+    result = result.replace(/\(([^(){}]+)\}/g, '{$1}');
+
+    // Fix { content ) to { content }
+    return result.replace(/\{([^(){}]+)\)/g, '{$1}');
+};
+
+export const fixBracketTypos = (text: string) => {
+    return (
+        text
+            .replace(/\(«|\( \(/g, '«')
+            .replace(/»\)|\) \)/g, '»')
+            // Fix ")digit)" pattern to "(digit)"
+            .replace(/\)([0-9\u0660-\u0669]+)\)/g, '($1)')
+            // Fix ")digit(" pattern to "(digit)"
+            .replace(/\)([0-9\u0660-\u0669]+)\(/g, '($1)')
+    );
+};
+
+export const fixUnbalanced = (text: string) => {
+    let result = text;
+
+    for (const f of [fixBracketTypos, fixMismatchedQuotationMarks, fixCurlyBraces]) {
+        result = f(result);
+    }
+
+    return result;
+};
+
+const autoCorrectPipeline = [standardizeHijriSymbol, standardizeAhHijriSymbol];
 
 const pastePipeline = [
     stripZeroWidthCharacters,
     cleanSpacesBeforePeriod,
     normalizeSlashInReferences,
     removeSpaceInsideBrackets,
+    trimSpaceInsideQuotes,
     replaceEnglishPunctuationWithArabic,
     addSpaceBetweenArabicTextAndNumbers,
     ensureSpaceBeforeBrackets,
+    ensureSpaceBeforeQuotes,
     fixTrailingWow,
     removeTatwil,
     condenseColons,
