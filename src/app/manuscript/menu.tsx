@@ -21,6 +21,7 @@ type ManuscriptMenuProps = ButtonPropsType & {
     markAsFootnotes: (value: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean) => void;
+    mergeWithAbove: () => void;
     onFixSwsSymbol: () => void;
     onReplaceSwsWithAzw: () => void;
 };
@@ -31,6 +32,7 @@ export function ManuscriptMenu({
     markAsFootnotes,
     markAsHeading,
     markAsPoetry,
+    mergeWithAbove,
     onFixSwsSymbol,
     onReplaceSwsWithAzw,
     ...props
@@ -91,6 +93,7 @@ export function ManuscriptMenu({
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
+                    <DropdownMenuItem onClick={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={deleteLines}>✘ Delete</DropdownMenuItem>
                 </DropdownMenuGroup>

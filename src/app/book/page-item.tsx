@@ -23,6 +23,14 @@ const HTAWithToolbar = withFormattingToolbar(DyeLight);
 
 const TextAreaWithToolbar = withFormattingToolbar(Textarea);
 
+const getBorderForRow = (page: Page) => {
+    if (page.hasHeader) {
+        return `border-4 border-purple-300`;
+    }
+
+    return `border-2 border-blue-100`;
+};
+
 /**
  * Renders a table row for a manuscript page with editable ID, text, and selection controls.
  *
@@ -48,7 +56,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
     const FooterTextArea = footnoteCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
 
     return (
-        <tr className="border-2 border-blue-100">
+        <tr className={getBorderForRow(page)}>
             <td className="px-2 py-1 align-top">
                 <Checkbox
                     checked={isSelected}

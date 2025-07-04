@@ -91,7 +91,7 @@ type ManuscriptActions = {
      */
     init: (fileNameToData: RawInputFiles) => void;
 
-    mergeWithAbove: (page: number, id: number) => void;
+    mergeWithAbove: (page: number, id: number, mergeAsl?: boolean) => void;
 
     replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
 

@@ -2,6 +2,9 @@ import { describe, expect, it } from 'bun:test';
 
 import {
     findFirstTokenForText,
+    fixBracketTypos,
+    fixCurlyBraces,
+    fixMismatchedQuotationMarks,
     parsePageRanges,
     preformatArabicText,
     standardizeAhHijriSymbol,
@@ -114,13 +117,6 @@ describe('textUtils', () => {
             expect(preformatArabicText('')).toBe('');
         });
 
-        it('should handle string with bracket typos', () => {
-            const input = '(« text »)';
-            const result = preformatArabicText(input, true);
-
-            expect(result).toContain('« text »');
-        });
-
         it('should handle multiple formatting issues', () => {
             const input = 'text(«content»)with123هandاه';
             const result = preformatArabicText(input, true);
@@ -198,6 +194,42 @@ describe('textUtils', () => {
 
             const result = findFirstTokenForText(tokens, 'short text that is longer');
             expect(result).toBeNull();
+        });
+    });
+
+    describe('fixBracketTypos', () => {
+        it('should fix the brackets', () => {
+            const actual = fixBracketTypos(')١)');
+            expect(actual).toEqual('(١)');
+        });
+
+        it('should fix the flipped brackets', () => {
+            const actual = fixBracketTypos(')١(');
+            expect(actual).toEqual('(١)');
+        });
+    });
+
+    describe('fixCurlyBraces', () => {
+        it('should fix the curly brackets', () => {
+            const actual = fixCurlyBraces('( إِيَّاه}(٣)، وقال: {تَذَكَّرُونَ) (٤).');
+            expect(actual).toEqual('{ إِيَّاه}(٣)، وقال: {تَذَكَّرُونَ} (٤).');
+        });
+    });
+
+    describe('fixMismatchedQuotationMarks', () => {
+        it('should replace with the arrow brackets', () => {
+            const actual = fixMismatchedQuotationMarks('يقول: « الهيثم بن عدي كوفي ليس بثقة، كان يكذب ) (٢).');
+            expect(actual).toEqual('يقول: « الهيثم بن عدي كوفي ليس بثقة، كان يكذب » (٢).');
+        });
+
+        it('should replace with the arrow brackets with the footnote', () => {
+            const actual = fixMismatchedQuotationMarks('«كذَّاب)(٣).');
+            expect(actual).toEqual('«كذَّاب»(٣).');
+        });
+
+        it('should replace with the reversed arrow brackets', () => {
+            const actual = fixMismatchedQuotationMarks('وقال ( يدلسها »(٥).');
+            expect(actual).toEqual('وقال « يدلسها »(٥).');
         });
     });
 

@@ -22,7 +22,7 @@ export const mapManuscriptToJuz = (manuscriptState: ManuscriptStateCore): Juz =>
     });
 
     const index = manuscriptState.sheets.flatMap((s) => {
-        return s.observations.filter((o) => o.isHeading).map((o) => ({ page: o.id, title: o.text }));
+        return s.observations.filter((o) => o.isHeading).map((o) => ({ page: s.page, title: o.text }));
     });
 
     return {

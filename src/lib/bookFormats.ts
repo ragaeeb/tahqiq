@@ -44,7 +44,7 @@ export const mapBookStateToKitab = (state: BookStateCore): Kitab => {
         lastUpdatedAt: new Date(),
         pages: Object.entries(state.volumeToPages).flatMap(([, pages]) => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            return pages.map(({ id, lastUpdate, ...p }) => ({ ...p }));
+            return pages.map(({ hasHeader, id, lastUpdate, ...p }) => ({ ...p }));
         }),
         postProcessingApps: state.postProcessingApps.concat({
             id: packageJson.name,

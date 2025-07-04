@@ -28,7 +28,7 @@ describe('manuscript', () => {
                                 text: 'F',
                             },
                         ],
-                        page: 1,
+                        page: 2,
                     },
                 ],
             });
@@ -37,14 +37,14 @@ describe('manuscript', () => {
                 contractVersion: 'v1.0',
                 index: [
                     {
-                        page: 1,
+                        page: 2,
                         title: 'T',
                     },
                 ],
                 sheets: [
                     {
                         footnotes: 'F',
-                        page: 1,
+                        page: 2,
                         text: 'T',
                     },
                 ],

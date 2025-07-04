@@ -2,6 +2,7 @@
 
 import { replaceLineBreaksWithSpaces } from 'bitaboom';
 import { FormattingToolbar } from 'blumbaben';
+import { CurlyBracesIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -11,11 +12,11 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
-import { preformatArabicText } from '@/lib/textUtils';
+import { fixUnbalanced, preformatArabicText } from '@/lib/textUtils';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
-import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 import '@/lib/analytics';
+import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import BookToolbar from './book-toolbar';
 import PageItem from './page-item';
@@ -159,6 +160,15 @@ export default function Book() {
                             }}
                         >
                             Reformat
+                        </Button>
+                        <Button
+                            key="fixUnbalanced"
+                            onClick={() => {
+                                record('FixUnbalanced');
+                                applyFormat(fixUnbalanced);
+                            }}
+                        >
+                            <CurlyBracesIcon />
                         </Button>
                     </>
                 )}
