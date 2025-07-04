@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/ragaeeb/tahqiq/compare/v1.6.0...v1.7.0) (2025-07-04)
+
+
+### Features
+
+* **blank:** Keep blank pages, add merging asl with above, fix indexing bugs ([#28](https://github.com/ragaeeb/tahqiq/issues/28)) ([ab7ac80](https://github.com/ragaeeb/tahqiq/commit/ab7ac80a46f950e81924aa1ac34fb1e990d29ecb))
+
 # [1.6.0](https://github.com/ragaeeb/tahqiq/compare/v1.5.1...v1.6.0) (2025-07-04)
 
 
