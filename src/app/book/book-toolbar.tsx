@@ -1,6 +1,6 @@
 'use client';
 
-import { BotIcon, DownloadIcon, SaveIcon, TextCursorInputIcon, TrashIcon } from 'lucide-react';
+import { BotIcon, DownloadIcon, MergeIcon, SaveIcon, TextCursorInputIcon, TrashIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -15,6 +15,7 @@ import { TranslateDialog } from './translate-dialog';
 
 type BookToolbarProps = {
     onDeleteSelectedPages?: () => void;
+    onMergeFootnotes?: () => void;
     onReformatSelectedPages?: () => void;
 };
 
@@ -22,7 +23,11 @@ type BookToolbarProps = {
  * Renders a toolbar for manuscript management operations.
  * Currently provides functionality to export the current manuscript state as a JSON file.
  */
-export default function BookToolbar({ onDeleteSelectedPages, onReformatSelectedPages }: BookToolbarProps) {
+export default function BookToolbar({
+    onDeleteSelectedPages,
+    onMergeFootnotes,
+    onReformatSelectedPages,
+}: BookToolbarProps) {
     return (
         <div className="flex space-x-2">
             <Button
@@ -72,6 +77,11 @@ export default function BookToolbar({ onDeleteSelectedPages, onReformatSelectedP
             {onReformatSelectedPages && (
                 <Button aria-label="Reformat selected pages" onClick={onReformatSelectedPages}>
                     <TextCursorInputIcon />
+                </Button>
+            )}
+            {onMergeFootnotes && (
+                <Button aria-label="Merge Footnotes" className="bg-purple-500" onClick={onMergeFootnotes}>
+                    <MergeIcon />
                 </Button>
             )}
             <DialogTriggerButton

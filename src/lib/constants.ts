@@ -48,3 +48,5 @@ Use ALA-LC transliteration for words best left untranslated, placing only their 
 Example: “This is a sentence with taqlīd (blind following) in it.” Do not enclose transliterated words in brackets.
 Respond only with the translated plain text—no commentary or, markdown or extra formatting. Preserve full chains of narration.
 The text will include a page ID (pN or fN) before each text content, ensure your translated response includes these so they can be mapped back to the original Arabic. When a sentence continues from one page to another, consider the next page for context in your translation. Revise your translation 3 times before sending.`;
+
+export const FOOTNOTES_DELIMITER = '\n_';

@@ -161,6 +161,12 @@ type BookActions = {
     initFromManuscript: (manuscript: ManuscriptStateCore) => void;
 
     /**
+     * Merges the footnotes with the matn of the pages.
+     * @param pageIds - Array of page IDs to merge.
+     */
+    mergeFootnotesWithMatn: (pageIds: number[]) => void;
+
+    /**
      * Applies formatting on the selected pages from the book.
      * @param pageIds - Array of page IDs to reformat.
      */

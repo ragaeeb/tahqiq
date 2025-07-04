@@ -2,7 +2,7 @@ import type { BookStateCore, Kitab } from '@/stores/bookStore/types';
 
 import packageJson from '@/../package.json';
 
-import { LatestContractVersion } from './constants';
+import { FOOTNOTES_DELIMITER, LatestContractVersion } from './constants';
 
 /**
  * Maps the internal book state to the standardized Kitab format.
@@ -92,11 +92,16 @@ export const mapBookStateToKitab = (state: BookStateCore): Kitab => {
 export const mapKitabToLegacyFormat = (kitab: Kitab) => {
     return {
         bookmarks: kitab.index,
-        pages: kitab.pages.map((p) => ({
-            body: [p.text, p.footnotes].filter(Boolean).join('\n_\n'),
-            page: p.page,
-            part: p.volume,
-            pp: p.volumePage,
-        })),
+        pages: kitab.pages
+            .filter((p) => p.page)
+            .map((p) => ({
+                body: [p.text, p.footnotes]
+                    .filter(Boolean)
+                    .map((t) => t!.trim())
+                    .join(FOOTNOTES_DELIMITER),
+                page: p.page,
+                part: p.volume,
+                pp: p.volumePage,
+            })),
     };
 };

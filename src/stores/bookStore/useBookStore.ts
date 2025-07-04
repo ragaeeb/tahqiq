@@ -18,6 +18,7 @@ export const useBookStore = create<BookState>()(
         deletePages: (...args) => set((state) => actions.deletePages(state, ...args)),
         init: (data) => set(() => actions.initStore(data)),
         initFromManuscript: (data) => set(() => actions.initFromManuscript(data)),
+        mergeFootnotesWithMatn: (...args) => set((state) => actions.mergeFootnotesWithMatn(state, ...args)),
         postProcessingApps: [],
         reformatPages: (...args) => set((state) => actions.reformatPages(state, ...args)),
         selectedVolume: 0,

@@ -1,6 +1,7 @@
 import { rawReturn } from 'mutative';
 
 import { getNextId } from '@/lib/common';
+import { FOOTNOTES_DELIMITER } from '@/lib/constants';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { preformatArabicText } from '@/lib/textUtils';
 
@@ -154,5 +155,19 @@ export const reformatPages = (state: BookStateCore, ids: number[]) => {
 export const deletePages = (state: BookStateCore, ids: number[]) => {
     state.volumeToPages[state.selectedVolume] = state.volumeToPages[state.selectedVolume].filter(
         (p) => !ids.includes(p.id),
+    );
+};
+
+export const mergeFootnotesWithMatn = (state: BookStateCore, ids: number[]) => {
+    updatePages(
+        state,
+        ids,
+        (p) => {
+            if (p.footnotes) {
+                p.text = p.text + FOOTNOTES_DELIMITER + p.footnotes;
+                p.footnotes = undefined;
+            }
+        },
+        true,
     );
 };

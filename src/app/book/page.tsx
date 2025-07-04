@@ -30,6 +30,7 @@ export default function Book() {
     const initFromManuscript = useBookStore((state) => state.initFromManuscript);
     const deletePages = useBookStore((state) => state.deletePages);
     const reformatPages = useBookStore((state) => state.reformatPages);
+    const mergeFootnotesWithMatn = useBookStore((state) => state.mergeFootnotesWithMatn);
     const pages = useBookStore(selectCurrentPages);
     const [selectedPages, setSelectedPages] = useState<Page[]>([]);
 
@@ -60,6 +61,21 @@ export default function Book() {
         ));
     }, [pages, selectedVolume, selectedPages, handleSelectionChange]);
 
+    const onReformatSelectedPages = useCallback(() => {
+        record('ReformatPages', selectedPages.length.toString());
+        reformatPages(selectedPages.map((p) => p.id));
+    }, [reformatPages, selectedPages]);
+
+    const onDeleteSelectedPages = useCallback(() => {
+        record('DeletePagesFromBook', selectedPages.length.toString());
+        deletePages(selectedPages.map((p) => p.id));
+    }, [deletePages, selectedPages]);
+
+    const onMergeFootnotes = useCallback(() => {
+        record('MergeFootnotes', selectedPages.length.toString());
+        mergeFootnotesWithMatn(selectedPages.map((p) => p.id));
+    }, [mergeFootnotesWithMatn, selectedPages]);
+
     if (!isInitialized) {
         return (
             <>
@@ -86,22 +102,9 @@ export default function Book() {
                 <div className="flex flex-col w-full max-w">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                         <BookToolbar
-                            onDeleteSelectedPages={
-                                selectedPages.length > 0
-                                    ? () => {
-                                          record('DeletePagesFromBook', selectedPages.length.toString());
-                                          deletePages(selectedPages.map((p) => p.id));
-                                      }
-                                    : undefined
-                            }
-                            onReformatSelectedPages={
-                                selectedPages.length > 0
-                                    ? () => {
-                                          record('ReformatPages', selectedPages.length.toString());
-                                          reformatPages(selectedPages.map((p) => p.id));
-                                      }
-                                    : undefined
-                            }
+                            onDeleteSelectedPages={selectedPages.length > 0 ? onDeleteSelectedPages : undefined}
+                            onMergeFootnotes={selectedPages.length > 0 ? onMergeFootnotes : undefined}
+                            onReformatSelectedPages={selectedPages.length > 0 ? onReformatSelectedPages : undefined}
                         />
                     </div>
 
