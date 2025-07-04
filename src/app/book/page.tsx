@@ -2,7 +2,6 @@
 
 import { replaceLineBreaksWithSpaces } from 'bitaboom';
 import { FormattingToolbar } from 'blumbaben';
-import { CurlyBracesIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -12,10 +11,11 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
+import { BASMALAH } from '@/lib/constants';
 import { fixUnbalanced, preformatArabicText } from '@/lib/textUtils';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
-import { useBookStore } from '@/stores/bookStore/useBookStore';
 import '@/lib/analytics';
+import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import BookToolbar from './book-toolbar';
@@ -51,6 +51,10 @@ export default function Book() {
         });
     }, []);
 
+    const blankPages = useMemo(() => {
+        return pages.filter((p) => !p.footnotes && !p.text);
+    }, [pages]);
+
     const pageItems = useMemo(() => {
         return pages.map((page) => (
             <PageItem
@@ -76,6 +80,11 @@ export default function Book() {
         record('MergeFootnotes', selectedPages.length.toString());
         mergeFootnotesWithMatn(selectedPages.map((p) => p.id));
     }, [mergeFootnotesWithMatn, selectedPages]);
+
+    const onSelectEmptyPages = useCallback(() => {
+        record('SelectEmptyPages', blankPages.length.toString());
+        setSelectedPages(blankPages);
+    }, [blankPages]);
 
     if (!isInitialized) {
         return (
@@ -106,6 +115,9 @@ export default function Book() {
                             onDeleteSelectedPages={selectedPages.length > 0 ? onDeleteSelectedPages : undefined}
                             onMergeFootnotes={selectedPages.length > 0 ? onMergeFootnotes : undefined}
                             onReformatSelectedPages={selectedPages.length > 0 ? onReformatSelectedPages : undefined}
+                            onSelectEmptyPages={
+                                blankPages.length && !selectedPages.length ? onSelectEmptyPages : undefined
+                            }
                         />
                     </div>
 
@@ -168,7 +180,16 @@ export default function Book() {
                                 applyFormat(fixUnbalanced);
                             }}
                         >
-                            <CurlyBracesIcon />
+                            «»
+                        </Button>
+                        <Button
+                            key="basmalah"
+                            onClick={() => {
+                                record('Basmalah');
+                                applyFormat(() => BASMALAH);
+                            }}
+                        >
+                            Basmalah
                         </Button>
                     </>
                 )}

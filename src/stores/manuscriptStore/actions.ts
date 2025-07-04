@@ -99,9 +99,17 @@ export const initStore = (fileNameToData: RawInputFiles) => {
     const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
 
     const sheets = Object.entries(fileToObservations)
-        .filter(([, macOCRData]) => macOCRData.observations.length > 0)
         .map(([imageFile, macOCRData]) => {
             const pageNumber = parseInt(imageFile.split('.')[0]!);
+
+            if (!macOCRData.observations.length) {
+                return {
+                    alt: [],
+                    observations: [],
+                    page: pageNumber,
+                };
+            }
+
             const suryaPage = surya.find((s) => s.page === pageNumber);
 
             if (!suryaPage) {
@@ -119,7 +127,6 @@ export const initStore = (fileNameToData: RawInputFiles) => {
 
             return sheet;
         })
-        .filter((s) => s.observations.length > 0)
         .toSorted((a, b) => a.page - b.page);
 
     return rawReturn({
