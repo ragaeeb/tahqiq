@@ -293,7 +293,7 @@ describe('bookFormats', () => {
                         pp: 1,
                     },
                     {
-                        body: 'Chapter 1 content\n_\nImportant footnote',
+                        body: 'Chapter 1 content\n_Important footnote',
                         page: 25,
                         part: 1,
                         pp: 25,
