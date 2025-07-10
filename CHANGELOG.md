@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/ragaeeb/tahqiq/compare/v1.7.0...v1.7.1) (2025-07-10)
+
+
+### Bug Fixes
+
+* **legacy:** Handle missing text in a legacy transcript ([32be429](https://github.com/ragaeeb/tahqiq/commit/32be4297999b6a6df4041d03628141b36f2ab0f5))
+
 # [1.7.0](https://github.com/ragaeeb/tahqiq/compare/v1.6.0...v1.7.0) (2025-07-04)
 
 
