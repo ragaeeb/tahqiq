@@ -146,7 +146,7 @@ export default function ManuscriptTableHeader({
                             aria-label="Poetic"
                             onClick={() => {
                                 record('FilterByPoetic');
-                                filterByPages(rows.filter((r) => r.isPoetic).map((r) => r.page));
+                                filterByIds(rows.filter((r) => r.isPoetic).map((r) => r.id));
                             }}
                         >
                             Poetic

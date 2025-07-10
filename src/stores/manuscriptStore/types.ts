@@ -10,6 +10,7 @@ export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
  */
 export type ManuscriptStateCore = {
     idsFilter: Set<number>;
+    isInitialized: boolean;
     sheets: Sheet[];
 };
 

@@ -28,7 +28,7 @@ import ManuscriptToolbar from './toolbar';
 export default function Manuscript() {
     const initManuscript = useManuscriptStore((state) => state.init);
     const rows = useManuscriptStore(selectAllSheetLines);
-    const isInitialized = rows.length > 0;
+    const isInitialized = useManuscriptStore((state) => state.isInitialized);
     const selection = useState<SheetLine[]>([]);
     const [selectedRows, setSelectedRows] = selection;
 

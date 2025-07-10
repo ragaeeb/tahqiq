@@ -130,6 +130,7 @@ export const initStore = (fileNameToData: RawInputFiles) => {
         .toSorted((a, b) => a.page - b.page);
 
     return rawReturn({
+        isInitialized: true,
         sheets,
     });
 };

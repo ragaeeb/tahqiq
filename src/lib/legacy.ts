@@ -112,13 +112,15 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
             createdAt: data.timestamp,
             lastUpdatedAt: data.timestamp,
             transcripts: data.parts.map((part) => {
+                const transcripts = part.transcripts.filter((t) => t.body);
+
                 return {
                     segments: [
                         {
-                            end: part.transcripts.at(-1)!.end,
-                            start: part.transcripts[0]!.start,
-                            text: part.transcripts.map((t) => t.body).join(' '),
-                            tokens: part.transcripts.flatMap(
+                            end: transcripts.at(-1)!.end,
+                            start: transcripts[0]!.start,
+                            text: transcripts.map((t) => t.body).join(' '),
+                            tokens: transcripts.flatMap(
                                 (s) => estimateSegmentFromToken({ end: s.end, start: s.start, text: s.body }).tokens,
                             ),
                         },

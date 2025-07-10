@@ -16,6 +16,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         fixTypos: (ids) => set((state) => actions.fixTypos(state, ids)),
         idsFilter: new Set<number>(),
         init: (data) => set(() => actions.initStore(data)),
+        isInitialized: false,
         mergeWithAbove: (...args) => set((state) => actions.mergeWithAbove(state, ...args)),
         replaceHonorifics: (ids, from, to) => set((state) => actions.replaceHonorifics(state, ids, from, to)),
         sheets: [],
