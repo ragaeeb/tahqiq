@@ -11,7 +11,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         autoCorrectFootnotes: (pages) => set((state) => actions.autoCorrectFootnotes(state, pages)),
         clearOutPages: (...args) => set((state) => actions.clearOutPages(state, ...args)),
         deleteLines: (ids) => set((state) => actions.deleteLines(state, ids)),
-        deleteSupport: (page, id) => set((state) => actions.deleteSupport(state, page, id)),
+        deleteSupport: (...args) => set((state) => actions.deleteSupport(state, ...args)),
         filterByIds: (ids) => set(() => ({ idsFilter: new Set(ids) })),
         filterByPages: (pages) => set((state) => actions.filterByPages(state, pages)),
         fixTypos: (ids) => set((state) => actions.fixTypos(state, ids)),
@@ -19,10 +19,9 @@ export const useManuscriptStore = create<ManuscriptState>()(
         init: (data) => set(() => actions.initStore(data)),
         isInitialized: false,
         mergeWithAbove: (...args) => set((state) => actions.mergeWithAbove(state, ...args)),
-        replaceHonorifics: (ids, from, to) => set((state) => actions.replaceHonorifics(state, ids, from, to)),
+        replaceHonorifics: (...args) => set((state) => actions.replaceHonorifics(state, ...args)),
         sheets: [],
-        splitAltAtLineBreak: (page, id, alt) => set((state) => actions.splitAltAtLineBreak(state, page, id, alt)),
-        updateTextLines: (ids, diff, updateLastUpdated) =>
-            set((state) => actions.updateTextLines(state, ids, diff, updateLastUpdated)),
+        splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
+        updateTextLines: (...args) => set((state) => actions.updateTextLines(state, ...args)),
     })),
 );

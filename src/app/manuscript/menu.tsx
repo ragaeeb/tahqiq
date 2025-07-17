@@ -1,5 +1,6 @@
 import { EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
 
+import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
 import { Button, type ButtonPropsType } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -52,9 +53,9 @@ export function ManuscriptMenu({
                         <DropdownMenuSubTrigger>{SWS_SYMBOL}</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem onClick={onFixSwsSymbol}>Fix {SWS_SYMBOL}</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={onFixSwsSymbol}>Fix {SWS_SYMBOL}</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={onReplaceSwsWithAzw}>
+                                <DropdownMenuItem onSelect={onReplaceSwsWithAzw}>
                                     Replace {SWS_SYMBOL} with {AZW_SYMBOL}
                                 </DropdownMenuItem>
                             </DropdownMenuSubContent>
@@ -64,12 +65,12 @@ export function ManuscriptMenu({
                         <DropdownMenuSubTrigger>Footnotes</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem onClick={() => markAsFootnotes(true)}>
+                                <DropdownMenuItem onSelect={() => markAsFootnotes(true)}>
                                     Apply <SuperscriptIcon />
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => markAsFootnotes(false)}>Clear</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => markAsFootnotes(false)}>Clear</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={autoCorrectFootnotes}>Autocorrect</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={autoCorrectFootnotes}>Autocorrect</DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
@@ -77,10 +78,10 @@ export function ManuscriptMenu({
                         <DropdownMenuSubTrigger>Poetry</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem onClick={() => markAsPoetry(true)}>
+                                <DropdownMenuItem onSelect={() => markAsPoetry(true)}>
                                     Apply <SignatureIcon />
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => markAsPoetry(false)}>Clear</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => markAsPoetry(false)}>Clear</DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
@@ -88,19 +89,19 @@ export function ManuscriptMenu({
                         <DropdownMenuSubTrigger>Heading</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem onClick={() => markAsHeading(true)}>
+                                <DropdownMenuItem onSelect={() => markAsHeading(true)}>
                                     Apply <HighlighterIcon />
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => markAsHeading(false)}>Clear</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => markAsHeading(false)}>Clear</DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    <DropdownMenuItem onClick={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={deleteLines}>✘ Delete</DropdownMenuItem>
-                    <DropdownMenuItem onClick={clearOutPages}>
+                    <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>
+                    <ConfirmDropdownMenuItem onClick={clearOutPages}>
                         <EraserIcon /> Clear Out Pages
-                    </DropdownMenuItem>
+                    </ConfirmDropdownMenuItem>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>
