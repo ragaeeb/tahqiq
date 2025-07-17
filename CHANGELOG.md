@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/ragaeeb/tahqiq/compare/v1.7.1...v1.8.0) (2025-07-17)
+
+
+### Features
+
+* **clear:** Implement clear pages for manuscript ([0e59d35](https://github.com/ragaeeb/tahqiq/commit/0e59d351a006a946f3cd72a636d479fb8680db6b))
+
 ## [1.7.1](https://github.com/ragaeeb/tahqiq/compare/v1.7.0...v1.7.1) (2025-07-10)
 
 
