@@ -86,17 +86,17 @@ export default function BookToolbar({
             )}
             {onReformatSelectedPages && (
                 <Button aria-label="Reformat selected pages" onClick={onReformatSelectedPages}>
-                    <TextCursorInputIcon />
+                    <TextCursorInputIcon /> Reformat
                 </Button>
             )}
             {onMergeFootnotes && (
                 <Button aria-label="Merge Footnotes" className="bg-purple-500" onClick={onMergeFootnotes}>
-                    <MergeIcon />
+                    <MergeIcon /> Merge Footnotes
                 </Button>
             )}
             {onSelectEmptyPages && (
                 <Button aria-label="Select Blank pages" className="bg-red-400" onClick={onSelectEmptyPages}>
-                    <SquareDashedIcon />
+                    <SquareDashedIcon /> Select Blank
                 </Button>
             )}
             <DialogTriggerButton
@@ -107,7 +107,7 @@ export default function BookToolbar({
                 renderContent={() => <TranslateDialog />}
                 variant="outline"
             >
-                <BotIcon />
+                <BotIcon /> AI Translate
             </DialogTriggerButton>
         </div>
     );

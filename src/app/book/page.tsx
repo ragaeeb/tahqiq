@@ -106,15 +106,17 @@ export default function Book() {
         );
     }
 
+    const arePagesSelected = selectedPages.length > 0;
+
     return (
         <>
             <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                 <div className="flex flex-col w-full max-w">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                         <BookToolbar
-                            onDeleteSelectedPages={selectedPages.length > 0 ? onDeleteSelectedPages : undefined}
-                            onMergeFootnotes={selectedPages.length > 0 ? onMergeFootnotes : undefined}
-                            onReformatSelectedPages={selectedPages.length > 0 ? onReformatSelectedPages : undefined}
+                            onDeleteSelectedPages={arePagesSelected ? onDeleteSelectedPages : undefined}
+                            onMergeFootnotes={arePagesSelected ? onMergeFootnotes : undefined}
+                            onReformatSelectedPages={arePagesSelected ? onReformatSelectedPages : undefined}
                             onSelectEmptyPages={
                                 blankPages.length && !selectedPages.length ? onSelectEmptyPages : undefined
                             }

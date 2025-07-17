@@ -234,8 +234,12 @@ export const autoCorrectFootnotes = (state: ManuscriptStateCore, pages: number[]
     }
 };
 
-export const updateText = (state: ManuscriptStateCore, page: number, id: number, text: string) => {
-    updateTextLines(state, [id], { text }, false);
+export const clearOutPages = (state: ManuscriptStateCore, pages: number[]) => {
+    const sheets = getSheets(state, pages);
+
+    for (const sheet of sheets) {
+        sheet.observations = [];
+    }
 };
 
 const getTextLines = (state: ManuscriptStateCore, observationIds: number[]) => {

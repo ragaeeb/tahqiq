@@ -26,6 +26,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
+    const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
     const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
 
@@ -46,6 +47,11 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                 autoCorrectFootnotes={() => {
                     record('AutocorrectFootnotes');
                     autoCorrectFootnotes(Array.from(new Set(selectedRows.map((r) => r.page))));
+                    setSelectedRows([]);
+                }}
+                clearOutPages={() => {
+                    record('ClearOutPages', selectedRows.length.toString());
+                    clearOutPages(selectedRows.map((row) => row.page));
                     setSelectedRows([]);
                 }}
                 deleteLines={() => {

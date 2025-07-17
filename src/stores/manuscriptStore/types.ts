@@ -76,6 +76,8 @@ type ManuscriptActions = {
 
     autoCorrectFootnotes: (pages: number[]) => void;
 
+    clearOutPages: (pages: number[]) => void;
+
     deleteLines: (ids: number[]) => void;
 
     deleteSupport: (page: number, id: number) => void;

@@ -7,8 +7,9 @@ import * as actions from './actions';
 
 export const useManuscriptStore = create<ManuscriptState>()(
     mutative((set) => ({
-        applySupportToOriginal: (page, id) => set((state) => actions.applySupportToOriginal(state, page, id)),
+        applySupportToOriginal: (...args) => set((state) => actions.applySupportToOriginal(state, ...args)),
         autoCorrectFootnotes: (pages) => set((state) => actions.autoCorrectFootnotes(state, pages)),
+        clearOutPages: (...args) => set((state) => actions.clearOutPages(state, ...args)),
         deleteLines: (ids) => set((state) => actions.deleteLines(state, ids)),
         deleteSupport: (page, id) => set((state) => actions.deleteSupport(state, page, id)),
         filterByIds: (ids) => set(() => ({ idsFilter: new Set(ids) })),

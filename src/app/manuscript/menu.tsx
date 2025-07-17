@@ -1,4 +1,4 @@
-import { HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
+import { EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
 
 import { Button, type ButtonPropsType } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 
 type ManuscriptMenuProps = ButtonPropsType & {
     autoCorrectFootnotes: () => void;
+    clearOutPages: () => void;
     deleteLines: () => void;
     markAsFootnotes: (value: boolean) => void;
     markAsHeading: (value: boolean) => void;
@@ -28,6 +29,7 @@ type ManuscriptMenuProps = ButtonPropsType & {
 
 export function ManuscriptMenu({
     autoCorrectFootnotes,
+    clearOutPages,
     deleteLines,
     markAsFootnotes,
     markAsHeading,
@@ -96,6 +98,9 @@ export function ManuscriptMenu({
                     <DropdownMenuItem onClick={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={deleteLines}>✘ Delete</DropdownMenuItem>
+                    <DropdownMenuItem onClick={clearOutPages}>
+                        <EraserIcon /> Clear Out Pages
+                    </DropdownMenuItem>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>
