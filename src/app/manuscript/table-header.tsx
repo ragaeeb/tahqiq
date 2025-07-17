@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import { BookmarkIcon, BracketsIcon, SignatureIcon } from 'lucide-react';
+import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -9,6 +9,7 @@ import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { filterRowsByDivergence } from '@/lib/filtering';
 import { parsePageRanges } from '@/lib/textUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
@@ -30,6 +31,7 @@ export default function ManuscriptTableHeader({
     const hasHonorifcsApplied = rows.some((o) => o.text.includes(SWS_SYMBOL));
     const hasMissingHonorifics = rows.some((o) => o.includesHonorifics);
     const includesPoetry = rows.some((o) => o.isPoetic);
+    const hasDivergence = rows.some((o) => !o.isSimilar);
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
     const hasHeadings = rows.some((o) => o.isHeading);
     const hasCenteredContent = rows.some((o) => o.isCentered);
@@ -153,6 +155,21 @@ export default function ManuscriptTableHeader({
                             variant="ghost"
                         >
                             <SignatureIcon />
+                        </Button>
+                    )}
+                    {hasDivergence && (
+                        <Button
+                            aria-label="Divergence"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
+                            onClick={() => {
+                                const pages = filterRowsByDivergence(rows);
+                                record('FilterByDivergence', pages.length.toString());
+
+                                filterByPages(pages);
+                            }}
+                            variant="ghost"
+                        >
+                            <StrikethroughIcon />
                         </Button>
                     )}
                     {hasInvalidFootnotes && (
