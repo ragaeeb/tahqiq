@@ -1,11 +1,12 @@
 'use client';
 
-import { BoxIcon, SaveIcon } from 'lucide-react';
+import { BoxIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-import type { RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
+import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,10 @@ import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import ManuscriptTableBody from './table-body';
-import ManuscriptTableHeader from './table-header';
 
 import '@/lib/analytics';
 
+import ManuscriptTableHeader from './table-header';
 import ManuscriptToolbar from './toolbar';
 
 /**
@@ -27,6 +28,7 @@ import ManuscriptToolbar from './toolbar';
  */
 export default function Manuscript() {
     const initManuscript = useManuscriptStore((state) => state.init);
+    const initJuz = useManuscriptStore((state) => state.initFromJuz);
     const rows = useManuscriptStore(selectAllSheetLines);
     const isInitialized = useManuscriptStore((state) => state.isInitialized);
     const selection = useState<SheetLine[]>([]);
@@ -47,12 +49,16 @@ export default function Manuscript() {
 
     useEffect(() => {
         const sessionData = sessionStorage.getItem('rawInputs');
+        const juz = sessionStorage.getItem('juz');
 
-        if (sessionData) {
+        if (juz) {
+            record('RestoreJuzFromSession');
+            initJuz(JSON.parse(juz) as unknown as Juz);
+        } else if (sessionData) {
             record('RestoreManuscriptFromSession');
             initManuscript(JSON.parse(sessionData) as unknown as RawInputFiles);
         }
-    }, [initManuscript]);
+    }, [initManuscript, initJuz]);
 
     const handleSelectAll = useCallback(
         (selected: boolean) => {
@@ -76,6 +82,7 @@ export default function Manuscript() {
                                 initManuscript(map as unknown as RawInputFiles);
 
                                 sessionStorage.setItem('rawInputs', JSON.stringify(map));
+                                sessionStorage.removeItem('juz');
                             }}
                         />
                     </div>
@@ -95,19 +102,40 @@ export default function Manuscript() {
                             <Button
                                 className="bg-emerald-500"
                                 onClick={() => {
+                                    record('SaveManuscriptJuz');
+
+                                    const juz = JSON.stringify(
+                                        mapManuscriptToJuz(useManuscriptStore.getState()),
+                                        null,
+                                        2,
+                                    );
+
+                                    sessionStorage.setItem('juz', juz);
+                                    sessionStorage.removeItem('rawInputs');
+
+                                    toast.success('Saved state');
+                                }}
+                            >
+                                <SaveIcon />
+                            </Button>
+                            <Button
+                                onClick={() => {
                                     const name = prompt('Enter output file name');
 
                                     if (name) {
                                         record('DownloadManuscriptJuz', name);
 
-                                        downloadFile(
-                                            name.endsWith('.json') ? name : `${name}.json`,
-                                            JSON.stringify(mapManuscriptToJuz(useManuscriptStore.getState()), null, 2),
+                                        const juz = JSON.stringify(
+                                            mapManuscriptToJuz(useManuscriptStore.getState()),
+                                            null,
+                                            2,
                                         );
+
+                                        downloadFile(name.endsWith('.json') ? name : `${name}.json`, juz);
                                     }
                                 }}
                             >
-                                <SaveIcon />
+                                <DownloadIcon />
                             </Button>
                             <Link href="/book">
                                 <Button

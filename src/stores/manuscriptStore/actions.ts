@@ -12,6 +12,7 @@ import { getNextId } from '@/lib/common';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 
 import type {
+    Juz,
     ManuscriptStateCore,
     RawInputFiles,
     Sheet,
@@ -83,6 +84,13 @@ const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, p
     );
 
     return flipAndAlignObservations(mapSuryaPageResultToObservations(suryaPage), imageWidth, dpiX);
+};
+
+export const initStoreFromJuz = (juz: Juz) => {
+    return rawReturn({
+        isInitialized: true,
+        sheets: juz.sheets,
+    });
 };
 
 export const initStore = (fileNameToData: RawInputFiles) => {

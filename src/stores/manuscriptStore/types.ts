@@ -1,6 +1,25 @@
 import type { BoundingBox, Observation, TextBlock } from 'kokokor';
 
 /**
+ * Represents a Juz (section/part) format for Islamic texts.
+ * This is a specialized format used for Quranic or Islamic scholarly works
+ * that are traditionally divided into parts called "Juz" or "Para".
+ */
+export type Juz = {
+    /** Version of the contract format used for this Juz */
+    contractVersion: 'v2.0';
+    /**
+     * Collection of sheets (pages) that make up this Juz.
+     * Each sheet contains the main text and optional footnotes.
+     */
+    sheets: Sheet[];
+    /** When this Juz was created or last modified */
+    timestamp: Date;
+    /** Type identifier for this data structure */
+    type: 'juz';
+};
+
+/**
  * Combined state and actions for manuscript management
  */
 export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
@@ -93,6 +112,8 @@ type ManuscriptActions = {
      * @param data Object containing manuscript information
      */
     init: (fileNameToData: RawInputFiles) => void;
+
+    initFromJuz: (juz: Juz) => void;
 
     mergeWithAbove: (page: number, id: number, mergeAsl?: boolean) => void;
 

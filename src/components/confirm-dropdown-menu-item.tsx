@@ -1,9 +1,10 @@
 'use client';
 
 import { CheckIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+
+import { useConfirmation } from './hooks/useConfirmation';
 
 interface ConfirmDropdownMenuItemProps extends Omit<React.ComponentProps<typeof DropdownMenuItem>, 'onClick'> {
     children: React.ReactNode;
@@ -17,22 +18,7 @@ export function ConfirmDropdownMenuItem({
     onClick,
     ...props
 }: ConfirmDropdownMenuItemProps) {
-    const [isConfirming, setIsConfirming] = useState(false);
-
-    const handleClick = (e: Event) => {
-        if (!isConfirming) {
-            e.preventDefault();
-            setIsConfirming(true);
-        } else {
-            onClick();
-        }
-    };
-
-    useEffect(() => {
-        return () => {
-            setIsConfirming(false);
-        };
-    }, []);
+    const { handleClick, isConfirming } = useConfirmation(onClick);
 
     return (
         <DropdownMenuItem onSelect={handleClick} variant="destructive" {...props}>

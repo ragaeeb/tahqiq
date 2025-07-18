@@ -1,26 +1,40 @@
+import { formatTextBlocks, mapTextLinesToParagraphs } from 'kokokor';
 import { rawReturn } from 'mutative';
+
+import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
 
 import { getNextId } from '@/lib/common';
 import { FOOTNOTES_DELIMITER } from '@/lib/constants';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { preformatArabicText } from '@/lib/textUtils';
 
-import type { ManuscriptStateCore } from '../manuscriptStore/types';
-import type { BookStateCore, Juz, Kitab, Page, TableOfContents } from './types';
+import type { BookStateCore, Kitab, Page, TableOfContents } from './types';
 
 import { selectCurrentPages } from './selectors';
 
+const FOOTNOTE_DIVIDER = '____________';
+
 const extractPagesFromJuz = (file: string, juz: Juz) => {
     const volume = Number(file.split('.')[0]);
-    const pages = juz.sheets.map((s) => ({
-        ...s,
-        id: getNextId(),
-        lastUpdate: Date.now(),
-        volume,
-        volumePage: s.page,
-    }));
+    const pages = juz.sheets.map((s) => {
+        const paragraphs = mapTextLinesToParagraphs(s.observations);
+        const text = formatTextBlocks(paragraphs, FOOTNOTE_DIVIDER);
+        const [body, footnotes] = text.split(FOOTNOTE_DIVIDER);
 
-    const index = (juz.index || []).map((bookmark) => ({ ...bookmark, id: getNextId() }));
+        return {
+            page: s.page,
+            text: preformatArabicText(body, true),
+            ...(footnotes && { footnotes: preformatArabicText(footnotes, true) }),
+            id: getNextId(),
+            lastUpdate: Date.now(),
+            volume,
+            volumePage: s.page,
+        };
+    });
+
+    const index = juz.sheets.flatMap((s) => {
+        return s.observations.filter((o) => o.isHeading).map((o) => ({ id: getNextId(), page: s.page, title: o.text }));
+    });
 
     return { index, pages, volume };
 };
