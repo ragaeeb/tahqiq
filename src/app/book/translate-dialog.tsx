@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { generateTranslationText } from '@/lib/ai';
 import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
@@ -17,13 +18,8 @@ export function TranslateDialog() {
     const pages = useBookStore(selectCurrentPages);
     const [prompt, setPrompt] = useState(TRANSLATE_BOOK_PROMPT);
     const text = useMemo(() => {
-        const nusus = pages.map((p) => {
-            return `P${p.page}\n${p.text}`;
-        });
-
-        const footnotes = pages.filter((p) => p.footnotes).map((p) => `F${p.page}\n${p.footnotes!.trim()}`);
-
-        return nusus.concat(footnotes).join('\n\n');
+        const nusus = generateTranslationText(pages.filter((p) => p.text)).join('\n\n');
+        return nusus;
     }, [pages]);
 
     return (

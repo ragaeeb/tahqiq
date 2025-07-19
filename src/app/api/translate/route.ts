@@ -1,6 +1,28 @@
 import { createUserContent, GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 
+type TranslateRequestBody = {
+    apiKey: string;
+    model: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite-preview-06-17' | 'gemini-2.5-pro';
+    prompt: string;
+};
+
+const validateFields = (data: Record<string, any>, requiredFields: string[]) => {
+    const missing = requiredFields.filter((field) => !data[field]?.trim?.());
+
+    if (missing.length > 0) {
+        return NextResponse.json(
+            {
+                error: `Missing required fields: ${missing.join(', ')}`,
+                fields: missing,
+            },
+            { status: 400 },
+        );
+    }
+
+    return null;
+};
+
 /**
  * Handles POST requests to translate input text using Google Gemini AI.
  *
@@ -13,34 +35,21 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function POST(req: NextRequest) {
     try {
-        const { text } = await req.json();
+        const body: TranslateRequestBody = await req.json();
 
-        if (!text) {
-            return NextResponse.json({ error: 'Missing "text" in request body.' }, { status: 400 });
-        }
+        const validationError = validateFields(body, ['apiKey', 'model', 'prompt']);
 
-        if (!process.env.GOOGLE_GENAI_API_KEY) {
-            console.error('GOOGLE_GENAI_API_KEY not set:');
-            return NextResponse.json({ error: 'Missing Google Gemini API key.' }, { status: 500 });
-        }
-
-        if (!process.env.GOOGLE_GENAI_MODEL) {
-            console.error('GOOGLE_GENAI_MODEL not set');
-            return NextResponse.json({ error: 'Missing Google Gemini model configuration.' }, { status: 500 });
-        }
-
-        if (!process.env.TRANSLATION_PROMPT) {
-            console.error('TRANSLATION_PROMPT not set');
-            return NextResponse.json({ error: 'Missing translation prompt configuration.' }, { status: 500 });
+        if (validationError) {
+            return validationError;
         }
 
         const client = new GoogleGenAI({
-            apiKey: process.env.GOOGLE_GENAI_API_KEY,
+            apiKey: body.apiKey,
         });
 
         const result = await client.models.generateContent({
-            contents: createUserContent([`${process.env.TRANSLATION_PROMPT}\n\n${text}`]),
-            model: process.env.GOOGLE_GENAI_MODEL!,
+            contents: createUserContent([body.prompt]),
+            model: body.model,
         });
 
         return NextResponse.json({ text: result.text });
