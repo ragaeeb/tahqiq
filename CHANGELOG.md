@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/ragaeeb/tahqiq/compare/v1.9.0...v1.10.0) (2025-07-20)
+
+
+### Features
+
+* **move:** Support move down feature ([#38](https://github.com/ragaeeb/tahqiq/issues/38)) ([06a7d05](https://github.com/ragaeeb/tahqiq/commit/06a7d054c0e927df1e0e066287519148d953ad51)), closes [#37](https://github.com/ragaeeb/tahqiq/issues/37)
+
 # [1.9.0](https://github.com/ragaeeb/tahqiq/compare/v1.8.0...v1.9.0) (2025-07-20)
 
 
