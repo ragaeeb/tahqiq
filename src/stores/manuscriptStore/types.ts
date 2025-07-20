@@ -117,6 +117,8 @@ type ManuscriptActions = {
 
     mergeWithAbove: (page: number, id: number, mergeAsl?: boolean) => void;
 
+    mergeWithBelow: (page: number, id: number, mergeAsl?: boolean) => void;
+
     replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;

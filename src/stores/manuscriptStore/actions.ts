@@ -198,6 +198,40 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
     }
 };
 
+export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: number, mergeAsl = false) => {
+    const sheet = state.sheets.find((s) => s.page === page)!;
+    const index = sheet.observations.findIndex((o) => o.id === id);
+
+    // Check if there's a row below to merge with
+    if (index + 1 >= sheet.alt.length) {
+        return; // No row below to merge with
+    }
+
+    const current = sheet.alt[index];
+    const below = sheet.alt[index + 1];
+
+    const mergedAlt = {
+        ...current,
+        lastUpdate: Date.now(),
+        text: `${below.text} ${current.text}`.trim(),
+    };
+
+    sheet.alt.splice(index, 2, mergedAlt);
+
+    if (mergeAsl) {
+        const currentObservation = sheet.observations[index];
+        const belowObservation = sheet.observations[index + 1];
+
+        const mergedObservation = {
+            ...currentObservation,
+            lastUpdate: Date.now(),
+            text: `${belowObservation.text} ${currentObservation.text}`.trim(),
+        };
+
+        sheet.observations.splice(index, 2, mergedObservation);
+    }
+};
+
 export const applySupportToOriginal = (state: ManuscriptStateCore, page: number, id: number) => {
     const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
