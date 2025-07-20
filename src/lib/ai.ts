@@ -1,11 +1,13 @@
+import { isEndingWithPunctuation } from 'paragrafs';
+
 import type { Page } from '@/stores/bookStore/types';
 
 /**
  * Regular expression pattern for Arabic punctuation marks.
  * Includes: period (.), exclamation mark (!), question mark (?),
- * Arabic question mark (؟), Arabic comma (،), and Arabic semicolon (؛).
+ * Arabic question mark (؟), and Arabic semicolon (؛).
  */
-const ARABIC_PUNCTUATION = /[.!?؟،؛…:]/;
+const ARABIC_STOP_PUNCTUATION = /[.!?؟؛…]/;
 
 const TOKENS_PER_CHARACTER = 3.5; // Arabic has more tokens since it's more dense
 
@@ -18,19 +20,11 @@ type TranslationOptions = {
 };
 
 /**
- * Checks if a text string ends with any Arabic or common punctuation mark.
- */
-const endsWithPunctuation = (text: string): boolean => {
-    const trimmedText = text.trim();
-    return trimmedText.length > 0 && ARABIC_PUNCTUATION.test(trimmedText.slice(-1));
-};
-
-/**
  * Finds the first punctuation mark in a text and returns the index
  */
 const findFirstPunctuation = (text: string): number => {
     for (let i = 0; i < text.length; i++) {
-        if (ARABIC_PUNCTUATION.test(text[i])) {
+        if (ARABIC_STOP_PUNCTUATION.test(text[i])) {
             return i;
         }
     }
@@ -144,7 +138,7 @@ const processTextSegments = (
         const currentText = remainingText || textExtractor(currentPage);
         remainingText = '';
 
-        if (endsWithPunctuation(currentText)) {
+        if (isEndingWithPunctuation(currentText)) {
             segments.push(`${prefixGenerator(currentPage)}\n${currentText}`);
             currentPageIndex++;
         } else {

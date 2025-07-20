@@ -1,11 +1,7 @@
 import { createUserContent, GoogleGenAI } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 
-type TranslateRequestBody = {
-    apiKey: string;
-    model: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite-preview-06-17' | 'gemini-2.5-pro';
-    prompt: string;
-};
+import type { TranslateRequestBody } from '@/types/api';
 
 const validateFields = (data: Record<string, any>, requiredFields: string[]) => {
     const missing = requiredFields.filter((field) => !data[field]?.trim?.());

@@ -48,15 +48,11 @@ export default function Manuscript() {
     );
 
     useEffect(() => {
-        const sessionData = sessionStorage.getItem('rawInputs');
         const juz = sessionStorage.getItem('juz');
 
         if (juz) {
             record('RestoreJuzFromSession');
             initJuz(JSON.parse(juz) as unknown as Juz);
-        } else if (sessionData) {
-            record('RestoreManuscriptFromSession');
-            initManuscript(JSON.parse(sessionData) as unknown as RawInputFiles);
         }
     }, [initManuscript, initJuz]);
 
@@ -80,9 +76,6 @@ export default function Manuscript() {
                             onFiles={(map) => {
                                 record('LoadManuscriptsFromInputFiles');
                                 initManuscript(map as unknown as RawInputFiles);
-
-                                sessionStorage.setItem('rawInputs', JSON.stringify(map));
-                                sessionStorage.removeItem('juz');
                             }}
                         />
                     </div>

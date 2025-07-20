@@ -14,8 +14,11 @@ import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
+import { generateTranslationText } from '@/lib/ai';
 import { mapBookStateToKitab, mapKitabToLegacyFormat } from '@/lib/bookFormats';
+import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
+import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 import TocMenu from './toc-menu';
@@ -104,7 +107,13 @@ export default function BookToolbar({
                 onClick={() => {
                     record('TranslateBook');
                 }}
-                renderContent={() => <TranslateDialog />}
+                renderContent={() => {
+                    const defaultText = generateTranslationText(
+                        selectCurrentPages(useBookStore.getState()).filter((p) => p.text),
+                    ).join('\n\n');
+
+                    return <TranslateDialog defaultPrompt={TRANSLATE_BOOK_PROMPT} defaultText={defaultText} />;
+                }}
                 variant="outline"
             >
                 <BotIcon /> AI Translate

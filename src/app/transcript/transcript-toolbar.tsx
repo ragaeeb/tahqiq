@@ -1,17 +1,25 @@
 'use client';
 
+import { BotIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { formatSecondsToTimestamp } from 'paragrafs';
+import {
+    createHints,
+    formatSecondsToTimestamp,
+    formatSegmentsToTimestampedTranscript,
+    markAndCombineSegments,
+} from 'paragrafs';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
+import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
+import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
+import { TranslateDialog } from '../book/translate-dialog';
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
 import { GroundingDialog } from './grounding-dialog';
-import { PreviewDialog } from './preview-dialog';
 import { SearchDialog } from './search-dialog';
 
 /**
@@ -105,9 +113,30 @@ export default function TranscriptToolbar() {
                 onClick={() => {
                     record('OpenTranscriptPreview');
                 }}
-                renderContent={() => <PreviewDialog />}
+                renderContent={() => {
+                    const state = useTranscriptStore.getState();
+                    const transcript = selectCurrentTranscript(state);
+                    const formatOptions = state.formatOptions;
+                    const markedSegments = markAndCombineSegments(transcript.segments, {
+                        fillers: formatOptions.fillers.flatMap((token) => [token, token + '.', token + '؟']),
+                        gapThreshold: formatOptions.silenceGapThreshold,
+                        hints: createHints(...formatOptions.hints),
+                        maxSecondsPerSegment: formatOptions.maxSecondsPerSegment,
+                        minWordsPerSegment: formatOptions.minWordsPerSegment,
+                    });
+                    const formatted = formatSegmentsToTimestampedTranscript(
+                        markedSegments,
+                        formatOptions.maxSecondsPerLine,
+                    );
+
+                    const defaultText = formatted.replace(/\n/g, '\n\n');
+
+                    return (
+                        <TranslateDialog defaultPrompt={TRANSLATE_DRAFT_TRANSCRIPT_PROMPT} defaultText={defaultText} />
+                    );
+                }}
             >
-                Preview
+                <BotIcon /> AI Translate
             </DialogTriggerButton>
             <DialogTriggerButton
                 aria-label="Search"

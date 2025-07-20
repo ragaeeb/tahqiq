@@ -101,8 +101,11 @@ describe('ai', () => {
             ];
 
             const result = generateTranslationText(pages, { maxTokens: 1000 });
-            expect(result).toEqual([
-                'P1\nنص بالنقطة.\n\nP2\nنص بعلامة التعجب!\n\nP3\nنص بعلامة الاستفهام؟\n\nP4\nنص بالفاصلة،\n\nP5\nنص بالفاصلة المنقوطة؛',
+            expect(result[0].split('\n\n')).toEqual([
+                'P1\nنص بالنقطة.',
+                'P2\nنص بعلامة التعجب!',
+                'P3\nنص بعلامة الاستفهام؟',
+                'P4_5\nنص بالفاصلة، نص بالفاصلة المنقوطة؛',
             ]);
         });
 
@@ -113,7 +116,7 @@ describe('ai', () => {
             ];
 
             const result = generateTranslationText(pages, { maxTokens: 1000 });
-            expect(result).toEqual(['P1\nنص مع مسافات.   \n\nP2\n   نص آخر مع مسافات   ']);
+            expect(result[0].split('\n\n')).toEqual(['P1_2\nنص مع مسافات.       نص آخر مع مسافات   ']);
         });
 
         it('should handle empty text strings', () => {
