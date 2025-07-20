@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -8,6 +9,7 @@ import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { filterRowsByDivergence } from '@/lib/filtering';
 import { parsePageRanges } from '@/lib/textUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
@@ -29,6 +31,7 @@ export default function ManuscriptTableHeader({
     const hasHonorifcsApplied = rows.some((o) => o.text.includes(SWS_SYMBOL));
     const hasMissingHonorifics = rows.some((o) => o.includesHonorifics);
     const includesPoetry = rows.some((o) => o.isPoetic);
+    const hasDivergence = rows.some((o) => !o.isSimilar);
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
     const hasHeadings = rows.some((o) => o.isHeading);
     const hasCenteredContent = rows.some((o) => o.isCentered);
@@ -92,7 +95,7 @@ export default function ManuscriptTableHeader({
                     {hasMissingHonorifics && (
                         <Button
                             aria-label="Fix Typos"
-                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
                                 record('FilterByHonorifics');
                                 filterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
@@ -105,7 +108,7 @@ export default function ManuscriptTableHeader({
                     {hasCenteredContent && (
                         <Button
                             aria-label="Centered Content"
-                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
                                 record('FilterByCentered');
                                 filterByIds(rows.filter((r) => r.isCentered).map((r) => r.id));
@@ -118,14 +121,14 @@ export default function ManuscriptTableHeader({
                     {hasHeadings && (
                         <Button
                             aria-label="Headings"
-                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
                                 record('FilterByHeadings');
                                 filterByIds(rows.filter((r) => r.isHeading).map((r) => r.id));
                             }}
                             variant="ghost"
                         >
-                            🏷️
+                            <BookmarkIcon />
                         </Button>
                     )}
                     {hasHonorifcsApplied && (
@@ -144,24 +147,42 @@ export default function ManuscriptTableHeader({
                     {includesPoetry && (
                         <Button
                             aria-label="Poetic"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
                             onClick={() => {
                                 record('FilterByPoetic');
                                 filterByIds(rows.filter((r) => r.isPoetic).map((r) => r.id));
                             }}
+                            variant="ghost"
                         >
-                            Poetic
+                            <SignatureIcon />
+                        </Button>
+                    )}
+                    {hasDivergence && (
+                        <Button
+                            aria-label="Divergence"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
+                            onClick={() => {
+                                const pages = filterRowsByDivergence(rows);
+                                record('FilterByDivergence', pages.length.toString());
+
+                                filterByPages(pages);
+                            }}
+                            variant="ghost"
+                        >
+                            <StrikethroughIcon />
                         </Button>
                     )}
                     {hasInvalidFootnotes && (
                         <Button
                             aria-label="Invalid Footnotes"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
                             onClick={() => {
                                 record('FilterByInvalidFootnotes');
                                 filterByPages(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
                             }}
-                            variant="outline"
+                            variant="ghost"
                         >
-                            ()
+                            <BracketsIcon />
                         </Button>
                     )}
                     <div className="text-right w-full">

@@ -1,5 +1,6 @@
+import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
+
 import type { PostProcessingApp } from '../commonTypes';
-import type { ManuscriptStateCore } from '../manuscriptStore/types';
 
 /**
  * Represents a bookmark entry in the book's table of contents.
@@ -48,34 +49,6 @@ export type BookStateCore = {
      * Each volume contains an array of pages with content and metadata.
      */
     readonly volumeToPages: Record<number, Page[]>;
-};
-
-/**
- * Represents a Juz (section/part) format for Islamic texts.
- * This is a specialized format used for Quranic or Islamic scholarly works
- * that are traditionally divided into parts called "Juz" or "Para".
- */
-export type Juz = {
-    /** Version of the contract format used for this Juz */
-    contractVersion: 'v1.0';
-    /** Index/table of contents for this Juz */
-    index: BookIndex[];
-    /**
-     * Collection of sheets (pages) that make up this Juz.
-     * Each sheet contains the main text and optional footnotes.
-     */
-    sheets: {
-        /** Optional footnotes or commentary for this sheet */
-        footnotes?: string;
-        /** Page number within the overall work */
-        page: number;
-        /** Main text content of this sheet */
-        text: string;
-    }[];
-    /** When this Juz was created or last modified */
-    timestamp: Date;
-    /** Type identifier for this data structure */
-    type: 'juz';
 };
 
 /**

@@ -1,17 +1,20 @@
 'use client';
 
+import { BotIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
+import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
+import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
+import { TranslateDialog } from '../book/translate-dialog';
 import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
 import { GroundingDialog } from './grounding-dialog';
-import { PreviewDialog } from './preview-dialog';
 import { SearchDialog } from './search-dialog';
 
 /**
@@ -105,9 +108,16 @@ export default function TranscriptToolbar() {
                 onClick={() => {
                     record('OpenTranscriptPreview');
                 }}
-                renderContent={() => <PreviewDialog />}
+                renderContent={() => {
+                    const state = useTranscriptStore.getState();
+                    const defaultText = generateFormattedTranscriptFromState(state);
+
+                    return (
+                        <TranslateDialog defaultPrompt={TRANSLATE_DRAFT_TRANSCRIPT_PROMPT} defaultText={defaultText} />
+                    );
+                }}
             >
-                Preview
+                <BotIcon /> AI Translate
             </DialogTriggerButton>
             <DialogTriggerButton
                 aria-label="Search"

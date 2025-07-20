@@ -5,7 +5,8 @@ import { FormattingToolbar } from 'blumbaben';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { Juz, Kitab, Page } from '@/stores/bookStore/types';
+import type { Kitab, Page } from '@/stores/bookStore/types';
+import type { Juz } from '@/stores/manuscriptStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
@@ -13,8 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
 import { BASMALAH } from '@/lib/constants';
 import { fixUnbalanced, preformatArabicText } from '@/lib/textUtils';
-import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import '@/lib/analytics';
+import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
