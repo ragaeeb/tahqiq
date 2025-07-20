@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/ragaeeb/tahqiq/compare/v1.8.0...v1.9.0) (2025-07-20)
+
+
+### Features
+
+* **translate:** v1.9 release ([#36](https://github.com/ragaeeb/tahqiq/issues/36)) ([509dd80](https://github.com/ragaeeb/tahqiq/commit/509dd802b69e40083fc6713d598a74d8574f748b)), closes [#29](https://github.com/ragaeeb/tahqiq/issues/29) [#30](https://github.com/ragaeeb/tahqiq/issues/30) [#31](https://github.com/ragaeeb/tahqiq/issues/31) [#33](https://github.com/ragaeeb/tahqiq/issues/33) [#34](https://github.com/ragaeeb/tahqiq/issues/34) [#35](https://github.com/ragaeeb/tahqiq/issues/35)
+
 # [1.8.0](https://github.com/ragaeeb/tahqiq/compare/v1.7.1...v1.8.0) (2025-07-17)
 
 
