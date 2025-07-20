@@ -43,6 +43,7 @@ const getAltTextAreaClassName = (data: SheetLine) => {
 function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
+    const mergeWithBelow = useManuscriptStore((state) => state.mergeWithBelow);
     const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
@@ -132,6 +133,17 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                         variant="outline"
                     >
                         ↑
+                    </Button>
+                    <Button
+                        aria-label="Merge With Below"
+                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                        onClick={() => {
+                            record('MergeAltWithBelow');
+                            mergeWithBelow(data.page, data.id);
+                        }}
+                        variant="outline"
+                    >
+                        ↓
                     </Button>
                     <Textarea
                         className={getAltTextAreaClassName(data)}

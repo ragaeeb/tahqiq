@@ -20,6 +20,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         initFromJuz: (...args) => set(() => actions.initStoreFromJuz(...args)),
         isInitialized: false,
         mergeWithAbove: (...args) => set((state) => actions.mergeWithAbove(state, ...args)),
+        mergeWithBelow: (...args) => set((state) => actions.mergeWithBelow(state, ...args)),
         replaceHonorifics: (...args) => set((state) => actions.replaceHonorifics(state, ...args)),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
