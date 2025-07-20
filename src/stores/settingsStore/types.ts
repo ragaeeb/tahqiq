@@ -5,7 +5,7 @@ export type SettingsStateCore = {
 };
 
 /**
- * Action functions available for transcript manipulation
+ * Action functions available for settings manipulation
  */
 type SettingsActions = {
     updateGeminiApiKeys: (keys: string[]) => void;

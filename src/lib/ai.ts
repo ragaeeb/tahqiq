@@ -23,12 +23,7 @@ type TranslationOptions = {
  * Finds the first punctuation mark in a text and returns the index
  */
 const findFirstPunctuation = (text: string): number => {
-    for (let i = 0; i < text.length; i++) {
-        if (ARABIC_STOP_PUNCTUATION.test(text[i])) {
-            return i;
-        }
-    }
-    return -1; // No punctuation found
+    return text.search(ARABIC_STOP_PUNCTUATION);
 };
 
 /**

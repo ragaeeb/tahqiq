@@ -1,6 +1,6 @@
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
-export const filterRowsByDivergence = (rows: SheetLine[]) => {
+export const filterRowsByDivergence = (rows: SheetLine[], threshold = 3) => {
     const pageToTotalDivergence: Record<string, number> = {};
 
     rows.forEach((r) => {
@@ -13,7 +13,7 @@ export const filterRowsByDivergence = (rows: SheetLine[]) => {
     const pages = Object.keys(pageToTotalDivergence)
         .filter((page) => {
             const current = pageToTotalDivergence[page];
-            return current > 3;
+            return current > threshold;
         })
         .map(Number);
 

@@ -2,18 +2,13 @@
 
 import { BotIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import {
-    createHints,
-    formatSecondsToTimestamp,
-    formatSegmentsToTimestampedTranscript,
-    markAndCombineSegments,
-} from 'paragrafs';
+import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
-import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
+import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import { TranslateDialog } from '../book/translate-dialog';
@@ -115,21 +110,7 @@ export default function TranscriptToolbar() {
                 }}
                 renderContent={() => {
                     const state = useTranscriptStore.getState();
-                    const transcript = selectCurrentTranscript(state);
-                    const formatOptions = state.formatOptions;
-                    const markedSegments = markAndCombineSegments(transcript.segments, {
-                        fillers: formatOptions.fillers.flatMap((token) => [token, token + '.', token + '؟']),
-                        gapThreshold: formatOptions.silenceGapThreshold,
-                        hints: createHints(...formatOptions.hints),
-                        maxSecondsPerSegment: formatOptions.maxSecondsPerSegment,
-                        minWordsPerSegment: formatOptions.minWordsPerSegment,
-                    });
-                    const formatted = formatSegmentsToTimestampedTranscript(
-                        markedSegments,
-                        formatOptions.maxSecondsPerLine,
-                    );
-
-                    const defaultText = formatted.replace(/\n/g, '\n\n');
+                    const defaultText = generateFormattedTranscriptFromState(state);
 
                     return (
                         <TranslateDialog defaultPrompt={TRANSLATE_DRAFT_TRANSCRIPT_PROMPT} defaultText={defaultText} />

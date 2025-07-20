@@ -21,7 +21,13 @@ export function ConfirmDropdownMenuItem({
     const { handleClick, isConfirming } = useConfirmation(onClick);
 
     return (
-        <DropdownMenuItem onSelect={handleClick} variant="destructive" {...props}>
+        <DropdownMenuItem
+            aria-label={isConfirming ? `Confirm: ${confirmText}` : undefined}
+            aria-pressed={isConfirming}
+            onSelect={handleClick}
+            variant="destructive"
+            {...props}
+        >
             {isConfirming ? (
                 <>
                     <CheckIcon />

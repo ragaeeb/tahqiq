@@ -4,7 +4,7 @@ import { mapManuscriptToJuz } from './manuscript';
 
 describe('manuscript', () => {
     describe('mapManuscriptToJuz', () => {
-        it('should convert HH:MM:SS format correctly', () => {
+        it('should convert manuscript state to Juz format correctly', () => {
             const sheets = [
                 {
                     alt: [],
@@ -42,6 +42,26 @@ describe('manuscript', () => {
                 timestamp: expect.any(Date),
                 type: 'juz',
             });
+        });
+
+        it('should handle empty sheets array', () => {
+            const actual = mapManuscriptToJuz({
+                idsFilter: new Set(),
+                isInitialized: true,
+                sheets: [],
+            });
+
+            expect(actual.sheets).toEqual([]);
+        });
+
+        it('should handle uninitialized state', () => {
+            const actual = mapManuscriptToJuz({
+                idsFilter: new Set(),
+                isInitialized: false,
+                sheets: [],
+            });
+
+            expect(actual.sheets).toEqual([]);
         });
     });
 });

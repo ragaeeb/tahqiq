@@ -6,9 +6,10 @@ import '@/lib/analytics';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 
 /**
- * Displays and manages transcript segments with selection and file import capabilities.
+ * Settings page for managing application configuration.
  *
- * Renders a transcript viewer that allows users to import transcript files, select transcript parts, and interact with individual segments. If no transcript is loaded, prompts the user to * upload a JSON transcript file.
+ * Allows users to configure and manage their Gemini API keys through a secure input interface.
+ * API keys are stored in browser localStorage with base64 encoding.
  */
 export default function Settings() {
     const geminiApiKeys = useSettingsStore((state) => state.geminiApiKeys);

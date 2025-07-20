@@ -108,14 +108,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
                     />
                 </div>
                 <DialogFooter className="mt-4 flex-shrink-0">
-                    <Button
-                        className="bg-blue-500"
-                        disabled={isLoading}
-                        onClick={() => {
-                            record('StartTranslate');
-                        }}
-                        type="submit"
-                    >
+                    <Button className="bg-blue-500" disabled={isLoading} type="submit">
                         {isLoading ? 'Translating...' : 'Translate'}
                     </Button>
                 </DialogFooter>
