@@ -4,7 +4,6 @@ import { rawReturn } from 'mutative';
 import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
 
 import { getNextId } from '@/lib/common';
-import { FOOTNOTES_DELIMITER } from '@/lib/constants';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { preformatArabicText } from '@/lib/textUtils';
 
@@ -190,7 +189,7 @@ export const mergeFootnotesWithMatn = (state: BookStateCore, ids: number[]) => {
         ids,
         (p) => {
             if (p.footnotes) {
-                p.text = p.text + FOOTNOTES_DELIMITER + p.footnotes;
+                p.text = p.text + '\n' + p.footnotes;
                 p.footnotes = undefined;
             }
         },

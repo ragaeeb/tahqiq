@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -121,7 +122,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                         }}
                         variant="ghost"
                     >
-                        🗑️
+                        <Trash2Icon />
                     </Button>
                     <Button
                         aria-label="Merge With Above"

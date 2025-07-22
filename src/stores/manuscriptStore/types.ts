@@ -80,6 +80,8 @@ export type TextLine = TextBlock & {
     lastUpdate: number;
 };
 
+export type TextLinePatch = Omit<Partial<TextLine>, 'id' | 'lastUpdate'>;
+
 type AltText = {
     readonly id: number;
     text: string;
@@ -123,11 +125,9 @@ type ManuscriptActions = {
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 
-    updateTextLines: (
-        ids: number[],
-        diff: Omit<Partial<TextLine>, 'id' | 'lastUpdate'>,
-        updateLastUpdated?: boolean,
-    ) => void;
+    updatePages: (pages: number[], diff: TextLinePatch, updateLastUpdated?: boolean) => void;
+
+    updateTextLines: (ids: number[], diff: TextLinePatch, updateLastUpdated?: boolean) => void;
 };
 
 type OcrData = {

@@ -10,6 +10,7 @@ import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/compon
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
+import { removeMarkdownFormatting } from '@/lib/textUtils';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 
 type TranslateDialogProps = {
@@ -61,7 +62,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
             }
 
             record('TranslationSuccess');
-            promptTextArea.value = responseData.text;
+            promptTextArea.value = removeMarkdownFormatting(responseData.text);
         } catch (error) {
             record('TranslationFailure');
 

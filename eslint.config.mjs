@@ -22,6 +22,7 @@ const eslintConfig = [
     {
         rules: {
             '@typescript-eslint/no-explicit-any': 'off',
+            'sonarjs/slow-regex': 'off',
         },
     },
 ];

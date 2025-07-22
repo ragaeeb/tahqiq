@@ -33,6 +33,8 @@ export type BookStateCore = {
 
     inputFileName?: string;
 
+    readonly isHighlighterEnabled: boolean;
+
     postProcessingApps: PostProcessingApp[];
 
     /** Currently selected manuscript volume number for editing/viewing */
@@ -161,6 +163,11 @@ type BookActions = {
         startingPageValue: number,
         key: keyof Pick<Page, 'page' | 'volumePage'>,
     ) => void;
+
+    /**
+     * Toggles whether the highlighting textareas are enabled.
+     */
+    toggleHighlighter: () => void;
 
     /**
      * Updates multiple pages with the same changes.

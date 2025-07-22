@@ -41,6 +41,7 @@ const getBorderForRow = (page: Page) => {
 const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
     const updatePages = useBookStore((state) => state.updatePages);
     const shiftValues = useBookStore((state) => state.shiftValues);
+    const isHighlighterEnabled = useBookStore((state) => state.isHighlighterEnabled);
 
     const bodyCharacterHighlights = useMemo(() => {
         const result = getCharacterErrorHighlights(page.text);
@@ -52,8 +53,8 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
         return result?.length && result;
     }, [page.footnotes]);
 
-    const BodyTextArea = bodyCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
-    const FooterTextArea = footnoteCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
+    const BodyTextArea = isHighlighterEnabled && bodyCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
+    const FooterTextArea = isHighlighterEnabled && footnoteCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
 
     return (
         <tr className={getBorderForRow(page)}>

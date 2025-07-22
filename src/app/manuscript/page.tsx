@@ -12,14 +12,13 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
+import { loadCompressed, saveCompressed } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
-
-import ManuscriptTableBody from './table-body';
-
 import '@/lib/analytics';
 
+import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
 import ManuscriptToolbar from './toolbar';
 
@@ -48,12 +47,13 @@ export default function Manuscript() {
     );
 
     useEffect(() => {
-        const juz = sessionStorage.getItem('juz');
-
-        if (juz) {
-            record('RestoreJuzFromSession');
-            initJuz(JSON.parse(juz) as unknown as Juz);
-        }
+        loadCompressed('juz').then((juz) => {
+            if (juz) {
+                record('RestoreJuzFromSession');
+                console.log('juz', juz);
+                initJuz(juz as Juz);
+            }
+        });
     }, [initManuscript, initJuz]);
 
     const handleSelectAll = useCallback(
@@ -74,8 +74,15 @@ export default function Manuscript() {
                             description="Drag and drop the manuscript"
                             maxFiles={4}
                             onFiles={(map) => {
-                                record('LoadManuscriptsFromInputFiles');
-                                initManuscript(map as unknown as RawInputFiles);
+                                const fileNames = Object.keys(map);
+
+                                if (fileNames.length === 1 && fileNames[0].endsWith('.json')) {
+                                    record('LoadManuscriptsFromJuz');
+                                    initJuz(map[fileNames[0]] as unknown as Juz);
+                                } else {
+                                    record('LoadManuscriptsFromInputFiles');
+                                    initManuscript(map as unknown as RawInputFiles);
+                                }
                             }}
                         />
                     </div>
@@ -97,16 +104,15 @@ export default function Manuscript() {
                                 onClick={() => {
                                     record('SaveManuscriptJuz');
 
-                                    const juz = JSON.stringify(
-                                        mapManuscriptToJuz(useManuscriptStore.getState()),
-                                        null,
-                                        2,
-                                    );
+                                    const juz = mapManuscriptToJuz(useManuscriptStore.getState());
 
-                                    sessionStorage.setItem('juz', juz);
-                                    sessionStorage.removeItem('rawInputs');
-
-                                    toast.success('Saved state');
+                                    try {
+                                        saveCompressed('juz', juz);
+                                        toast.success('Saved state');
+                                    } catch (err) {
+                                        console.error('Could not save juz', err);
+                                        downloadFile(`${Date.now()}.json`, JSON.stringify(juz));
+                                    }
                                 }}
                             >
                                 <SaveIcon />

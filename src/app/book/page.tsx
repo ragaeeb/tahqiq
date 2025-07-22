@@ -70,16 +70,19 @@ export default function Book() {
     const onReformatSelectedPages = useCallback(() => {
         record('ReformatPages', selectedPages.length.toString());
         reformatPages(selectedPages.map((p) => p.id));
+        setSelectedPages([]);
     }, [reformatPages, selectedPages]);
 
     const onDeleteSelectedPages = useCallback(() => {
         record('DeletePagesFromBook', selectedPages.length.toString());
         deletePages(selectedPages.map((p) => p.id));
+        setSelectedPages([]);
     }, [deletePages, selectedPages]);
 
     const onMergeFootnotes = useCallback(() => {
         record('MergeFootnotes', selectedPages.length.toString());
         mergeFootnotesWithMatn(selectedPages.map((p) => p.id));
+        setSelectedPages([]);
     }, [mergeFootnotesWithMatn, selectedPages]);
 
     const onSelectEmptyPages = useCallback(() => {

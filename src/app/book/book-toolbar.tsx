@@ -3,6 +3,7 @@
 import {
     BotIcon,
     DownloadIcon,
+    HighlighterIcon,
     MergeIcon,
     SaveIcon,
     SquareDashedIcon,
@@ -41,6 +42,9 @@ export default function BookToolbar({
     onReformatSelectedPages,
     onSelectEmptyPages,
 }: BookToolbarProps) {
+    const toggleHighlighter = useBookStore((state) => state.toggleHighlighter);
+    const isHighlighterEnabled = useBookStore((state) => state.isHighlighterEnabled);
+
     return (
         <div className="flex space-x-2">
             <Button
@@ -102,6 +106,13 @@ export default function BookToolbar({
                     <SquareDashedIcon /> Select Blank
                 </Button>
             )}
+            <Button
+                aria-label="Highlighter"
+                className={isHighlighterEnabled ? 'bg-purple-400' : undefined}
+                onClick={toggleHighlighter}
+            >
+                <HighlighterIcon />
+            </Button>
             <DialogTriggerButton
                 aria-label="Translate Book"
                 onClick={() => {

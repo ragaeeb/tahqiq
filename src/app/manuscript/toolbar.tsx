@@ -23,6 +23,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const fixTypos = useManuscriptStore((state) => state.fixTypos);
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
+    const updatePages = useManuscriptStore((state) => state.updatePages);
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
@@ -59,12 +60,26 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     deleteLines(selectedRows.map((row) => row.id));
                     setSelectedRows([]);
                 }}
-                markAsFootnotes={(isFootnote) => {
-                    record('MarkAsFootnotes', isFootnote.toString());
-                    updateTextLines(
-                        selectedRows.map((r) => r.id),
-                        { isFootnote },
+                disabled={selectedRows.length === 0}
+                markAsFootnotes={(isFootnote, applyToEntirePage) => {
+                    record(
+                        'MarkAsFootnotes',
+                        isFootnote.toString(),
+                        applyToEntirePage ? { applyToEntirePage } : undefined,
                     );
+
+                    if (applyToEntirePage) {
+                        updatePages(
+                            selectedRows.map((r) => r.page),
+                            { isFootnote },
+                        );
+                    } else {
+                        updateTextLines(
+                            selectedRows.map((r) => r.id),
+                            { isFootnote },
+                        );
+                    }
+
                     setSelectedRows([]);
                 }}
                 markAsHeading={(isHeading) => {
@@ -76,18 +91,27 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     );
                     setSelectedRows([]);
                 }}
-                markAsPoetry={(isPoetic) => {
-                    record('MarkAsPoetry', isPoetic.toString());
+                markAsPoetry={(isPoetic, applyToEntirePage) => {
+                    record('MarkAsPoetry', isPoetic.toString(), applyToEntirePage ? { applyToEntirePage } : undefined);
 
-                    updateTextLines(
-                        selectedRows.map((r) => r.id),
-                        { isPoetic },
-                    );
+                    if (applyToEntirePage) {
+                        updatePages(
+                            selectedRows.map((r) => r.page),
+                            { isPoetic },
+                        );
+                    } else {
+                        updateTextLines(
+                            selectedRows.map((r) => r.id),
+                            { isPoetic },
+                        );
+                    }
+
                     setSelectedRows([]);
                 }}
                 mergeWithAbove={() => {
                     record('MergeAslWithAbove');
                     mergeWithAbove(selectedRows[0].page, selectedRows[0].id, true);
+                    setSelectedRows([]);
                 }}
                 onFixSwsSymbol={() => {
                     record('FixSwsSymbol');
