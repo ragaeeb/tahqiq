@@ -3,6 +3,7 @@
 import { BoxIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import Link from 'next/link';
+import pako from 'pako';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -48,10 +49,11 @@ export default function Manuscript() {
     );
 
     useEffect(() => {
-        const juz = sessionStorage.getItem('juz');
+        const compressed = sessionStorage.getItem('juz');
 
-        if (juz) {
+        if (compressed) {
             record('RestoreJuzFromSession');
+            const juz = pako.ungzip(compressed, { to: 'string' });
             initJuz(JSON.parse(juz) as unknown as Juz);
         }
     }, [initManuscript, initJuz]);
@@ -74,8 +76,15 @@ export default function Manuscript() {
                             description="Drag and drop the manuscript"
                             maxFiles={4}
                             onFiles={(map) => {
-                                record('LoadManuscriptsFromInputFiles');
-                                initManuscript(map as unknown as RawInputFiles);
+                                const fileNames = Object.keys(map);
+
+                                if (fileNames.length === 1 && fileNames[0].endsWith('.json')) {
+                                    record('LoadManuscriptsFromJuz');
+                                    initJuz(map[fileNames[0]] as unknown as Juz);
+                                } else {
+                                    record('LoadManuscriptsFromInputFiles');
+                                    initManuscript(map as unknown as RawInputFiles);
+                                }
                             }}
                         />
                     </div>
@@ -103,10 +112,14 @@ export default function Manuscript() {
                                         2,
                                     );
 
-                                    sessionStorage.setItem('juz', juz);
-                                    sessionStorage.removeItem('rawInputs');
-
-                                    toast.success('Saved state');
+                                    try {
+                                        const compressed = pako.gzip(juz, { to: 'string' });
+                                        sessionStorage.setItem('juz', compressed);
+                                        toast.success('Saved state');
+                                    } catch (err) {
+                                        console.error('Could not save juz', err);
+                                        downloadFile(`${Date.now()}.json`, juz);
+                                    }
                                 }}
                             >
                                 <SaveIcon />
