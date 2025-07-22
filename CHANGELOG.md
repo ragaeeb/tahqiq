@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/ragaeeb/tahqiq/compare/v1.10.0...v1.11.0) (2025-07-22)
+
+
+### Features
+
+* **v1.11:** Add highlight toggling, enhance state save, and page-level properties ([#52](https://github.com/ragaeeb/tahqiq/issues/52)) ([29cc318](https://github.com/ragaeeb/tahqiq/commit/29cc318bc3461ba500e0430092291d9d8b4b26e8)), closes [#49](https://github.com/ragaeeb/tahqiq/issues/49) [#41](https://github.com/ragaeeb/tahqiq/issues/41) [#44](https://github.com/ragaeeb/tahqiq/issues/44) [#46](https://github.com/ragaeeb/tahqiq/issues/46) [#48](https://github.com/ragaeeb/tahqiq/issues/48) [#50](https://github.com/ragaeeb/tahqiq/issues/50) [#51](https://github.com/ragaeeb/tahqiq/issues/51)
+
 # [1.10.0](https://github.com/ragaeeb/tahqiq/compare/v1.9.0...v1.10.0) (2025-07-20)
 
 
