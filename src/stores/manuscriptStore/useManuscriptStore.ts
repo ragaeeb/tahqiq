@@ -24,6 +24,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         replaceHonorifics: (...args) => set((state) => actions.replaceHonorifics(state, ...args)),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
+        updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),
         updateTextLines: (...args) => set((state) => actions.updateTextLines(state, ...args)),
     })),
 );

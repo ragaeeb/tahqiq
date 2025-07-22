@@ -19,6 +19,7 @@ import type {
     StructureMetadata,
     SuryaPageOcrResult,
     TextLine,
+    TextLinePatch,
 } from './types';
 
 import { assertHasRequiredFiles } from './guards';
@@ -315,7 +316,7 @@ const getSheets = (state: ManuscriptStateCore, pages: number[]) => {
 export const updateTextLines = (
     state: ManuscriptStateCore,
     ids: number[],
-    payload: ((o: TextLine) => void) | Omit<Partial<TextLine>, 'id' | 'lastUpdate'>,
+    payload: ((o: TextLine) => void) | TextLinePatch,
     updateLastUpdated = true,
 ) => {
     const observations = getTextLines(state, ids);
@@ -331,6 +332,18 @@ export const updateTextLines = (
             o.lastUpdate = Date.now();
         }
     }
+};
+
+export const updatePages = (
+    state: ManuscriptStateCore,
+    pages: number[],
+    payload: ((o: TextLine) => void) | TextLinePatch,
+    updateLastUpdated = true,
+) => {
+    const sheets = getSheets(state, pages);
+    const ids = sheets.flatMap((s) => s.observations.map((o) => o.id));
+
+    updateTextLines(state, ids, payload, updateLastUpdated);
 };
 
 export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], from = SWS_SYMBOL, to = AZW_SYMBOL) => {

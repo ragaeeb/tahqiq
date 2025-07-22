@@ -20,12 +20,53 @@ type ManuscriptMenuProps = ButtonPropsType & {
     autoCorrectFootnotes: () => void;
     clearOutPages: () => void;
     deleteLines: () => void;
-    markAsFootnotes: (value: boolean) => void;
+    markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
-    markAsPoetry: (value: boolean) => void;
+    markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
     mergeWithAbove: () => void;
     onFixSwsSymbol: () => void;
     onReplaceSwsWithAzw: () => void;
+};
+
+type NestedMenuProps = {
+    children?: React.ReactNode;
+    label: string;
+    onSelect: (value: boolean, applyToEntirePage?: boolean) => void;
+};
+
+const NestedMenu = ({ children, label, onSelect }: NestedMenuProps) => {
+    return (
+        <DropdownMenuSub>
+            <DropdownMenuSubTrigger>{label}</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Apply</DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => onSelect(true, true)}>
+                                    To Page <SignatureIcon />
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => onSelect(true)}>
+                                    To Row <SignatureIcon />
+                                </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Clear</DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => onSelect(false, true)}>Page</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => onSelect(false)}>Row</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    {children}
+                </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+        </DropdownMenuSub>
+    );
 };
 
 export function ManuscriptMenu({
@@ -61,30 +102,15 @@ export function ManuscriptMenu({
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>Footnotes</DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => markAsFootnotes(true)}>
-                                    Apply <SuperscriptIcon />
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => markAsFootnotes(false)}>Clear</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={autoCorrectFootnotes}>Autocorrect</DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>Poetry</DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => markAsPoetry(true)}>
-                                    Apply <SignatureIcon />
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => markAsPoetry(false)}>Clear</DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                    </DropdownMenuSub>
+                    <NestedMenu label="Footnotes" onSelect={markAsFootnotes}>
+                        <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={autoCorrectFootnotes}>
+                                Autocorrect <SuperscriptIcon />
+                            </DropdownMenuItem>
+                        </>
+                    </NestedMenu>
+                    <NestedMenu label="Poetry" onSelect={markAsPoetry} />
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger>Heading</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
