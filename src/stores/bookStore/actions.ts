@@ -190,7 +190,7 @@ export const mergeFootnotesWithMatn = (state: BookStateCore, ids: number[]) => {
         ids,
         (p) => {
             if (p.footnotes) {
-                p.text = p.text + FOOTNOTES_DELIMITER + p.footnotes;
+                p.text = p.text + '\n' + p.footnotes;
                 p.footnotes = undefined;
             }
         },
