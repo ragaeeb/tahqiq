@@ -4,7 +4,6 @@ import { rawReturn } from 'mutative';
 import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
 
 import { getNextId } from '@/lib/common';
-import { FOOTNOTES_DELIMITER } from '@/lib/constants';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { preformatArabicText } from '@/lib/textUtils';
 

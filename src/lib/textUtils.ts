@@ -53,7 +53,6 @@ export const standardizeAhHijriSymbol = (text: string) => {
  * @returns {string} - The modified text with proper spacing before Arabic quotes
  */
 export const ensureSpaceBeforeQuotes = (text: string) => {
-    // eslint-disable-next-line sonarjs/slow-regex
     return text.replace(/(\S) *(«[^»]*»)/g, '$1 $2');
 };
 
@@ -61,12 +60,12 @@ export const fixMismatchedQuotationMarks = (text: string) => {
     return (
         text
             // Matches mismatched quotation marks: « followed by content and closed with )
-            // eslint-disable-next-line sonarjs/slow-regex
+
             .replace(/«([^»)]+)\)/g, '«$1»')
             // Fix reverse mismatched ( content » to « content »
             .replace(/\(([^()]+)»/g, '«$1»')
             // Matches any unclosed « quotation marks at end of content
-            // eslint-disable-next-line sonarjs/slow-regex
+
             .replace(/«([^»]+)(?=\s*$|$)/g, '«$1»')
     );
 };
@@ -215,4 +214,20 @@ export const parsePageRanges = (pageInput: string): number[] => {
     } else {
         return pageInput.split(',').map(Number);
     }
+};
+
+export const removeMarkdownFormatting = (text: string) => {
+    return (
+        text
+            // Remove bold first (**text**) - must come before italics
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            // Remove italics (*text*)
+            .replace(/\*([^*]+)\*/g, '$1')
+            // Remove headers (# ## ### etc.)
+            .replace(/^#+\s*/gm, '')
+            // Remove unordered list markers (- * +)
+            .replace(/^\s*[-*+]\s+/gm, '')
+            // Remove ordered list markers (1. 2. etc.)
+            .replace(/^\s*\d+\.\s+/gm, '')
+    );
 };

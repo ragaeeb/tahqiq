@@ -3,7 +3,6 @@
 import { BoxIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import Link from 'next/link';
-import pako from 'pako';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,14 +12,13 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
+import { loadCompressed, saveCompressed } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
-
-import ManuscriptTableBody from './table-body';
-
 import '@/lib/analytics';
 
+import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
 import ManuscriptToolbar from './toolbar';
 
@@ -49,13 +47,13 @@ export default function Manuscript() {
     );
 
     useEffect(() => {
-        const compressed = sessionStorage.getItem('juz');
-
-        if (compressed) {
-            record('RestoreJuzFromSession');
-            const juz = pako.ungzip(compressed, { to: 'string' });
-            initJuz(JSON.parse(juz) as unknown as Juz);
-        }
+        loadCompressed('juz').then((juz) => {
+            if (juz) {
+                record('RestoreJuzFromSession');
+                console.log('juz', juz);
+                initJuz(juz as Juz);
+            }
+        });
     }, [initManuscript, initJuz]);
 
     const handleSelectAll = useCallback(
@@ -106,19 +104,14 @@ export default function Manuscript() {
                                 onClick={() => {
                                     record('SaveManuscriptJuz');
 
-                                    const juz = JSON.stringify(
-                                        mapManuscriptToJuz(useManuscriptStore.getState()),
-                                        null,
-                                        2,
-                                    );
+                                    const juz = mapManuscriptToJuz(useManuscriptStore.getState());
 
                                     try {
-                                        const compressed = pako.gzip(juz, { to: 'string' });
-                                        sessionStorage.setItem('juz', compressed);
+                                        saveCompressed('juz', juz);
                                         toast.success('Saved state');
                                     } catch (err) {
                                         console.error('Could not save juz', err);
-                                        downloadFile(`${Date.now()}.json`, juz);
+                                        downloadFile(`${Date.now()}.json`, JSON.stringify(juz));
                                     }
                                 }}
                             >
