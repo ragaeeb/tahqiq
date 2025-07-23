@@ -231,3 +231,14 @@ export const removeMarkdownFormatting = (text: string) => {
             .replace(/^\s*\d+\.\s+/gm, '')
     );
 };
+
+export function createSearchRegex(userInput: string): RegExp {
+    try {
+        // First try as regex
+        return new RegExp(userInput, 'i');
+    } catch {
+        // If invalid regex, escape special chars and treat as literal
+        const escaped = userInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(escaped, 'i');
+    }
+}

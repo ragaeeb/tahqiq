@@ -50,7 +50,6 @@ export default function Manuscript() {
         loadCompressed('juz').then((juz) => {
             if (juz) {
                 record('RestoreJuzFromSession');
-                console.log('juz', juz);
                 initJuz(juz as Juz);
             }
         });
