@@ -1,5 +1,6 @@
 'use client';
 
+import { record } from 'nanolytics';
 import { useMemo } from 'react';
 
 import { JsonBrowseButton } from '@/components/json-browse-button';
@@ -13,9 +14,10 @@ import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore'
 import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
 import TranscriptToolbar from './transcript-toolbar';
-import UrlField from './url-field';
 
 import '@/lib/analytics';
+
+import UrlField from './url-field';
 
 /**
  * Displays and manages transcript segments with selection and file import capabilities.
@@ -41,9 +43,13 @@ export default function Transcript() {
                 <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
                     <div className="flex flex-col w-full max-w">
                         <JsonDropZone
-                            onFiles={(fileNameToData) =>
-                                initTranscripts(adaptLegacyTranscripts(Object.values(fileNameToData)[0]))
-                            }
+                            onFiles={(fileNameToData) => {
+                                const fileName = Object.keys(fileNameToData)[0];
+                                record('LoadTranscriptFromFile', fileName);
+
+                                document.title = fileName;
+                                initTranscripts(adaptLegacyTranscripts(fileNameToData[fileName]));
+                            }}
                         />
                     </div>
                 </div>
