@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/ragaeeb/tahqiq/compare/v1.11.0...v1.12.0) (2025-07-24)
+
+
+### Features
+
+* **regex:** Regex-based searches, fix footnote delimiter for legacy book format ([#53](https://github.com/ragaeeb/tahqiq/issues/53)) ([f3d64f4](https://github.com/ragaeeb/tahqiq/commit/f3d64f406965844e110245c147afbdd33807d78c)), closes [#11](https://github.com/ragaeeb/tahqiq/issues/11)
+
 # [1.11.0](https://github.com/ragaeeb/tahqiq/compare/v1.10.0...v1.11.0) (2025-07-22)
 
 
