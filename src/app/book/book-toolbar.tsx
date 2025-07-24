@@ -36,7 +36,7 @@ type BookToolbarProps = {
  * Renders a toolbar for manuscript management operations.
  * Currently provides functionality to export the current manuscript state as a JSON file.
  */
-export default function BookToolbar({
+function BookToolbar({
     onDeleteSelectedPages,
     onMergeFootnotes,
     onReformatSelectedPages,
@@ -132,3 +132,5 @@ export default function BookToolbar({
         </div>
     );
 }
+
+export default React.memo(BookToolbar);

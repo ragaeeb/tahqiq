@@ -59,4 +59,4 @@ The transcript will include the time segments, ensure your translated response i
 
 export const TRANSLATE_DRAFT_TRANSCRIPT_PROMPT = `${TRANSLATE_TRANSCRIPT_PROMPT}\nThe transcript was generated using AI so it may not be 100% accurate. Any parts that sound like a typo or incorrect transcription, use your best judgment based on the context of what is before and after.`;
 
-export const FOOTNOTES_DELIMITER = '\n_';
+export const FOOTNOTES_DELIMITER = '\n_\n';

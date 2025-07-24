@@ -99,7 +99,7 @@ export default function Book() {
                             allowedExtensions=".json"
                             description="Drag and drop the parts"
                             onFiles={(map) => {
-                                record('InitBookFromJuz');
+                                record('InitBookFromJuz', Object.keys(map).toString());
                                 initBook(map as unknown as Record<string, Juz | Kitab>);
                             }}
                         />

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
 import { filterRowsByDivergence } from '@/lib/filtering';
-import { parsePageRanges } from '@/lib/textUtils';
+import { createSearchRegex, parsePageRanges } from '@/lib/textUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {
@@ -35,6 +35,11 @@ export default function ManuscriptTableHeader({
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
     const hasHeadings = rows.some((o) => o.isHeading);
     const hasCenteredContent = rows.some((o) => o.isCentered);
+
+    const queryRows = (query: string, property: 'alt' | 'text') => {
+        const regex = createSearchRegex(query);
+        filterByIds(rows.filter((r) => regex.test(r[property])).map((r) => r.id));
+    };
 
     return (
         <tr>
@@ -68,7 +73,7 @@ export default function ManuscriptTableHeader({
                     name="query"
                     onSubmit={(query) => {
                         record('QueryObservations');
-                        filterByIds(rows.filter((r) => r.text.includes(query)).map((r) => r.id));
+                        queryRows(query, 'text');
                     }}
                     placeholder={`Text (${rows.length})`}
                 />
@@ -191,7 +196,7 @@ export default function ManuscriptTableHeader({
                             name="query"
                             onSubmit={(query) => {
                                 record('QueryAlt');
-                                filterByIds(rows.filter((r) => r.alt.includes(query)).map((r) => r.id));
+                                queryRows(query, 'alt');
                             }}
                             placeholder={`Support (${altCount})`}
                         />
