@@ -125,6 +125,16 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     replaceHonorifics(selectedRows.map((r) => r.id));
                     setSelectedRows([]);
                 }}
+                onReplaceText={(text) => {
+                    record('ReplaceAslText', selectedRows.length.toString());
+
+                    updateTextLines(
+                        selectedRows.map((r) => r.id),
+                        { text },
+                    );
+
+                    setSelectedRows([]);
+                }}
             />
         </div>
     );

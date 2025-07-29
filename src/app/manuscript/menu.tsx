@@ -1,6 +1,8 @@
 import { EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
+import { useState } from 'react';
 
 import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
+import { InputMenu } from '@/components/input-menu';
 import { Button, type ButtonPropsType } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -26,6 +28,7 @@ type ManuscriptMenuProps = ButtonPropsType & {
     mergeWithAbove: () => void;
     onFixSwsSymbol: () => void;
     onReplaceSwsWithAzw: () => void;
+    onReplaceText: (text: string) => void;
 };
 
 type NestedMenuProps = {
@@ -79,10 +82,13 @@ export function ManuscriptMenu({
     mergeWithAbove,
     onFixSwsSymbol,
     onReplaceSwsWithAzw,
+    onReplaceText,
     ...props
 }: ManuscriptMenuProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
     return (
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" {...props}>
                     Apply
@@ -102,6 +108,14 @@ export function ManuscriptMenu({
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
+                    <InputMenu
+                        label="Replace Asl"
+                        onSubmit={(value) => {
+                            setIsOpen(false);
+                            onReplaceText(value);
+                        }}
+                        placeholder="Enter text to replace..."
+                    />
                     <NestedMenu label="Footnotes" onSelect={markAsFootnotes}>
                         <>
                             <DropdownMenuSeparator />
