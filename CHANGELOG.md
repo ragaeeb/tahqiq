@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/ragaeeb/tahqiq/compare/v1.13.0...v1.14.0) (2025-07-29)
+
+
+### Features
+
+* **menu:** Add quick menu ([#58](https://github.com/ragaeeb/tahqiq/issues/58)) ([ad793c6](https://github.com/ragaeeb/tahqiq/commit/ad793c68f9a177e126c428e897604651ff698c1e)), closes [#57](https://github.com/ragaeeb/tahqiq/issues/57)
+
 # [1.13.0](https://github.com/ragaeeb/tahqiq/compare/v1.12.0...v1.13.0) (2025-07-29)
 
 
