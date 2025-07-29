@@ -22,6 +22,7 @@ type ManuscriptMenuProps = ButtonPropsType & {
     autoCorrectFootnotes: () => void;
     clearOutPages: () => void;
     deleteLines: () => void;
+    deleteSupports: () => void;
     markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
@@ -76,6 +77,7 @@ export function ManuscriptMenu({
     autoCorrectFootnotes,
     clearOutPages,
     deleteLines,
+    deleteSupports,
     markAsFootnotes,
     markAsHeading,
     markAsPoetry,
@@ -139,6 +141,7 @@ export function ManuscriptMenu({
                     <DropdownMenuItem onSelect={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>
+                    <ConfirmDropdownMenuItem onClick={deleteSupports}>✘ Delete Support</ConfirmDropdownMenuItem>
                     <ConfirmDropdownMenuItem onClick={clearOutPages}>
                         <EraserIcon /> Clear Out Pages
                     </ConfirmDropdownMenuItem>

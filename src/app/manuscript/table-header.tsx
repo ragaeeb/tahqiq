@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
+import { isArabicTextNoise } from 'baburchi';
+import { BookmarkIcon, BracketsIcon, FilterIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -53,63 +54,35 @@ export default function ManuscriptTableHeader({
                 aria-label="Page"
                 className="w-20 px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide"
             >
-                <SubmittableInput
-                    className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
-                    name="range"
-                    onSubmit={(range) => {
-                        record('FilterByPages', range);
-                        filterByPages(parsePageRanges(range));
-                    }}
-                    placeholder="Page"
-                />
+                <div className="flex items-center justify-between">
+                    <SubmittableInput
+                        className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                        name="range"
+                        onSubmit={(range) => {
+                            record('FilterByPages', range);
+                            filterByPages(parsePageRanges(range));
+                        }}
+                        placeholder="Page"
+                    />
+                </div>
             </th>
             <th
                 aria-label="Text"
                 className="w-1/2 px-4 py-3 text-right text-sm font-semibold text-gray-700 uppercase tracking-wide"
                 dir="rtl"
             >
-                <SubmittableInput
-                    className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
-                    name="query"
-                    onSubmit={(query) => {
-                        record('QueryObservations');
-                        queryRows(query, 'text');
-                    }}
-                    placeholder={`Text (${rows.length})`}
-                />
-            </th>
-            <th
-                aria-label="Support"
-                className="w-1/2 px-4 py-3 text-sm font-semibold text-gray-700 uppercase tracking-wide"
-                dir="rtl"
-            >
                 <div className="flex items-center justify-between">
-                    {altCount !== rows.length && (
-                        <Button
-                            aria-label="Filter Misaligned Observations"
-                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
-                            onClick={() => {
-                                record('FilterByMissingAlt');
-                                filterByPages(rows.filter((r) => !r.alt).map((r) => r.page));
-                            }}
-                            variant="destructive"
-                        >
-                            ✗
-                        </Button>
-                    )}
-                    {hasMissingHonorifics && (
-                        <Button
-                            aria-label="Fix Typos"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
-                            onClick={() => {
-                                record('FilterByHonorifics');
-                                filterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
-                            }}
-                            variant="ghost"
-                        >
-                            {SWS_SYMBOL}
-                        </Button>
-                    )}
+                    <Button
+                        aria-label="Filter Misaligned Observations"
+                        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                        onClick={() => {
+                            record('FilterNoiseInAsl');
+                            filterByIds(rows.filter((r) => isArabicTextNoise(r.text)).map((r) => r.id));
+                        }}
+                        variant="ghost"
+                    >
+                        <FilterIcon />
+                    </Button>
                     {hasCenteredContent && (
                         <Button
                             aria-label="Centered Content"
@@ -149,6 +122,19 @@ export default function ManuscriptTableHeader({
                             {AZW_SYMBOL}
                         </Button>
                     )}
+                    {hasInvalidFootnotes && (
+                        <Button
+                            aria-label="Invalid Footnotes"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
+                            onClick={() => {
+                                record('FilterByInvalidFootnotes');
+                                filterByPages(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
+                            }}
+                            variant="ghost"
+                        >
+                            <BracketsIcon />
+                        </Button>
+                    )}
                     {includesPoetry && (
                         <Button
                             aria-label="Poetic"
@@ -160,6 +146,62 @@ export default function ManuscriptTableHeader({
                             variant="ghost"
                         >
                             <SignatureIcon />
+                        </Button>
+                    )}
+                    <div className="text-right w-full">
+                        <SubmittableInput
+                            className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                            name="query"
+                            onSubmit={(query) => {
+                                record('QueryObservations');
+                                queryRows(query, 'text');
+                            }}
+                            placeholder={`Text (${rows.length})`}
+                        />
+                    </div>
+                </div>
+            </th>
+            <th
+                aria-label="Support"
+                className="w-1/2 px-4 py-3 text-sm font-semibold text-gray-700 uppercase tracking-wide"
+                dir="rtl"
+            >
+                <div className="flex items-center justify-between">
+                    <Button
+                        aria-label="Filter Misaligned Observations"
+                        className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                        onClick={() => {
+                            record('FilterNoiseInSupport');
+                            filterByIds(rows.filter((r) => r.alt && isArabicTextNoise(r.alt)).map((r) => r.id));
+                        }}
+                        variant="ghost"
+                    >
+                        <FilterIcon />
+                    </Button>
+                    {altCount !== rows.length && (
+                        <Button
+                            aria-label="Filter Misaligned Observations"
+                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                record('FilterByMissingAlt');
+                                filterByPages(rows.filter((r) => !r.alt).map((r) => r.page));
+                            }}
+                            variant="destructive"
+                        >
+                            ✗
+                        </Button>
+                    )}
+                    {hasMissingHonorifics && (
+                        <Button
+                            aria-label="Fix Typos"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            onClick={() => {
+                                record('FilterByHonorifics');
+                                filterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
+                            }}
+                            variant="ghost"
+                        >
+                            {SWS_SYMBOL}
                         </Button>
                     )}
                     {hasDivergence && (
@@ -175,19 +217,6 @@ export default function ManuscriptTableHeader({
                             variant="ghost"
                         >
                             <StrikethroughIcon />
-                        </Button>
-                    )}
-                    {hasInvalidFootnotes && (
-                        <Button
-                            aria-label="Invalid Footnotes"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
-                            onClick={() => {
-                                record('FilterByInvalidFootnotes');
-                                filterByPages(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
-                            }}
-                            variant="ghost"
-                        >
-                            <BracketsIcon />
                         </Button>
                     )}
                     <div className="text-right w-full">

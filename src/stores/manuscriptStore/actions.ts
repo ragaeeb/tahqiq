@@ -364,6 +364,20 @@ export const deleteLines = (state: ManuscriptStateCore, ids: number[]) => {
     });
 };
 
+export const deleteSupports = (state: ManuscriptStateCore, ids: number[]) => {
+    const idsSet = new Set(ids);
+
+    state.sheets.forEach((sheet) => {
+        const supportIds = sheet.observations
+            .map((observation, i) => idsSet.has(observation.id) && sheet.alt[i].id)
+            .filter(Boolean);
+
+        if (supportIds.length) {
+            sheet.alt = sheet.alt.filter((alt) => !supportIds.includes(alt.id));
+        }
+    });
+};
+
 export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: number[]) => {
     const idsFilter = new Set<number>();
     const sheets = getSheets(state, pagesToFilterBy);

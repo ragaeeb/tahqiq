@@ -27,6 +27,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
+    const deleteSupports = useManuscriptStore((state) => state.deleteSupports);
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
     const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
@@ -58,6 +59,11 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                 deleteLines={() => {
                     record('DeleteLines', selectedRows.length.toString());
                     deleteLines(selectedRows.map((row) => row.id));
+                    setSelectedRows([]);
+                }}
+                deleteSupports={() => {
+                    record('DeleteSupports', selectedRows.length.toString());
+                    deleteSupports(selectedRows.map((row) => row.id));
                     setSelectedRows([]);
                 }}
                 disabled={selectedRows.length === 0}
