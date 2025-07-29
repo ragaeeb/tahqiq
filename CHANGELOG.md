@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/ragaeeb/tahqiq/compare/v1.12.0...v1.13.0) (2025-07-29)
+
+
+### Features
+
+* **noise:** v1.13 release: noise removal, search and replace ([#56](https://github.com/ragaeeb/tahqiq/issues/56)) ([303d6a4](https://github.com/ragaeeb/tahqiq/commit/303d6a410a6e0f6f406d90b621b63310d7012d66)), closes [#40](https://github.com/ragaeeb/tahqiq/issues/40) [#55](https://github.com/ragaeeb/tahqiq/issues/55)
+
 # [1.12.0](https://github.com/ragaeeb/tahqiq/compare/v1.11.0...v1.12.0) (2025-07-24)
 
 
