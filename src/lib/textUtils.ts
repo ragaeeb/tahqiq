@@ -229,6 +229,8 @@ export const removeMarkdownFormatting = (text: string) => {
             .replace(/^\s*[-*+]\s+/gm, '')
             // Remove ordered list markers (1. 2. etc.)
             .replace(/^\s*\d+\.\s+/gm, '')
+            // Remove backticks
+            .replace(/`/gm, '')
     );
 };
 

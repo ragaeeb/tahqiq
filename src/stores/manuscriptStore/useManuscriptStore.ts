@@ -12,6 +12,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         clearOutPages: (...args) => set((state) => actions.clearOutPages(state, ...args)),
         deleteLines: (ids) => set((state) => actions.deleteLines(state, ids)),
         deleteSupport: (...args) => set((state) => actions.deleteSupport(state, ...args)),
+        deleteSupports: (...args) => set((state) => actions.deleteSupports(state, ...args)),
         filterByIds: (ids) => set(() => ({ idsFilter: new Set(ids) })),
         filterByPages: (pages) => set((state) => actions.filterByPages(state, pages)),
         fixTypos: (ids) => set((state) => actions.fixTypos(state, ids)),

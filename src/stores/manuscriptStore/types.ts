@@ -103,6 +103,8 @@ type ManuscriptActions = {
 
     deleteSupport: (page: number, id: number) => void;
 
+    deleteSupports: (ids: number[]) => void;
+
     filterByIds: (ids: number[]) => void;
 
     filterByPages: (pages: number[]) => void;
@@ -134,7 +136,7 @@ type OcrData = {
     /**
      * Matching observations extracted from surya for typo corrections.
      */
-    readonly alt: AltText[];
+    alt: AltText[];
 
     /**
      * Matching observations extracted from surya for typo corrections.

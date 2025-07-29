@@ -1,6 +1,8 @@
 import { EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
+import { useState } from 'react';
 
 import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
+import { InputMenu } from '@/components/input-menu';
 import { Button, type ButtonPropsType } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -20,12 +22,14 @@ type ManuscriptMenuProps = ButtonPropsType & {
     autoCorrectFootnotes: () => void;
     clearOutPages: () => void;
     deleteLines: () => void;
+    deleteSupports: () => void;
     markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
     mergeWithAbove: () => void;
     onFixSwsSymbol: () => void;
     onReplaceSwsWithAzw: () => void;
+    onReplaceText: (text: string) => void;
 };
 
 type NestedMenuProps = {
@@ -73,16 +77,20 @@ export function ManuscriptMenu({
     autoCorrectFootnotes,
     clearOutPages,
     deleteLines,
+    deleteSupports,
     markAsFootnotes,
     markAsHeading,
     markAsPoetry,
     mergeWithAbove,
     onFixSwsSymbol,
     onReplaceSwsWithAzw,
+    onReplaceText,
     ...props
 }: ManuscriptMenuProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
     return (
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" {...props}>
                     Apply
@@ -102,6 +110,14 @@ export function ManuscriptMenu({
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
+                    <InputMenu
+                        label="Replace Asl"
+                        onSubmit={(value) => {
+                            setIsOpen(false);
+                            onReplaceText(value);
+                        }}
+                        placeholder="Enter text to replace..."
+                    />
                     <NestedMenu label="Footnotes" onSelect={markAsFootnotes}>
                         <>
                             <DropdownMenuSeparator />
@@ -125,6 +141,7 @@ export function ManuscriptMenu({
                     <DropdownMenuItem onSelect={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>
+                    <ConfirmDropdownMenuItem onClick={deleteSupports}>✘ Delete Support</ConfirmDropdownMenuItem>
                     <ConfirmDropdownMenuItem onClick={clearOutPages}>
                         <EraserIcon /> Clear Out Pages
                     </ConfirmDropdownMenuItem>
