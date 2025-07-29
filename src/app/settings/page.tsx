@@ -1,8 +1,11 @@
 'use client';
 
+import { record } from 'nanolytics';
+
 import { ClickToReveal } from '@/components/click-to-reveal';
-import VersionFooter from '@/components/version-footer';
+import { TagInput } from '@/components/ui/tag-input';
 import '@/lib/analytics';
+import VersionFooter from '@/components/version-footer';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 
 /**
@@ -14,6 +17,8 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 export default function Settings() {
     const geminiApiKeys = useSettingsStore((state) => state.geminiApiKeys);
     const updateGeminiApiKeys = useSettingsStore((state) => state.updateGeminiApiKeys);
+    const quickSubs = useSettingsStore((state) => state.quickSubs);
+    const updateQuickSubs = useSettingsStore((state) => state.updateQuickSubs);
 
     return (
         <>
@@ -23,6 +28,16 @@ export default function Settings() {
                         defaultValue={geminiApiKeys.join('\n')}
                         onSubmit={(value) => updateGeminiApiKeys(value.split('\n'))}
                         placeholder="Enter your Gemini API keys"
+                    />
+                </div>
+                <div className="flex flex-col w-full max-w">
+                    <TagInput
+                        dir="rtl"
+                        onChange={(value) => {
+                            record('QuickSubs', value.toString());
+                            updateQuickSubs(value);
+                        }}
+                        value={quickSubs}
                     />
                 </div>
             </div>

@@ -11,13 +11,22 @@ import type { SettingsState } from './types';
  */
 export const useSettingsStore = create<SettingsState>((set) => {
     const encryptedGeminiApiKeys = typeof window !== 'undefined' && localStorage.getItem('geminiApiKeys');
+    const quickSubs = typeof window !== 'undefined' && localStorage.getItem('quickSubs');
 
     return {
         geminiApiKeys: encryptedGeminiApiKeys ? atob(encryptedGeminiApiKeys).split('\n') : [],
-        updateGeminiApiKeys: (keys) =>
-            set(() => {
+        quickSubs: quickSubs ? quickSubs.split('\n') : [],
+        updateGeminiApiKeys: (keys) => {
+            return set(() => {
                 localStorage.setItem('geminiApiKeys', btoa(keys.join('\n')));
                 return { geminiApiKeys: keys };
-            }),
+            });
+        },
+        updateQuickSubs: (values) => {
+            return set(() => {
+                localStorage.setItem('quickSubs', values.join('\n'));
+                return { quickSubs: values };
+            });
+        },
     };
 });

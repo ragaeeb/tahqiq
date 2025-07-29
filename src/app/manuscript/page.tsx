@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 
+import RowToolbar from '@/app/manuscript/row-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
@@ -15,8 +16,8 @@ import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
-import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 import '@/lib/analytics';
+import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
@@ -168,6 +169,7 @@ export default function Manuscript() {
                     </div>
                 </div>
             </div>
+            <RowToolbar />
             <VersionFooter />
         </>
     );
