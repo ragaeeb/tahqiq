@@ -11,5 +11,5 @@
     "eslint.codeAction.showDocumentation": {
         "enable": true
     },
-    "npm.packageManager": "pnpm"
+    "npm.packageManager": "bun"
 }

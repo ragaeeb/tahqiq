@@ -1,3 +1,4 @@
+import { withFormattingToolbar } from 'blumbaben';
 import clsx from 'clsx';
 import { Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
@@ -18,6 +19,8 @@ type TextRowProps = {
     onSelectionChange: (row: SheetLine, selected: boolean) => void;
     style?: React.CSSProperties; // Add style prop for virtualization
 };
+
+const InputWithToolbar = withFormattingToolbar(Input);
 
 const getTextInputClassName = (data: SheetLine) => {
     return clsx(
@@ -80,7 +83,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 className={`w-1/2 px-4 py-4 text-xl text-right leading-relaxed text-gray-800 border-r border-gray-100`}
                 dir="rtl"
             >
-                <Input
+                <InputWithToolbar
                     className={getTextInputClassName(data)}
                     defaultValue={data.text}
                     dir="rtl"

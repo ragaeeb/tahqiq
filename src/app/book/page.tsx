@@ -1,7 +1,5 @@
 'use client';
 
-import { replaceLineBreaksWithSpaces } from 'bitaboom';
-import { FormattingToolbar } from 'blumbaben';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -9,11 +7,8 @@ import type { Kitab, Page } from '@/stores/bookStore/types';
 import type { Juz } from '@/stores/manuscriptStore/types';
 
 import JsonDropZone from '@/components/json-drop-zone';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
-import { BASMALAH } from '@/lib/constants';
-import { fixUnbalanced, preformatArabicText } from '@/lib/textUtils';
 import '@/lib/analytics';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
@@ -21,6 +16,7 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 
 import BookToolbar from './book-toolbar';
 import PageItem from './page-item';
+import PageToolbar from './page-toolbar';
 
 /**
  * Renders the main page layout for displaying manuscript pages.
@@ -157,49 +153,7 @@ export default function Book() {
                     </div>
                 </div>
             </div>
-            <FormattingToolbar>
-                {(applyFormat) => (
-                    <>
-                        <Button
-                            key="replaceLineBreaksWithSpaces"
-                            onClick={() => {
-                                record('FormatToolBar', 'lineBreaksToSpaces');
-                                applyFormat(replaceLineBreaksWithSpaces);
-                            }}
-                            variant="outline"
-                        >
-                            ↩̶
-                        </Button>
-                        <Button
-                            key="reformat"
-                            onClick={() => {
-                                record('Reformat');
-                                applyFormat(preformatArabicText);
-                            }}
-                        >
-                            Reformat
-                        </Button>
-                        <Button
-                            key="fixUnbalanced"
-                            onClick={() => {
-                                record('FixUnbalanced');
-                                applyFormat(fixUnbalanced);
-                            }}
-                        >
-                            «»
-                        </Button>
-                        <Button
-                            key="basmalah"
-                            onClick={() => {
-                                record('Basmalah');
-                                applyFormat(() => BASMALAH);
-                            }}
-                        >
-                            Basmalah
-                        </Button>
-                    </>
-                )}
-            </FormattingToolbar>
+            <PageToolbar />
             <VersionFooter />
         </>
     );

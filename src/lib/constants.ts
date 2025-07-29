@@ -26,8 +26,6 @@ export const DEFAULT_MIN_WORDS_PER_SEGMENT = 10;
 
 export const DEFAULT_SILENCE_GAP_THRESHOLD = 2;
 
-export const BASMALAH = 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ';
-
 export const REQUIRED_RAW_INPUT_FILES = [
     'batch_output.json',
     'structures.json',
