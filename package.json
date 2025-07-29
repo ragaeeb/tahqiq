@@ -10,7 +10,7 @@
         "test": "bun test --coverage --coverage-reporter=lcov"
     },
     "engines": {
-        "bun": ">=1.2.18",
+        "bun": ">=1.2.19",
         "node": ">=22.x"
     },
     "dependencies": {
