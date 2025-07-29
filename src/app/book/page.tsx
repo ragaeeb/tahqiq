@@ -1,24 +1,18 @@
 'use client';
 
-import { replaceLineBreaksWithSpaces } from 'bitaboom';
-import { FormattingToolbar } from 'blumbaben';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { Kitab, Page } from '@/stores/bookStore/types';
 import type { Juz } from '@/stores/manuscriptStore/types';
 
-import QuicksubsToolbar from '@/app/manuscript/row-toolbar';
 import JsonDropZone from '@/components/json-drop-zone';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
 import '@/lib/analytics';
-import { fixUnbalanced, preformatArabicText } from '@/lib/textUtils';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
-import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 
 import BookToolbar from './book-toolbar';
 import PageItem from './page-item';
@@ -35,7 +29,6 @@ export default function Book() {
     const deletePages = useBookStore((state) => state.deletePages);
     const reformatPages = useBookStore((state) => state.reformatPages);
     const mergeFootnotesWithMatn = useBookStore((state) => state.mergeFootnotesWithMatn);
-    const quickSubs = useSettingsStore((state) => state.quickSubs);
     const pages = useBookStore(selectCurrentPages);
     const [selectedPages, setSelectedPages] = useState<Page[]>([]);
 
