@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/ragaeeb/tahqiq/compare/v1.14.0...v1.15.0) (2025-07-30)
+
+
+### Features
+
+* **intaha:** Add fix intaha symbol [#59](https://github.com/ragaeeb/tahqiq/issues/59) ([#61](https://github.com/ragaeeb/tahqiq/issues/61)) ([3e5c1c7](https://github.com/ragaeeb/tahqiq/commit/3e5c1c7f93d9605a8801f9d3fa9a0e74bb594c77)), closes [#60](https://github.com/ragaeeb/tahqiq/issues/60)
+
 # [1.14.0](https://github.com/ragaeeb/tahqiq/compare/v1.13.0...v1.14.0) (2025-07-29)
 
 
