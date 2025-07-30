@@ -7,6 +7,7 @@ import React, { type Dispatch, type SetStateAction } from 'react';
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 import { Button } from '@/components/ui/button';
+import { INTAHA_ACTUAL, INTAHA_TYPO } from '@/lib/constants';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import { ManuscriptMenu } from './menu';
@@ -67,6 +68,24 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     setSelectedRows([]);
                 }}
                 disabled={selectedRows.length === 0}
+                fixIntaha={() => {
+                    record('FixIntaha', selectedRows.length.toString());
+
+                    const regex = new RegExp(`( )(${INTAHA_TYPO})[.]?($| )`);
+
+                    updateTextLines(
+                        selectedRows.map((r) => r.id),
+                        (o) => {
+                            const replaced = o.text.replace(regex, `$1${INTAHA_ACTUAL}$3`);
+
+                            if (o.text !== replaced) {
+                                o.text = replaced;
+                            }
+                        },
+                    );
+
+                    setSelectedRows([]);
+                }}
                 markAsFootnotes={(isFootnote, applyToEntirePage) => {
                     record(
                         'MarkAsFootnotes',

@@ -23,6 +23,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         mergeWithAbove: (...args) => set((state) => actions.mergeWithAbove(state, ...args)),
         mergeWithBelow: (...args) => set((state) => actions.mergeWithBelow(state, ...args)),
         replaceHonorifics: (...args) => set((state) => actions.replaceHonorifics(state, ...args)),
+        searchAndReplace: (...args) => set((state) => actions.searchAndReplace(state, ...args)),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),

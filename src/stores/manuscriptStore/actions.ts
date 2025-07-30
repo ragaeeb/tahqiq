@@ -316,7 +316,7 @@ const getSheets = (state: ManuscriptStateCore, pages: number[]) => {
 export const updateTextLines = (
     state: ManuscriptStateCore,
     ids: number[],
-    payload: ((o: TextLine) => void) | TextLinePatch,
+    payload: TextLinePatch,
     updateLastUpdated = true,
 ) => {
     const observations = getTextLines(state, ids);
@@ -337,7 +337,7 @@ export const updateTextLines = (
 export const updatePages = (
     state: ManuscriptStateCore,
     pages: number[],
-    payload: ((o: TextLine) => void) | TextLinePatch,
+    payload: TextLinePatch,
     updateLastUpdated = true,
 ) => {
     const sheets = getSheets(state, pages);
@@ -389,4 +389,17 @@ export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: numbe
     }
 
     return rawReturn({ idsFilter });
+};
+
+export const searchAndReplace = (state: ManuscriptStateCore, pattern: RegExp | string, replacement: string) => {
+    for (const sheet of state.sheets) {
+        for (const observation of sheet.observations) {
+            const newValue = observation.text.replace(pattern, replacement);
+
+            if (observation.text !== newValue) {
+                observation.text = newValue;
+                observation.lastUpdate = Date.now();
+            }
+        }
+    }
 };

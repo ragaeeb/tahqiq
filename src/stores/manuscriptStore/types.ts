@@ -80,7 +80,7 @@ export type TextLine = TextBlock & {
     lastUpdate: number;
 };
 
-export type TextLinePatch = Omit<Partial<TextLine>, 'id' | 'lastUpdate'>;
+export type TextLinePatch = ((o: TextLine) => void) | Omit<Partial<TextLine>, 'id' | 'lastUpdate'>;
 
 type AltText = {
     readonly id: number;
@@ -124,6 +124,8 @@ type ManuscriptActions = {
     mergeWithBelow: (page: number, id: number, mergeAsl?: boolean) => void;
 
     replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
+
+    searchAndReplace: (pattern: RegExp | string, replacement: string) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 
