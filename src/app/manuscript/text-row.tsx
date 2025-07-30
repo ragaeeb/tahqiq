@@ -83,20 +83,44 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 className={`w-1/2 px-4 py-4 text-xl text-right leading-relaxed text-gray-800 border-r border-gray-100`}
                 dir="rtl"
             >
-                <InputWithToolbar
-                    className={getTextInputClassName(data)}
-                    defaultValue={data.text}
-                    dir="rtl"
-                    key={data.id + '/' + data.lastUpdate}
-                    onBlur={(e) => {
-                        if (data.text !== e.target.value) {
-                            record('UpdateObservationText');
-                            updateTextLines([data.id], { text: e.target.value }, false);
-                        }
-                    }}
-                    style={{ fontFamily: 'inherit' }}
-                    type="text"
-                />
+                <div className="flex items-center justify-between">
+                    <Button
+                        aria-label="Merge With Above"
+                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                        onClick={() => {
+                            record('MergeAslWithAbove');
+                            mergeWithAbove(data.page, data.id, true);
+                        }}
+                        variant="outline"
+                    >
+                        ↑
+                    </Button>
+                    <Button
+                        aria-label="Merge With Below"
+                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                        onClick={() => {
+                            record('MergeAslWithBelow');
+                            mergeWithBelow(data.page, data.id, true);
+                        }}
+                        variant="outline"
+                    >
+                        ↓
+                    </Button>
+                    <InputWithToolbar
+                        className={getTextInputClassName(data)}
+                        defaultValue={data.text}
+                        dir="rtl"
+                        key={data.id + '/' + data.lastUpdate}
+                        onBlur={(e) => {
+                            if (data.text !== e.target.value) {
+                                record('UpdateObservationText');
+                                updateTextLines([data.id], { text: e.target.value }, false);
+                            }
+                        }}
+                        style={{ fontFamily: 'inherit' }}
+                        type="text"
+                    />
+                </div>
             </td>
             <td
                 aria-label="Support"

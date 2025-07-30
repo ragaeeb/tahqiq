@@ -174,17 +174,6 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
     const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
 
-    const above = sheet.alt[index - 1];
-    const current = sheet.alt[index];
-
-    const mergedAlt = {
-        ...above,
-        lastUpdate: Date.now(),
-        text: `${above.text} ${current.text}`.trim(),
-    };
-
-    sheet.alt.splice(index - 1, 2, mergedAlt);
-
     if (mergeAsl) {
         const aboveObservation = sheet.observations[index - 1];
         const currentObservation = sheet.observations[index];
@@ -196,28 +185,23 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
         };
 
         sheet.observations.splice(index - 1, 2, mergedObservation);
+    } else {
+        const above = sheet.alt[index - 1];
+        const current = sheet.alt[index];
+
+        const mergedAlt = {
+            ...above,
+            lastUpdate: Date.now(),
+            text: `${above.text} ${current.text}`.trim(),
+        };
+
+        sheet.alt.splice(index - 1, 2, mergedAlt);
     }
 };
 
 export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: number, mergeAsl = false) => {
     const sheet = state.sheets.find((s) => s.page === page)!;
-    const index = sheet.observations.findIndex((o) => o.id === id);
-
-    // Check if there's a row below to merge with
-    if (index + 1 >= sheet.alt.length) {
-        return; // No row below to merge with
-    }
-
-    const current = sheet.alt[index];
-    const below = sheet.alt[index + 1];
-
-    const mergedAlt = {
-        ...current,
-        lastUpdate: Date.now(),
-        text: `${below.text} ${current.text}`.trim(),
-    };
-
-    sheet.alt.splice(index, 2, mergedAlt);
+    const index = sheet.alt.findIndex((o) => o.id === id);
 
     if (mergeAsl) {
         const currentObservation = sheet.observations[index];
@@ -230,6 +214,22 @@ export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: num
         };
 
         sheet.observations.splice(index, 2, mergedObservation);
+    } else {
+        // Check if there's a row below to merge with
+        if (index + 1 >= sheet.alt.length) {
+            return; // No row below to merge with
+        }
+
+        const current = sheet.alt[index];
+        const below = sheet.alt[index + 1];
+
+        const mergedAlt = {
+            ...current,
+            lastUpdate: Date.now(),
+            text: `${below.text} ${current.text}`.trim(),
+        };
+
+        sheet.alt.splice(index, 2, mergedAlt);
     }
 };
 

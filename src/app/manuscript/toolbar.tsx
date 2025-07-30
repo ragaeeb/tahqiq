@@ -26,7 +26,6 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
     const updatePages = useManuscriptStore((state) => state.updatePages);
     const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
-    const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const deleteSupports = useManuscriptStore((state) => state.deleteSupports);
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
@@ -131,11 +130,6 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                         );
                     }
 
-                    setSelectedRows([]);
-                }}
-                mergeWithAbove={() => {
-                    record('MergeAslWithAbove');
-                    mergeWithAbove(selectedRows[0].page, selectedRows[0].id, true);
                     setSelectedRows([]);
                 }}
                 onFixSwsSymbol={() => {

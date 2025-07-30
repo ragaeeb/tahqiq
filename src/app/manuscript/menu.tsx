@@ -27,7 +27,6 @@ type ManuscriptMenuProps = ButtonPropsType & {
     markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
-    mergeWithAbove: () => void;
     onFixSwsSymbol: () => void;
     onReplaceSwsWithAzw: () => void;
     onReplaceText: (text: string) => void;
@@ -83,7 +82,6 @@ export function ManuscriptMenu({
     markAsFootnotes,
     markAsHeading,
     markAsPoetry,
-    mergeWithAbove,
     onFixSwsSymbol,
     onReplaceSwsWithAzw,
     onReplaceText,
@@ -141,7 +139,6 @@ export function ManuscriptMenu({
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
                     <DropdownMenuItem onSelect={() => fixIntaha()}>Fix {INTAHA_ACTUAL}</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>
                     <ConfirmDropdownMenuItem onClick={deleteSupports}>✘ Delete Support</ConfirmDropdownMenuItem>
