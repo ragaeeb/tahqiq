@@ -42,6 +42,10 @@ export const SWS_SYMBOL = 'ﷺ';
 
 export const AZW_SYMBOL = 'ﷻ';
 
+export const INTAHA_TYPO = 'اه';
+
+export const INTAHA_ACTUAL = 'اهـ';
+
 export const TRANSLATE_BOOK_PROMPT = `Translate the following Arabic text into English with the highest accuracy, prioritizing literal translation unless a meaning-based approach is more appropriate.
 Carefully analyze context to ensure correct usage of Islamic technical terms. Keep at most a single line-break character between lines.
 Use ALA-LC transliteration for words best left untranslated, placing only their English meaning in parentheses.

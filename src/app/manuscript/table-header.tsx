@@ -9,9 +9,9 @@ import type { SheetLine } from '@/stores/manuscriptStore/types';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { AZW_SYMBOL, INTAHA_TYPO, SWS_SYMBOL } from '@/lib/constants';
 import { filterRowsByDivergence } from '@/lib/filtering';
-import { createSearchRegex, parsePageRanges } from '@/lib/textUtils';
+import { parsePageRanges } from '@/lib/textUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {
@@ -36,11 +36,6 @@ export default function ManuscriptTableHeader({
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
     const hasHeadings = rows.some((o) => o.isHeading);
     const hasCenteredContent = rows.some((o) => o.isCentered);
-
-    const queryRows = (query: string, property: 'alt' | 'text') => {
-        const regex = createSearchRegex(query);
-        filterByIds(rows.filter((r) => regex.test(r[property])).map((r) => r.id));
-    };
 
     return (
         <tr>
@@ -82,6 +77,20 @@ export default function ManuscriptTableHeader({
                         variant="ghost"
                     >
                         <FilterIcon />
+                    </Button>
+                    <Button
+                        aria-label="Filter Intaha"
+                        className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                        onClick={() => {
+                            record('FilterIntaha');
+
+                            const regex = new RegExp(`( )(${INTAHA_TYPO})[.]?($| )`);
+
+                            filterByIds(rows.filter((r) => regex.test(r.text)).map((r) => r.id));
+                        }}
+                        variant="outline"
+                    >
+                        اهـ
                     </Button>
                     {hasCenteredContent && (
                         <Button
@@ -154,7 +163,7 @@ export default function ManuscriptTableHeader({
                             name="query"
                             onSubmit={(query) => {
                                 record('QueryObservations');
-                                queryRows(query, 'text');
+                                filterByIds(rows.filter((r) => r.text.includes(query)).map((r) => r.id));
                             }}
                             placeholder={`Text (${rows.length})`}
                         />
@@ -225,7 +234,7 @@ export default function ManuscriptTableHeader({
                             name="query"
                             onSubmit={(query) => {
                                 record('QueryAlt');
-                                queryRows(query, 'alt');
+                                filterByIds(rows.filter((r) => r.alt.includes(query)).map((r) => r.id));
                             }}
                             placeholder={`Support (${altCount})`}
                         />

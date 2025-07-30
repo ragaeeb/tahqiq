@@ -25,6 +25,8 @@ import {
 } from 'bitaboom';
 import { isEndingWithPunctuation, type Token } from 'paragrafs';
 
+import { INTAHA_ACTUAL } from './constants';
+
 /**
  * Standardizes standalone Hijri symbol ه to هـ when following Arabic digits
  * @param text - Input text to process
@@ -43,7 +45,7 @@ export const standardizeHijriSymbol = (text: string) => {
 export const standardizeAhHijriSymbol = (text: string) => {
     // Replace standalone اه with اهـ when it appears as a whole word
     // Ensures it's preceded by start/whitespace/non-Arabic AND followed by end/whitespace/non-Arabic
-    return text.replace(/(^|\s|[^\u0600-\u06FF])اه(?=\s|$|[^\u0600-\u06FF])/g, '$1اهـ');
+    return text.replace(/(^|\s|[^\u0600-\u06FF])اه(?=\s|$|[^\u0600-\u06FF])/g, `$1${INTAHA_ACTUAL}`);
 };
 
 /**
@@ -233,14 +235,3 @@ export const removeMarkdownFormatting = (text: string) => {
             .replace(/`/gm, '')
     );
 };
-
-export function createSearchRegex(userInput: string): RegExp {
-    try {
-        // First try as regex
-        return new RegExp(userInput, 'i');
-    } catch {
-        // If invalid regex, escape special chars and treat as literal
-        const escaped = userInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return new RegExp(escaped, 'i');
-    }
-}

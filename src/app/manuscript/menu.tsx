@@ -16,13 +16,14 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { AZW_SYMBOL, INTAHA_ACTUAL, SWS_SYMBOL } from '@/lib/constants';
 
 type ManuscriptMenuProps = ButtonPropsType & {
     autoCorrectFootnotes: () => void;
     clearOutPages: () => void;
     deleteLines: () => void;
     deleteSupports: () => void;
+    fixIntaha: () => void;
     markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
@@ -78,6 +79,7 @@ export function ManuscriptMenu({
     clearOutPages,
     deleteLines,
     deleteSupports,
+    fixIntaha,
     markAsFootnotes,
     markAsHeading,
     markAsPoetry,
@@ -138,6 +140,7 @@ export function ManuscriptMenu({
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
+                    <DropdownMenuItem onSelect={() => fixIntaha()}>Fix {INTAHA_ACTUAL}</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => mergeWithAbove()}>Merge With Above ↑</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>

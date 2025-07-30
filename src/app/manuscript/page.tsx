@@ -22,6 +22,7 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
 import ManuscriptToolbar from './toolbar';
+import '@/stores/dev';
 
 /**
  * Renders the main page layout for displaying manuscript pages.
