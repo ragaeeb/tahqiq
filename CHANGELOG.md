@@ -1,3 +1,11 @@
+## [1.15.1](https://github.com/ragaeeb/tahqiq/compare/v1.15.0...v1.15.1) (2025-07-30)
+
+
+### Bug Fixes
+
+* **merge:** Fix merge logic ([1b73491](https://github.com/ragaeeb/tahqiq/commit/1b734915738428327c0b571c92aaee85b5942000))
+* **merge:** Move merge asl inline and make it independent ([9c97546](https://github.com/ragaeeb/tahqiq/commit/9c97546bf8737aed89b2da547d7c6e9344ef671e))
+
 # [1.15.0](https://github.com/ragaeeb/tahqiq/compare/v1.14.0...v1.15.0) (2025-07-30)
 
 
