@@ -201,7 +201,7 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
 
 export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: number, mergeAsl = false) => {
     const sheet = state.sheets.find((s) => s.page === page)!;
-    const index = sheet.alt.findIndex((o) => o.id === id);
+    const index = sheet.observations.findIndex((o) => o.id === id);
 
     if (mergeAsl) {
         const currentObservation = sheet.observations[index];
