@@ -114,6 +114,8 @@ export type TableOfContents = BookIndex & {
  * including page management, initialization, and bulk operations.
  */
 type BookActions = {
+    addAjza: (files: Record<string, any>) => void;
+
     /**
      * Removes multiple pages from the book by their IDs.
      * This operation is irreversible and will permanently delete the specified pages.
@@ -149,6 +151,12 @@ type BookActions = {
      * @param pageIds - Array of page IDs to reformat.
      */
     reformatPages: (pageIds: number[]) => void;
+
+    /**
+     * Changes the currently selected book volume
+     * @param volume Volume number to select
+     */
+    setSelectedVolume: (volume: number) => void;
 
     /**
      * Shifts page or volume page numbers starting from a specific page.

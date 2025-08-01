@@ -58,21 +58,17 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
     };
 };
 
-export const addTranscriptsFromFiles = async (state: TranscriptState, files: FileList) => {
-    const jsonPromises = Array.from(files)
-        .filter((f) => f.name.endsWith('.json'))
-        .map(async (file) => {
-            return JSON.parse(await file.text()) as Transcript;
-        });
+export const addTranscriptsFromFiles = (state: TranscriptState, files: Record<string, any>) => {
+    const transcripts = { ...state.transcripts };
 
-    const transcripts: Record<number, Transcript> = (await Promise.all(jsonPromises)).reduce(
-        (acc, t) => ({ ...acc, [t.volume]: t }),
-        {},
-    );
+    Object.values(files).forEach((data) => {
+        const transcript = data as Transcript;
+        transcripts[transcript.volume] = transcript;
+    });
 
     return {
-        selectedPart: Object.values(transcripts)[0]!.volume,
-        transcripts: { ...state.transcripts, ...transcripts },
+        selectedPart: state.selectedPart || Object.values(transcripts)[0]!.volume,
+        transcripts,
     };
 };
 

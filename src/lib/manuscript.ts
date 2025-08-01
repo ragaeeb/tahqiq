@@ -1,11 +1,18 @@
 import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
 
+import packageJson from '@/../package.json';
+
 import { LatestContractVersion } from './constants';
 
-export const mapManuscriptToJuz = (manuscriptState: ManuscriptStateCore): Juz => {
+export const mapManuscriptToJuz = (state: ManuscriptStateCore): Juz => {
     return {
         contractVersion: LatestContractVersion.Juz,
-        sheets: manuscriptState.sheets,
+        postProcessingApps: state.postProcessingApps.concat({
+            id: packageJson.name,
+            timestamp: new Date(),
+            version: packageJson.version,
+        }),
+        sheets: state.sheets,
         timestamp: new Date(),
         type: 'juz',
     };

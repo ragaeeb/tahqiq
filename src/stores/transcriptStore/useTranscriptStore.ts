@@ -34,12 +34,9 @@ import {
  *
  * @returns A Zustand store with transcript state and actions
  */
-export const useTranscriptStore = create<TranscriptState>((set, get) => {
+export const useTranscriptStore = create<TranscriptState>((set) => {
     return {
-        addTranscripts: async (files) => {
-            const result = await addTranscriptsFromFiles(get(), files);
-            set(result);
-        },
+        addTranscripts: (...args) => set((state) => addTranscriptsFromFiles(state, args)),
         createdAt: new Date(),
         deleteSelectedSegments: () => {
             set(removeSelectedSegments);

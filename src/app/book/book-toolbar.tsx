@@ -13,17 +13,20 @@ import {
 import { record } from 'nanolytics';
 import React from 'react';
 
+import { JsonBrowseButton } from '@/components/json-browse-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { generateTranslationText } from '@/lib/ai';
 import { mapBookStateToKitab, mapKitabToLegacyFormat } from '@/lib/bookFormats';
 import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
+import { loadFiles } from '@/lib/io';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 import TocMenu from './toc-menu';
 import { TranslateDialog } from './translate-dialog';
+import VolumeSelector from './volume-selector';
 
 type BookToolbarProps = {
     onDeleteSelectedPages?: () => void;
@@ -44,9 +47,11 @@ function BookToolbar({
 }: BookToolbarProps) {
     const toggleHighlighter = useBookStore((state) => state.toggleHighlighter);
     const isHighlighterEnabled = useBookStore((state) => state.isHighlighterEnabled);
+    const addAjza = useBookStore((state) => state.addAjza);
 
     return (
         <div className="flex space-x-2">
+            <VolumeSelector />
             <Button
                 className="bg-emerald-500"
                 onClick={() => {
@@ -129,6 +134,15 @@ function BookToolbar({
             >
                 <BotIcon /> AI Translate
             </DialogTriggerButton>
+            <JsonBrowseButton
+                onFilesSelected={async (files) => {
+                    record('AddVolumes', files.length.toString());
+
+                    addAjza(await loadFiles(files));
+                }}
+            >
+                + Volumes
+            </JsonBrowseButton>
         </div>
     );
 }

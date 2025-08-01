@@ -16,7 +16,7 @@ export async function loadCompressed<T>(key: string): Promise<null | T> {
         const compressedData = base64ToArrayBuffer(base64);
 
         const ds = new DecompressionStream('gzip');
-        const stream = new Response(compressedData).body?.pipeThrough(ds);
+        const stream = new Response(compressedData as BodyInit).body?.pipeThrough(ds);
         const jsonString = await new Response(stream).text();
 
         return JSON.parse(jsonString) as T;
@@ -85,3 +85,14 @@ function base64ToArrayBuffer(base64: string): Uint8Array {
 
     return bytes;
 }
+
+export const loadFiles = async (files: FileList) => {
+    const fileNameToData: Record<string, any> = {};
+
+    for (const file of files) {
+        const data = await file.text();
+        fileNameToData[file.name] = file.name.endsWith('.json') ? JSON.parse(data) : data;
+    }
+
+    return fileNameToData;
+};

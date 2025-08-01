@@ -35,20 +35,22 @@ const extractPagesFromJuz = (file: string, juz: Juz) => {
         return s.observations.filter((o) => o.isHeading).map((o) => ({ id: getNextId(), page: s.page, title: o.text }));
     });
 
-    return { index, pages, volume };
+    return { index, pages, postProcessingApps: juz.postProcessingApps || [], volume };
 };
 
 export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
     const volumeToPages: Record<number, Page[]> = {};
     const volumeToIndex: Record<number, TableOfContents[]> = {};
-    const result: Partial<BookStateCore> = { volumeToIndex, volumeToPages };
+    const result: Partial<BookStateCore> = { postProcessingApps: [], volumeToIndex, volumeToPages };
     let inputFileName: string | undefined;
 
     Object.entries(fileToJuzOrKitab).forEach(([file, juzOrKitab]) => {
         if (juzOrKitab.type === 'juz') {
-            const { index, pages, volume } = extractPagesFromJuz(file, juzOrKitab);
+            const { index, pages, postProcessingApps, volume } = extractPagesFromJuz(file, juzOrKitab);
             volumeToIndex[volume] = index;
             volumeToPages[volume] = pages;
+
+            result.postProcessingApps!.push(...postProcessingApps);
         } else if (juzOrKitab.type === 'book') {
             juzOrKitab.pages.forEach((p) => {
                 const volume = p.volume || 1;
@@ -73,29 +75,29 @@ export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
             result.createdAt = juzOrKitab.createdAt;
             inputFileName = file;
 
-            if (juzOrKitab.postProcessingApps) {
-                result.postProcessingApps = [...juzOrKitab.postProcessingApps];
-            }
+            result.postProcessingApps!.push(...(juzOrKitab.postProcessingApps || []));
         }
     });
-
-    const indexKeys = new Set(
-        Object.entries(volumeToIndex).flatMap(([volume, indices]) => indices.map((i) => `${volume}/${i.page}`)),
-    );
-
-    Object.values(volumeToPages)
-        .flat()
-        .forEach((p) => {
-            if (indexKeys.has(`${p.volume}/${p.page}`)) {
-                p.hasHeader = true;
-            }
-        });
 
     return rawReturn({
         ...result,
         selectedVolume: Object.keys(volumeToPages).map(Number).sort()[0],
         ...(inputFileName && { inputFileName }),
     });
+};
+
+export const addAjza = (state: BookStateCore, files: Record<string, any>) => {
+    for (const [file, data] of Object.entries(files)) {
+        if (file.endsWith('.json')) {
+            const { index, pages, postProcessingApps, volume } = extractPagesFromJuz(file, data as Juz);
+
+            state.postProcessingApps.push(...postProcessingApps);
+            state.volumeToPages[volume] = pages;
+            state.volumeToIndex[volume] = index;
+        }
+    }
+
+    console.log('state', state);
 };
 
 export const initFromManuscript = (manuscript: ManuscriptStateCore) => {
