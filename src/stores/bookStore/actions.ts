@@ -96,8 +96,6 @@ export const addAjza = (state: BookStateCore, files: Record<string, any>) => {
             state.volumeToIndex[volume] = index;
         }
     }
-
-    console.log('state', state);
 };
 
 export const initFromManuscript = (manuscript: ManuscriptStateCore) => {

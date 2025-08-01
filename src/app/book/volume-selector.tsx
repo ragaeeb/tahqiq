@@ -7,14 +7,13 @@ import { selectVolumes } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 /**
- * Renders a dropdown menu for selecting a transcript part.
+ * Renders a dropdown menu for selecting a book volume.
  *
- * Updates the selected part in the transcript store when the user chooses a different option.
+ * Updates the selected volume in the book store when the user chooses a different option.
  */
 export default function VolumeSelector() {
     const { selectedVolume, setSelectedVolume } = useBookStore();
     const volumes = useBookStore(selectVolumes);
-    console.log('volumes', volumes);
 
     return (
         <select

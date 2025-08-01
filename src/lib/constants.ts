@@ -40,8 +40,6 @@ export const REQUIRED_RAW_INPUT_FILES = [
  */
 export const SWS_SYMBOL = 'ﷺ';
 
-export const VALID_SWS_NOUNS = ['رسول الله', 'رسول', 'النبي الله', 'النبي', 'محمد', 'رسول اللّٰه', 'رسول اللّه'];
-
 export const AZW_SYMBOL = 'ﷻ';
 
 export const INTAHA_TYPO = 'اه';
