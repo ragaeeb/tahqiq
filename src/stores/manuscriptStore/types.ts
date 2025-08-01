@@ -1,5 +1,7 @@
 import type { BoundingBox, Observation, TextBlock } from 'kokokor';
 
+import type { PostProcessingApp } from '@/stores/commonTypes';
+
 /**
  * Represents a Juz (section/part) format for Islamic texts.
  * This is a specialized format used for Quranic or Islamic scholarly works
@@ -8,6 +10,7 @@ import type { BoundingBox, Observation, TextBlock } from 'kokokor';
 export type Juz = {
     /** Version of the contract format used for this Juz */
     contractVersion: 'v2.0';
+    postProcessingApps: PostProcessingApp[];
     /**
      * Collection of sheets (pages) that make up this Juz.
      * Each sheet contains the main text and optional footnotes.
@@ -15,6 +18,7 @@ export type Juz = {
     sheets: Sheet[];
     /** When this Juz was created or last modified */
     timestamp: Date;
+
     /** Type identifier for this data structure */
     type: 'juz';
 };
@@ -30,6 +34,7 @@ export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
 export type ManuscriptStateCore = {
     idsFilter: Set<number>;
     isInitialized: boolean;
+    postProcessingApps: PostProcessingApp[];
     sheets: Sheet[];
 };
 
@@ -93,8 +98,6 @@ type MacOCR = { observations: Observation[] };
  * Action functions available for transcript manipulation
  */
 type ManuscriptActions = {
-    applySupportToOriginal: (page: number, id: number) => void;
-
     autoCorrectFootnotes: (pages: number[]) => void;
 
     clearOutPages: (pages: number[]) => void;

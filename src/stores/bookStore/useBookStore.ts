@@ -14,6 +14,7 @@ import * as actions from './actions';
 
 export const useBookStore = create<BookState>()(
     mutative((set) => ({
+        addAjza: (...args) => set((state) => actions.addAjza(state, ...args)),
         createdAt: new Date(),
         deletePages: (...args) => set((state) => actions.deletePages(state, ...args)),
         init: (data) => set(() => actions.initStore(data)),
@@ -23,6 +24,7 @@ export const useBookStore = create<BookState>()(
         postProcessingApps: [],
         reformatPages: (...args) => set((state) => actions.reformatPages(state, ...args)),
         selectedVolume: 0,
+        setSelectedVolume: (selectedVolume) => set({ selectedVolume }),
         shiftValues: (...args) => set((state) => actions.shiftValues(state, ...args)),
         toggleHighlighter: () => set((state) => ({ isHighlighterEnabled: !state.isHighlighterEnabled })),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),

@@ -27,7 +27,7 @@ const getTextInputClassName = (data: SheetLine) => {
         'w-full leading-relaxed text-gray-800 border-none outline-none px-1 py-1 transition-colors duration-150',
         data.isFootnote ? 'text-sm' : 'text-xl',
         data.isPoetic && 'italic bg-purple-100',
-        data.isCentered ? 'text-center' : 'text-right',
+        data.isCentered || data.isPoetic ? 'text-center' : 'text-right',
         data.isHeading && 'font-bold',
         data.includesHonorifics ? 'bg-red-200' : 'bg-transparent',
         'focus:bg-gray-50 focus:rounded',
@@ -48,7 +48,6 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const mergeWithBelow = useManuscriptStore((state) => state.mergeWithBelow);
-    const applySupportToOriginal = useManuscriptStore((state) => state.applySupportToOriginal);
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
@@ -135,7 +134,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('ApplyAltToAsl');
-                            applySupportToOriginal(data.page, data.id);
+                            updateTextLines([data.id], { text: data.alt });
                         }}
                     >
                         ✓

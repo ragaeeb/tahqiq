@@ -7,16 +7,17 @@ import { JsonBrowseButton } from '@/components/json-browse-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
+import { loadFiles } from '@/lib/io';
 import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
-import TranscriptToolbar from './transcript-toolbar';
 
 import '@/lib/analytics';
 
+import TranscriptToolbar from './transcript-toolbar';
 import UrlField from './url-field';
 
 /**
@@ -64,7 +65,13 @@ export default function Transcript() {
                 <div className="flex flex-col w-full max-w">
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                         <PartSelector />
-                        <JsonBrowseButton onFilesSelected={addTranscripts}>+ Parts</JsonBrowseButton>
+                        <JsonBrowseButton
+                            onFilesSelected={async (files) => {
+                                addTranscripts(await loadFiles(files));
+                            }}
+                        >
+                            + Parts
+                        </JsonBrowseButton>
                         <TranscriptToolbar />
                     </div>
 

@@ -1,6 +1,6 @@
 import memoizeOne from 'memoize-one';
 
-import type { BookStateCore, Page } from './types';
+import type { BookStateCore, Page, TableOfContents } from './types';
 
 const getVolumes = memoizeOne((volumeToPages: Record<number, Page[]>) =>
     Object.keys(volumeToPages)
@@ -8,7 +8,10 @@ const getVolumes = memoizeOne((volumeToPages: Record<number, Page[]>) =>
         .sort((a, b) => a - b),
 );
 
-const getPages = memoizeOne((pages?: Page[]) => pages || []);
+const getPages = memoizeOne((pages: Page[] = [], indices: TableOfContents[] = []) => {
+    const indexedPages = new Set(indices.map((i) => i.page));
+    return pages.map((p) => ({ ...p, ...(indexedPages.has(p.page) && { hasHeader: true }) }));
+});
 
 /**
  * Selects all manuscript volume numbers from state, sorted in ascending order.
@@ -22,7 +25,8 @@ export const selectVolumes = (state: BookStateCore): number[] => getVolumes(stat
  * @param state The manuscript state
  * @returns Array of pages or empty array if no volume is selected
  */
-export const selectCurrentPages = (state: BookStateCore) => getPages(state.volumeToPages[state.selectedVolume]);
+export const selectCurrentPages = (state: BookStateCore) =>
+    getPages(state.volumeToPages[state.selectedVolume], state.volumeToIndex[state.selectedVolume]);
 
 export const selectTableOfContents = memoizeOne(({ selectedVolume, volumeToIndex }: BookStateCore) => {
     return volumeToIndex[selectedVolume] || [];

@@ -87,9 +87,10 @@ const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, p
     return flipAndAlignObservations(mapSuryaPageResultToObservations(suryaPage), imageWidth, dpiX);
 };
 
-export const initStoreFromJuz = (juz: Juz) => {
+export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
     return rawReturn({
         isInitialized: true,
+        ...(juz.postProcessingApps && { postProcessingApps: juz.postProcessingApps }),
         sheets: juz.sheets,
     });
 };
@@ -231,17 +232,6 @@ export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: num
 
         sheet.alt.splice(index, 2, mergedAlt);
     }
-};
-
-export const applySupportToOriginal = (state: ManuscriptStateCore, page: number, id: number) => {
-    const sheet = state.sheets.find((s) => s.page === page)!;
-    const index = sheet.observations.findIndex((o) => o.id === id);
-
-    sheet.observations[index] = {
-        ...sheet.observations[index],
-        lastUpdate: Date.now(),
-        text: sheet.alt[index].text,
-    };
 };
 
 export const deleteSupport = (state: ManuscriptStateCore, page: number, id: number) => {
