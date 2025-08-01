@@ -33,11 +33,15 @@ describe('manuscript', () => {
             const actual = mapManuscriptToJuz({
                 idsFilter: new Set(),
                 isInitialized: true,
+                postProcessingApps: [],
                 sheets,
             });
 
             expect(actual).toEqual({
                 contractVersion: 'v2.0',
+                postProcessingApps: [
+                    { id: expect.any(String), timestamp: expect.any(Date), version: expect.any(String) },
+                ],
                 sheets,
                 timestamp: expect.any(Date),
                 type: 'juz',
@@ -48,6 +52,7 @@ describe('manuscript', () => {
             const actual = mapManuscriptToJuz({
                 idsFilter: new Set(),
                 isInitialized: true,
+                postProcessingApps: [],
                 sheets: [],
             });
 
@@ -58,6 +63,7 @@ describe('manuscript', () => {
             const actual = mapManuscriptToJuz({
                 idsFilter: new Set(),
                 isInitialized: false,
+                postProcessingApps: [],
                 sheets: [],
             });
 
