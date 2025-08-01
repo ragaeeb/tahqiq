@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/ragaeeb/tahqiq/compare/v1.15.1...v1.16.0) (2025-08-01)
+
+
+### Features
+
+* **volume:** Implement adding new volume to existing book [#65](https://github.com/ragaeeb/tahqiq/issues/65) ([#66](https://github.com/ragaeeb/tahqiq/issues/66)) ([e710b11](https://github.com/ragaeeb/tahqiq/commit/e710b11aa6ae8c03ed224b661e768a0692467c57)), closes [#63](https://github.com/ragaeeb/tahqiq/issues/63)
+
 ## [1.15.1](https://github.com/ragaeeb/tahqiq/compare/v1.15.0...v1.15.1) (2025-07-30)
 
 
