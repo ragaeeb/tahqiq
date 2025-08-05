@@ -287,7 +287,7 @@ export const initStore = (data: TranscriptSeries) => {
     }
 
     return {
-        createdAt: data.createdAt,
+        createdAt: new Date(data.createdAt),
         selectedPart: data.transcripts[0]!.volume,
         transcripts,
     };
