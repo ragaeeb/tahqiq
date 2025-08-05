@@ -112,19 +112,19 @@ export const shiftValues = (
     const pages = selectCurrentPages(state);
     const startingIndex = pages.findIndex((p) => p.id === startingPageId);
 
-    const startingPage = pages[startingIndex];
-    startingPage[key] = startingPageValue;
-    startingPage.lastUpdate = Date.now();
+    const updatedPages = pages.map((page, index) => {
+        if (index >= startingIndex) {
+            const offset = index - startingIndex;
+            return {
+                ...page,
+                [key]: startingPageValue + offset,
+                lastUpdate: Date.now(),
+            };
+        }
+        return page;
+    });
 
-    let counter = startingPageValue + 1;
-
-    for (let i = startingIndex + 1; i < pages.length; i++) {
-        const page = pages[i];
-        page[key] = counter;
-        page.lastUpdate = Date.now();
-
-        counter++;
-    }
+    state.volumeToPages[state.selectedVolume] = updatedPages;
 };
 
 const getPagesById = (state: BookStateCore, pageIds: number[]) => {
