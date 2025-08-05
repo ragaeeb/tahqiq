@@ -32,6 +32,7 @@ export type ManuscriptState = ManuscriptActions & ManuscriptStateCore;
  * Core state properties for manuscript management
  */
 export type ManuscriptStateCore = {
+    createdAt: Date;
     idsFilter: Set<number>;
     isInitialized: boolean;
     postProcessingApps: PostProcessingApp[];
@@ -98,6 +99,8 @@ type MacOCR = { observations: Observation[] };
  * Action functions available for transcript manipulation
  */
 type ManuscriptActions = {
+    alignPoetry: (pages: number[]) => void;
+
     autoCorrectFootnotes: (pages: number[]) => void;
 
     clearOutPages: (pages: number[]) => void;

@@ -7,8 +7,10 @@ import * as actions from './actions';
 
 export const useManuscriptStore = create<ManuscriptState>()(
     mutative((set) => ({
+        alignPoetry: (...args) => set((state) => actions.alignPoetry(state, ...args)),
         autoCorrectFootnotes: (pages) => set((state) => actions.autoCorrectFootnotes(state, pages)),
         clearOutPages: (...args) => set((state) => actions.clearOutPages(state, ...args)),
+        createdAt: new Date(),
         deleteLines: (ids) => set((state) => actions.deleteLines(state, ids)),
         deleteSupport: (...args) => set((state) => actions.deleteSupport(state, ...args)),
         deleteSupports: (...args) => set((state) => actions.deleteSupports(state, ...args)),

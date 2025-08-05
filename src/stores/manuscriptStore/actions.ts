@@ -1,4 +1,10 @@
-import { correctReferences, fixTypo } from 'baburchi';
+import {
+    areSimilarAfterNormalization,
+    calculateSimilarity,
+    correctReferences,
+    fixTypo,
+    normalizeArabicText,
+} from 'baburchi';
 import {
     calculateDPI,
     flipAndAlignObservations,
@@ -89,6 +95,7 @@ const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, p
 
 export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
     return rawReturn({
+        createdAt: new Date(juz.timestamp),
         isInitialized: true,
         ...(juz.postProcessingApps && { postProcessingApps: juz.postProcessingApps }),
         sheets: juz.sheets,
@@ -392,4 +399,96 @@ export const searchAndReplace = (state: ManuscriptStateCore, pattern: RegExp | s
             }
         }
     }
+};
+
+export const alignPoetry = (state: ManuscriptStateCore, pages: number[]) => {
+    const sheets = getSheets(state, pages);
+
+    for (const sheet of sheets) {
+        const mergedAlt = alignAndMergeAltPoetry(sheet);
+        sheet.alt = mergedAlt;
+    }
+};
+
+/**
+ * Aligns and merges poetic lines from an alternative OCR source ('alt') to match
+ * the structure of a primary OCR source ('observations').
+ *
+ * For poetic lines, 'observations' typically contains the full line, while 'alt'
+ * may contain the line split into two segments, sometimes in reversed order.
+ * This function identifies such splits, determines the correct segment order by
+ * comparing similarity scores against the full line, and merges them.
+ *
+ * @param {AlignAndMergeParams} params - The input object containing observations and alt arrays.
+ * @returns {TextObservation[]} A new 'alt' array with poetic lines merged to align with 'observations'.
+ */
+// eslint-disable-next-line sonarjs/cognitive-complexity
+export const alignAndMergeAltPoetry = ({ alt, observations }: Sheet) => {
+    const mergedAlt: typeof alt = [];
+    let altIndex = 0;
+
+    for (const observation of observations) {
+        if (altIndex >= alt.length) {
+            // Stop if we have run out of alt elements to process.
+            break;
+        }
+
+        const currentAltObservation = alt[altIndex];
+
+        if (observation.isPoetic) {
+            // First, check if the current 'alt' line is already a good match for the full 'observation' line.
+            // This handles cases where one engine did not split the poetic line.
+            if (areSimilarAfterNormalization(observation.text, currentAltObservation.text)) {
+                mergedAlt.push(currentAltObservation);
+                altIndex++;
+                continue;
+            }
+
+            // If not a direct match, assume it's a split line. We need to look at the next two 'alt' elements.
+            const partA = alt[altIndex];
+            const partB = alt[altIndex + 1];
+
+            // Ensure we have two parts to merge. If not, we have a mismatch.
+            // As a fallback, we'll just add the current part and move on.
+            if (!partA || !partB) {
+                if (partA) {
+                    mergedAlt.push(partA);
+                    altIndex++;
+                }
+                continue;
+            }
+
+            // Create two potential merged strings: one in order, one reversed.
+            const mergedForward = `${partA.text} ${partB.text}`;
+            const mergedReversed = `${partB.text} ${partA.text}`;
+
+            // Normalize the target text from observations for a fair comparison.
+            const normalizedTarget = normalizeArabicText(observation.text);
+
+            // Calculate similarity scores for both potential orderings against the target.
+            const scoreForward = calculateSimilarity(normalizedTarget, normalizeArabicText(mergedForward));
+            const scoreReversed = calculateSimilarity(normalizedTarget, normalizeArabicText(mergedReversed));
+
+            // Choose the merged text with the higher similarity score.
+            if (scoreForward >= scoreReversed) {
+                mergedAlt.push({ id: getNextId(), text: mergedForward });
+            } else {
+                mergedAlt.push({ id: getNextId(), text: mergedReversed });
+            }
+
+            // Since we've processed and merged two elements from 'alt', advance the index by two.
+            altIndex += 2;
+        } else {
+            // For non-poetic lines, we assume a one-to-one correspondence.
+            mergedAlt.push(currentAltObservation);
+            altIndex++;
+        }
+    }
+
+    // Add any remaining elements from alt that were not processed.
+    if (altIndex < alt.length) {
+        mergedAlt.push(...alt.slice(altIndex));
+    }
+
+    return mergedAlt;
 };

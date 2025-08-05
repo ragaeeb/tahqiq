@@ -1,4 +1,4 @@
-import { EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
+import { AlignJustifyIcon, EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
@@ -19,6 +19,7 @@ import {
 import { AZW_SYMBOL, INTAHA_ACTUAL, SWS_SYMBOL } from '@/lib/constants';
 
 type ManuscriptMenuProps = ButtonPropsType & {
+    alignPoetry: () => void;
     autoCorrectFootnotes: () => void;
     clearOutPages: () => void;
     deleteLines: () => void;
@@ -48,11 +49,11 @@ const NestedMenu = ({ children, label, onSelect }: NestedMenuProps) => {
                         <DropdownMenuSubTrigger>Apply</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => onSelect(true, true)}>
-                                    To Page <SignatureIcon />
-                                </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => onSelect(true)}>
                                     To Row <SignatureIcon />
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => onSelect(true, true)}>
+                                    To Page <SignatureIcon />
                                 </DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
@@ -74,6 +75,7 @@ const NestedMenu = ({ children, label, onSelect }: NestedMenuProps) => {
 };
 
 export function ManuscriptMenu({
+    alignPoetry,
     autoCorrectFootnotes,
     clearOutPages,
     deleteLines,
@@ -126,7 +128,14 @@ export function ManuscriptMenu({
                             </DropdownMenuItem>
                         </>
                     </NestedMenu>
-                    <NestedMenu label="Poetry" onSelect={markAsPoetry} />
+                    <NestedMenu label="Poetry" onSelect={markAsPoetry}>
+                        <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={alignPoetry}>
+                                Align <AlignJustifyIcon />
+                            </DropdownMenuItem>
+                        </>
+                    </NestedMenu>
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger>Heading</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>

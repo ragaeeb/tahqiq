@@ -72,7 +72,7 @@ export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
                 volumeToIndex[volume].push({ ...p, id: getNextId() });
             });
 
-            result.createdAt = juzOrKitab.createdAt;
+            result.createdAt = new Date(juzOrKitab.createdAt);
             inputFileName = file;
 
             result.postProcessingApps!.push(...(juzOrKitab.postProcessingApps || []));

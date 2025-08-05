@@ -223,7 +223,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getState().init(testData);
 
             const state = useTranscriptStore.getState();
-            expect(state.createdAt).toBe(now);
+            expect(state.createdAt.toString()).toBe(now.toString());
             expect(state.selectedPart).toBe(1);
             expect(state.transcripts[1]).toEqual(testData.transcripts[0]!);
         });
