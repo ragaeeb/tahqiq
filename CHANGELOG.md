@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/ragaeeb/tahqiq/compare/v1.16.0...v1.17.0) (2025-08-05)
+
+
+### Features
+
+* **poetry:** Implement automatically aligning broken alt poetic lines [#68](https://github.com/ragaeeb/tahqiq/issues/68) ([#69](https://github.com/ragaeeb/tahqiq/issues/69)) ([179766f](https://github.com/ragaeeb/tahqiq/commit/179766f207d967792f26c60097c92db76af3b658)), closes [#67](https://github.com/ragaeeb/tahqiq/issues/67)
+
 # [1.16.0](https://github.com/ragaeeb/tahqiq/compare/v1.15.1...v1.16.0) (2025-08-01)
 
 
