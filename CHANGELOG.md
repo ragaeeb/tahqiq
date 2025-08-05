@@ -1,3 +1,10 @@
+## [1.17.1](https://github.com/ragaeeb/tahqiq/compare/v1.17.0...v1.17.1) (2025-08-05)
+
+
+### Bug Fixes
+
+* **shift:** Fix shift pages not updating ([14bea4a](https://github.com/ragaeeb/tahqiq/commit/14bea4afe0087bfa51dae047245042cec5f48ca4))
+
 # [1.17.0](https://github.com/ragaeeb/tahqiq/compare/v1.16.0...v1.17.0) (2025-08-05)
 
 
