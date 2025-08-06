@@ -16,6 +16,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         deleteSupports: (...args) => set((state) => actions.deleteSupports(state, ...args)),
         filterByIds: (ids) => set(() => ({ idsFilter: new Set(ids) })),
         filterByPages: (pages) => set((state) => actions.filterByPages(state, pages)),
+        filterBySimilar: (...args) => set((state) => actions.filterBySimilar(state, ...args)),
         fixTypos: (ids) => set((state) => actions.fixTypos(state, ids)),
         idsFilter: new Set<number>(),
         init: (...args) => set(() => actions.initStore(...args)),

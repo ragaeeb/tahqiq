@@ -24,7 +24,7 @@
         "@radix-ui/react-slider": "^1.3.5",
         "@radix-ui/react-slot": "^1.2.3",
         "@tanstack/react-virtual": "^3.13.12",
-        "baburchi": "^1.3.0",
+        "baburchi": "^1.4.0",
         "bitaboom": "^1.3.0",
         "blumbaben": "^1.0.0",
         "class-variance-authority": "^0.7.1",

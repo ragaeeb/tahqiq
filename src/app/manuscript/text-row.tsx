@@ -50,6 +50,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
     const mergeWithBelow = useManuscriptStore((state) => state.mergeWithBelow);
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
+    const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
 
     return (
@@ -83,6 +84,17 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
+                    <Button
+                        aria-label="Delete Asl"
+                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                        onClick={() => {
+                            record('DeleteAsl');
+                            deleteLines([data.id]);
+                        }}
+                        variant="ghost"
+                    >
+                        <Trash2Icon />
+                    </Button>
                     <Button
                         aria-label="Merge With Above"
                         className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"

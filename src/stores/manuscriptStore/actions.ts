@@ -1,9 +1,9 @@
 import {
+    alignTextSegments,
     areSimilarAfterNormalization,
-    calculateSimilarity,
     correctReferences,
     fixTypo,
-    normalizeArabicText,
+    isArabicTextNoise,
 } from 'baburchi';
 import {
     calculateDPI,
@@ -68,17 +68,21 @@ const createSheet = (
         },
     });
 
-    const altObservations = alternateObservations.map((o) => ({ id: getNextId(), text: o.text }));
+    const altObservations = alternateObservations
+        .filter((o) => !isArabicTextNoise(o.text))
+        .map((o) => ({ id: getNextId(), text: o.text }));
 
     return {
         alt: altObservations,
-        observations: textLines.map((o) => {
-            return {
-                ...o,
-                id: getNextId(),
-                lastUpdate: Date.now(),
-            };
-        }),
+        observations: textLines
+            .filter((o) => !isArabicTextNoise(o.text))
+            .map((o) => {
+                return {
+                    ...o,
+                    id: getNextId(),
+                    lastUpdate: Date.now(),
+                };
+            }),
         page,
     };
 };
@@ -388,6 +392,21 @@ export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: numbe
     return rawReturn({ idsFilter });
 };
 
+export const filterBySimilar = (state: ManuscriptStateCore, ids: number[], threshold: number) => {
+    const idsFilter = new Set<number>();
+    const texts = getTextLines(state, ids).map((l) => l.text);
+
+    for (const sheet of state.sheets) {
+        for (const o of sheet.observations) {
+            if (texts.some((text) => areSimilarAfterNormalization(o.text, text, threshold))) {
+                idsFilter.add(o.id);
+            }
+        }
+    }
+
+    return rawReturn({ idsFilter });
+};
+
 export const searchAndReplace = (state: ManuscriptStateCore, pattern: RegExp | string, replacement: string) => {
     for (const sheet of state.sheets) {
         for (const observation of sheet.observations) {
@@ -422,73 +441,18 @@ export const alignPoetry = (state: ManuscriptStateCore, pages: number[]) => {
  * @param {AlignAndMergeParams} params - The input object containing observations and alt arrays.
  * @returns {TextObservation[]} A new 'alt' array with poetic lines merged to align with 'observations'.
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
+
 export const alignAndMergeAltPoetry = ({ alt, observations }: Sheet) => {
-    const mergedAlt: typeof alt = [];
-    let altIndex = 0;
+    // Use the string-based alignment function
+    const alignedTexts = alignTextSegments(
+        observations.map((obs) => (obs.isPoetic ? obs.text : '')),
+        alt.map((altObs) => altObs.text),
+    );
 
-    for (const observation of observations) {
-        if (altIndex >= alt.length) {
-            // Stop if we have run out of alt elements to process.
-            break;
-        }
-
-        const currentAltObservation = alt[altIndex];
-
-        if (observation.isPoetic) {
-            // First, check if the current 'alt' line is already a good match for the full 'observation' line.
-            // This handles cases where one engine did not split the poetic line.
-            if (areSimilarAfterNormalization(observation.text, currentAltObservation.text)) {
-                mergedAlt.push(currentAltObservation);
-                altIndex++;
-                continue;
-            }
-
-            // If not a direct match, assume it's a split line. We need to look at the next two 'alt' elements.
-            const partA = alt[altIndex];
-            const partB = alt[altIndex + 1];
-
-            // Ensure we have two parts to merge. If not, we have a mismatch.
-            // As a fallback, we'll just add the current part and move on.
-            if (!partA || !partB) {
-                if (partA) {
-                    mergedAlt.push(partA);
-                    altIndex++;
-                }
-                continue;
-            }
-
-            // Create two potential merged strings: one in order, one reversed.
-            const mergedForward = `${partA.text} ${partB.text}`;
-            const mergedReversed = `${partB.text} ${partA.text}`;
-
-            // Normalize the target text from observations for a fair comparison.
-            const normalizedTarget = normalizeArabicText(observation.text);
-
-            // Calculate similarity scores for both potential orderings against the target.
-            const scoreForward = calculateSimilarity(normalizedTarget, normalizeArabicText(mergedForward));
-            const scoreReversed = calculateSimilarity(normalizedTarget, normalizeArabicText(mergedReversed));
-
-            // Choose the merged text with the higher similarity score.
-            if (scoreForward >= scoreReversed) {
-                mergedAlt.push({ id: getNextId(), text: mergedForward });
-            } else {
-                mergedAlt.push({ id: getNextId(), text: mergedReversed });
-            }
-
-            // Since we've processed and merged two elements from 'alt', advance the index by two.
-            altIndex += 2;
-        } else {
-            // For non-poetic lines, we assume a one-to-one correspondence.
-            mergedAlt.push(currentAltObservation);
-            altIndex++;
-        }
-    }
-
-    // Add any remaining elements from alt that were not processed.
-    if (altIndex < alt.length) {
-        mergedAlt.push(...alt.slice(altIndex));
-    }
-
-    return mergedAlt;
+    // Convert back to the original object structure
+    return alignedTexts.map((text) => {
+        // For lines that match original alt text, preserve the original object
+        const matchingOriginal = alt.find((altItem) => altItem.text === text);
+        return matchingOriginal || { id: getNextId(), text };
+    });
 };
