@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/ragaeeb/tahqiq/compare/v1.17.1...v1.18.0) (2025-08-06)
+
+
+### Features
+
+* **similar:** Add filter by similar matn [#70](https://github.com/ragaeeb/tahqiq/issues/70) ([#71](https://github.com/ragaeeb/tahqiq/issues/71)) ([afd85eb](https://github.com/ragaeeb/tahqiq/commit/afd85ebf81f22482c6ef6c235db2162f4e49b6d5)), closes [#54](https://github.com/ragaeeb/tahqiq/issues/54)
+
 ## [1.17.1](https://github.com/ragaeeb/tahqiq/compare/v1.17.0...v1.17.1) (2025-08-05)
 
 
