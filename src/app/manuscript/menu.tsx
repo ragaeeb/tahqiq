@@ -24,6 +24,7 @@ type ManuscriptMenuProps = ButtonPropsType & {
     clearOutPages: () => void;
     deleteLines: () => void;
     deleteSupports: () => void;
+    findSimilar: (threshold: number) => void;
     fixIntaha: () => void;
     markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
@@ -80,6 +81,7 @@ export function ManuscriptMenu({
     clearOutPages,
     deleteLines,
     deleteSupports,
+    findSimilar,
     fixIntaha,
     markAsFootnotes,
     markAsHeading,
@@ -109,6 +111,17 @@ export function ManuscriptMenu({
                                 <DropdownMenuItem onSelect={onReplaceSwsWithAzw}>
                                     Replace {SWS_SYMBOL} with {AZW_SYMBOL}
                                 </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Find Similar</DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => findSimilar(0.6)}>60%</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => findSimilar(0.7)}>70%</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => findSimilar(0.8)}>80%</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => findSimilar(0.9)}>90%</DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>

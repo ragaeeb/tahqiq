@@ -115,6 +115,8 @@ type ManuscriptActions = {
 
     filterByPages: (pages: number[]) => void;
 
+    filterBySimilar: (ids: number[], threshold: number) => void;
+
     fixTypos: (ids: number[]) => void;
 
     /**

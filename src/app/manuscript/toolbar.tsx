@@ -30,6 +30,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const deleteSupports = useManuscriptStore((state) => state.deleteSupports);
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
+    const filterBySimilar = useManuscriptStore((state) => state.filterBySimilar);
     const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
     const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
 
@@ -74,6 +75,14 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     setSelectedRows([]);
                 }}
                 disabled={selectedRows.length === 0}
+                findSimilar={(threshold) => {
+                    record('FindSimilar', threshold.toString());
+
+                    filterBySimilar(
+                        selectedRows.map((r) => r.id),
+                        threshold,
+                    );
+                }}
                 fixIntaha={() => {
                     record('FixIntaha', selectedRows.length.toString());
 
