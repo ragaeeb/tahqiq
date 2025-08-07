@@ -63,6 +63,16 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         rebuildSegmentFromTokens: () => {
             set(rebuildSegmentFromTokens);
         },
+        reset: () => {
+            return set(() => ({
+                createdAt: new Date(),
+                postProcessingApps: [],
+                selectedPart: 0,
+                selectedSegments: [],
+                selectedToken: null,
+                transcripts: {},
+            }));
+        },
         selectAllSegments: (isSelected: boolean) => {
             return set((state) => selectAllSegments(state, isSelected));
         },

@@ -1,6 +1,6 @@
 'use client';
 
-import { BoxIcon, DownloadIcon, SaveIcon } from 'lucide-react';
+import { BoxIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -9,20 +9,22 @@ import { toast } from 'sonner';
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 
 import RowToolbar from '@/app/manuscript/row-toolbar';
+import { ConfirmButton } from '@/components/confirm-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
-import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import '@/lib/analytics';
+import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
-import ManuscriptToolbar from './toolbar';
 import '@/stores/dev';
+
+import ManuscriptToolbar from './toolbar';
 
 /**
  * Renders the main page layout for displaying manuscript pages.
@@ -30,6 +32,7 @@ import '@/stores/dev';
 export default function Manuscript() {
     const initManuscript = useManuscriptStore((state) => state.init);
     const initJuz = useManuscriptStore((state) => state.initFromJuz);
+    const reset = useManuscriptStore((state) => state.reset);
     const rows = useManuscriptStore(selectAllSheetLines);
     const isInitialized = useManuscriptStore((state) => state.isInitialized);
     const selection = useState<SheetLine[]>([]);
@@ -137,6 +140,14 @@ export default function Manuscript() {
                             >
                                 <DownloadIcon />
                             </Button>
+                            <ConfirmButton
+                                onClick={() => {
+                                    record('ResetManuscript');
+                                    reset();
+                                }}
+                            >
+                                <RefreshCwIcon />
+                            </ConfirmButton>
                             <Link href="/book">
                                 <Button
                                     className="bg-blue-500"

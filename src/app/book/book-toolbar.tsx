@@ -5,6 +5,7 @@ import {
     DownloadIcon,
     HighlighterIcon,
     MergeIcon,
+    RefreshCwIcon,
     SaveIcon,
     SquareDashedIcon,
     TextCursorInputIcon,
@@ -13,6 +14,7 @@ import {
 import { record } from 'nanolytics';
 import React from 'react';
 
+import { ConfirmButton } from '@/components/confirm-button';
 import { JsonBrowseButton } from '@/components/json-browse-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
@@ -48,6 +50,7 @@ function BookToolbar({
     const toggleHighlighter = useBookStore((state) => state.toggleHighlighter);
     const isHighlighterEnabled = useBookStore((state) => state.isHighlighterEnabled);
     const addAjza = useBookStore((state) => state.addAjza);
+    const reset = useBookStore((state) => state.reset);
 
     return (
         <div className="flex space-x-2">
@@ -86,6 +89,14 @@ function BookToolbar({
             >
                 <DownloadIcon /> Legacy
             </Button>
+            <ConfirmButton
+                onClick={() => {
+                    record('ResetBook');
+                    reset();
+                }}
+            >
+                <RefreshCwIcon />
+            </ConfirmButton>
             <TocMenu
                 onBookmarkClicked={() => {
                     record('BookmarkClicked');

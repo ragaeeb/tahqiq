@@ -1,10 +1,11 @@
 'use client';
 
-import { BotIcon } from 'lucide-react';
+import { BotIcon, RefreshCwIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
 
+import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
@@ -31,6 +32,7 @@ export default function TranscriptToolbar() {
     const removeSegments = useTranscriptStore((state) => state.deleteSelectedSegments);
     const selectedSegments = useTranscriptStore((state) => state.selectedSegments);
     const selectedToken = useTranscriptStore((state) => state.selectedToken);
+    const reset = useTranscriptStore((state) => state.reset);
     const sortedSegments = selectedSegments.toSorted((a, b) => a.start - b.start);
 
     return (
@@ -149,6 +151,14 @@ export default function TranscriptToolbar() {
                 ♺ Rebuild Segment from Tokens
             </Button>
             <DownloadButton />
+            <ConfirmButton
+                onClick={() => {
+                    record('ResetTranscript');
+                    reset();
+                }}
+            >
+                <RefreshCwIcon />
+            </ConfirmButton>
         </div>
     );
 }

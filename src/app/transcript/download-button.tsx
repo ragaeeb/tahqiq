@@ -22,11 +22,9 @@ export default function DownloadButton() {
                 if (name) {
                     record('DownloadTranscript', name);
 
-                    const { createdAt, transcripts } = useTranscriptStore.getState();
-
                     downloadFile(
                         name.endsWith('.json') ? name : `${name}.json`,
-                        JSON.stringify(mapTranscriptsToLatestContract(Object.values(transcripts), createdAt), null, 2),
+                        JSON.stringify(mapTranscriptsToLatestContract(useTranscriptStore.getState()), null, 2),
                     );
                 }
             }}

@@ -83,6 +83,7 @@ export type TranscriptStateCore = {
     readonly createdAt: Date;
     /** Current formatting options for displaying and processing transcripts */
     readonly formatOptions: FormatOptions;
+    readonly postProcessingApps: PostProcessingApp[];
     /** Currently selected transcript volume number */
     readonly selectedPart: number;
     /** Array of currently selected segments */
@@ -129,6 +130,8 @@ type TranscriptActions = {
      * Merges all the tokens from various segments into a single segment.
      */
     rebuildSegmentFromTokens: () => void;
+
+    reset: () => void;
 
     /**
      * Sets selection state for all segments

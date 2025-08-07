@@ -13,7 +13,7 @@ export const mapManuscriptToJuz = (state: ManuscriptStateCore): Juz => {
             version: packageJson.version,
         }),
         sheets: state.sheets,
-        timestamp: new Date(),
+        timestamp: state.createdAt,
         type: 'juz',
     };
 };
