@@ -31,6 +31,7 @@ describe('manuscript', () => {
             ];
 
             const actual = mapManuscriptToJuz({
+                createdAt: new Date(),
                 idsFilter: new Set(),
                 isInitialized: true,
                 postProcessingApps: [],
@@ -50,6 +51,7 @@ describe('manuscript', () => {
 
         it('should handle empty sheets array', () => {
             const actual = mapManuscriptToJuz({
+                createdAt: new Date(),
                 idsFilter: new Set(),
                 isInitialized: true,
                 postProcessingApps: [],
@@ -61,6 +63,7 @@ describe('manuscript', () => {
 
         it('should handle uninitialized state', () => {
             const actual = mapManuscriptToJuz({
+                createdAt: new Date(),
                 idsFilter: new Set(),
                 isInitialized: false,
                 postProcessingApps: [],

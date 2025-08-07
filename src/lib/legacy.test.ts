@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 
 import type { Transcript } from '@/stores/transcriptStore/types';
 
@@ -22,7 +22,7 @@ describe('legacy', () => {
             };
 
             const result = adaptLegacyTranscripts(modernFormat);
-            expect(result).toEqual(modernFormat);
+            expect(result).toEqual(modernFormat as any);
         });
 
         it('should convert v0.x format to latest contract version', () => {
@@ -472,7 +472,7 @@ describe('legacy', () => {
                 },
             ];
 
-            const result = mapTranscriptsToLatestContract(transcripts, createdAt);
+            const result = mapTranscriptsToLatestContract({ createdAt, postProcessingApps: [], transcripts } as any);
 
             expect(result.contractVersion).toBe(LatestContractVersion.Transcript);
             expect(result.createdAt).toBe(createdAt);
@@ -491,7 +491,11 @@ describe('legacy', () => {
 
         it('should handle empty transcripts array', () => {
             const createdAt = new Date('2023-01-01');
-            const result = mapTranscriptsToLatestContract([], createdAt);
+            const result = mapTranscriptsToLatestContract({
+                createdAt,
+                postProcessingApps: [],
+                transcripts: [],
+            } as any);
 
             expect(result.contractVersion).toBe(LatestContractVersion.Transcript);
             expect(result.transcripts).toEqual([]);

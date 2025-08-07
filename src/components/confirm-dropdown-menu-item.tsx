@@ -24,7 +24,7 @@ export function ConfirmDropdownMenuItem({
         <DropdownMenuItem
             aria-label={isConfirming ? `Confirm: ${confirmText}` : undefined}
             aria-pressed={isConfirming}
-            onSelect={handleClick}
+            onSelect={handleClick as any}
             variant="destructive"
             {...props}
         >

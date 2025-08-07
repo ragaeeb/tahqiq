@@ -60,6 +60,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         mergeSegments: () => {
             set(mergeSelectedSegments);
         },
+        postProcessingApps: [],
         rebuildSegmentFromTokens: () => {
             set(rebuildSegmentFromTokens);
         },
