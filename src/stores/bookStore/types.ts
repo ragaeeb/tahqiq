@@ -152,6 +152,8 @@ type BookActions = {
      */
     reformatPages: (pageIds: number[]) => void;
 
+    reset: () => void;
+
     /**
      * Changes the currently selected book volume
      * @param volume Volume number to select

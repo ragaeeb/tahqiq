@@ -23,6 +23,15 @@ export const useBookStore = create<BookState>()(
         mergeFootnotesWithMatn: (...args) => set((state) => actions.mergeFootnotesWithMatn(state, ...args)),
         postProcessingApps: [],
         reformatPages: (...args) => set((state) => actions.reformatPages(state, ...args)),
+        reset: () => {
+            return set(() => ({
+                createdAt: new Date(),
+                postProcessingApps: [],
+                selectedVolume: 0,
+                volumeToIndex: {},
+                volumeToPages: {},
+            }));
+        },
         selectedVolume: 0,
         setSelectedVolume: (selectedVolume) => set({ selectedVolume }),
         shiftValues: (...args) => set((state) => actions.shiftValues(state, ...args)),

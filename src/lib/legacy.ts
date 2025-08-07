@@ -1,6 +1,8 @@
 import { estimateSegmentFromToken } from 'paragrafs';
 
-import type { Transcript, TranscriptSeries } from '@/stores/transcriptStore/types';
+import type { Transcript, TranscriptSeries, TranscriptStateCore } from '@/stores/transcriptStore/types';
+
+import packageJson from '@/../package.json';
 
 import type { BookTranscriptFormat, PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 
@@ -160,11 +162,18 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
     throw new Error(`Unrecognized transcript format: ${JSON.stringify(input).substring(0, 100)}...`);
 };
 
-export const mapTranscriptsToLatestContract = (transcripts: Transcript[], createdAt: Date): TranscriptSeries => {
+export const mapTranscriptsToLatestContract = (state: TranscriptStateCore): TranscriptSeries => {
+    const { createdAt, transcripts } = state;
+
     return {
         contractVersion: LatestContractVersion.Transcript,
         createdAt,
         lastUpdatedAt: new Date(),
+        postProcessingApps: state.postProcessingApps.concat({
+            id: packageJson.name,
+            timestamp: new Date(),
+            version: packageJson.version,
+        }),
         transcripts: Object.values(transcripts)
             .toSorted((a, b) => a.volume - b.volume)
             .map((t) => ({

@@ -1,30 +1,29 @@
-'use client';
-
 import { CheckIcon } from 'lucide-react';
 
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { useConfirmation } from '@/components/hooks/useConfirmation';
+import { Button } from '@/components/ui/button';
 
-import { useConfirmation } from './hooks/useConfirmation';
-
-interface ConfirmDropdownMenuItemProps extends Omit<React.ComponentProps<typeof DropdownMenuItem>, 'onClick'> {
+interface ConfirmButtonProps extends Omit<React.ComponentProps<typeof Button>, 'onClick'> {
     children: React.ReactNode;
     confirmText?: string;
     onClick: () => void;
+    resetTimeoutMs?: number;
 }
 
-export function ConfirmDropdownMenuItem({
+export function ConfirmButton({
     children,
-    confirmText = 'Click to confirm',
+    confirmText = 'Confirm',
     onClick,
+    resetTimeoutMs = 3000,
     ...props
-}: ConfirmDropdownMenuItemProps) {
-    const { handleClick, isConfirming } = useConfirmation(onClick);
+}: ConfirmButtonProps) {
+    const { handleClick, isConfirming } = useConfirmation(onClick, resetTimeoutMs);
 
     return (
-        <DropdownMenuItem
+        <Button
             aria-label={isConfirming ? `Confirm: ${confirmText}` : undefined}
             aria-pressed={isConfirming}
-            onSelect={handleClick as any}
+            onClick={handleClick as any}
             variant="destructive"
             {...props}
         >
@@ -36,6 +35,6 @@ export function ConfirmDropdownMenuItem({
             ) : (
                 <>{children}</>
             )}
-        </DropdownMenuItem>
+        </Button>
     );
 }

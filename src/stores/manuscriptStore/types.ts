@@ -133,6 +133,8 @@ type ManuscriptActions = {
 
     replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
 
+    reset: () => void;
+
     searchAndReplace: (pattern: RegExp | string, replacement: string) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
