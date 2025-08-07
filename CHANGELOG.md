@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/ragaeeb/tahqiq/compare/v1.18.0...v1.19.0) (2025-08-07)
+
+
+### Features
+
+* **reset:** Add reset button [#72](https://github.com/ragaeeb/tahqiq/issues/72) ([#73](https://github.com/ragaeeb/tahqiq/issues/73)) ([3fb9848](https://github.com/ragaeeb/tahqiq/commit/3fb9848c5732b2a67a3a72a4cf54d30fb8f17b1e))
+
 # [1.18.0](https://github.com/ragaeeb/tahqiq/compare/v1.17.1...v1.18.0) (2025-08-06)
 
 
