@@ -25,7 +25,6 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const autoCorrectFootnotes = useManuscriptStore((state) => state.autoCorrectFootnotes);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
     const updatePages = useManuscriptStore((state) => state.updatePages);
-    const replaceHonorifics = useManuscriptStore((state) => state.replaceHonorifics);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const deleteSupports = useManuscriptStore((state) => state.deleteSupports);
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
@@ -161,12 +160,6 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                     record('FixSwsSymbol');
 
                     fixTypos(selectedRows.map((s) => s.id));
-                    setSelectedRows([]);
-                }}
-                onReplaceSwsWithAzw={() => {
-                    record('ReplaceSwsWithAzw', selectedRows.length.toString());
-
-                    replaceHonorifics(selectedRows.map((r) => r.id));
                     setSelectedRows([]);
                 }}
                 onReplaceText={(text) => {

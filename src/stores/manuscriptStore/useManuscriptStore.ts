@@ -27,16 +27,21 @@ export const useManuscriptStore = create<ManuscriptState>()(
         mergeWithAbove: (...args) => set((state) => actions.mergeWithAbove(state, ...args)),
         mergeWithBelow: (...args) => set((state) => actions.mergeWithBelow(state, ...args)),
         postProcessingApps: [],
-        replaceHonorifics: (...args) => set((state) => actions.replaceHonorifics(state, ...args)),
         reset: () => {
             return set(() => ({
                 createdAt: new Date(),
                 idsFilter: new Set<number>(),
                 isInitialized: false,
                 postProcessingApps: [],
+                savedIds: [],
                 sheets: [],
             }));
         },
+        savedIds: [],
+        saveId: (id) =>
+            set((state) => {
+                state.savedIds.push(id);
+            }),
         searchAndReplace: (...args) => set((state) => actions.searchAndReplace(state, ...args)),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),

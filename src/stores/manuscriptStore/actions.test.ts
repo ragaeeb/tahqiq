@@ -3,6 +3,10 @@ import { describe, expect, it } from 'bun:test';
 import { alignAndMergeAltPoetry, mergeWithBelow } from './actions';
 
 describe('actions', () => {
+    describe('merge', () => {
+        it('bug with alt not merging properly even though asl does', () => {});
+    });
+
     describe('mergeWithBelow', () => {
         it('should merge the row with the one below it', () => {
             const state = {

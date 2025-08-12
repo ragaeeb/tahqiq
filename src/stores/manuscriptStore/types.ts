@@ -36,6 +36,7 @@ export type ManuscriptStateCore = {
     idsFilter: Set<number>;
     isInitialized: boolean;
     postProcessingApps: PostProcessingApp[];
+    savedIds: number[];
     sheets: Sheet[];
 };
 
@@ -135,9 +136,9 @@ type ManuscriptActions = {
 
     mergeWithBelow: (page: number, id: number, mergeAsl?: boolean) => void;
 
-    replaceHonorifics: (ids: number[], from?: string, to?: string) => void;
-
     reset: () => void;
+
+    saveId: (id: number) => void;
 
     searchAndReplace: (pattern: RegExp | string, replacement: string) => void;
 
