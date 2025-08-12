@@ -10,6 +10,7 @@ import {
     flipAndAlignObservations,
     mapMatrixToBoundingBox,
     mapObservationsToTextLines,
+    mergeObservations,
     type Observation,
 } from 'kokokor';
 import { rawReturn } from 'mutative';
@@ -211,6 +212,54 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
     }
 };
 
+export const merge = (state: ManuscriptStateCore, page: number, ids: number[]) => {
+    const sheet = state.sheets.find((s) => s.page === page)!;
+
+    // Get the indices of observations to merge
+    const indices = ids
+        .map((id) => sheet.observations.findIndex((o) => o.id === id))
+        .filter((index) => index !== -1)
+        .sort((a, b) => a - b);
+
+    // Ensure indices are adjacent
+    for (let i = 1; i < indices.length; i++) {
+        if (indices[i] !== indices[i - 1] + 1) {
+            throw new Error('Observations to merge must be adjacent');
+        }
+    }
+
+    if (indices.length <= 1) {
+        return; // Nothing to merge
+    }
+
+    // Get observations to merge
+    const observationsToMerge = indices.map((index) => sheet.observations[index]);
+    const altToMerge = indices.map((index) => sheet.alt[index]);
+
+    // Merge observations
+    const mergedObservation = {
+        ...mergeObservations(observationsToMerge),
+        id: observationsToMerge[0].id,
+        isCentered: observationsToMerge.some((o) => o.isCentered),
+        isHeading: observationsToMerge.some((o) => o.isHeading),
+        isPoetic: observationsToMerge.some((o) => o.isPoetic),
+        lastUpdate: Date.now(),
+    };
+
+    // Merge alt elements
+    const mergedAlt = {
+        ...altToMerge[0],
+        lastUpdate: Date.now(),
+        text: altToMerge
+            .map((alt) => alt.text)
+            .join(' ')
+            .trim(),
+    };
+
+    sheet.observations.splice(indices[0], indices.length, mergedObservation);
+    sheet.alt.splice(indices[0], indices.length, mergedAlt);
+};
+
 export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: number, mergeAsl = false) => {
     const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);
@@ -377,6 +426,25 @@ export const deleteSupports = (state: ManuscriptStateCore, ids: number[]) => {
             sheet.alt = sheet.alt.filter((alt) => !supportIds.includes(alt.id));
         }
     });
+};
+
+export const expandFilteredRow = (state: ManuscriptStateCore, id: number) => {
+    for (const sheet of state.sheets) {
+        const index = sheet.observations.findIndex((o) => o.id === id);
+
+        if (index !== -1) {
+            const prev = sheet.observations[index - 1];
+            const next = sheet.observations[index + 1];
+
+            if (prev) {
+                state.idsFilter.add(prev.id);
+            }
+
+            if (next) {
+                state.idsFilter.add(next.id);
+            }
+        }
+    }
 };
 
 export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: number[]) => {

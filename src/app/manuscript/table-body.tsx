@@ -8,7 +8,7 @@ import type { SheetLine } from '@/stores/manuscriptStore/types';
 import TextRow from './text-row';
 
 type ManuscriptTableBodyProps = {
-    onSelectionChange: (row: SheetLine, selected: boolean) => void;
+    onSelectionChange: (row: SheetLine, selected: boolean, isShiftPressed: boolean) => void;
     rows: SheetLine[];
     selectedRows: SheetLine[];
 };
