@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/ragaeeb/tahqiq/compare/v1.19.0...v1.20.0) (2025-08-12)
+
+
+### Features
+
+* **merge:** Select range, expand filter, quick actions, merge rows ([860b123](https://github.com/ragaeeb/tahqiq/commit/860b12323a84c531de49088234a6b08899cc9080)), closes [#74](https://github.com/ragaeeb/tahqiq/issues/74) [#75](https://github.com/ragaeeb/tahqiq/issues/75) [#76](https://github.com/ragaeeb/tahqiq/issues/76) [#77](https://github.com/ragaeeb/tahqiq/issues/77) [#78](https://github.com/ragaeeb/tahqiq/issues/78)
+
 # [1.19.0](https://github.com/ragaeeb/tahqiq/compare/v1.18.0...v1.19.0) (2025-08-07)
 
 
