@@ -1,4 +1,4 @@
-import { AlignJustifyIcon, EraserIcon, HighlighterIcon, SignatureIcon, SuperscriptIcon } from 'lucide-react';
+import { AlignJustifyIcon, EraserIcon, HighlighterIcon, SuperscriptIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
@@ -29,6 +29,7 @@ type ManuscriptMenuProps = ButtonPropsType & {
     markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
+    mergeRows: () => void;
     onFixSwsSymbol: () => void;
     onReplaceSwsWithAzw: () => void;
     onReplaceText: (text: string) => void;
@@ -50,12 +51,8 @@ const NestedMenu = ({ children, label, onSelect }: NestedMenuProps) => {
                         <DropdownMenuSubTrigger>Apply</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => onSelect(true)}>
-                                    To Row <SignatureIcon />
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => onSelect(true, true)}>
-                                    To Page <SignatureIcon />
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => onSelect(true)}>To Row</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => onSelect(true, true)}>To Page</DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
@@ -86,6 +83,7 @@ export function ManuscriptMenu({
     markAsFootnotes,
     markAsHeading,
     markAsPoetry,
+    mergeRows,
     onFixSwsSymbol,
     onReplaceSwsWithAzw,
     onReplaceText,
@@ -161,6 +159,7 @@ export function ManuscriptMenu({
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
                     <DropdownMenuItem onSelect={() => fixIntaha()}>Fix {INTAHA_ACTUAL}</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => mergeRows()}>Merge</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>
                     <ConfirmDropdownMenuItem onClick={deleteSupports}>✘ Delete Support</ConfirmDropdownMenuItem>

@@ -32,6 +32,7 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
     const filterBySimilar = useManuscriptStore((state) => state.filterBySimilar);
     const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
+    const merge = useManuscriptStore((state) => state.merge);
     const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
 
     return (
@@ -146,6 +147,14 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                         );
                     }
 
+                    setSelectedRows([]);
+                }}
+                mergeRows={() => {
+                    record('MergeRows');
+                    merge(
+                        selectedRows[0].page,
+                        selectedRows.map((r) => r.id),
+                    );
                     setSelectedRows([]);
                 }}
                 onFixSwsSymbol={() => {

@@ -1,6 +1,6 @@
 import { withFormattingToolbar } from 'blumbaben';
 import clsx from 'clsx';
-import { Trash2Icon } from 'lucide-react';
+import { BookmarkIcon, ExpandIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -16,7 +16,7 @@ type TextRowProps = {
     data: SheetLine;
     isNewPage?: boolean;
     isSelected: boolean;
-    onSelectionChange: (row: SheetLine, selected: boolean) => void;
+    onSelectionChange: (row: SheetLine, selected: boolean, isShiftPressed: boolean) => void;
     style?: React.CSSProperties; // Add style prop for virtualization
 };
 
@@ -44,6 +44,16 @@ const getAltTextAreaClassName = (data: SheetLine) => {
     );
 };
 
+const ActionButton = (props: any) => {
+    return (
+        <Button
+            className="flex items-center justify-center px-2 w-4 h-4 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+            variant="ghost"
+            {...props}
+        />
+    );
+};
+
 function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
@@ -52,6 +62,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
+    const expandFilteredRow = useManuscriptStore((state) => state.expandFilteredRow);
 
     return (
         <tr
@@ -61,7 +72,9 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
             <td aria-label="Select" className="w-12 px-4 py-4 text-center border-r border-green-100">
                 <Checkbox
                     checked={isSelected}
-                    onCheckedChange={(checked) => onSelectionChange(data, Boolean(checked))}
+                    onCheckedChange={(...args) => {
+                        onSelectionChange(data, ...args);
+                    }}
                 />
             </td>
             <td
@@ -84,39 +97,33 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
-                    <Button
+                    <ActionButton
                         aria-label="Delete Asl"
-                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('DeleteAsl');
                             deleteLines([data.id]);
                         }}
-                        variant="ghost"
                     >
                         <Trash2Icon />
-                    </Button>
-                    <Button
+                    </ActionButton>
+                    <ActionButton
                         aria-label="Merge With Above"
-                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('MergeAslWithAbove');
                             mergeWithAbove(data.page, data.id, true);
                         }}
-                        variant="outline"
                     >
                         ↑
-                    </Button>
-                    <Button
+                    </ActionButton>
+                    <ActionButton
                         aria-label="Merge With Below"
-                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('MergeAslWithBelow');
                             mergeWithBelow(data.page, data.id, true);
                         }}
-                        variant="outline"
                     >
                         ↓
-                    </Button>
+                    </ActionButton>
                     <InputWithToolbar
                         className={getTextInputClassName(data)}
                         defaultValue={data.text}
@@ -131,6 +138,70 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                         style={{ fontFamily: 'inherit' }}
                         type="text"
                     />
+                    {!data.isHeading && (
+                        <ActionButton
+                            aria-label="Mark as Heading"
+                            onClick={() => {
+                                record('MarkAsHeading');
+                                updateTextLines([data.id], { isHeading: true });
+                            }}
+                        >
+                            <BookmarkIcon />
+                        </ActionButton>
+                    )}
+                    {data.isFootnote && (
+                        <ActionButton
+                            aria-label="Clear Footnote"
+                            onClick={() => {
+                                record('ClearFootnote');
+                                updateTextLines([data.id], { isFootnote: false });
+                            }}
+                        >
+                            x̶₁̶
+                        </ActionButton>
+                    )}
+                    {!data.isFootnote && (
+                        <ActionButton
+                            aria-label="Mark as Footnote"
+                            onClick={() => {
+                                record('MarkAsFootnote');
+                                updateTextLines([data.id], { isFootnote: true });
+                            }}
+                        >
+                            x₁
+                        </ActionButton>
+                    )}
+                    {data.isPoetic && (
+                        <ActionButton
+                            aria-label="Clear Poetry"
+                            onClick={() => {
+                                record('ClearPoetry');
+                                updateTextLines([data.id], { isPoetic: false });
+                            }}
+                        >
+                            <LetterTextIcon />
+                        </ActionButton>
+                    )}
+                    {!data.isPoetic && (
+                        <ActionButton
+                            aria-label="Mark as Poetry"
+                            onClick={() => {
+                                record('MarkAsPoetry');
+                                updateTextLines([data.id], { isPoetic: true });
+                            }}
+                        >
+                            <SignatureIcon />
+                        </ActionButton>
+                    )}
+                    <ActionButton
+                        aria-label="Expand"
+                        onClick={() => {
+                            record('ExpandFilteredRow');
+                            expandFilteredRow(data.id);
+                        }}
+                    >
+                        <ExpandIcon />
+                    </ActionButton>
                 </div>
             </td>
             <td
@@ -141,49 +212,42 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
-                    <Button
+                    <ActionButton
                         aria-label="Accept Support"
-                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('ApplyAltToAsl');
                             updateTextLines([data.id], { text: data.alt });
                         }}
                     >
                         ✓
-                    </Button>
-                    <Button
+                    </ActionButton>
+                    <ActionButton
                         aria-label="Delete Support"
-                        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('DeleteAlt');
                             deleteSupport(data.page, data.id);
                         }}
-                        variant="ghost"
                     >
                         <Trash2Icon />
-                    </Button>
-                    <Button
+                    </ActionButton>
+                    <ActionButton
                         aria-label="Merge With Above"
-                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('MergeAltWithAbove');
                             mergeWithAbove(data.page, data.id);
                         }}
-                        variant="outline"
                     >
                         ↑
-                    </Button>
-                    <Button
+                    </ActionButton>
+                    <ActionButton
                         aria-label="Merge With Below"
-                        className="flex items-center justify-center px-2 w-8 h-8 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('MergeAltWithBelow');
                             mergeWithBelow(data.page, data.id);
                         }}
-                        variant="outline"
                     >
                         ↓
-                    </Button>
+                    </ActionButton>
                     <Textarea
                         className={getAltTextAreaClassName(data)}
                         dir="rtl"

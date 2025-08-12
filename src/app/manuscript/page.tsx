@@ -39,16 +39,42 @@ export default function Manuscript() {
     const [selectedRows, setSelectedRows] = selection;
 
     const handleSelectionChange = useCallback(
-        (item: SheetLine, selected: boolean) => {
+        (item: SheetLine, selected: boolean, isShiftPressed: boolean) => {
             setSelectedRows((prev) => {
                 if (selected) {
+                    // Handle shift-click range selection only if exactly one item is currently selected
+                    if (isShiftPressed && prev.length === 1) {
+                        const previousItem = prev[0];
+
+                        // Find indices of both items in the full data array
+                        // You'll need to pass your full data array to this function or access it from context/store
+                        // Assuming you have access to `allItems` array here
+                        const previousIndex = rows.findIndex((i) => i === previousItem);
+                        const currentIndex = rows.findIndex((i) => i === item);
+
+                        if (previousIndex !== -1 && currentIndex !== -1) {
+                            const start = Math.min(previousIndex, currentIndex);
+                            const end = Math.max(previousIndex, currentIndex);
+
+                            // Get all items in the range
+                            const itemsInRange = rows.slice(start, end + 1);
+
+                            // Create a new selection that includes the previous item and all items in range
+                            const newSelection = new Set(prev);
+                            itemsInRange.forEach((rangeItem) => newSelection.add(rangeItem));
+
+                            return Array.from(newSelection);
+                        }
+                    }
+
+                    // Normal selection - just add the item
                     return [...prev, item];
                 }
 
                 return prev.filter((p) => p !== item);
             });
         },
-        [setSelectedRows],
+        [setSelectedRows, rows],
     );
 
     useEffect(() => {

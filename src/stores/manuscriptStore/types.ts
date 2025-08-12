@@ -111,6 +111,8 @@ type ManuscriptActions = {
 
     deleteSupports: (ids: number[]) => void;
 
+    expandFilteredRow: (id: number) => void;
+
     filterByIds: (ids: number[]) => void;
 
     filterByPages: (pages: number[]) => void;
@@ -126,6 +128,8 @@ type ManuscriptActions = {
     init: (fileNameToData: RawInputFiles) => void;
 
     initFromJuz: (juz: Juz) => void;
+
+    merge: (page: number, ids: number[]) => void;
 
     mergeWithAbove: (page: number, id: number, mergeAsl?: boolean) => void;
 

@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import { isArabicTextNoise } from 'baburchi';
-import { BookmarkIcon, BracketsIcon, FilterIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
+import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -67,17 +66,6 @@ export default function ManuscriptTableHeader({
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
-                    <Button
-                        aria-label="Filter Misaligned Observations"
-                        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
-                        onClick={() => {
-                            record('FilterNoiseInAsl');
-                            filterByIds(rows.filter((r) => isArabicTextNoise(r.text)).map((r) => r.id));
-                        }}
-                        variant="ghost"
-                    >
-                        <FilterIcon />
-                    </Button>
                     <Button
                         aria-label="Filter Intaha"
                         className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
@@ -176,17 +164,6 @@ export default function ManuscriptTableHeader({
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
-                    <Button
-                        aria-label="Filter Misaligned Observations"
-                        className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
-                        onClick={() => {
-                            record('FilterNoiseInSupport');
-                            filterByIds(rows.filter((r) => r.alt && isArabicTextNoise(r.alt)).map((r) => r.id));
-                        }}
-                        variant="ghost"
-                    >
-                        <FilterIcon />
-                    </Button>
                     {altCount !== rows.length && (
                         <Button
                             aria-label="Filter Misaligned Observations"
