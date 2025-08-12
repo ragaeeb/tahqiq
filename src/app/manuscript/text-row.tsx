@@ -1,14 +1,6 @@
 import { withFormattingToolbar } from 'blumbaben';
 import clsx from 'clsx';
-import {
-    BookmarkIcon,
-    ExpandIcon,
-    LetterTextIcon,
-    SignatureIcon,
-    TextIcon,
-    TextSelectIcon,
-    Trash2Icon,
-} from 'lucide-react';
+import { BookmarkIcon, ExpandIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
