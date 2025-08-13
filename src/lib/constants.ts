@@ -36,11 +36,8 @@ export const REQUIRED_RAW_INPUT_FILES = [
 /**
  * Honorific symbols frequently encountered in Arabic texts.
  * SWS: ﷺ (صلى الله عليه وسلم)
- * AZW: ﷻ (عز وجل)
  */
 export const SWS_SYMBOL = 'ﷺ';
-
-export const AZW_SYMBOL = 'ﷻ';
 
 export const INTAHA_TYPO = 'اه';
 

@@ -16,7 +16,7 @@ import {
 import { rawReturn } from 'mutative';
 
 import { getNextId } from '@/lib/common';
-import { AZW_SYMBOL, SWS_SYMBOL } from '@/lib/constants';
+import { SWS_SYMBOL } from '@/lib/constants';
 
 import type {
     Juz,
@@ -303,7 +303,7 @@ export const deleteSupport = (state: ManuscriptStateCore, page: number, id: numb
 
 export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
     const idsSet = new Set(ids);
-    const options = { typoSymbols: [SWS_SYMBOL] };
+    const options = { typoSymbols: [SWS_SYMBOL, '»', '«'] };
 
     state.sheets.forEach((sheet) => {
         sheet.observations.forEach((observation, index) => {
@@ -394,12 +394,6 @@ export const updatePages = (
     const ids = sheets.flatMap((s) => s.observations.map((o) => o.id));
 
     updateTextLines(state, ids, payload, updateLastUpdated);
-};
-
-export const replaceHonorifics = (state: ManuscriptStateCore, ids: number[], from = SWS_SYMBOL, to = AZW_SYMBOL) => {
-    updateTextLines(state, ids, (o) => {
-        o.text = o.text.replaceAll(from, to);
-    });
 };
 
 export const deleteLines = (state: ManuscriptStateCore, ids: number[]) => {

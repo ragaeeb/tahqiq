@@ -1,8 +1,58 @@
 import { describe, expect, it } from 'bun:test';
 
-import { alignAndMergeAltPoetry, mergeWithBelow } from './actions';
+import { alignAndMergeAltPoetry, merge, mergeWithBelow } from './actions';
 
 describe('actions', () => {
+    describe('merge', () => {
+        it('bug with alt not merging properly even though asl does', () => {
+            const state = {
+                sheets: [
+                    {
+                        alt: [
+                            { id: 12, text: 'A' },
+                            { id: 13, text: 'B' },
+                            { id: 14, text: 'C' },
+                        ],
+                        observations: [
+                            { bbox: {}, id: 2, text: 'A' },
+                            { bbox: {}, id: 3, text: 'B' },
+                            { bbox: {}, id: 4, text: 'C' },
+                        ],
+                        page: 1,
+                    },
+                ],
+            } as any;
+
+            merge(state, 1, [2, 3, 4]);
+
+            expect(state).toEqual({
+                sheets: [
+                    {
+                        alt: [
+                            {
+                                id: 12,
+                                lastUpdate: expect.any(Number),
+                                text: 'A B C',
+                            },
+                        ],
+                        observations: [
+                            {
+                                bbox: expect.any(Object),
+                                id: 2,
+                                isCentered: false,
+                                isHeading: false,
+                                isPoetic: false,
+                                lastUpdate: expect.any(Number),
+                                text: 'A B C',
+                            },
+                        ],
+                        page: 1,
+                    },
+                ],
+            });
+        });
+    });
+
     describe('mergeWithBelow', () => {
         it('should merge the row with the one below it', () => {
             const state = {

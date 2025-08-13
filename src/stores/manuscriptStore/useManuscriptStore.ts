@@ -27,17 +27,38 @@ export const useManuscriptStore = create<ManuscriptState>()(
         mergeWithAbove: (...args) => set((state) => actions.mergeWithAbove(state, ...args)),
         mergeWithBelow: (...args) => set((state) => actions.mergeWithBelow(state, ...args)),
         postProcessingApps: [],
-        replaceHonorifics: (...args) => set((state) => actions.replaceHonorifics(state, ...args)),
         reset: () => {
-            return set(() => ({
-                createdAt: new Date(),
-                idsFilter: new Set<number>(),
-                isInitialized: false,
-                postProcessingApps: [],
-                sheets: [],
-            }));
+            return set((state) => {
+                if (state.pdfUrl) {
+                    URL.revokeObjectURL(state.pdfUrl);
+                }
+
+                return {
+                    createdAt: new Date(),
+                    idsFilter: new Set<number>(),
+                    isInitialized: false,
+                    pdfUrl: undefined,
+                    postProcessingApps: [],
+                    savedIds: [],
+                    sheets: [],
+                };
+            });
         },
+        savedIds: [],
+        saveId: (id) =>
+            set((state) => {
+                state.savedIds.push(id);
+            }),
         searchAndReplace: (...args) => set((state) => actions.searchAndReplace(state, ...args)),
+        setPdfUrl: (pdfUrl) =>
+            set((state) => {
+                if (state.pdfUrl?.startsWith?.('blob:')) {
+                    try {
+                        URL.revokeObjectURL(state.pdfUrl);
+                    } catch {}
+                }
+                return { pdfUrl };
+            }),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),

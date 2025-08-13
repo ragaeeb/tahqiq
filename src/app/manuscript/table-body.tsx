@@ -9,11 +9,12 @@ import TextRow from './text-row';
 
 type ManuscriptTableBodyProps = {
     onSelectionChange: (row: SheetLine, selected: boolean, isShiftPressed: boolean) => void;
+    previewPdf: (page: number) => void;
     rows: SheetLine[];
     selectedRows: SheetLine[];
 };
 
-function ManuscriptTableBody({ onSelectionChange, rows, selectedRows }: ManuscriptTableBodyProps) {
+function ManuscriptTableBody({ onSelectionChange, previewPdf, rows, selectedRows }: ManuscriptTableBodyProps) {
     const parentRef = useRef<HTMLDivElement>(null);
 
     // Calculate dynamic row height based on content
@@ -89,6 +90,7 @@ function ManuscriptTableBody({ onSelectionChange, rows, selectedRows }: Manuscri
                                         }
                                         isSelected={selectedRows.includes(row)}
                                         onSelectionChange={onSelectionChange}
+                                        previewPdf={previewPdf}
                                     />
                                 </tbody>
                             </table>

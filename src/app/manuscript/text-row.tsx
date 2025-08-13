@@ -1,6 +1,6 @@
 import { withFormattingToolbar } from 'blumbaben';
 import clsx from 'clsx';
-import { BookmarkIcon, ExpandIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
+import { BookmarkIcon, ExpandIcon, EyeIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -17,6 +17,7 @@ type TextRowProps = {
     isNewPage?: boolean;
     isSelected: boolean;
     onSelectionChange: (row: SheetLine, selected: boolean, isShiftPressed: boolean) => void;
+    previewPdf: (page: number) => void;
     style?: React.CSSProperties; // Add style prop for virtualization
 };
 
@@ -54,7 +55,7 @@ const ActionButton = (props: any) => {
     );
 };
 
-function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: TextRowProps) {
+function TextRow({ data, isNewPage, isSelected, onSelectionChange, previewPdf, style }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const mergeWithBelow = useManuscriptStore((state) => state.mergeWithBelow);
@@ -62,6 +63,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
     const deleteSupport = useManuscriptStore((state) => state.deleteSupport);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
+    const saveId = useManuscriptStore((state) => state.saveId);
     const expandFilteredRow = useManuscriptStore((state) => state.expandFilteredRow);
 
     return (
@@ -81,15 +83,33 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                 aria-label="Page"
                 className={`w-20 px-4 py-4 text-left text-sm font-medium text-gray-900 border-r border-gray-100 ${data.hasInvalidFootnotes && 'bg-red-200'}`}
             >
-                <Button
-                    onClick={() => {
-                        record('FilterByPageOfLine');
-                        filterByPages([data.page]);
-                    }}
-                    variant="ghost"
-                >
-                    {data.page}
-                </Button>
+                <div className="flex items-center gap-1">
+                    <Button
+                        className="h-6 px-2 text-xs"
+                        onClick={() => {
+                            record('FilterByPageOfLine');
+                            filterByPages([data.page]);
+                        }}
+                        size="sm"
+                        variant="ghost"
+                    >
+                        {data.page}
+                    </Button>
+
+                    <Button
+                        aria-label="Preview PDF page"
+                        className="h-6 w-6 p-0 text-xs"
+                        onClick={() => {
+                            record('PreviewPdfPage');
+                            previewPdf(data.page);
+                        }}
+                        size="sm"
+                        title={`Preview PDF page ${data.page}`}
+                        variant="ghost"
+                    >
+                        <EyeIcon />
+                    </Button>
+                </div>
             </td>
             <td
                 aria-label="Text"
@@ -193,6 +213,17 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                             <SignatureIcon />
                         </ActionButton>
                     )}
+                    <Button
+                        className="h-6 w-6 p-0 text-xs"
+                        onClick={() => {
+                            record('SaveRow');
+                            saveId(data.id);
+                        }}
+                        size="sm"
+                        variant="ghost"
+                    >
+                        ★
+                    </Button>
                     <ActionButton
                         aria-label="Expand"
                         onClick={() => {

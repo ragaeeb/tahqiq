@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon } from 'lucide-react';
+import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon, SubscriptIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -8,7 +8,7 @@ import type { SheetLine } from '@/stores/manuscriptStore/types';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AZW_SYMBOL, INTAHA_TYPO, SWS_SYMBOL } from '@/lib/constants';
+import { INTAHA_TYPO, SWS_SYMBOL } from '@/lib/constants';
 import { filterRowsByDivergence } from '@/lib/filtering';
 import { parsePageRanges } from '@/lib/textUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
@@ -25,15 +25,16 @@ export default function ManuscriptTableHeader({
     selection: [selectedRows],
 }: ManuscriptTableHeaderProps) {
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
+    const savedIds = useManuscriptStore((state) => state.savedIds);
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const altCount = rows.filter((r) => r.alt).length;
     const isAllSelected = rows.length > 0 && selectedRows.length === rows.length;
-    const hasHonorifcsApplied = rows.some((o) => o.text.includes(SWS_SYMBOL));
     const hasMissingHonorifics = rows.some((o) => o.includesHonorifics);
     const includesPoetry = rows.some((o) => o.isPoetic);
     const hasDivergence = rows.some((o) => !o.isSimilar);
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
     const hasHeadings = rows.some((o) => o.isHeading);
+    const hasFootnotes = rows.some((o) => o.isFootnote);
     const hasCenteredContent = rows.some((o) => o.isCentered);
 
     return (
@@ -106,17 +107,40 @@ export default function ManuscriptTableHeader({
                             <BookmarkIcon />
                         </Button>
                     )}
-                    {hasHonorifcsApplied && (
+                    {hasFootnotes && (
                         <Button
-                            aria-label="Correct Wrong Honorifics"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
+                            aria-label="Footnotes"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
-                                record('FilterByHonorificsInObservation');
-                                filterByIds(rows.filter((r) => r.text.includes(SWS_SYMBOL)).map((r) => r.id));
+                                const pageGroups = new Map<number, SheetLine[]>();
+
+                                for (const row of rows) {
+                                    if (!pageGroups.has(row.page)) {
+                                        pageGroups.set(row.page, []);
+                                    }
+                                    pageGroups.get(row.page)!.push(row);
+                                }
+
+                                const footnoteHeavyPages: number[] = [];
+
+                                // Analyze each page
+                                for (const [pageNumber, pageRows] of pageGroups) {
+                                    const totalRows = pageRows.length;
+                                    const footnoteRows = pageRows.filter((row) => row.isFootnote).length;
+                                    const footnotePercentage = footnoteRows / totalRows;
+
+                                    if (footnotePercentage >= 0.8) {
+                                        footnoteHeavyPages.push(pageNumber);
+                                    }
+                                }
+
+                                record('FilterByFootnotes', footnoteHeavyPages.length.toString());
+
+                                filterByPages(footnoteHeavyPages);
                             }}
                             variant="ghost"
                         >
-                            {AZW_SYMBOL}
+                            <SubscriptIcon />
                         </Button>
                     )}
                     {hasInvalidFootnotes && (
@@ -130,6 +154,19 @@ export default function ManuscriptTableHeader({
                             variant="ghost"
                         >
                             <BracketsIcon />
+                        </Button>
+                    )}
+                    {savedIds.length > 0 && (
+                        <Button
+                            aria-label="Saved Rows"
+                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
+                            onClick={() => {
+                                record('FilterBySavedRows', savedIds.length.toString());
+                                filterByIds(savedIds);
+                            }}
+                            variant="ghost"
+                        >
+                            ★
                         </Button>
                     )}
                     {includesPoetry && (

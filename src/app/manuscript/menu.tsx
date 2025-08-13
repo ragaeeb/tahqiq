@@ -16,7 +16,7 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AZW_SYMBOL, INTAHA_ACTUAL, SWS_SYMBOL } from '@/lib/constants';
+import { INTAHA_ACTUAL, SWS_SYMBOL } from '@/lib/constants';
 
 type ManuscriptMenuProps = ButtonPropsType & {
     alignPoetry: () => void;
@@ -31,7 +31,6 @@ type ManuscriptMenuProps = ButtonPropsType & {
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
     mergeRows: () => void;
     onFixSwsSymbol: () => void;
-    onReplaceSwsWithAzw: () => void;
     onReplaceText: (text: string) => void;
 };
 
@@ -85,7 +84,6 @@ export function ManuscriptMenu({
     markAsPoetry,
     mergeRows,
     onFixSwsSymbol,
-    onReplaceSwsWithAzw,
     onReplaceText,
     ...props
 }: ManuscriptMenuProps) {
@@ -105,10 +103,6 @@ export function ManuscriptMenu({
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
                                 <DropdownMenuItem onSelect={onFixSwsSymbol}>Fix {SWS_SYMBOL}</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={onReplaceSwsWithAzw}>
-                                    Replace {SWS_SYMBOL} with {AZW_SYMBOL}
-                                </DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
