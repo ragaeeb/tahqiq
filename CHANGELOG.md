@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/ragaeeb/tahqiq/compare/v1.20.0...v1.21.0) (2025-08-13)
+
+
+### Features
+
+* **pdf:** Show pdf preview ([#83](https://github.com/ragaeeb/tahqiq/issues/83)) ([7d01a33](https://github.com/ragaeeb/tahqiq/commit/7d01a33aa24926bff75098fdead0523ef3ac96ef)), closes [#81](https://github.com/ragaeeb/tahqiq/issues/81) [#80](https://github.com/ragaeeb/tahqiq/issues/80) [#82](https://github.com/ragaeeb/tahqiq/issues/82)
+
 # [1.20.0](https://github.com/ragaeeb/tahqiq/compare/v1.19.0...v1.20.0) (2025-08-12)
 
 
