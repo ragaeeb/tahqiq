@@ -12,7 +12,6 @@ interface PdfDialogProps {
 export function PdfDialog({ page }: PdfDialogProps) {
     const pdfUrl = useManuscriptStore((state) => state.pdfUrl);
     const setPdfUrl = useManuscriptStore((state) => state.setPdfUrl);
-    console.log('render', page);
 
     if (pdfUrl) {
         return (
@@ -27,7 +26,7 @@ export function PdfDialog({ page }: PdfDialogProps) {
                         style={{
                             border: 'none',
                         }}
-                        title={`PDF Viewer - Page`}
+                        title={`PDF Viewer - Page ${page}`}
                     />
                 </div>
             </DialogContent>

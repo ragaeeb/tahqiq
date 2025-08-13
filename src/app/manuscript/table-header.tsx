@@ -34,6 +34,7 @@ export default function ManuscriptTableHeader({
     const hasDivergence = rows.some((o) => !o.isSimilar);
     const hasInvalidFootnotes = rows.some((o) => o.hasInvalidFootnotes);
     const hasHeadings = rows.some((o) => o.isHeading);
+    const hasFootnotes = rows.some((o) => o.isFootnote);
     const hasCenteredContent = rows.some((o) => o.isCentered);
 
     return (
@@ -106,9 +107,9 @@ export default function ManuscriptTableHeader({
                             <BookmarkIcon />
                         </Button>
                     )}
-                    {hasHeadings && (
+                    {hasFootnotes && (
                         <Button
-                            aria-label="Headings"
+                            aria-label="Footnotes"
                             className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
                             onClick={() => {
                                 const pageGroups = new Map<number, SheetLine[]>();
@@ -157,10 +158,10 @@ export default function ManuscriptTableHeader({
                     )}
                     {savedIds.length > 0 && (
                         <Button
-                            aria-label="Invalid Footnotes"
+                            aria-label="Saved Rows"
                             className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
                             onClick={() => {
-                                record('FilterByInvalidFootnotes');
+                                record('FilterBySavedRows', savedIds.length.toString());
                                 filterByIds(savedIds);
                             }}
                             variant="ghost"

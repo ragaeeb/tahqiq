@@ -97,12 +97,14 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, previewPdf, s
                     </Button>
 
                     <Button
+                        aria-label="Preview PDF page"
                         className="h-6 w-6 p-0 text-xs"
                         onClick={() => {
                             record('PreviewPdfPage');
                             previewPdf(data.page);
                         }}
                         size="sm"
+                        title={`Preview PDF page ${data.page}`}
                         variant="ghost"
                     >
                         <EyeIcon />

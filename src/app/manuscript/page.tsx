@@ -107,7 +107,6 @@ export default function Manuscript() {
                             maxFiles={4}
                             onFiles={(map) => {
                                 const fileNames = Object.keys(map);
-                                console.log('fileNames', fileNames);
 
                                 if (fileNames.length === 1 && fileNames[0].endsWith('.json')) {
                                     record('LoadManuscriptsFromJuz');
