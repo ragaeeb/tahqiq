@@ -12,18 +12,19 @@ import RowToolbar from '@/app/manuscript/row-toolbar';
 import { ConfirmButton } from '@/components/confirm-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import '@/lib/analytics';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
-import '@/lib/analytics';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
+import '@/stores/dev';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
+import { PdfDialog } from './pdf-modal';
 import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
-import '@/stores/dev';
-
 import ManuscriptToolbar from './toolbar';
 
 /**
@@ -37,6 +38,7 @@ export default function Manuscript() {
     const isInitialized = useManuscriptStore((state) => state.isInitialized);
     const selection = useState<SheetLine[]>([]);
     const [selectedRows, setSelectedRows] = selection;
+    const [pageToPreview, setPageToPreview] = useState<number>(0);
 
     const handleSelectionChange = useCallback(
         (item: SheetLine, selected: boolean, isShiftPressed: boolean) => {
@@ -105,6 +107,7 @@ export default function Manuscript() {
                             maxFiles={4}
                             onFiles={(map) => {
                                 const fileNames = Object.keys(map);
+                                console.log('fileNames', fileNames);
 
                                 if (fileNames.length === 1 && fileNames[0].endsWith('.json')) {
                                     record('LoadManuscriptsFromJuz');
@@ -201,12 +204,26 @@ export default function Manuscript() {
                         </div>
                         <ManuscriptTableBody
                             onSelectionChange={handleSelectionChange}
+                            previewPdf={setPageToPreview}
                             rows={rows}
                             selectedRows={selectedRows}
                         />
                     </div>
                 </div>
             </div>
+            {pageToPreview && (
+                <Dialog
+                    modal={false}
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setPageToPreview(0);
+                        }
+                    }}
+                    open
+                >
+                    <PdfDialog page={pageToPreview} />
+                </Dialog>
+            )}
             <RowToolbar />
             <VersionFooter />
         </>

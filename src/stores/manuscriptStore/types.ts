@@ -35,6 +35,7 @@ export type ManuscriptStateCore = {
     createdAt: Date;
     idsFilter: Set<number>;
     isInitialized: boolean;
+    pdfUrl?: string;
     postProcessingApps: PostProcessingApp[];
     savedIds: number[];
     sheets: Sheet[];
@@ -141,6 +142,8 @@ type ManuscriptActions = {
     saveId: (id: number) => void;
 
     searchAndReplace: (pattern: RegExp | string, replacement: string) => void;
+
+    setPdfUrl: (url: string) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 

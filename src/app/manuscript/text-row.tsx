@@ -1,6 +1,6 @@
 import { withFormattingToolbar } from 'blumbaben';
 import clsx from 'clsx';
-import { BookmarkIcon, ExpandIcon, LetterTextIcon, PlusIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
+import { BookmarkIcon, ExpandIcon, EyeIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
@@ -17,6 +17,7 @@ type TextRowProps = {
     isNewPage?: boolean;
     isSelected: boolean;
     onSelectionChange: (row: SheetLine, selected: boolean, isShiftPressed: boolean) => void;
+    previewPdf: (page: number) => void;
     style?: React.CSSProperties; // Add style prop for virtualization
 };
 
@@ -54,7 +55,7 @@ const ActionButton = (props: any) => {
     );
 };
 
-function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: TextRowProps) {
+function TextRow({ data, isNewPage, isSelected, onSelectionChange, previewPdf, style }: TextRowProps) {
     const splitAltAtLineBreak = useManuscriptStore((state) => state.splitAltAtLineBreak);
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const mergeWithBelow = useManuscriptStore((state) => state.mergeWithBelow);
@@ -94,16 +95,17 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                     >
                         {data.page}
                     </Button>
+
                     <Button
                         className="h-6 w-6 p-0 text-xs"
                         onClick={() => {
-                            record('SaveRow');
-                            saveId(data.id);
+                            record('PreviewPdfPage');
+                            previewPdf(data.page);
                         }}
                         size="sm"
                         variant="ghost"
                     >
-                        ★
+                        <EyeIcon />
                     </Button>
                 </div>
             </td>
@@ -209,6 +211,17 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, style }: Text
                             <SignatureIcon />
                         </ActionButton>
                     )}
+                    <Button
+                        className="h-6 w-6 p-0 text-xs"
+                        onClick={() => {
+                            record('SaveRow');
+                            saveId(data.id);
+                        }}
+                        size="sm"
+                        variant="ghost"
+                    >
+                        ★
+                    </Button>
                     <ActionButton
                         aria-label="Expand"
                         onClick={() => {

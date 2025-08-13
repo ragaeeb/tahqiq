@@ -3,11 +3,12 @@ import { useRef } from 'react';
 import { Button } from './ui/button';
 
 type JsonBrowseButtonProps = {
+    accept?: string;
     children: React.ReactNode;
     onFilesSelected: (files: FileList) => void;
 };
 
-export function JsonBrowseButton({ children, onFilesSelected }: JsonBrowseButtonProps) {
+export function JsonBrowseButton({ accept = '.json', children, onFilesSelected }: JsonBrowseButtonProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +27,7 @@ export function JsonBrowseButton({ children, onFilesSelected }: JsonBrowseButton
             </Button>
 
             <input
-                accept=".json"
+                accept={accept}
                 className="hidden"
                 multiple
                 onChange={handleFileChange}

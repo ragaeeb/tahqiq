@@ -43,6 +43,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
                 state.savedIds.push(id);
             }),
         searchAndReplace: (...args) => set((state) => actions.searchAndReplace(state, ...args)),
+        setPdfUrl: (pdfUrl) => set(() => ({ pdfUrl })),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),

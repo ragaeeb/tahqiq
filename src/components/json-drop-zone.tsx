@@ -9,7 +9,7 @@ type Props = {
     allowedExtensions?: string;
     description?: string;
     maxFiles?: number;
-    onFiles: (map: Record<string, JsonObject | string>) => void;
+    onFiles: (map: Record<string, File | JsonObject | string>) => void;
     title?: string;
 };
 
@@ -26,7 +26,7 @@ export default function JsonDropZone({
     allowedExtensions = '.json',
     description = 'Drop your transcript JSON file to start editing',
     maxFiles = 1,
-    onFiles: onFile,
+    onFiles,
     title = 'Drag & Drop JSON file',
 }: Props) {
     const [isDragging, setIsDragging] = useState(false);
@@ -65,20 +65,24 @@ export default function JsonDropZone({
             }
 
             try {
-                const result: Record<string, JsonObject | string> = {};
+                const result: Record<string, File | JsonObject | string> = {};
 
                 for (const file of files) {
-                    const text = await file.text();
-                    const data = file.name.toLowerCase().endsWith('.json') ? JSON.parse(text) : text;
-                    result[file.name] = data;
+                    result[file.name] = file;
+
+                    if (file.name.endsWith('.json')) {
+                        result[file.name] = JSON.parse(await file.text());
+                    } else if (file.name.endsWith('.txt')) {
+                        result[file.name] = await file.text();
+                    }
                 }
 
-                onFile(result);
+                onFiles(result);
             } catch (error) {
                 console.error('Error parsing JSON file:', error);
             }
         },
-        [onFile, maxFiles, allowedExtensions],
+        [onFiles, maxFiles, allowedExtensions],
     );
 
     useEffect(() => {
