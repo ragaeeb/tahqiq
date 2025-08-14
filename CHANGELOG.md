@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/ragaeeb/tahqiq/compare/v1.21.0...v1.22.0) (2025-08-14)
+
+
+### Features
+
+* **pdf:** Make pdf modal remain while we can scroll on the page ([a7c8e9c](https://github.com/ragaeeb/tahqiq/commit/a7c8e9c3378895fb32ab225350e03445c1ed965b))
+
 # [1.21.0](https://github.com/ragaeeb/tahqiq/compare/v1.20.0...v1.21.0) (2025-08-13)
 
 
