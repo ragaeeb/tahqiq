@@ -1,7 +1,8 @@
-import { ExpandIcon, EyeIcon, FilterIcon, StarIcon } from 'lucide-react';
+import { EraserIcon, ExpandIcon, EyeIcon, FilterIcon, SignatureIcon, StarIcon, SubscriptIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
+import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,6 +10,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
+
+import { ActionButton } from './shared';
 
 type PageInfoProps = Readonly<{
     id: number;
@@ -20,6 +23,8 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
     const saveId = useManuscriptStore((state) => state.saveId);
     const expandFilteredRow = useManuscriptStore((state) => state.expandFilteredRow);
+    const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
+    const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
 
     return (
         <div className="flex items-center justify-center">
@@ -43,12 +48,12 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                         aria-label="Preview PDF"
                         className="flex items-center gap-2 px-3 py-2"
                         onSelect={() => {
-                            record('PreviewPdfPage');
+                            record('ClearFootnotes');
                             previewPdf(page);
                         }}
                     >
-                        <EyeIcon className="w-4 h-4" />
-                        <span>Preview</span>
+                        <SubscriptIcon className="w-4 h-4" />
+                        <span>F̶o̶o̶t̶n̶o̶t̶e̶s̶</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         aria-label="Expand"
@@ -61,7 +66,17 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                         <ExpandIcon /> Expand
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        aria-label="Expand"
+                        aria-label="Align"
+                        className="flex items-center gap-2 px-3 py-2"
+                        onSelect={() => {
+                            record('AlignPoetry');
+                            alignPoetry([page]);
+                        }}
+                    >
+                        <SignatureIcon /> Align
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        aria-label="Save Row"
                         className="flex items-center gap-2 px-3 py-2"
                         onSelect={() => {
                             record('SaveRow');
@@ -70,8 +85,25 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                     >
                         <StarIcon /> Save
                     </DropdownMenuItem>
+                    <ConfirmDropdownMenuItem
+                        onClick={() => {
+                            record('ErasePage');
+                            clearOutPages([page]);
+                        }}
+                    >
+                        <EraserIcon /> Erase
+                    </ConfirmDropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            <ActionButton
+                aria-label="Preview PDF"
+                onClick={() => {
+                    record('PreviewPdfPage');
+                    previewPdf(page);
+                }}
+            >
+                <EyeIcon className="w-4 h-4" />
+            </ActionButton>
         </div>
     );
 }

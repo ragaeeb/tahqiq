@@ -27,10 +27,8 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
     const updatePages = useManuscriptStore((state) => state.updatePages);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const deleteSupports = useManuscriptStore((state) => state.deleteSupports);
-    const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const filterByIds = useManuscriptStore((state) => state.filterByIds);
     const filterBySimilar = useManuscriptStore((state) => state.filterBySimilar);
-    const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
     const merge = useManuscriptStore((state) => state.merge);
     const isFilterSet = useManuscriptStore((state) => state.idsFilter.size > 0);
 
@@ -48,20 +46,9 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                 </Button>
             )}
             <ManuscriptMenu
-                alignPoetry={() => {
-                    record('AlignPoetry');
-
-                    alignPoetry(Array.from(new Set(selectedRows.map((r) => r.page))));
-                    setSelectedRows([]);
-                }}
                 autoCorrectFootnotes={() => {
                     record('AutocorrectFootnotes');
                     autoCorrectFootnotes(Array.from(new Set(selectedRows.map((r) => r.page))));
-                    setSelectedRows([]);
-                }}
-                clearOutPages={() => {
-                    record('ClearOutPages', selectedRows.length.toString());
-                    clearOutPages(selectedRows.map((row) => row.page));
                     setSelectedRows([]);
                 }}
                 deleteLines={() => {

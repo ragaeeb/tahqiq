@@ -1,4 +1,4 @@
-import { AlignJustifyIcon, EraserIcon, HighlighterIcon, SuperscriptIcon } from 'lucide-react';
+import { HighlighterIcon, SuperscriptIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
@@ -19,9 +19,7 @@ import {
 import { INTAHA_ACTUAL, SWS_SYMBOL } from '@/lib/constants';
 
 type ManuscriptMenuProps = ButtonPropsType & {
-    alignPoetry: () => void;
     autoCorrectFootnotes: () => void;
-    clearOutPages: () => void;
     deleteLines: () => void;
     deleteSupports: () => void;
     findSimilar: (threshold: number) => void;
@@ -72,9 +70,7 @@ const NestedMenu = ({ children, label, onSelect }: NestedMenuProps) => {
 };
 
 export function ManuscriptMenu({
-    alignPoetry,
     autoCorrectFootnotes,
-    clearOutPages,
     deleteLines,
     deleteSupports,
     findSimilar,
@@ -135,14 +131,7 @@ export function ManuscriptMenu({
                             </DropdownMenuItem>
                         </>
                     </NestedMenu>
-                    <NestedMenu label="Poetry" onSelect={markAsPoetry}>
-                        <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={alignPoetry}>
-                                Align <AlignJustifyIcon />
-                            </DropdownMenuItem>
-                        </>
-                    </NestedMenu>
+                    <NestedMenu label="Poetry" onSelect={markAsPoetry} />
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger>Heading</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
@@ -159,9 +148,6 @@ export function ManuscriptMenu({
                     <DropdownMenuSeparator />
                     <ConfirmDropdownMenuItem onClick={deleteLines}>✘ Delete</ConfirmDropdownMenuItem>
                     <ConfirmDropdownMenuItem onClick={deleteSupports}>✘ Delete Support</ConfirmDropdownMenuItem>
-                    <ConfirmDropdownMenuItem onClick={clearOutPages}>
-                        <EraserIcon /> Clear Out Pages
-                    </ConfirmDropdownMenuItem>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>

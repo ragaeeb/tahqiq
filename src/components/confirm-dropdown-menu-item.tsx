@@ -14,7 +14,7 @@ interface ConfirmDropdownMenuItemProps extends Omit<React.ComponentProps<typeof 
 
 export function ConfirmDropdownMenuItem({
     children,
-    confirmText = 'Click to confirm',
+    confirmText = 'Confirm',
     onClick,
     ...props
 }: ConfirmDropdownMenuItemProps) {
