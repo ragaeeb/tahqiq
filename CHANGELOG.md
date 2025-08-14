@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/ragaeeb/tahqiq/compare/v1.22.0...v1.22.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* **pdf:** Rearrange icons for easier usability ([8dddb0b](https://github.com/ragaeeb/tahqiq/commit/8dddb0b863034aadf99705d0d7ffb5d2dbf92e8d))
+
 # [1.22.0](https://github.com/ragaeeb/tahqiq/compare/v1.21.0...v1.22.0) (2025-08-14)
 
 
