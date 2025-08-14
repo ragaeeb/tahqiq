@@ -12,7 +12,6 @@ import RowToolbar from '@/app/manuscript/row-toolbar';
 import { ConfirmButton } from '@/components/confirm-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
 import '@/lib/analytics';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
@@ -210,19 +209,7 @@ export default function Manuscript() {
                     </div>
                 </div>
             </div>
-            {pageToPreview && (
-                <Dialog
-                    modal={false}
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setPageToPreview(0);
-                        }
-                    }}
-                    open
-                >
-                    <PdfDialog page={pageToPreview} />
-                </Dialog>
-            )}
+            {pageToPreview ? <PdfDialog onClose={() => setPageToPreview(0)} page={pageToPreview} /> : null}
             <RowToolbar />
             <VersionFooter />
         </>

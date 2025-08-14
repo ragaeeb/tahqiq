@@ -110,6 +110,8 @@ export function ManuscriptMenu({
                         <DropdownMenuSubTrigger>Find Similar</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => findSimilar(0.4)}>40%</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => findSimilar(0.5)}>50%</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => findSimilar(0.6)}>60%</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => findSimilar(0.7)}>70%</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => findSimilar(0.8)}>80%</DropdownMenuItem>
