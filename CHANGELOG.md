@@ -1,3 +1,10 @@
+## [1.22.2](https://github.com/ragaeeb/tahqiq/compare/v1.22.1...v1.22.2) (2025-08-16)
+
+
+### Bug Fixes
+
+* **footnotes:** Clear footnotes button does not work ([bf90eec](https://github.com/ragaeeb/tahqiq/commit/bf90eecd8b42fa76a8276d0a0d552b17363f3432))
+
 ## [1.22.1](https://github.com/ragaeeb/tahqiq/compare/v1.22.0...v1.22.1) (2025-08-14)
 
 
