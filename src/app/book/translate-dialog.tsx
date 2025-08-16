@@ -1,5 +1,6 @@
 'use client';
 
+import { removeMarkdownFormatting } from 'bitaboom';
 import { record } from 'nanolytics';
 import { useState } from 'react';
 
@@ -10,7 +11,6 @@ import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/compon
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
-import { removeMarkdownFormatting } from '@/lib/textUtils';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 
 type TranslateDialogProps = {

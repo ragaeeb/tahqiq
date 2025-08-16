@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import { parsePageRanges } from 'bitaboom';
 import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon, SubscriptIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
@@ -10,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { INTAHA_TYPO, SWS_SYMBOL } from '@/lib/constants';
 import { filterRowsByDivergence } from '@/lib/filtering';
-import { parsePageRanges } from '@/lib/textUtils';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {

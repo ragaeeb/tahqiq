@@ -25,6 +25,7 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
     const expandFilteredRow = useManuscriptStore((state) => state.expandFilteredRow);
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
+    const updatePages = useManuscriptStore((state) => state.updatePages);
 
     return (
         <div className="flex items-center justify-center">
@@ -45,11 +46,11 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                         <span>Filter</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        aria-label="Preview PDF"
+                        aria-label="Clear Footnotes"
                         className="flex items-center gap-2 px-3 py-2"
                         onSelect={() => {
-                            record('ClearFootnotes');
-                            previewPdf(page);
+                            record('ClearPageFootnotes');
+                            updatePages([page], { isFootnote: false });
                         }}
                     >
                         <SubscriptIcon className="w-4 h-4" />
