@@ -15,5 +15,6 @@ export const mapManuscriptToJuz = (state: ManuscriptStateCore): Juz => {
         sheets: state.sheets,
         timestamp: state.createdAt,
         type: 'juz',
+        ...(state.url && { url: state.url }),
     };
 };

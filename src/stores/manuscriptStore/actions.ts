@@ -104,6 +104,7 @@ export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
         isInitialized: true,
         ...(juz.postProcessingApps && { postProcessingApps: juz.postProcessingApps }),
         sheets: juz.sheets,
+        url: juz.url,
     });
 };
 
@@ -517,4 +518,23 @@ export const alignAndMergeAltPoetry = ({ alt, observations }: Sheet) => {
         const matchingOriginal = alt.find((altItem) => altItem.text === text);
         return matchingOriginal || { id: getNextId(), text };
     });
+};
+
+export const updatePageNumber = (
+    state: ManuscriptStateCore,
+    startingPageId: number,
+    startingPageValue: number,
+    cascadeBelow?: boolean,
+) => {
+    const startingIndex = state.sheets.findIndex((p) => p.page === startingPageId);
+    state.sheets[startingIndex].page = startingPageValue;
+
+    if (cascadeBelow) {
+        state.sheets.forEach((page, index) => {
+            if (index >= startingIndex) {
+                const offset = index - startingIndex;
+                page.page = startingPageValue + offset;
+            }
+        });
+    }
 };

@@ -2,13 +2,20 @@ import { useRef } from 'react';
 
 import { Button } from './ui/button';
 
-type JsonBrowseButtonProps = {
+interface JsonBrowseButtonProps extends Omit<React.ComponentProps<typeof Button>, 'onClick'> {
     accept?: string;
     children: React.ReactNode;
+    isMulti?: boolean;
     onFilesSelected: (files: FileList) => void;
-};
+}
 
-export function JsonBrowseButton({ accept = '.json', children, onFilesSelected }: JsonBrowseButtonProps) {
+export function JsonBrowseButton({
+    accept = '.json',
+    children,
+    isMulti,
+    onFilesSelected,
+    ...props
+}: JsonBrowseButtonProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,17 +26,14 @@ export function JsonBrowseButton({ accept = '.json', children, onFilesSelected }
 
     return (
         <>
-            <Button
-                //className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-                onClick={() => fileInputRef.current?.click()}
-            >
+            <Button onClick={() => fileInputRef.current?.click()} {...props}>
                 {children}
             </Button>
 
             <input
                 accept={accept}
                 className="hidden"
-                multiple
+                multiple={isMulti}
                 onChange={handleFileChange}
                 ref={fileInputRef}
                 type="file"

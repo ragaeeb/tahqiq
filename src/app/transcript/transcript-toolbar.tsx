@@ -1,19 +1,22 @@
 'use client';
 
-import { BotIcon, RefreshCwIcon } from 'lucide-react';
+import { BotIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import React from 'react';
+import { toast } from 'sonner';
 
 import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
+import { downloadFile } from '@/lib/domUtils';
+import { saveCompressed } from '@/lib/io';
+import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 import { TranslateDialog } from '../book/translate-dialog';
-import DownloadButton from './download-button';
 import { FormatDialog } from './format-dialog';
 import { GroundingDialog } from './grounding-dialog';
 import { SearchDialog } from './search-dialog';
@@ -150,7 +153,43 @@ export default function TranscriptToolbar() {
             >
                 ♺ Rebuild Segment from Tokens
             </Button>
-            <DownloadButton />
+            <Button
+                className="bg-emerald-500"
+                onClick={() => {
+                    record('SaveManuscriptJuz');
+
+                    const transcript = mapTranscriptsToLatestContract(useTranscriptStore.getState());
+
+                    try {
+                        saveCompressed('transcript', transcript);
+                        toast.success('Saved state');
+                    } catch (err) {
+                        console.error('Could not save transcript', err);
+                        downloadFile(`${Date.now()}.json`, JSON.stringify(transcript));
+                    }
+                }}
+            >
+                <SaveIcon />
+            </Button>
+            <Button
+                onClick={() => {
+                    const name = prompt('Enter output file name');
+
+                    if (name) {
+                        record('DownloadTranscript', name);
+
+                        const juz = JSON.stringify(
+                            mapTranscriptsToLatestContract(useTranscriptStore.getState()),
+                            null,
+                            2,
+                        );
+
+                        downloadFile(name.endsWith('.json') ? name : `${name}.json`, juz);
+                    }
+                }}
+            >
+                <DownloadIcon />
+            </Button>
             <ConfirmButton
                 onClick={() => {
                     record('ResetTranscript');

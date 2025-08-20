@@ -288,9 +288,11 @@ export const initStore = (data: TranscriptSeries) => {
 
     return {
         createdAt: new Date(data.createdAt),
-        postProcessingApps: data.postProcessingApps,
+        groundTruth: data.groundTruth,
+        postProcessingApps: data.postProcessingApps || [],
         selectedPart: data.transcripts[0]!.volume,
         transcripts,
+        urls: data.urls || [],
     };
 };
 

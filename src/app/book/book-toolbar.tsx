@@ -146,6 +146,7 @@ function BookToolbar({
                 <BotIcon /> AI Translate
             </DialogTriggerButton>
             <JsonBrowseButton
+                isMulti
                 onFilesSelected={async (files) => {
                     record('AddVolumes', files.length.toString());
 

@@ -102,19 +102,14 @@ export function ManuscriptMenu({
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>Find Similar</DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => findSimilar(0.4)}>40%</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => findSimilar(0.5)}>50%</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => findSimilar(0.6)}>60%</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => findSimilar(0.7)}>70%</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => findSimilar(0.8)}>80%</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => findSimilar(0.9)}>90%</DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                    </DropdownMenuSub>
+                    <InputMenu
+                        label="Find Similar"
+                        onSubmit={(value) => {
+                            setIsOpen(false);
+                            findSimilar(Number(value));
+                        }}
+                        placeholder="Enter threshold (0.4)..."
+                    />
                     <InputMenu
                         label="Replace Asl"
                         onSubmit={(value) => {

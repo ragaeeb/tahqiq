@@ -1,5 +1,6 @@
 import type { BoundingBox, Observation, TextBlock } from 'kokokor';
 
+import type { LatestContractVersion } from '@/lib/constants';
 import type { PostProcessingApp } from '@/stores/commonTypes';
 
 /**
@@ -9,7 +10,7 @@ import type { PostProcessingApp } from '@/stores/commonTypes';
  */
 export type Juz = {
     /** Version of the contract format used for this Juz */
-    contractVersion: 'v2.0';
+    contractVersion: typeof LatestContractVersion.Juz;
     postProcessingApps: PostProcessingApp[];
     /**
      * Collection of sheets (pages) that make up this Juz.
@@ -21,6 +22,9 @@ export type Juz = {
 
     /** Type identifier for this data structure */
     type: 'juz';
+
+    /** URL to the PDF this was OCRed from. */
+    url?: string;
 };
 
 /**
@@ -35,10 +39,10 @@ export type ManuscriptStateCore = {
     createdAt: Date;
     idsFilter: Set<number>;
     isInitialized: boolean;
-    pdfUrl?: string;
     postProcessingApps: PostProcessingApp[];
     savedIds: number[];
     sheets: Sheet[];
+    url: string;
 };
 
 export type RawInputFiles = {
@@ -143,9 +147,19 @@ type ManuscriptActions = {
 
     searchAndReplace: (pattern: RegExp | string, replacement: string) => void;
 
-    setPdfUrl: (url: string) => void;
+    setUrl: (url: string) => void;
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
+
+    /**
+     * Shifts page numbers starting from a specific page.
+     * This is useful for renumbering pages.
+     *
+     * @param startingPageId - The page ID to start shifting from
+     * @param startingPageValue - The new value to start with
+     * @param cascadeBelow If this is true, we will update the pages after this one accordingly.
+     */
+    updatePageNumber: (startingPageId: number, startingPageValue: number, cascadeBelow?: boolean) => void;
 
     updatePages: (pages: number[], diff: TextLinePatch, updateLastUpdated?: boolean) => void;
 

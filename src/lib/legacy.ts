@@ -119,12 +119,16 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                 return {
                     segments: [
                         {
-                            end: transcripts.at(-1)!.end,
-                            start: transcripts[0]!.start,
+                            end: roundToDecimal(transcripts.at(-1)!.end),
+                            start: roundToDecimal(transcripts[0]!.start),
                             text: transcripts.map((t) => t.body).join(' '),
-                            tokens: transcripts.flatMap(
-                                (s) => estimateSegmentFromToken({ end: s.end, start: s.start, text: s.body }).tokens,
-                            ),
+                            tokens: transcripts
+                                .flatMap(
+                                    (s) =>
+                                        estimateSegmentFromToken({ end: s.end, start: s.start, text: s.body }).tokens,
+                                )
+                                .filter((e) => e.text)
+                                .map((e) => ({ ...e, end: roundToDecimal(e.end), start: roundToDecimal(e.start) })),
                         },
                     ],
                     timestamp: part.timestamp,
@@ -168,6 +172,7 @@ export const mapTranscriptsToLatestContract = (state: TranscriptStateCore): Tran
     return {
         contractVersion: LatestContractVersion.Transcript,
         createdAt,
+        groundTruth: state.groundTruth,
         lastUpdatedAt: new Date(),
         postProcessingApps: state.postProcessingApps.concat({
             id: packageJson.name,

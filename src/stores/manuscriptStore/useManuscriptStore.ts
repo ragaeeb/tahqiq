@@ -28,19 +28,15 @@ export const useManuscriptStore = create<ManuscriptState>()(
         mergeWithBelow: (...args) => set((state) => actions.mergeWithBelow(state, ...args)),
         postProcessingApps: [],
         reset: () => {
-            return set((state) => {
-                if (state.pdfUrl) {
-                    URL.revokeObjectURL(state.pdfUrl);
-                }
-
+            return set(() => {
                 return {
                     createdAt: new Date(),
                     idsFilter: new Set<number>(),
                     isInitialized: false,
-                    pdfUrl: undefined,
                     postProcessingApps: [],
                     savedIds: [],
                     sheets: [],
+                    url: '',
                 };
             });
         },
@@ -50,18 +46,12 @@ export const useManuscriptStore = create<ManuscriptState>()(
                 state.savedIds.push(id);
             }),
         searchAndReplace: (...args) => set((state) => actions.searchAndReplace(state, ...args)),
-        setPdfUrl: (pdfUrl) =>
-            set((state) => {
-                if (state.pdfUrl?.startsWith?.('blob:')) {
-                    try {
-                        URL.revokeObjectURL(state.pdfUrl);
-                    } catch {}
-                }
-                return { pdfUrl };
-            }),
+        setUrl: (url) => set({ url }),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
+        updatePageNumber: (...args) => set((state) => actions.updatePageNumber(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),
         updateTextLines: (...args) => set((state) => actions.updateTextLines(state, ...args)),
+        url: '',
     })),
 );

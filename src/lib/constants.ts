@@ -12,8 +12,8 @@ export const DEFAULT_HINTS = [
 
 export const LatestContractVersion = {
     Book: 'v1.0',
-    Juz: 'v2.0',
-    Transcript: 'v1.0',
+    Juz: 'v2.1',
+    Transcript: 'v1.1',
 } as const;
 
 export const DEFAULT_FILLER_WORDS = ['آآ', 'اه', 'ايه', 'وآآ', 'فآآ', 'مم', 'ها'];

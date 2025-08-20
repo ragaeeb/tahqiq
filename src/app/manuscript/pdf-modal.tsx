@@ -2,7 +2,7 @@ import { XIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
 
-import JsonDropZone from '@/components/json-drop-zone';
+import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
@@ -43,17 +43,17 @@ const DialogContainer = ({
 };
 
 export function PdfDialog({ onClose, page }: PdfDialogProps) {
-    const pdfUrl = useManuscriptStore((state) => state.pdfUrl);
-    const setPdfUrl = useManuscriptStore((state) => state.setPdfUrl);
+    const url = useManuscriptStore((state) => state.url);
+    const setPdfUrl = useManuscriptStore((state) => state.setUrl);
 
-    if (pdfUrl) {
+    if (url) {
         return (
             <DialogContainer onCloseClicked={onClose}>
                 <div className="flex-1 overflow-hidden">
                     <iframe
                         className="w-full h-full"
                         key={page}
-                        src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&page=${page}`}
+                        src={`${url}#navpanes=0&scrollbar=0&page=${page}`}
                         style={{
                             border: 'none',
                         }}
@@ -64,23 +64,18 @@ export function PdfDialog({ onClose, page }: PdfDialogProps) {
         );
     }
 
-    if (!pdfUrl) {
-        return (
-            <DialogContainer onCloseClicked={onClose}>
-                <JsonDropZone
-                    allowedExtensions=".pdf"
-                    description="Drop the PDF"
-                    maxFiles={1}
-                    onFiles={(map) => {
-                        const [fileName] = Object.keys(map);
-
-                        record('LoadPDF', fileName);
-
-                        const url = URL.createObjectURL(map[fileName] as File);
-                        setPdfUrl(url);
-                    }}
-                />
-            </DialogContainer>
-        );
-    }
+    return (
+        <DialogContainer onCloseClicked={onClose}>
+            <SubmittableInput
+                className="border-1 shadow-none focus:ring-0 focus:outline-none"
+                defaultValue={url}
+                name="pdfUrl"
+                onSubmit={(value) => {
+                    record('LoadPDF', value);
+                    setPdfUrl(value);
+                }}
+                placeholder="Enter PDF url..."
+            />
+        </DialogContainer>
+    );
 }

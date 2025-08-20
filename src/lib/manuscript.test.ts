@@ -36,10 +36,10 @@ describe('manuscript', () => {
                 isInitialized: true,
                 postProcessingApps: [],
                 sheets,
-            });
+            } as any);
 
             expect(actual).toEqual({
-                contractVersion: 'v2.0',
+                contractVersion: expect.any(String),
                 postProcessingApps: [
                     { id: expect.any(String), timestamp: expect.any(Date), version: expect.any(String) },
                 ],
@@ -56,7 +56,7 @@ describe('manuscript', () => {
                 isInitialized: true,
                 postProcessingApps: [],
                 sheets: [],
-            });
+            } as any);
 
             expect(actual.sheets).toEqual([]);
         });
@@ -68,7 +68,7 @@ describe('manuscript', () => {
                 isInitialized: false,
                 postProcessingApps: [],
                 sheets: [],
-            });
+            } as any);
 
             expect(actual.sheets).toEqual([]);
         });
