@@ -67,6 +67,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         reset: () => {
             return set(() => ({
                 createdAt: new Date(),
+                groundTruth: undefined,
                 postProcessingApps: [],
                 selectedPart: 0,
                 selectedSegments: [],
@@ -83,6 +84,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         setFormattingOptions: (formatOptions: FormatOptions) => {
             return set({ formatOptions });
         },
+        setGroundTruth: (groundTruth) => set({ groundTruth }),
         setSelectedPart: (selectedPart) => set({ selectedPart, selectedSegments: [] }),
         setSelectedToken: (token: null | Token) => set({ selectedToken: token }),
         splitSegment: () => {
@@ -93,5 +95,6 @@ export const useTranscriptStore = create<TranscriptState>((set) => {
         updateSegment: (segmentStart, update, shouldForceRefresh) =>
             set((state) => updateSegmentWithDiff(state, segmentStart, update, shouldForceRefresh)),
         updateUrlsForTranscript: (urls) => set((state) => setUrlsForTranscript(state, urls)),
+        urls: [],
     };
 });

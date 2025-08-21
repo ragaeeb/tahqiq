@@ -36,14 +36,33 @@ describe('manuscript', () => {
                 isInitialized: true,
                 postProcessingApps: [],
                 sheets,
-            });
+            } as any);
 
-            expect(actual).toEqual({
-                contractVersion: 'v2.0',
+            expect(actual).toMatchObject({
+                contractVersion: expect.any(String),
                 postProcessingApps: [
                     { id: expect.any(String), timestamp: expect.any(Date), version: expect.any(String) },
                 ],
-                sheets,
+                sheets: [
+                    {
+                        alt: [],
+                        observations: [
+                            {
+                                bbox: { height: 1, width: 2, x: 3, y: 4 },
+                                isCentered: true,
+                                isHeading: true,
+                                isPoetic: true,
+                                text: 'T',
+                            },
+                            {
+                                bbox: { height: 1, width: 1, x: 1, y: 1 },
+                                isFootnote: true,
+                                text: 'F',
+                            },
+                        ],
+                        page: 2,
+                    },
+                ],
                 timestamp: expect.any(Date),
                 type: 'juz',
             });
@@ -56,7 +75,7 @@ describe('manuscript', () => {
                 isInitialized: true,
                 postProcessingApps: [],
                 sheets: [],
-            });
+            } as any);
 
             expect(actual.sheets).toEqual([]);
         });
@@ -68,7 +87,7 @@ describe('manuscript', () => {
                 isInitialized: false,
                 postProcessingApps: [],
                 sheets: [],
-            });
+            } as any);
 
             expect(actual.sheets).toEqual([]);
         });

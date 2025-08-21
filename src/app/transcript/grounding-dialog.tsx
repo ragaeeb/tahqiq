@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { pasteText } from '@/lib/domUtils';
 import { preformatArabicText } from '@/lib/textUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
@@ -22,7 +21,7 @@ export function GroundingDialog({
 }: Readonly<{
     segment: Segment;
 }>) {
-    const [groundedSegment, setGroundedSegment] = useState<GroundedSegment>();
+    const [groundedSegment, setGroundedSegment] = useState<GroundedSegment>(segment);
     const updateSegment = useTranscriptStore((state) => state.updateSegment);
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
 
@@ -42,12 +41,13 @@ export function GroundingDialog({
                     onPaste={(e) => {
                         record('OnPasteIntoGroundingTruth');
 
-                        e.preventDefault();
-                        const text = preformatArabicText(e.clipboardData.getData('text'));
+                        setTimeout(() => {
+                            const textarea = e.target as HTMLTextAreaElement;
+                            const fullText = preformatArabicText(textarea.value);
+                            const newSegment = updateSegmentWithGroundTruth(segment, fullText);
 
-                        const newSegment = updateSegmentWithGroundTruth(segment, text);
-                        setGroundedSegment(newSegment);
-                        pasteText(e.target as HTMLTextAreaElement, text);
+                            setGroundedSegment(newSegment);
+                        }, 0);
                     }}
                 />
                 {groundedSegment && (
@@ -62,7 +62,7 @@ export function GroundingDialog({
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {groundedSegment.tokens.map((s) => (
-                                <tr className="px-2 py-1 space-y-1 text-xs align-top" key={s.start}>
+                                <tr className="px-2 py-1 space-y-1 text-xs align-top" key={`${s.start}_${s.end}`}>
                                     <td aria-label="Volume" className="px-2 py-1 w-36 text-left font-normal">
                                         {formatSecondsToTimestamp(s.start)}
                                     </td>

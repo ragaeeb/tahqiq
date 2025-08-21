@@ -1,8 +1,9 @@
 import { EraserIcon, ExpandIcon, EyeIcon, FilterIcon, SignatureIcon, StarIcon, SubscriptIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { ConfirmDropdownMenuItem } from '@/components/confirm-dropdown-menu-item';
+import { InputMenu } from '@/components/input-menu';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,10 +27,12 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
     const updatePages = useManuscriptStore((state) => state.updatePages);
+    const updatePageNumber = useManuscriptStore((state) => state.updatePageNumber);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
         <div className="flex items-center justify-center">
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
                 <DropdownMenuTrigger className="flex items-center justify-center min-w-0 hover:bg-gray-50 rounded px-1 py-0.5 transition-colors">
                     {page}
                 </DropdownMenuTrigger>
@@ -86,6 +89,16 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                     >
                         <StarIcon /> Save
                     </DropdownMenuItem>
+                    <InputMenu
+                        inputMode="numeric"
+                        label="Page #"
+                        onSubmit={(value) => {
+                            setIsMenuOpen(false);
+                            updatePageNumber(page, Number(value), true);
+                        }}
+                        pattern="\d+"
+                        placeholder="Enter new page number..."
+                    />
                     <ConfirmDropdownMenuItem
                         onClick={() => {
                             record('ErasePage');

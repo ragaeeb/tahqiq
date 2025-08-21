@@ -8,11 +8,7 @@ describe('actions', () => {
             const state = {
                 sheets: [
                     {
-                        alt: [
-                            { id: 12, text: 'A' },
-                            { id: 13, text: 'B' },
-                            { id: 14, text: 'C' },
-                        ],
+                        alt: ['A', 'B', 'C'],
                         observations: [
                             { bbox: {}, id: 2, text: 'A' },
                             { bbox: {}, id: 3, text: 'B' },
@@ -28,13 +24,7 @@ describe('actions', () => {
             expect(state).toEqual({
                 sheets: [
                     {
-                        alt: [
-                            {
-                                id: 12,
-                                lastUpdate: expect.any(Number),
-                                text: 'A B C',
-                            },
-                        ],
+                        alt: ['A B C'],
                         observations: [
                             {
                                 bbox: expect.any(Object),
@@ -58,10 +48,7 @@ describe('actions', () => {
             const state = {
                 sheets: [
                     {
-                        alt: [
-                            { id: 12, text: 'A' },
-                            { id: 13, text: 'B' },
-                        ],
+                        alt: ['A', 'B'],
                         observations: [
                             { id: 2, text: 'A' },
                             { id: 3, text: 'B' },
@@ -76,7 +63,7 @@ describe('actions', () => {
             expect(state).toEqual({
                 sheets: [
                     {
-                        alt: [{ id: 12, lastUpdate: expect.any(Number), text: 'B A' }],
+                        alt: ['B A'],
                         observations: [
                             { id: 2, text: 'A' },
                             { id: 3, text: 'B' },
@@ -116,33 +103,15 @@ describe('actions', () => {
             ];
 
             const alt = [
-                {
-                    text: 'A',
-                },
-                {
-                    text: 'قد قُدِّم العَجْبُ على الرُّوَيس وشـارف الوهـدُ أبــا قُبيس',
-                },
-                {
-                    text: 'وطاول البقلُ فروعَ الميْس',
-                },
-                {
-                    text: 'وهبت العنـز لـقرع التـيس',
-                },
-                {
-                    text: 'واختلط الناس اختلاط الحيس',
-                },
-                {
-                    text: 'وادَّعت الروم أبًا في قيس',
-                },
-                {
-                    text: 'معـاني الشعر على العـبـيــسـي',
-                },
-                {
-                    text: 'إذ قرا القاضي حليف الكيس',
-                },
-                {
-                    text: 'B',
-                },
+                'A',
+                'قد قُدِّم العَجْبُ على الرُّوَيس وشـارف الوهـدُ أبــا قُبيس',
+                'وطاول البقلُ فروعَ الميْس',
+                'وهبت العنـز لـقرع التـيس',
+                'واختلط الناس اختلاط الحيس',
+                'وادَّعت الروم أبًا في قيس',
+                'معـاني الشعر على العـبـيــسـي',
+                'إذ قرا القاضي حليف الكيس',
+                'B',
             ];
 
             const merged = alignAndMergeAltPoetry({
@@ -151,27 +120,12 @@ describe('actions', () => {
             } as any);
 
             expect(merged).toEqual([
-                {
-                    text: 'A',
-                },
-                {
-                    text: 'قد قُدِّم العَجْبُ على الرُّوَيس وشـارف الوهـدُ أبــا قُبيس',
-                },
-                {
-                    id: expect.any(Number),
-                    text: ['وطاول البقلُ فروعَ الميْس', 'وهبت العنـز لـقرع التـيس'].join(' '),
-                },
-                {
-                    id: expect.any(Number),
-                    text: ['وادَّعت الروم أبًا في قيس', 'واختلط الناس اختلاط الحيس'].join(' '),
-                },
-                {
-                    id: expect.any(Number),
-                    text: ['إذ قرا القاضي حليف الكيس', 'معـاني الشعر على العـبـيــسـي'].join(' '),
-                },
-                {
-                    text: 'B',
-                },
+                'A',
+                'قد قُدِّم العَجْبُ على الرُّوَيس وشـارف الوهـدُ أبــا قُبيس',
+                ['وطاول البقلُ فروعَ الميْس', 'وهبت العنـز لـقرع التـيس'].join(' '),
+                ['وادَّعت الروم أبًا في قيس', 'واختلط الناس اختلاط الحيس'].join(' '),
+                ['إذ قرا القاضي حليف الكيس', 'معـاني الشعر على العـبـيــسـي'].join(' '),
+                'B',
             ] as any);
         });
     });

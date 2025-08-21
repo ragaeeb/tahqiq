@@ -11,7 +11,7 @@ export const selectAllSheetLines = memoizeOne(({ idsFilter, sheets }: Manuscript
         .filter((s) => s.observations.length > 0)
         .flatMap((sheet) => {
             return sheet.observations.map((o, i) => {
-                const alt = sheet.alt[i]?.text || '';
+                const alt = sheet.alt[i] || '';
 
                 return {
                     ...o,

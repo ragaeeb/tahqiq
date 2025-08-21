@@ -1,6 +1,10 @@
 import { type Segment as ParagrafsSegment, type Token } from 'paragrafs';
 
+import { LatestContractVersion } from '@/lib/constants';
+
+import type { Kitab } from '../bookStore/types';
 import type { PostProcessingApp } from '../commonTypes';
+import type { Juz } from '../manuscriptStore/types';
 
 /**
  * Configuration options for formatting transcript segments
@@ -55,10 +59,13 @@ export type Transcript = {
  */
 export type TranscriptSeries = {
     /** Version of the contract format used for this transcript series */
-    contractVersion: 'v1.0';
+    contractVersion: typeof LatestContractVersion.Transcript;
 
     /** When this transcript series was initially created */
     createdAt: Date;
+
+    /** Optional ground truth for this transcription. */
+    groundTruth?: Juz | Kitab;
 
     /** When this transcript series was last modified */
     lastUpdatedAt: Date;
@@ -68,6 +75,9 @@ export type TranscriptSeries = {
 
     /** Array of transcript volumes in this series */
     transcripts: Transcript[];
+
+    /** Optional array of source URLs for where we got the ground truth from. */
+    readonly urls?: string[];
 };
 
 /**
@@ -78,21 +88,19 @@ export type TranscriptState = TranscriptActions & TranscriptStateCore;
 /**
  * Core state properties for transcript management
  */
-export type TranscriptStateCore = {
-    /** When the transcript store was created */
-    readonly createdAt: Date;
-    /** Current formatting options for displaying and processing transcripts */
-    readonly formatOptions: FormatOptions;
-    readonly postProcessingApps: PostProcessingApp[];
-    /** Currently selected transcript volume number */
-    readonly selectedPart: number;
-    /** Array of currently selected segments */
-    readonly selectedSegments: Segment[];
-    /** Currently selected token for operations like splitting, or null if none selected */
-    readonly selectedToken: null | Token;
-    /** Map of transcript volumes indexed by volume number */
-    readonly transcripts: Record<number, Transcript>;
-};
+export type TranscriptStateCore = Pick<TranscriptSeries, 'createdAt' | 'groundTruth'> &
+    Required<Pick<TranscriptSeries, 'postProcessingApps' | 'urls'>> & {
+        /** Current formatting options for displaying and processing transcripts */
+        readonly formatOptions: FormatOptions;
+        /** Currently selected transcript volume number */
+        readonly selectedPart: number;
+        /** Array of currently selected segments */
+        readonly selectedSegments: Segment[];
+        /** Currently selected token for operations like splitting, or null if none selected */
+        readonly selectedToken: null | Token;
+        /** Map of transcript volumes indexed by volume number */
+        readonly transcripts: Record<number, Transcript>;
+    };
 
 /**
  * Action functions available for transcript manipulation
@@ -144,6 +152,12 @@ type TranscriptActions = {
      * @param options New formatting options to apply
      */
     setFormattingOptions: (options: FormatOptions) => void;
+
+    /**
+     * Sets the ground truth.
+     * @param groundTruth The ground truth data.
+     */
+    setGroundTruth: (groundTruth?: Juz | Kitab) => void;
 
     /**
      * Changes the currently selected transcript volume

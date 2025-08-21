@@ -1,22 +1,21 @@
 'use client';
 
+import { PaperclipIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { JsonBrowseButton } from '@/components/json-browse-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
-import { loadFiles } from '@/lib/io';
+import { loadCompressed, loadFiles } from '@/lib/io';
 import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
+import '@/lib/analytics';
 
 import PartSelector from './part-selector';
 import SegmentItem from './segment-item';
-
-import '@/lib/analytics';
-
 import TranscriptToolbar from './transcript-toolbar';
 import UrlField from './url-field';
 
@@ -28,6 +27,8 @@ import UrlField from './url-field';
 export default function Transcript() {
     const isInitialized = useTranscriptStore((state) => state.selectedPart > 0);
     const initTranscripts = useTranscriptStore((state) => state.init);
+    const hasGroundTruth = useTranscriptStore((state) => Boolean(state.groundTruth));
+    const setGroundTruth = useTranscriptStore((state) => state.setGroundTruth);
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
     const addTranscripts = useTranscriptStore((state) => state.addTranscripts);
     const segments = useTranscriptStore(selectCurrentSegments);
@@ -37,6 +38,15 @@ export default function Transcript() {
             <SegmentItem key={segment.start.toString() + segment.end.toString()} segment={segment} />
         ));
     }, [segments]);
+
+    useEffect(() => {
+        loadCompressed('transcript').then((transcript) => {
+            if (transcript) {
+                record('RestoreTranscriptFromSession');
+                initTranscripts(adaptLegacyTranscripts(transcript));
+            }
+        });
+    }, [initTranscripts]);
 
     if (!isInitialized) {
         return (
@@ -66,12 +76,24 @@ export default function Transcript() {
                     <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                         <PartSelector />
                         <JsonBrowseButton
+                            isMulti
                             onFilesSelected={async (files) => {
                                 addTranscripts(await loadFiles(files));
                             }}
                         >
                             + Parts
                         </JsonBrowseButton>
+                        {!hasGroundTruth && (
+                            <JsonBrowseButton
+                                aria-label="Set Ground Truth"
+                                onFilesSelected={async (files) => {
+                                    const result = await loadFiles(files);
+                                    setGroundTruth(Object.values(result) as any);
+                                }}
+                            >
+                                <PaperclipIcon />
+                            </JsonBrowseButton>
+                        )}
                         <TranscriptToolbar />
                     </div>
 
