@@ -44,7 +44,7 @@ const DialogContainer = ({
 
 export function PdfDialog({ onClose, page }: PdfDialogProps) {
     const url = useManuscriptStore((state) => state.url);
-    const setPdfUrl = useManuscriptStore((state) => state.setUrl);
+    const setUrl = useManuscriptStore((state) => state.setUrl);
 
     if (url) {
         return (
@@ -72,7 +72,7 @@ export function PdfDialog({ onClose, page }: PdfDialogProps) {
                 name="pdfUrl"
                 onSubmit={(value) => {
                     record('LoadPDF', value);
-                    setPdfUrl(value);
+                    setUrl(value);
                 }}
                 placeholder="Enter PDF url..."
             />

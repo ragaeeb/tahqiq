@@ -150,11 +150,11 @@ type ManuscriptActions = {
      * Shifts page numbers starting from a specific page.
      * This is useful for renumbering pages.
      *
-     * @param startingPageId - The page ID to start shifting from
+     * @param startingPage - The page ID to start shifting from
      * @param startingPageValue - The new value to start with
      * @param cascadeBelow If this is true, we will update the pages after this one accordingly.
      */
-    updatePageNumber: (startingPageId: number, startingPageValue: number, cascadeBelow?: boolean) => void;
+    updatePageNumber: (startingPage: number, startingPageValue: number, cascadeBelow?: boolean) => void;
 
     updatePages: (pages: number[], diff: TextLinePatch, updateLastUpdated?: boolean) => void;
 

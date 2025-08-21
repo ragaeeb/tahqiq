@@ -6,15 +6,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 
-export const InputMenu = ({
-    label,
-    onSubmit,
-    placeholder,
-}: {
+interface InputMenuProps extends Omit<React.ComponentProps<typeof Input>, 'onSubmit'> {
     label: string;
     onSubmit: (value: string) => void;
-    placeholder: string;
-}) => {
+}
+
+export const InputMenu = ({ label, onSubmit, ...props }: InputMenuProps) => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -35,7 +32,7 @@ export const InputMenu = ({
                             autoFocus
                             className="w-full text-sm px-2 py-1.5 focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
                             name="input"
-                            placeholder={placeholder}
+                            {...props}
                         />
                     </form>
                 </DropdownMenuSubContent>

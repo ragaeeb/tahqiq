@@ -69,7 +69,7 @@ const createSheet = (
         },
     });
 
-    const altObservations = alternateObservations.filter((o) => !isArabicTextNoise(o.text)).map((o) => o.text);
+    const altObservations = alternateObservations.filter((o) => !isArabicTextNoise(o.text)).map((o) => o.text.trim());
 
     return {
         alt: altObservations,
@@ -482,31 +482,23 @@ export const alignPoetry = (state: ManuscriptStateCore, pages: number[]) => {
  * comparing similarity scores against the full line, and merges them.
  *
  * @param {AlignAndMergeParams} params - The input object containing observations and alt arrays.
- * @returns {TextObservation[]} A new 'alt' array with poetic lines merged to align with 'observations'.
+ * @returns {string[]} A new 'alt' array (string[]) with poetic lines merged to align with 'observations'.
  */
 
 export const alignAndMergeAltPoetry = ({ alt, observations }: Sheet) => {
-    // Use the string-based alignment function
-    const alignedTexts = alignTextSegments(
+    return alignTextSegments(
         observations.map((obs) => (obs.isPoetic ? obs.text : '')),
         alt,
     );
-
-    // Convert back to the original object structure
-    return alignedTexts.map((text) => {
-        // For lines that match original alt text, preserve the original object
-        const matchingOriginal = alt.find((altItem) => altItem === text);
-        return matchingOriginal || text;
-    });
 };
 
 export const updatePageNumber = (
     state: ManuscriptStateCore,
-    startingPageId: number,
+    startingPage: number,
     startingPageValue: number,
     cascadeBelow?: boolean,
 ) => {
-    const startingIndex = state.sheets.findIndex((p) => p.page === startingPageId);
+    const startingIndex = state.sheets.findIndex((p) => p.page === startingPage);
     state.sheets[startingIndex].page = startingPageValue;
 
     if (cascadeBelow) {

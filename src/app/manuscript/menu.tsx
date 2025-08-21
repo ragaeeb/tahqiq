@@ -103,11 +103,13 @@ export function ManuscriptMenu({
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
                     <InputMenu
+                        inputMode="decimal"
                         label="Find Similar"
                         onSubmit={(value) => {
                             setIsOpen(false);
                             findSimilar(Number(value));
                         }}
+                        pattern="0?.[0-9]+"
                         placeholder="Enter threshold (0.4)..."
                     />
                     <InputMenu

@@ -90,11 +90,13 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                         <StarIcon /> Save
                     </DropdownMenuItem>
                     <InputMenu
+                        inputMode="numeric"
                         label="Page #"
                         onSubmit={(value) => {
                             setIsMenuOpen(false);
                             updatePageNumber(page, Number(value), true);
                         }}
+                        pattern="\d+"
                         placeholder="Enter new page number..."
                     />
                     <ConfirmDropdownMenuItem

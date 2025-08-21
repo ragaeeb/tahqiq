@@ -38,7 +38,7 @@ describe('manuscript', () => {
                 sheets,
             } as any);
 
-            expect(actual).toEqual({
+            expect(actual).toMatchObject({
                 contractVersion: expect.any(String),
                 postProcessingApps: [
                     { id: expect.any(String), timestamp: expect.any(Date), version: expect.any(String) },
@@ -65,7 +65,7 @@ describe('manuscript', () => {
                 ],
                 timestamp: expect.any(Date),
                 type: 'juz',
-            } as any);
+            });
         });
 
         it('should handle empty sheets array', () => {

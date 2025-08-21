@@ -172,17 +172,14 @@ export default function TranscriptToolbar() {
                 <SaveIcon />
             </Button>
             <Button
+                aria-label="Download transcript JSON"
                 onClick={() => {
                     const name = prompt('Enter output file name');
 
                     if (name) {
                         record('DownloadTranscript', name);
 
-                        const juz = JSON.stringify(
-                            mapTranscriptsToLatestContract(useTranscriptStore.getState()),
-                            null,
-                            2,
-                        );
+                        const juz = JSON.stringify(mapTranscriptsToLatestContract(useTranscriptStore.getState()));
 
                         downloadFile(name.endsWith('.json') ? name : `${name}.json`, juz);
                     }

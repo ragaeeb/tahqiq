@@ -36,8 +36,8 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                 ...((t.urls?.length || 0) > 0 && { urls: t.urls }),
                 segments: [
                     {
-                        end: t.tokens.at(-1)!.end,
-                        start: t.tokens[0]!.start,
+                        end: roundToDecimal(t.tokens.at(-1)!.end),
+                        start: roundToDecimal(t.tokens[0]!.start),
                         text: t.tokens.map((t) => t.text).join(' '),
                         tokens: t.tokens,
                     },
@@ -95,8 +95,8 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                 transcripts: data.parts.map((part) => {
                     return {
                         segments: part.transcripts.map((s) => ({
-                            end: s.end,
-                            start: s.start,
+                            end: roundToDecimal(s.end),
+                            start: roundToDecimal(s.start),
                             text: s.body,
                             tokens: s.words!,
                         })),
@@ -125,10 +125,13 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                             tokens: transcripts
                                 .flatMap(
                                     (s) =>
-                                        estimateSegmentFromToken({ end: s.end, start: s.start, text: s.body }).tokens,
+                                        estimateSegmentFromToken({
+                                            end: roundToDecimal(s.end),
+                                            start: roundToDecimal(s.start),
+                                            text: s.body,
+                                        }).tokens,
                                 )
-                                .filter((e) => e.text)
-                                .map((e) => ({ ...e, end: roundToDecimal(e.end), start: roundToDecimal(e.start) })),
+                                .filter((e) => e.text),
                         },
                     ],
                     timestamp: part.timestamp,
@@ -150,8 +153,8 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
                 return {
                     segments: [
                         {
-                            end: part.transcripts.at(-1)!.end,
-                            start: part.transcripts[0]!.start,
+                            end: roundToDecimal(part.transcripts.at(-1)!.end),
+                            start: roundToDecimal(part.transcripts[0]!.start),
                             text: part.transcripts.map((t) => t.text).join(' '),
                             tokens: part.transcripts.flatMap((s) => s.tokens),
                         },
