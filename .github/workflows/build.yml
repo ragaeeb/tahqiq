@@ -26,14 +26,14 @@ jobs:
             id-token: write
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
               with:
                   fetch-depth: 0
                   # Use a Personal Access Token instead of GITHUB_TOKEN for better permissions
                   token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
 
             - name: Cache dependencies
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ~/.bun/install/cache
                   key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -74,12 +74,12 @@ jobs:
         runs-on: ubuntu-latest
         if: github.event_name == 'pull_request'
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
               with:
                   fetch-depth: 1
 
             - name: Cache dependencies
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ~/.bun/install/cache
                   key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
