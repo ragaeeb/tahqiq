@@ -75,15 +75,11 @@ export default function AjzaPage() {
                                     if (name) {
                                         record('DownloadAjza', name);
 
-                                        const ajza = JSON.stringify(
-                                            {
-                                                contractVersion: LatestContractVersion.Ajza,
-                                                data: fileNameToJuz,
-                                                type: 'ajza',
-                                            } satisfies Ajza,
-                                            null,
-                                            2,
-                                        );
+                                        const ajza = JSON.stringify({
+                                            contractVersion: LatestContractVersion.Ajza,
+                                            data: fileNameToJuz,
+                                            type: 'ajza',
+                                        } satisfies Ajza);
 
                                         downloadFile(name.endsWith('.json') ? name : `${name}.json`, ajza);
                                     }

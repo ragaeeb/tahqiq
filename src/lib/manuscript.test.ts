@@ -43,10 +43,29 @@ describe('manuscript', () => {
                 postProcessingApps: [
                     { id: expect.any(String), timestamp: expect.any(Date), version: expect.any(String) },
                 ],
-                sheets,
+                sheets: [
+                    {
+                        alt: [],
+                        observations: [
+                            {
+                                bbox: { height: 1, width: 2, x: 3, y: 4 },
+                                isCentered: true,
+                                isHeading: true,
+                                isPoetic: true,
+                                text: 'T',
+                            },
+                            {
+                                bbox: { height: 1, width: 1, x: 1, y: 1 },
+                                isFootnote: true,
+                                text: 'F',
+                            },
+                        ],
+                        page: 2,
+                    },
+                ],
                 timestamp: expect.any(Date),
                 type: 'juz',
-            });
+            } as any);
         });
 
         it('should handle empty sheets array', () => {

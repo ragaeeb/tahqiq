@@ -69,9 +69,7 @@ const createSheet = (
         },
     });
 
-    const altObservations = alternateObservations
-        .filter((o) => !isArabicTextNoise(o.text))
-        .map((o) => ({ id: getNextId(), text: o.text }));
+    const altObservations = alternateObservations.filter((o) => !isArabicTextNoise(o.text)).map((o) => o.text);
 
     return {
         alt: altObservations,
@@ -98,12 +96,23 @@ const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, p
     return flipAndAlignObservations(mapSuryaPageResultToObservations(suryaPage), imageWidth, dpiX);
 };
 
+type LegacyAltText = { text: string };
+
 export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
+    const isLegacyAlt = juz.contractVersion.startsWith('v2.');
+
     return rawReturn({
         createdAt: new Date(juz.timestamp),
         isInitialized: true,
         ...(juz.postProcessingApps && { postProcessingApps: juz.postProcessingApps }),
-        sheets: juz.sheets,
+        sheets: juz.sheets.map((s) => ({
+            alt: isLegacyAlt ? (s.alt as unknown as LegacyAltText[]).map((a) => a.text) : s.alt,
+            observations: s.observations.map((o) => ({
+                ...o,
+                id: getNextId(),
+            })),
+            page: s.page,
+        })),
         url: juz.url,
     });
 };
@@ -165,22 +174,9 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
     const [firstLine, secondLine] = alt.split('\n');
 
     if (secondLine) {
-        const altObservation = {
-            ...sheet.alt[index],
-            lastUpdate: Date.now(),
-            text: firstLine,
-        };
-
-        const nextObservation = {
-            ...sheet.alt[index],
-            id: getNextId(),
-            lastUpdate: Date.now(),
-            text: secondLine,
-        };
-
-        sheet.alt.splice(index, 1, altObservation, nextObservation);
+        sheet.alt.splice(index, 1, firstLine, secondLine);
     } else {
-        sheet.alt[index].text = alt;
+        sheet.alt[index] = alt;
     }
 };
 
@@ -203,13 +199,7 @@ export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: num
         const above = sheet.alt[index - 1];
         const current = sheet.alt[index];
 
-        const mergedAlt = {
-            ...above,
-            lastUpdate: Date.now(),
-            text: `${above.text} ${current.text}`.trim(),
-        };
-
-        sheet.alt.splice(index - 1, 2, mergedAlt);
+        sheet.alt.splice(index - 1, 2, [above, current].join(' ').trim());
     }
 };
 
@@ -248,15 +238,7 @@ export const merge = (state: ManuscriptStateCore, page: number, ids: number[]) =
     };
 
     // Merge alt elements
-    const mergedAlt = {
-        ...altToMerge[0],
-        lastUpdate: Date.now(),
-        text: altToMerge
-            .map((alt) => alt.text)
-            .join(' ')
-            .trim(),
-    };
-
+    const mergedAlt = altToMerge.join(' ').trim();
     sheet.observations.splice(indices[0], indices.length, mergedObservation);
     sheet.alt.splice(indices[0], indices.length, mergedAlt);
 };
@@ -285,13 +267,7 @@ export const mergeWithBelow = (state: ManuscriptStateCore, page: number, id: num
         const current = sheet.alt[index];
         const below = sheet.alt[index + 1];
 
-        const mergedAlt = {
-            ...current,
-            lastUpdate: Date.now(),
-            text: `${below.text} ${current.text}`.trim(),
-        };
-
-        sheet.alt.splice(index, 2, mergedAlt);
+        sheet.alt.splice(index, 2, [below, current].join(' ').trim());
     }
 };
 
@@ -310,7 +286,7 @@ export const fixTypos = (state: ManuscriptStateCore, ids: number[]) => {
         sheet.observations.forEach((observation, index) => {
             if (idsSet.has(observation.id)) {
                 observation.lastUpdate = Date.now();
-                observation.text = fixTypo(observation.text, sheet.alt[index].text, options);
+                observation.text = fixTypo(observation.text, sheet.alt[index], options);
             }
         });
     });
@@ -412,15 +388,19 @@ export const deleteLines = (state: ManuscriptStateCore, ids: number[]) => {
 export const deleteSupports = (state: ManuscriptStateCore, ids: number[]) => {
     const idsSet = new Set(ids);
 
-    state.sheets.forEach((sheet) => {
-        const supportIds = sheet.observations
-            .map((observation, i) => idsSet.has(observation.id) && sheet.alt[i].id)
-            .filter(Boolean);
+    for (const sheet of state.sheets) {
+        const alt: string[] = [];
 
-        if (supportIds.length) {
-            sheet.alt = sheet.alt.filter((alt) => !supportIds.includes(alt.id));
+        sheet.observations.forEach((o, i) => {
+            if (!idsSet.has(o.id) && sheet.alt[i]) {
+                alt.push(sheet.alt[i]);
+            }
+        });
+
+        if (sheet.alt.length !== alt.length) {
+            sheet.alt = alt;
         }
-    });
+    }
 };
 
 export const expandFilteredRow = (state: ManuscriptStateCore, id: number) => {
@@ -509,14 +489,14 @@ export const alignAndMergeAltPoetry = ({ alt, observations }: Sheet) => {
     // Use the string-based alignment function
     const alignedTexts = alignTextSegments(
         observations.map((obs) => (obs.isPoetic ? obs.text : '')),
-        alt.map((altObs) => altObs.text),
+        alt,
     );
 
     // Convert back to the original object structure
     return alignedTexts.map((text) => {
         // For lines that match original alt text, preserve the original object
-        const matchingOriginal = alt.find((altItem) => altItem.text === text);
-        return matchingOriginal || { id: getNextId(), text };
+        const matchingOriginal = alt.find((altItem) => altItem === text);
+        return matchingOriginal || text;
     });
 };
 

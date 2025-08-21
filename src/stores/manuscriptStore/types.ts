@@ -94,11 +94,6 @@ export type TextLine = TextBlock & {
 
 export type TextLinePatch = ((o: TextLine) => void) | Omit<Partial<TextLine>, 'id' | 'lastUpdate'>;
 
-type AltText = {
-    readonly id: number;
-    text: string;
-};
-
 type MacOCR = { observations: Observation[] };
 
 /**
@@ -170,7 +165,7 @@ type OcrData = {
     /**
      * Matching observations extracted from surya for typo corrections.
      */
-    alt: AltText[];
+    alt: string[];
 
     /**
      * Matching observations extracted from surya for typo corrections.
