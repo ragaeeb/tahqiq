@@ -33,7 +33,7 @@ jobs:
                   token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
 
             - name: Cache dependencies
-              uses: actions/cache@v5
+              uses: actions/cache@v4
               with:
                   path: ~/.bun/install/cache
                   key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
@@ -79,7 +79,7 @@ jobs:
                   fetch-depth: 1
 
             - name: Cache dependencies
-              uses: actions/cache@v5
+              uses: actions/cache@v4
               with:
                   path: ~/.bun/install/cache
                   key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
