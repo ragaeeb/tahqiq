@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/ragaeeb/tahqiq/compare/v1.22.2...v1.23.0) (2025-08-21)
+
+
+### Features
+
+* **ground:** v1.23 release ([#95](https://github.com/ragaeeb/tahqiq/issues/95)) ([ce68ed5](https://github.com/ragaeeb/tahqiq/commit/ce68ed51182e0a0976d01c489f861eee4c877372)), closes [#92](https://github.com/ragaeeb/tahqiq/issues/92) [#91](https://github.com/ragaeeb/tahqiq/issues/91) [#90](https://github.com/ragaeeb/tahqiq/issues/90) [#86](https://github.com/ragaeeb/tahqiq/issues/86) [#85](https://github.com/ragaeeb/tahqiq/issues/85) [#93](https://github.com/ragaeeb/tahqiq/issues/93) [#94](https://github.com/ragaeeb/tahqiq/issues/94)
+
 ## [1.22.2](https://github.com/ragaeeb/tahqiq/compare/v1.22.1...v1.22.2) (2025-08-16)
 
 
