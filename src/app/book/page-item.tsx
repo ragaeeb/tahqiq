@@ -65,9 +65,9 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                 />
             </td>
 
-            <td className="px-2 py-1 space-y-1 text-xs align-top">
+            <td className="space-y-1 px-2 py-1 align-top text-xs">
                 <SubmittableInput
-                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
+                    className="border-none bg-transparent shadow-none focus:ring-0 focus:outline-none"
                     defaultValue={page.page.toString()}
                     key={page.id + '/' + page.lastUpdate + '/page'}
                     name="page_id"
@@ -83,9 +83,9 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     }}
                 />
             </td>
-            <td className="px-2 py-1 space-y-1 text-xs align-top">
+            <td className="space-y-1 px-2 py-1 align-top text-xs">
                 <SubmittableInput
-                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
+                    className="border-none bg-transparent shadow-none focus:ring-0 focus:outline-none"
                     defaultValue={page.volumePage?.toString()}
                     key={page.id + '/' + page.lastUpdate + '/volumePage'}
                     name="volume_page"
@@ -104,7 +104,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
             <td className={`px-4 py-1 align-top`}>
                 <BodyTextArea
                     {...(bodyCharacterHighlights && { highlights: bodyCharacterHighlights })}
-                    className={`leading-relaxed resize-none overflow-hidden border-none shadow-none focus:ring-0 focus:outline-none text-lg`}
+                    className={`resize-none overflow-hidden border-none text-lg leading-relaxed shadow-none focus:ring-0 focus:outline-none`}
                     defaultValue={page.text}
                     dir="rtl"
                     key={page.id + '/' + page.lastUpdate + '/text'}
@@ -119,7 +119,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     <>
                         <hr />
                         <FooterTextArea
-                            className={`overflow-hidden border-none resize-none shadow-none focus:ring-0 focus:outline-none text-sm`}
+                            className={`resize-none overflow-hidden border-none text-sm shadow-none focus:ring-0 focus:outline-none`}
                             defaultValue={page.footnotes}
                             dir="rtl"
                             key={page.id + '/' + page.lastUpdate + '/footnotes'}

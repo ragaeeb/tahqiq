@@ -31,7 +31,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
         e.preventDefault();
         const data = new FormData(e.currentTarget);
 
-        record('Translate', data.get('text') as string, {
+        record('Translate', (data.get('text') as string).length.toString(), {
             promptChanged: data.get('prompt') !== TRANSLATE_BOOK_PROMPT,
         });
 
@@ -75,7 +75,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
     };
 
     return (
-        <DialogContent className="w-[80vw] sm:max-w-none max-h-[80vh] flex flex-col">
+        <DialogContent className="flex max-h-[80vh] w-[80vw] flex-col sm:max-w-none">
             <DialogHeader>
                 <DialogTitle>Translate</DialogTitle>
                 <Select onValueChange={setApiKey} value={apiKey}>
@@ -92,16 +92,16 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
                 </Select>
             </DialogHeader>
 
-            <form className="flex-1 flex flex-col min-h-0" onSubmit={handleTranslate}>
-                <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-hidden">
+            <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleTranslate}>
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
                     <Textarea
-                        className="resize-none text-xs h-24 flex-shrink-0"
+                        className="h-24 flex-shrink-0 resize-none text-xs"
                         defaultValue={defaultPrompt}
                         name="prompt"
                         placeholder="Enter translation prompt..."
                     />
                     <Textarea
-                        className="flex-1 resize-none text-sm min-h-0"
+                        className="min-h-0 flex-1 resize-none text-sm"
                         defaultValue={defaultText}
                         dir="rtl"
                         name="text"
