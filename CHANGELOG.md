@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/ragaeeb/tahqiq/compare/v1.23.0...v1.23.1) (2025-09-09)
+
+
+### Bug Fixes
+
+* **analytics:** Fix translate analytics ([433f8ad](https://github.com/ragaeeb/tahqiq/commit/433f8adc6955d43e48e1590ba15bb938ebba341c))
+
 # [1.23.0](https://github.com/ragaeeb/tahqiq/compare/v1.22.2...v1.23.0) (2025-08-21)
 
 
