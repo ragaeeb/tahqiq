@@ -2,13 +2,11 @@
 
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
-import type { Kitab, Page } from '@/stores/bookStore/types';
-import type { Juz } from '@/stores/manuscriptStore/types';
-
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
 import VersionFooter from '@/components/version-footer';
+import type { Kitab, Page } from '@/stores/bookStore/types';
+import type { Juz } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
 import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
@@ -89,8 +87,8 @@ export default function Book() {
     if (!isInitialized) {
         return (
             <>
-                <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-                    <div className="flex flex-col w-full max-w">
+                <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
+                    <div className="max-w flex w-full flex-col">
                         <JsonDropZone
                             allowedExtensions=".json"
                             description="Drag and drop the parts"
@@ -110,9 +108,9 @@ export default function Book() {
 
     return (
         <>
-            <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-                <div className="flex flex-col w-full max-w">
-                    <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+            <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
+                <div className="max-w flex w-full flex-col">
+                    <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-2">
                         <BookToolbar
                             onDeleteSelectedPages={arePagesSelected ? onDeleteSelectedPages : undefined}
                             onMergeFootnotes={arePagesSelected ? onMergeFootnotes : undefined}
@@ -123,11 +121,11 @@ export default function Book() {
                         />
                     </div>
 
-                    <div className="overflow-auto border rounded">
+                    <div className="overflow-auto rounded border">
                         <table className="w-full table-auto divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-2 py-1 w-8 text-left">
+                                    <th className="w-8 px-2 py-1 text-left">
                                         <Checkbox
                                             aria-label="Select all pages"
                                             checked={selectedPages.length === pages.length && pages.length > 0}
@@ -137,10 +135,10 @@ export default function Book() {
                                             }}
                                         />
                                     </th>
-                                    <th aria-label="Page" className="px-2 py-1 w-36 text-left">
+                                    <th aria-label="Page" className="w-36 px-2 py-1 text-left">
                                         ID
                                     </th>
-                                    <th aria-label="Page" className="px-2 py-1 w-36 text-left">
+                                    <th aria-label="Page" className="w-36 px-2 py-1 text-left">
                                         Page
                                     </th>
                                     <th aria-label="Text" className="px-4 py-1 text-right">

@@ -1,22 +1,18 @@
 import { formatTextBlocks, mapTextLinesToParagraphs } from 'kokokor';
-import { rawReturn } from 'mutative';
-
-import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
-
 import { getNextId } from '@/lib/common';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
+import { mapTextLineToMarkdown } from '@/lib/markdown';
 import { preformatArabicText } from '@/lib/textUtils';
-
+import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
 import type { BookStateCore, Kitab, Page, TableOfContents } from './types';
-
-import { selectCurrentPages } from './selectors';
 
 const FOOTNOTE_DIVIDER = '____________';
 
 const extractPagesFromJuz = (file: string, juz: Juz) => {
     const volume = Number(file.split('.')[0]);
     const pages = juz.sheets.map((s) => {
-        const paragraphs = mapTextLinesToParagraphs(s.observations);
+        const textLines = s.observations.map(mapTextLineToMarkdown);
+        const paragraphs = mapTextLinesToParagraphs(textLines);
         const text = formatTextBlocks(paragraphs, FOOTNOTE_DIVIDER);
         const [body, footnotes] = text.split(FOOTNOTE_DIVIDER);
 
@@ -38,7 +34,7 @@ const extractPagesFromJuz = (file: string, juz: Juz) => {
     return { index, pages, postProcessingApps: juz.postProcessingApps || [], volume };
 };
 
-export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
+export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>): Partial<BookStateCore> => {
     const volumeToPages: Record<number, Page[]> = {};
     const volumeToIndex: Record<number, TableOfContents[]> = {};
     const result: Partial<BookStateCore> = { postProcessingApps: [], volumeToIndex, volumeToPages };
@@ -79,23 +75,33 @@ export const initStore = (fileToJuzOrKitab: Record<string, Juz | Kitab>) => {
         }
     });
 
-    return rawReturn({
+    return {
         ...result,
         selectedVolume: Object.keys(volumeToPages).map(Number).sort()[0],
         ...(inputFileName && { inputFileName }),
-    });
+    };
 };
 
-export const addAjza = (state: BookStateCore, files: Record<string, any>) => {
+export const addAjza = (state: BookStateCore, files: Record<string, any>): Partial<BookStateCore> => {
+    const newPostProcessingApps = [...state.postProcessingApps];
+    const newVolumeToPages = { ...state.volumeToPages };
+    const newVolumeToIndex = { ...state.volumeToIndex };
+
     for (const [file, data] of Object.entries(files)) {
         if (file.endsWith('.json')) {
             const { index, pages, postProcessingApps, volume } = extractPagesFromJuz(file, data as Juz);
 
-            state.postProcessingApps.push(...postProcessingApps);
-            state.volumeToPages[volume] = pages;
-            state.volumeToIndex[volume] = index;
+            newPostProcessingApps.push(...postProcessingApps);
+            newVolumeToPages[volume] = pages;
+            newVolumeToIndex[volume] = index;
         }
     }
+
+    return {
+        postProcessingApps: newPostProcessingApps,
+        volumeToIndex: newVolumeToIndex,
+        volumeToPages: newVolumeToPages,
+    };
 };
 
 export const initFromManuscript = (manuscript: ManuscriptStateCore) => {
@@ -108,91 +114,67 @@ export const shiftValues = (
     startingPageId: number,
     startingPageValue: number,
     key: keyof Pick<Page, 'page' | 'volumePage'>,
-) => {
-    const pages = selectCurrentPages(state);
+): Partial<BookStateCore> => {
+    const pages = state.volumeToPages[state.selectedVolume] || [];
     const startingIndex = pages.findIndex((p) => p.id === startingPageId);
 
     const updatedPages = pages.map((page, index) => {
         if (index >= startingIndex) {
             const offset = index - startingIndex;
-            return {
-                ...page,
-                [key]: startingPageValue + offset,
-                lastUpdate: Date.now(),
-            };
+            return { ...page, [key]: startingPageValue + offset, lastUpdate: Date.now() };
         }
         return page;
     });
 
-    state.volumeToPages[state.selectedVolume] = updatedPages;
-};
-
-const getPagesById = (state: BookStateCore, pageIds: number[]) => {
-    const result: Page[] = [];
-    const pages = selectCurrentPages(state);
-    const ids = new Set(pageIds);
-
-    for (const page of pages) {
-        if (ids.has(page.id)) {
-            result.push(page);
-        }
-    }
-
-    return result;
+    return { volumeToPages: { ...state.volumeToPages, [state.selectedVolume]: updatedPages } };
 };
 
 export const updatePages = (
     state: BookStateCore,
     ids: number[],
-    payload: ((p: Page) => void) | Omit<Partial<Page>, 'id' | 'lastUpdate'>,
+    payload: ((p: Page) => Partial<Page>) | Omit<Partial<Page>, 'id' | 'lastUpdate'>,
     updateLastUpdated?: boolean,
-) => {
-    const pages = getPagesById(state, ids);
+): Partial<BookStateCore> => {
+    const pages = [...(state.volumeToPages[state.selectedVolume] || [])];
+    const idSet = new Set(ids);
 
-    for (const page of pages) {
-        if (typeof payload === 'function') {
-            payload(page);
-        } else {
-            Object.assign(page, payload);
+    const updatedPages = pages.map((page) => {
+        if (!idSet.has(page.id)) {
+            return page;
         }
 
-        if (updateLastUpdated) {
-            page.lastUpdate = Date.now();
-        }
-    }
+        const updates = typeof payload === 'function' ? payload(page) : payload;
+
+        return { ...page, ...updates, ...(updateLastUpdated && { lastUpdate: Date.now() }) };
+    });
+
+    return { volumeToPages: { ...state.volumeToPages, [state.selectedVolume]: updatedPages } };
 };
 
-export const reformatPages = (state: BookStateCore, ids: number[]) => {
-    updatePages(
+export const reformatPages = (state: BookStateCore, ids: number[]): Partial<BookStateCore> => {
+    return updatePages(
         state,
         ids,
-        (p) => {
-            p.text = preformatArabicText(p.text);
-
-            if (p.footnotes) {
-                p.footnotes = preformatArabicText(p.footnotes);
-            }
-        },
+        (p) => ({
+            text: preformatArabicText(p.text),
+            ...(p.footnotes && { footnotes: preformatArabicText(p.footnotes) }),
+        }),
         true,
     );
 };
 
-export const deletePages = (state: BookStateCore, ids: number[]) => {
-    state.volumeToPages[state.selectedVolume] = state.volumeToPages[state.selectedVolume].filter(
-        (p) => !ids.includes(p.id),
-    );
+export const deletePages = (state: BookStateCore, ids: number[]): Partial<BookStateCore> => {
+    const idSet = new Set(ids);
+    const filteredPages = (state.volumeToPages[state.selectedVolume] || []).filter((p) => !idSet.has(p.id));
+
+    return { volumeToPages: { ...state.volumeToPages, [state.selectedVolume]: filteredPages } };
 };
 
-export const mergeFootnotesWithMatn = (state: BookStateCore, ids: number[]) => {
-    updatePages(
+export const mergeFootnotesWithMatn = (state: BookStateCore, ids: number[]): Partial<BookStateCore> => {
+    return updatePages(
         state,
         ids,
-        (p) => {
-            if (p.footnotes) {
-                p.text = p.text + '\n' + p.footnotes;
-                p.footnotes = undefined;
-            }
-        },
+        (p) => ({ footnotes: undefined, text: p.footnotes ? `${p.text}\n${p.footnotes}` : p.text }),
         true,
     );
 };

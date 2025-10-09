@@ -1,6 +1,5 @@
-import type { BookStateCore, Kitab } from '@/stores/bookStore/types';
-
 import packageJson from '@/../package.json';
+import type { BookStateCore, Kitab } from '@/stores/bookStore/types';
 
 import { FOOTNOTES_DELIMITER, LatestContractVersion } from './constants';
 

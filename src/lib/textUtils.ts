@@ -1,4 +1,4 @@
-import { standardizeHijriSymbol, standardizeIntahaSymbol } from 'baburchi';
+import { sanitizeArabic, standardizeHijriSymbol, standardizeIntahaSymbol } from 'baburchi';
 import {
     addSpaceBeforeAndAfterPunctuation,
     addSpaceBetweenArabicTextAndNumbers,
@@ -22,10 +22,8 @@ import {
     reduceMultilineBreaksToSingle,
     removeRedundantPunctuation,
     removeSpaceInsideBrackets,
-    removeTatwil,
     replaceDoubleBracketsWithArrows,
     replaceEnglishPunctuationWithArabic,
-    stripZeroWidthCharacters,
     trimSpaceInsideQuotes,
 } from 'bitaboom';
 import { isEndingWithPunctuation, type Token } from 'paragrafs';
@@ -43,7 +41,7 @@ export const fixUnbalanced = (text: string) => {
 const autoCorrectPipeline = [standardizeHijriSymbol, standardizeIntahaSymbol];
 
 const pastePipeline = [
-    stripZeroWidthCharacters,
+    (text: string) => sanitizeArabic(text, { base: 'none', stripTatweel: true, stripZeroWidth: true }),
     cleanSpacesBeforePeriod,
     normalizeSlashInReferences,
     removeSpaceInsideBrackets,
@@ -53,7 +51,6 @@ const pastePipeline = [
     ensureSpaceBeforeBrackets,
     ensureSpaceBeforeQuotes,
     fixTrailingWow,
-    removeTatwil,
     condenseColons,
     cleanLiteralNewLines,
     condenseUnderscores,

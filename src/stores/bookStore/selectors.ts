@@ -1,33 +1,41 @@
 import memoizeOne from 'memoize-one';
-
 import type { BookStateCore, Page, TableOfContents } from './types';
 
-const getVolumes = memoizeOne((volumeToPages: Record<number, Page[]>) =>
-    Object.keys(volumeToPages)
-        .map((p) => parseInt(p, 10))
-        .sort((a, b) => a - b),
-);
-
-const getPages = memoizeOne((pages: Page[] = [], indices: TableOfContents[] = []) => {
-    const indexedPages = new Set(indices.map((i) => i.page));
-    return pages.map((p) => ({ ...p, ...(indexedPages.has(p.page) && { hasHeader: true }) }));
-});
+const EMPTY_STABLE_ARRAY: Page[] = [];
 
 /**
  * Selects all manuscript volume numbers from state, sorted in ascending order.
  * @param state The manuscript state
  * @returns Array of part numbers
  */
-export const selectVolumes = (state: BookStateCore): number[] => getVolumes(state.volumeToPages);
+export const selectVolumes = memoizeOne((state: BookStateCore): number[] =>
+    Object.keys(state.volumeToPages)
+        .map((p) => parseInt(p, 10))
+        .sort((a, b) => a - b),
+);
 
 /**
- * Selects pages from the currently active manuscript volume.
+ * Selects pages from the currently active manuscript volume with header markers.
  * @param state The manuscript state
- * @returns Array of pages or empty array if no volume is selected
+ * @returns Array of pages with hasHeader flag or empty array if no volume is selected
  */
-export const selectCurrentPages = (state: BookStateCore) =>
-    getPages(state.volumeToPages[state.selectedVolume], state.volumeToIndex[state.selectedVolume]);
+export const selectCurrentPages = memoizeOne((state: BookStateCore): Page[] => {
+    const pages = state.volumeToPages[state.selectedVolume] || EMPTY_STABLE_ARRAY;
+    const indices = state.volumeToIndex[state.selectedVolume] || EMPTY_STABLE_ARRAY;
 
-export const selectTableOfContents = memoizeOne(({ selectedVolume, volumeToIndex }: BookStateCore) => {
-    return volumeToIndex[selectedVolume] || [];
+    if (indices.length === 0) {
+        return pages;
+    }
+
+    const indexedPages = new Set(indices.map((i) => i.page));
+    return pages.map((p) => ({ ...p, ...(indexedPages.has(p.page) && { hasHeader: true }) }));
 });
+
+/**
+ * Selects the table of contents for the currently selected volume.
+ * @param state The manuscript state
+ * @returns Table of contents array or empty array if none exists
+ */
+export const selectTableOfContents = (state: BookStateCore): TableOfContents[] => {
+    return state.volumeToIndex[state.selectedVolume] || [];
+};

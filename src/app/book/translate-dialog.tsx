@@ -3,20 +3,15 @@
 import { removeMarkdownFormatting } from 'bitaboom';
 import { record } from 'nanolytics';
 import { useState } from 'react';
-
-import type { TranslateRequestBody } from '@/types/api';
-
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
+import type { TranslateRequestBody } from '@/types/api';
 
-type TranslateDialogProps = {
-    defaultPrompt: string;
-    defaultText: string;
-};
+type TranslateDialogProps = { defaultPrompt: string; defaultText: string };
 
 /**
  * Displays a dialog for translating a book via AI.
@@ -46,9 +41,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
                     model: 'gemini-2.5-pro',
                     prompt: [data.get('prompt'), data.get('text')].join('\n\n'),
                 } satisfies TranslateRequestBody),
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 method: 'POST',
             });
             const responseData = await res.json();

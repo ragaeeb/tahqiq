@@ -6,7 +6,7 @@ import {
     isArabicTextNoise,
 } from 'baburchi';
 import {
-    calculateDPI,
+    type BoundingBox,
     flipAndAlignObservations,
     mapMatrixToBoundingBox,
     mapObservationsToTextLines,
@@ -17,19 +17,17 @@ import { rawReturn } from 'mutative';
 
 import { getNextId } from '@/lib/common';
 import { SWS_SYMBOL } from '@/lib/constants';
-
+import { assertHasRequiredFiles } from './guards';
 import type {
     Juz,
     ManuscriptStateCore,
     RawInputFiles,
     Sheet,
-    StructureMetadata,
+    StructurePage,
     SuryaPageOcrResult,
     TextLine,
     TextLinePatch,
 } from './types';
-
-import { assertHasRequiredFiles } from './guards';
 
 /**
  * Converts Surya OCR page results to standardized Observation format.
@@ -52,7 +50,8 @@ const createSheet = (
     page: number,
     macObservations: Observation[],
     alternateObservations: Observation[],
-    struct: StructureMetadata,
+    struct: Pick<StructurePage, 'horizontal_lines' | 'rectangles'>,
+    dpi: BoundingBox,
 ): Sheet => {
     const shouldLog = PAGES_TO_LOG.includes(page);
 
@@ -60,13 +59,11 @@ const createSheet = (
         console.log('page', page, struct);
     }
 
-    const textLines = mapObservationsToTextLines(macObservations, struct.dpi, {
+    const textLines = mapObservationsToTextLines(macObservations, dpi, {
         horizontalLines: struct.horizontal_lines,
         rectangles: struct.rectangles,
         ...(shouldLog && { log: console.log }),
-        poetryDetectionOptions: {
-            minWidthRatioForMerged: null,
-        },
+        poetryDetectionOptions: { minWidthRatioForMerged: null },
     });
 
     const altObservations = alternateObservations.filter((o) => !isArabicTextNoise(o.text)).map((o) => o.text.trim());
@@ -76,23 +73,14 @@ const createSheet = (
         observations: textLines
             .filter((o) => !isArabicTextNoise(o.text))
             .map((o) => {
-                return {
-                    ...o,
-                    id: getNextId(),
-                    lastUpdate: Date.now(),
-                };
+                return { ...o, id: getNextId(), lastUpdate: Date.now() };
             }),
         page,
     };
 };
 
-const getSuryaObservations = (suryaPage: SuryaPageOcrResult, pdfWidth: number, pdfHeight: number) => {
-    const { height: imageHeight, width: imageWidth } = mapMatrixToBoundingBox(suryaPage.image_bbox);
-    const { x: dpiX } = calculateDPI(
-        { height: imageHeight, width: imageWidth },
-        { height: pdfHeight, width: pdfWidth },
-    );
-
+const getSuryaObservations = (suryaPage: SuryaPageOcrResult, dpiX: number) => {
+    const { width: imageWidth } = mapMatrixToBoundingBox(suryaPage.image_bbox);
     return flipAndAlignObservations(mapSuryaPageResultToObservations(suryaPage), imageWidth, dpiX);
 };
 
@@ -107,10 +95,7 @@ export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
         ...(juz.postProcessingApps && { postProcessingApps: juz.postProcessingApps }),
         sheets: juz.sheets.map((s) => ({
             alt: isLegacyAlt ? (s.alt as unknown as LegacyAltText[]).map((a) => a.text) : s.alt,
-            observations: s.observations.map((o) => ({
-                ...o,
-                id: getNextId(),
-            })),
+            observations: s.observations.map((o) => ({ ...o, id: getNextId() })),
             page: s.page,
         })),
         url: juz.url,
@@ -120,51 +105,31 @@ export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
 export const initStore = (fileNameToData: RawInputFiles) => {
     assertHasRequiredFiles(fileNameToData);
 
-    const {
-        ['batch_output.json']: fileToObservations,
-        ['page_size.txt']: pageSizeTxt,
-        ['structures.json']: { result: structures },
-        ['surya.json']: suryaJson,
-    } = fileNameToData;
+    const { ['mac.json']: macOCR, ['structures.json']: metadata, ['surya.json']: suryaJson } = fileNameToData;
 
     const [surya] = Object.values(suryaJson);
-    const [pdfWidth, pdfHeight] = pageSizeTxt.trim().split(' ').map(Number);
 
-    const sheets = Object.entries(fileToObservations)
-        .map(([imageFile, macOCRData]) => {
-            const pageNumber = parseInt(imageFile.split('.')[0]!);
-
-            if (!macOCRData.observations.length) {
-                return {
-                    alt: [],
-                    observations: [],
-                    page: pageNumber,
-                };
+    const sheets = macOCR.pages
+        .map(({ page: pageNumber, observations, width, height }) => {
+            if (!observations.length) {
+                return { alt: [], observations: [], page: pageNumber };
             }
 
-            const suryaPage = surya.find((s) => s.page === pageNumber);
+            const suryaPage = surya.find((s) => s.page === pageNumber)!;
+            const structures = metadata.pages.find((p) => p.page === pageNumber);
 
-            if (!suryaPage) {
-                throw new Error(`No Surya page data found for page ${pageNumber} (file: ${imageFile})`);
-            }
-
-            const alternateObservations = getSuryaObservations(suryaPage, pdfWidth, pdfHeight);
-
-            const sheet = createSheet(
-                pageNumber,
-                macOCRData.observations,
-                alternateObservations,
-                structures[imageFile],
-            );
+            const alternateObservations = getSuryaObservations(suryaPage, metadata.dpi.x);
+            const sheet = createSheet(pageNumber, observations, alternateObservations, structures || {}, {
+                ...metadata.dpi,
+                height,
+                width,
+            });
 
             return sheet;
         })
         .toSorted((a, b) => a.page - b.page);
 
-    return rawReturn({
-        isInitialized: true,
-        sheets,
-    });
+    return rawReturn({ isInitialized: true, sheets });
 };
 
 export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id: number, alt: string) => {

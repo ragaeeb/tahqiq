@@ -1,6 +1,5 @@
-import type { Juz, ManuscriptStateCore, Sheet } from '@/stores/manuscriptStore/types';
-
 import packageJson from '@/../package.json';
+import type { Juz, ManuscriptStateCore, Sheet } from '@/stores/manuscriptStore/types';
 
 import { LatestContractVersion } from './constants';
 import { roundToDecimal } from './time';

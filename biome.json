@@ -1,9 +1,15 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.2.3/schema.json",
-    "vcs": {
-        "enabled": true,
-        "clientKind": "git",
-        "useIgnoreFile": true
+    "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "on",
+                "useSortedKeys": {
+                    "level": "on",
+                    "options": { "sortOrder": "natural" }
+                }
+            }
+        }
     },
     "files": {
         "ignoreUnknown": true,
@@ -15,52 +21,69 @@
         "indentWidth": 4,
         "lineWidth": 120
     },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "always",
+            "bracketSameLine": false,
+            "bracketSpacing": true,
+            "expand": "never",
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingCommas": "all"
+        }
+    },
     "linter": {
+        "domains": {
+            "next": "recommended",
+            "react": "recommended"
+        },
         "enabled": true,
         "rules": {
-            "recommended": true,
-            "suspicious": {
-                "noUnknownAtRules": "off",
-                "noExplicitAny": "off"
+            "complexity": {
+                "noExcessiveCognitiveComplexity": "warn",
+                "useWhile": "error"
             },
-            "style": {
-                "noNonNullAssertion": "off"
+            "correctness": {
+                "noUnusedImports": {
+                    "fix": "safe",
+                    "level": "error",
+                    "options": {}
+                }
             },
             "nursery": {
                 "useSortedClasses": {
-                    "level": "error",
                     "fix": "safe",
+                    "level": "error",
                     "options": {
                         "attributes": ["className"],
                         "functions": ["cn", "cva", "tw", "clsx"]
                     }
                 }
             },
-            "complexity": {
-                "noExcessiveCognitiveComplexity": "warn",
-                "useWhile": "error"
+            "recommended": true,
+            "style": {
+                "noNonNullAssertion": "off",
+                "useBlockStatements": {
+                    "fix": "safe",
+                    "level": "error",
+                    "options": {}
+                },
+                "useTemplate": {
+                    "fix": "safe",
+                    "level": "warn",
+                    "options": {}
+                }
+            },
+            "suspicious": {
+                "noExplicitAny": "off",
+                "noUnknownAtRules": "off",
+                "useIterableCallbackReturn": "off"
             }
-        },
-        "domains": {
-            "next": "recommended",
-            "react": "recommended"
         }
     },
-    "assist": {
-        "actions": {
-            "source": {
-                "organizeImports": "on"
-            }
-        }
-    },
-    "javascript": {
-        "formatter": {
-            "semicolons": "always",
-            "quoteStyle": "single",
-            "trailingCommas": "all",
-            "bracketSpacing": true,
-            "bracketSameLine": false,
-            "arrowParentheses": "always"
-        }
+    "vcs": {
+        "clientKind": "git",
+        "enabled": true,
+        "useIgnoreFile": true
     }
 }

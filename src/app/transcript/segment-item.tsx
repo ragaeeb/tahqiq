@@ -2,15 +2,13 @@ import { autoResize } from 'dyelight';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
 import React from 'react';
-
-import type { Segment } from '@/stores/transcriptStore/types';
-
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { pasteText } from '@/lib/domUtils';
 import { findFirstTokenForText, preformatArabicText } from '@/lib/textUtils';
 import { timeToSeconds } from '@/lib/time';
+import type { Segment } from '@/stores/transcriptStore/types';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 /**
@@ -33,9 +31,9 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                 />
             </td>
 
-            <td className="px-2 py-1 space-y-1 text-xs align-top">
+            <td className="space-y-1 px-2 py-1 align-top text-xs">
                 <Input
-                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
+                    className="border-none bg-transparent shadow-none focus:outline-none focus:ring-0"
                     defaultValue={formatSecondsToTimestamp(segment.start)}
                     onBlur={(e) => {
                         const start = timeToSeconds(e.target.value);
@@ -47,7 +45,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
                     }}
                 />
                 <Input
-                    className="bg-transparent border-none shadow-none focus:ring-0 focus:outline-none"
+                    className="border-none bg-transparent shadow-none focus:outline-none focus:ring-0"
                     defaultValue={formatSecondsToTimestamp(segment.end)}
                     onBlur={(e) => {
                         const end = timeToSeconds(e.target.value);
@@ -63,7 +61,7 @@ const SegmentItem = ({ segment }: { segment: Segment }) => {
 
             <td className="px-4 py-1 align-top">
                 <Textarea
-                    className={`overflow-hidden ${segment.status === 'done' ? 'bg-emerald-100' : 'bg-transparent'} border-none shadow-none focus:ring-0 focus:outline-none`}
+                    className={`overflow-hidden ${segment.status === 'done' ? 'bg-emerald-100' : 'bg-transparent'} border-none shadow-none focus:outline-none focus:ring-0`}
                     defaultValue={segment.text}
                     dir="rtl"
                     onBlur={(e) => {

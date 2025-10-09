@@ -1,4 +1,4 @@
-import type { BoundingBox, Observation, TextBlock } from 'kokokor';
+import type { BoundingBox, Observation, Size, TextBlock } from 'kokokor';
 
 import type { LatestContractVersion } from '@/lib/constants';
 import type { PostProcessingApp } from '@/stores/commonTypes';
@@ -45,16 +45,23 @@ export type ManuscriptStateCore = {
     url: string;
 };
 
+export type Coordinates = { x: number; y: number };
+
+export type StructurePage = {
+    readonly page: number;
+    readonly horizontal_lines?: BoundingBox[];
+    readonly rectangles?: BoundingBox[];
+};
+
+type StructureMetadata = { readonly pages: StructurePage[]; readonly dpi: Coordinates };
+
 export type RawInputFiles = {
-    'batch_output.json': Record<string, MacOCR>;
-    'page_size.txt': string;
-    'structures.json': { result: Record<string, StructureMetadata> };
+    'mac.json': MacOCR;
+    'structures.json': StructureMetadata;
     'surya.json': Record<string, SuryaPageOcrResult[]>;
 };
 
-export type Sheet = OcrData & {
-    page: number;
-};
+export type Sheet = OcrData & { page: number };
 
 export type SheetLine = TextLine & {
     alt: string;
@@ -62,12 +69,6 @@ export type SheetLine = TextLine & {
     includesHonorifics?: boolean;
     isSimilar?: boolean;
     page: number;
-};
-
-export type StructureMetadata = {
-    readonly dpi: BoundingBox;
-    readonly horizontal_lines?: BoundingBox[];
-    readonly rectangles?: BoundingBox[];
 };
 
 export type SuryaPageOcrResult = {
@@ -87,14 +88,13 @@ export type SuryaPageOcrResult = {
     }[];
 };
 
-export type TextLine = TextBlock & {
-    id: number;
-    lastUpdate: number;
-};
+export type TextLine = TextBlock & { id: number; lastUpdate: number };
 
 export type TextLinePatch = ((o: TextLine) => void) | Omit<Partial<TextLine>, 'id' | 'lastUpdate'>;
 
-type MacOCR = { observations: Observation[] };
+type ObservationPage = Size & { page: number; observations: Observation[] };
+
+type MacOCR = { pages: ObservationPage[]; dpi: Coordinates };
 
 /**
  * Action functions available for transcript manipulation

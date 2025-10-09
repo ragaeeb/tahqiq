@@ -4,20 +4,14 @@ import { withFormattingToolbar } from 'blumbaben';
 import { DyeLight } from 'dyelight';
 import { record } from 'nanolytics';
 import React, { useMemo } from 'react';
-
-import type { Page } from '@/stores/bookStore/types';
-
 import SubmittableInput from '@/components/submittable-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { getCharacterErrorHighlights } from '@/lib/styling';
+import type { Page } from '@/stores/bookStore/types';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
-type PageItemProps = {
-    isSelected: boolean;
-    onSelectionChange: (row: Page, selected: boolean) => void;
-    page: Page;
-};
+type PageItemProps = { isSelected: boolean; onSelectionChange: (row: Page, selected: boolean) => void; page: Page };
 
 const HTAWithToolbar = withFormattingToolbar(DyeLight);
 
@@ -56,6 +50,8 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
     const BodyTextArea = isHighlighterEnabled && bodyCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
     const FooterTextArea = isHighlighterEnabled && footnoteCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
 
+    console.log('updated page', page);
+
     return (
         <tr className={getBorderForRow(page)}>
             <td className="px-2 py-1 align-top">
@@ -67,9 +63,9 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
 
             <td className="space-y-1 px-2 py-1 align-top text-xs">
                 <SubmittableInput
-                    className="border-none bg-transparent shadow-none focus:ring-0 focus:outline-none"
+                    className="border-none bg-transparent shadow-none focus:outline-none focus:ring-0"
                     defaultValue={page.page.toString()}
-                    key={page.id + '/' + page.lastUpdate + '/page'}
+                    key={`${page.id}/${page.lastUpdate}/page`}
                     name="page_id"
                     onBlur={(e) => {
                         if (e.target.value !== page.page.toString()) {
@@ -85,9 +81,9 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
             </td>
             <td className="space-y-1 px-2 py-1 align-top text-xs">
                 <SubmittableInput
-                    className="border-none bg-transparent shadow-none focus:ring-0 focus:outline-none"
+                    className="border-none bg-transparent shadow-none focus:outline-none focus:ring-0"
                     defaultValue={page.volumePage?.toString()}
-                    key={page.id + '/' + page.lastUpdate + '/volumePage'}
+                    key={`${page.id}/${page.lastUpdate}/volumePage`}
                     name="volume_page"
                     onBlur={(e) => {
                         if (e.target.value !== page.volumePage?.toString()) {
@@ -104,10 +100,10 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
             <td className={`px-4 py-1 align-top`}>
                 <BodyTextArea
                     {...(bodyCharacterHighlights && { highlights: bodyCharacterHighlights })}
-                    className={`resize-none overflow-hidden border-none text-lg leading-relaxed shadow-none focus:ring-0 focus:outline-none`}
+                    className={`resize-none overflow-hidden border-none text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0`}
                     defaultValue={page.text}
                     dir="rtl"
-                    key={page.id + '/' + page.lastUpdate + '/text'}
+                    key={`${page.id}/${page.lastUpdate}/text`}
                     onBlur={(e) => {
                         if (e.target.value !== page.text.toString()) {
                             record('UpdatePageText');
@@ -119,10 +115,10 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     <>
                         <hr />
                         <FooterTextArea
-                            className={`resize-none overflow-hidden border-none text-sm shadow-none focus:ring-0 focus:outline-none`}
+                            className={`resize-none overflow-hidden border-none text-sm shadow-none focus:outline-none focus:ring-0`}
                             defaultValue={page.footnotes}
                             dir="rtl"
-                            key={page.id + '/' + page.lastUpdate + '/footnotes'}
+                            key={`${page.id}/${page.lastUpdate}/footnotes`}
                             {...(footnoteCharacterHighlights && { highlights: footnoteCharacterHighlights })}
                             onBlur={(e) => {
                                 if (e.target.value !== page.footnotes?.toString()) {
