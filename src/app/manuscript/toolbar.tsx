@@ -2,19 +2,15 @@
 
 import { UndoIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import React, { type Dispatch, type SetStateAction } from 'react';
-
-import type { SheetLine } from '@/stores/manuscriptStore/types';
-
+import type { Dispatch, SetStateAction } from 'react';
 import { Button } from '@/components/ui/button';
 import { INTAHA_ACTUAL, INTAHA_TYPO } from '@/lib/constants';
+import type { SheetLine } from '@/stores/manuscriptStore/types';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import { ManuscriptMenu } from './menu';
 
-type ToolbarProps = {
-    selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>];
-};
+type ToolbarProps = { selection: [SheetLine[], Dispatch<SetStateAction<SheetLine[]>>] };
 
 /**
  * Renders a toolbar for manuscript management operations.
@@ -85,27 +81,6 @@ export default function ManuscriptToolbar({ selection: [selectedRows, setSelecte
                             }
                         },
                     );
-
-                    setSelectedRows([]);
-                }}
-                markAsFootnotes={(isFootnote, applyToEntirePage) => {
-                    record(
-                        'MarkAsFootnotes',
-                        isFootnote.toString(),
-                        applyToEntirePage ? { applyToEntirePage } : undefined,
-                    );
-
-                    if (applyToEntirePage) {
-                        updatePages(
-                            selectedRows.map((r) => r.page),
-                            { isFootnote },
-                        );
-                    } else {
-                        updateTextLines(
-                            selectedRows.map((r) => r.id),
-                            { isFootnote },
-                        );
-                    }
 
                     setSelectedRows([]);
                 }}

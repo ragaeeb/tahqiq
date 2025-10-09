@@ -3,10 +3,8 @@ import clsx from 'clsx';
 import { BookmarkIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
-
-import type { SheetLine } from '@/stores/manuscriptStore/types';
-
 import { Input } from '@/components/ui/input';
+import type { SheetLine } from '@/stores/manuscriptStore/types';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import { ActionButton } from './shared';
@@ -15,25 +13,24 @@ const InputWithToolbar = withFormattingToolbar(Input);
 
 const getTextInputClassName = (data: SheetLine) => {
     return clsx(
-        'w-full leading-relaxed text-gray-800 border-none outline-none px-1 py-1 transition-colors duration-150',
+        'w-full border-none px-1 py-1 text-gray-800 leading-relaxed outline-none transition-colors duration-150',
         data.isFootnote ? 'text-sm' : 'text-xl',
-        data.isPoetic && 'italic bg-purple-100',
+        data.isPoetic && 'bg-purple-100 italic',
         data.isCentered || data.isPoetic ? 'text-center' : 'text-right',
         data.isHeading && 'font-bold',
         data.includesHonorifics ? 'bg-red-200' : 'bg-transparent',
-        'focus:bg-gray-50 focus:rounded',
+        'focus:rounded focus:bg-gray-50',
     );
 };
 
-type AslContainerProps = {
-    data: SheetLine;
-};
+type AslContainerProps = { data: SheetLine };
 
 function AslContainer({ data }: AslContainerProps) {
     const mergeWithAbove = useManuscriptStore((state) => state.mergeWithAbove);
     const mergeWithBelow = useManuscriptStore((state) => state.mergeWithBelow);
     const deleteLines = useManuscriptStore((state) => state.deleteLines);
     const updateTextLines = useManuscriptStore((state) => state.updateTextLines);
+    const toggleFootnotes = useManuscriptStore((state) => state.toggleFootnotes);
 
     return (
         <div className="flex items-center justify-between">
@@ -68,7 +65,7 @@ function AslContainer({ data }: AslContainerProps) {
                 className={getTextInputClassName(data)}
                 defaultValue={data.text}
                 dir="rtl"
-                key={data.id + '/' + data.lastUpdate}
+                key={`${data.id}/${data.lastUpdate}`}
                 onBlur={(e) => {
                     if (data.text !== e.target.value) {
                         record('UpdateObservationText');
@@ -94,7 +91,7 @@ function AslContainer({ data }: AslContainerProps) {
                     aria-label="Clear Footnote"
                     onClick={() => {
                         record('ClearFootnote');
-                        updateTextLines([data.id], { isFootnote: false });
+                        toggleFootnotes(data.page, data.id, false);
                     }}
                 >
                     x̶₁̶
@@ -105,7 +102,7 @@ function AslContainer({ data }: AslContainerProps) {
                     aria-label="Mark as Footnote"
                     onClick={() => {
                         record('MarkAsFootnote');
-                        updateTextLines([data.id], { isFootnote: true });
+                        toggleFootnotes(data.page, data.id, true);
                     }}
                 >
                     x₁

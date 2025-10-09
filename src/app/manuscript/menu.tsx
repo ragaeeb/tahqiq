@@ -24,7 +24,6 @@ type ManuscriptMenuProps = ButtonPropsType & {
     deleteSupports: () => void;
     findSimilar: (threshold: number) => void;
     fixIntaha: () => void;
-    markAsFootnotes: (value: boolean, applyToEntirePage?: boolean) => void;
     markAsHeading: (value: boolean) => void;
     markAsPoetry: (value: boolean, applyToEntirePage?: boolean) => void;
     mergeRows: () => void;
@@ -75,7 +74,6 @@ export function ManuscriptMenu({
     deleteSupports,
     findSimilar,
     fixIntaha,
-    markAsFootnotes,
     markAsHeading,
     markAsPoetry,
     mergeRows,
@@ -120,14 +118,9 @@ export function ManuscriptMenu({
                         }}
                         placeholder="Enter text to replace..."
                     />
-                    <NestedMenu label="Footnotes" onSelect={markAsFootnotes}>
-                        <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={autoCorrectFootnotes}>
-                                Autocorrect <SuperscriptIcon />
-                            </DropdownMenuItem>
-                        </>
-                    </NestedMenu>
+                    <DropdownMenuItem onSelect={autoCorrectFootnotes}>
+                        Autocorrect <SuperscriptIcon />
+                    </DropdownMenuItem>
                     <NestedMenu label="Poetry" onSelect={markAsPoetry} />
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger>Heading</DropdownMenuSubTrigger>

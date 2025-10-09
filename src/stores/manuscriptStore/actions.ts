@@ -145,6 +145,17 @@ export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id
     }
 };
 
+export const toggleFootnotes = (state: ManuscriptStateCore, page: number, startId: number, value: boolean) => {
+    const sheet = state.sheets.find((s) => s.page === page)!;
+    const index = sheet.observations.findIndex((o) => o.id === startId);
+
+    sheet.observations.forEach((o, i) => {
+        if (i >= index) {
+            o.isFootnote = value;
+        }
+    });
+};
+
 export const mergeWithAbove = (state: ManuscriptStateCore, page: number, id: number, mergeAsl = false) => {
     const sheet = state.sheets.find((s) => s.page === page)!;
     const index = sheet.observations.findIndex((o) => o.id === id);

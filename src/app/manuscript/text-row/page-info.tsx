@@ -1,4 +1,4 @@
-import { EraserIcon, ExpandIcon, EyeIcon, FilterIcon, SignatureIcon, StarIcon, SubscriptIcon } from 'lucide-react';
+import { EraserIcon, ExpandIcon, EyeIcon, FilterIcon, SignatureIcon, StarIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React, { useState } from 'react';
 
@@ -14,11 +14,7 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 
 import { ActionButton } from './shared';
 
-type PageInfoProps = Readonly<{
-    id: number;
-    page: number;
-    previewPdf: (page: number) => void;
-}>;
+type PageInfoProps = Readonly<{ id: number; page: number; previewPdf: (page: number) => void }>;
 
 function PageInfo({ id, page, previewPdf }: PageInfoProps) {
     const filterByPages = useManuscriptStore((state) => state.filterByPages);
@@ -26,14 +22,13 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
     const expandFilteredRow = useManuscriptStore((state) => state.expandFilteredRow);
     const clearOutPages = useManuscriptStore((state) => state.clearOutPages);
     const alignPoetry = useManuscriptStore((state) => state.alignPoetry);
-    const updatePages = useManuscriptStore((state) => state.updatePages);
     const updatePageNumber = useManuscriptStore((state) => state.updatePageNumber);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
         <div className="flex items-center justify-center">
             <DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
-                <DropdownMenuTrigger className="flex items-center justify-center min-w-0 hover:bg-gray-50 rounded px-1 py-0.5 transition-colors">
+                <DropdownMenuTrigger className="flex min-w-0 items-center justify-center rounded px-1 py-0.5 transition-colors hover:bg-gray-50">
                     {page}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center">
@@ -45,19 +40,8 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                             filterByPages([page]);
                         }}
                     >
-                        <FilterIcon className="w-4 h-4" />
+                        <FilterIcon className="h-4 w-4" />
                         <span>Filter</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        aria-label="Clear Footnotes"
-                        className="flex items-center gap-2 px-3 py-2"
-                        onSelect={() => {
-                            record('ClearPageFootnotes');
-                            updatePages([page], { isFootnote: false });
-                        }}
-                    >
-                        <SubscriptIcon className="w-4 h-4" />
-                        <span>F̶o̶o̶t̶n̶o̶t̶e̶s̶</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         aria-label="Expand"
@@ -116,7 +100,7 @@ function PageInfo({ id, page, previewPdf }: PageInfoProps) {
                     previewPdf(page);
                 }}
             >
-                <EyeIcon className="w-4 h-4" />
+                <EyeIcon className="h-4 w-4" />
             </ActionButton>
         </div>
     );

@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import { mutative } from 'zustand-mutative';
-
-import type { ManuscriptState } from './types';
-
 import * as actions from './actions';
+import type { ManuscriptState } from './types';
 
 export const useManuscriptStore = create<ManuscriptState>()(
     mutative((set) => ({
@@ -49,6 +47,7 @@ export const useManuscriptStore = create<ManuscriptState>()(
         setUrl: (url) => set({ url }),
         sheets: [],
         splitAltAtLineBreak: (...args) => set((state) => actions.splitAltAtLineBreak(state, ...args)),
+        toggleFootnotes: (...args) => set((state) => actions.toggleFootnotes(state, ...args)),
         updatePageNumber: (...args) => set((state) => actions.updatePageNumber(state, ...args)),
         updatePages: (...args) => set((state) => actions.updatePages(state, ...args)),
         updateTextLines: (...args) => set((state) => actions.updateTextLines(state, ...args)),

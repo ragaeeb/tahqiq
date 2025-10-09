@@ -5,13 +5,11 @@ import { record } from 'nanolytics';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
-
 import RowToolbar from '@/app/manuscript/row-toolbar';
 import { ConfirmButton } from '@/components/confirm-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
+import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
 import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
@@ -85,7 +83,7 @@ export default function Manuscript() {
                 initJuz(juz as Juz);
             }
         });
-    }, [initManuscript, initJuz]);
+    }, [initJuz]);
 
     const handleSelectAll = useCallback(
         (selected: boolean) => {
@@ -98,8 +96,8 @@ export default function Manuscript() {
     if (!isInitialized) {
         return (
             <>
-                <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-                    <div className="flex flex-col w-full max-w">
+                <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
+                    <div className="max-w flex w-full flex-col">
                         <JsonDropZone
                             allowedExtensions=".json,.txt"
                             description="Drag and drop the manuscript"
@@ -125,9 +123,9 @@ export default function Manuscript() {
 
     return (
         <>
-            <div className="min-h-screen flex flex-col font-[family-name:var(--font-geist-sans)]">
-                <div className="flex flex-col w-full">
-                    <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
+            <div className="flex min-h-screen flex-col font-[family-name:var(--font-geist-sans)]">
+                <div className="flex w-full flex-col">
+                    <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-2 shadow-sm">
                         <ManuscriptToolbar selection={selection} />
                         <div className="space-x-2">
                             <Button
@@ -188,8 +186,8 @@ export default function Manuscript() {
                         </div>
                     </div>
 
-                    <div className="w-full border-t border-gray-300">
-                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 sticky top-0 z-10">
+                    <div className="w-full border-gray-300 border-t">
+                        <div className="sticky top-0 z-10 border-gray-200 border-b bg-gradient-to-r from-gray-50 to-gray-100">
                             <table className="w-full table-fixed">
                                 <thead>
                                     <ManuscriptTableHeader

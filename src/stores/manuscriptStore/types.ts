@@ -146,6 +146,8 @@ type ManuscriptActions = {
 
     splitAltAtLineBreak: (page: number, id: number, alt: string) => void;
 
+    toggleFootnotes: (page: number, startId: number, value: boolean) => void;
+
     /**
      * Shifts page numbers starting from a specific page.
      * This is useful for renumbering pages.
