@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/ragaeeb/tahqiq/compare/v1.23.1...v1.24.0) (2025-10-09)
+
+
+### Features
+
+* **markdown:** Support markdown outputs for books ([17536a5](https://github.com/ragaeeb/tahqiq/commit/17536a502abded73d98605a232df106db76bb92f))
+
 ## [1.23.1](https://github.com/ragaeeb/tahqiq/compare/v1.23.0...v1.23.1) (2025-09-09)
 
 

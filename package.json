@@ -59,5 +59,5 @@
         "start": "next start",
         "test": "bun test --coverage --coverage-reporter=lcov"
     },
-    "version": "1.23.1"
+    "version": "1.24.0"
 }
