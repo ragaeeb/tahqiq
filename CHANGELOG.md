@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/ragaeeb/tahqiq/compare/v1.24.0...v1.25.0) (2025-10-09)
+
+
+### Features
+
+* **footnotes:** Make it easy to toggle footnotes ([69e9892](https://github.com/ragaeeb/tahqiq/commit/69e98924f58ebcb8462d8aff9ad3f9c24d6debe6)), closes [#96](https://github.com/ragaeeb/tahqiq/issues/96)
+
 # [1.24.0](https://github.com/ragaeeb/tahqiq/compare/v1.23.1...v1.24.0) (2025-10-09)
 
 
