@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
 
@@ -32,7 +32,11 @@ mock.module('./part-selector', () => ({
 }));
 
 mock.module('./segment-item', () => ({
-    default: ({ segment }: any) => <tr data-testid="segment-row">{segment.text}</tr>,
+    default: ({ segment }: any) => (
+        <tr data-testid="segment-row">
+            <td colSpan={3}>{segment.text}</td>
+        </tr>
+    ),
 }));
 
 mock.module('./url-field', () => ({
@@ -62,15 +66,17 @@ describe('Transcript page', () => {
     });
 
     it('renders transcript table once initialized', () => {
-        useTranscriptStore.setState({
-            selectedPart: 1,
-            transcripts: {
-                1: {
-                    segments: [{ end: 5, start: 0, text: 'Segment text' }],
-                    timestamp: new Date(),
-                    volume: 1,
+        act(() => {
+            useTranscriptStore.setState({
+                selectedPart: 1,
+                transcripts: {
+                    1: {
+                        segments: [{ end: 5, start: 0, text: 'Segment text' }],
+                        timestamp: new Date(),
+                        volume: 1,
+                    },
                 },
-            },
+            });
         });
 
         const selectAllSegmentsSpy = jest

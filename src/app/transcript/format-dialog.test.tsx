@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
 
@@ -65,15 +65,20 @@ describe('FormatDialog', () => {
         resetTranscriptStoreState();
     });
 
-    it('applies updated formatting preferences', () => {
+    it('applies updated formatting preferences', async () => {
         render(<FormatDialog />);
 
         const [hintsInput, fillersInput] = screen.getAllByTestId('tag-input');
-        fireEvent.click(screen.getByLabelText('Flip English to Arabic Punctuation'));
-        fireEvent.change(hintsInput, { target: { value: 'new-hint' } });
-        fireEvent.change(fillersInput, { target: { value: 'new-filler' } });
 
-        fireEvent.click(screen.getByText('Apply'));
+        await act(async () => {
+            fireEvent.click(screen.getByLabelText('Flip English to Arabic Punctuation'));
+            fireEvent.change(hintsInput, { target: { value: 'new-hint' } });
+            fireEvent.change(fillersInput, { target: { value: 'new-filler' } });
+        });
+
+        await act(async () => {
+            fireEvent.click(screen.getByText('Apply'));
+        });
 
         expect(setFormattingOptionsSpy).toHaveBeenCalledWith(
             expect.objectContaining({

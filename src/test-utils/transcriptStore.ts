@@ -1,3 +1,5 @@
+import { act } from '@testing-library/react';
+
 import type { FormatOptions } from '@/stores/transcriptStore/types';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
@@ -5,11 +7,21 @@ const cloneOptions = (options: FormatOptions): FormatOptions => JSON.parse(JSON.
 
 const initialFormatOptions = cloneOptions(useTranscriptStore.getState().formatOptions);
 
+const runInAct = (callback: () => void) => {
+    act(() => {
+        callback();
+    });
+};
+
 export const resetTranscriptStoreState = () => {
-    useTranscriptStore.getState().reset();
-    useTranscriptStore.setState({ formatOptions: cloneOptions(initialFormatOptions) });
+    runInAct(() => {
+        useTranscriptStore.getState().reset();
+        useTranscriptStore.setState({ formatOptions: cloneOptions(initialFormatOptions) });
+    });
 };
 
 export const setTranscriptFormatOptions = (options: FormatOptions) => {
-    useTranscriptStore.setState({ formatOptions: cloneOptions(options) });
+    runInAct(() => {
+        useTranscriptStore.setState({ formatOptions: cloneOptions(options) });
+    });
 };

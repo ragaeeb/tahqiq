@@ -24,11 +24,13 @@ let setSelectedPartSpy: jest.Mock;
 describe('SearchDialog', () => {
     beforeEach(() => {
         resetTranscriptStoreState();
-        useTranscriptStore.setState({
-            transcripts: {
-                1: { segments: [{ start: 10, text: 'match me' }], timestamp: new Date(), volume: 1 },
-                2: { segments: [{ start: 20, text: 'nothing here' }], timestamp: new Date(), volume: 2 },
-            },
+        act(() => {
+            useTranscriptStore.setState({
+                transcripts: {
+                    1: { segments: [{ start: 10, text: 'match me' }], timestamp: new Date(), volume: 1 },
+                    2: { segments: [{ start: 20, text: 'nothing here' }], timestamp: new Date(), volume: 2 },
+                },
+            });
         });
         setSelectedPartSpy = jest
             .spyOn(useTranscriptStore.getState(), 'setSelectedPart')

@@ -63,7 +63,9 @@ describe('GroundingDialog', () => {
 
     it('saves grounded segments', async () => {
         const user = userEvent.setup();
-        render(<GroundingDialog segment={segment as any} />);
+        await act(async () => {
+            render(<GroundingDialog segment={segment as any} />);
+        });
 
         await act(async () => {
             await user.click(screen.getByText('✔️ Save'));

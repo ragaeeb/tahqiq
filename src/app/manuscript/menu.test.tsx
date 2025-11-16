@@ -3,29 +3,30 @@ import React from 'react';
 import { describe, expect, it, jest, mock } from 'bun:test';
 
 mock.module('@/components/ui/dropdown-menu', () => {
-    const Wrapper = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-    const ButtonWrapper = ({ children, onSelect, onClick, ...props }: any) => (
+    const DivWrapper = ({ children, className }: any) => <div className={className}>{children}</div>;
+    const DropdownMenu = ({ children }: any) => <div>{children}</div>;
+    const ButtonWrapper = ({ children, className, onSelect, onClick }: any) => (
         <button
+            className={className}
             onClick={(event) => {
                 onClick?.(event);
                 onSelect?.(event);
             }}
             type="button"
-            {...props}
         >
             {children}
         </button>
     );
 
     return {
-        DropdownMenu: Wrapper,
-        DropdownMenuContent: Wrapper,
-        DropdownMenuGroup: Wrapper,
+        DropdownMenu,
+        DropdownMenuContent: DivWrapper,
+        DropdownMenuGroup: DivWrapper,
         DropdownMenuItem: ButtonWrapper,
-        DropdownMenuPortal: Wrapper,
+        DropdownMenuPortal: DivWrapper,
         DropdownMenuSeparator: () => <hr />,
-        DropdownMenuSub: Wrapper,
-        DropdownMenuSubContent: Wrapper,
+        DropdownMenuSub: DivWrapper,
+        DropdownMenuSubContent: DivWrapper,
         DropdownMenuSubTrigger: ButtonWrapper,
         DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
     };
