@@ -148,7 +148,9 @@ npm run test
 
 ### Production build
 
-Always verify production builds locally before pushing changes:
+Always verify production builds locally before pushing changes. The Next.js config enables
+system TLS certificates so Turbopack can download Google Fonts without needing to set
+additional environment variables:
 
 ```bash
 bun run build

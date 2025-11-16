@@ -1,9 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-    /*experimental: {
-        // Allow Turbopack to resolve modules outside the project root
-        outputFileTracingRoot: path.join(__dirname, '../'),
-    }, */
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+    experimental: {
+        turbopackUseSystemTlsCerts: true,
+    },
 };
 
 export default nextConfig;
