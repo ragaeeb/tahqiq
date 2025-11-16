@@ -1,21 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
-import type { TranscriptState } from './types';
-
-import { useTranscriptStore } from './useTranscriptStore'; // Adjust import path as needed
+import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 describe('useTranscriptStore', () => {
+    beforeEach(() => {
+        resetTranscriptStoreState();
+    });
+
+    afterEach(() => {
+        resetTranscriptStoreState();
+    });
+
     describe('mergeSegments', () => {
-        let originalState: TranscriptState;
-
-        beforeEach(() => {
-            originalState = { ...useTranscriptStore.getState() };
-        });
-
-        afterEach(() => {
-            useTranscriptStore.setState(originalState, true);
-        });
-
         it('should correctly merge two segments when selecting the entire range', () => {
             const segments = [
                 {

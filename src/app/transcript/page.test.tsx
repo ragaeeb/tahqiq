@@ -2,6 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
 
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
+import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
+
 const record = jest.fn();
 
 mock.module('nanolytics', () => ({
@@ -32,17 +35,8 @@ mock.module('./segment-item', () => ({
     default: ({ segment }: any) => <tr data-testid="segment-row">{segment.text}</tr>,
 }));
 
-mock.module('./transcript-toolbar', () => ({
-    default: () => <div>toolbar</div>,
-}));
-
 mock.module('./url-field', () => ({
     default: () => <div>url-field</div>,
-}));
-
-
-mock.module('@/stores/transcriptStore/selectors', () => ({
-    selectCurrentSegments: (state: any) => state.currentSegments,
 }));
 
 mock.module('@/lib/io', () => ({
@@ -54,35 +48,11 @@ mock.module('@/lib/legacy', () => ({
     adaptLegacyTranscripts: (value: any) => value,
 }));
 
-const storeState: any = {
-    addTranscripts: jest.fn(),
-    currentSegments: [],
-    groundTruth: null,
-    init: jest.fn(),
-    selectedPart: 0,
-    selectAllSegments: jest.fn(),
-    setGroundTruth: jest.fn(),
-};
-
-const useTranscriptStore = (selector: any) => selector(storeState);
-useTranscriptStore.getState = () => storeState;
-
-mock.module('@/stores/transcriptStore/useTranscriptStore', () => ({
-    useTranscriptStore,
-}));
-
 import TranscriptPage from './page';
 
 describe('Transcript page', () => {
     beforeEach(() => {
-        Object.keys(storeState).forEach((key) => {
-            if (typeof storeState[key] === 'function') {
-                storeState[key] = jest.fn();
-            }
-        });
-        storeState.selectedPart = 0;
-        storeState.currentSegments = [];
-        storeState.groundTruth = null;
+        resetTranscriptStoreState();
         record.mockReset();
     });
 
@@ -92,8 +62,20 @@ describe('Transcript page', () => {
     });
 
     it('renders transcript table once initialized', () => {
-        storeState.selectedPart = 1;
-        storeState.currentSegments = [{ end: 5, start: 0, text: 'Segment text' }];
+        useTranscriptStore.setState({
+            selectedPart: 1,
+            transcripts: {
+                1: {
+                    segments: [{ end: 5, start: 0, text: 'Segment text' }],
+                    timestamp: new Date(),
+                    volume: 1,
+                },
+            },
+        });
+
+        const selectAllSegmentsSpy = jest
+            .spyOn(useTranscriptStore.getState(), 'selectAllSegments')
+            .mockImplementation(() => {});
 
         render(<TranscriptPage />);
 
@@ -102,6 +84,8 @@ describe('Transcript page', () => {
 
         const selectAll = screen.getByLabelText('Select all segments');
         fireEvent.click(selectAll);
-        expect(storeState.selectAllSegments).toHaveBeenCalledWith(true);
+        expect(selectAllSegmentsSpy).toHaveBeenCalledWith(true);
+
+        selectAllSegmentsSpy.mockRestore();
     });
 });

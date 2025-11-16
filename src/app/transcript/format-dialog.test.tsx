@@ -1,6 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+
+import type { FormatOptions } from '@/stores/transcriptStore/types';
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
+import { resetTranscriptStoreState, setTranscriptFormatOptions } from '@/test-utils/transcriptStore';
 
 const record = jest.fn();
 
@@ -18,11 +22,8 @@ mock.module('@/components/ui/dialog', () => ({
 }));
 
 mock.module('@/components/ui/tag-input', () => ({
-    TagInput: ({ onChange, value = [] }: any) => {
-        return <input data-testid="tag-input" onChange={(e) => onChange([e.target.value])} />;
-    },
+    TagInput: ({ onChange }: any) => <input data-testid="tag-input" onChange={(e) => onChange([e.target.value])} />,
 }));
-
 
 mock.module('@/components/ui/slider', () => ({
     Slider: ({ onValueChange, value = [0], min = 0, max = 100 }: any) => (
@@ -35,29 +36,33 @@ mock.module('@/components/ui/slider', () => ({
     ),
 }));
 
-const storeState: any = {
-    formatOptions: {
-        fillers: ['filler-marker'],
-        flipPunctuation: false,
-        hints: ['hint-marker'],
-        maxSecondsPerLine: 40,
-        maxSecondsPerSegment: 60,
-        minWordsPerSegment: 4,
-        silenceGapThreshold: 1,
-    },
-    setFormattingOptions: jest.fn(),
+import { FormatDialog } from './format-dialog';
+
+const testFormatOptions: FormatOptions = {
+    fillers: ['filler-marker'],
+    flipPunctuation: false,
+    hints: ['hint-marker'],
+    maxSecondsPerLine: 40,
+    maxSecondsPerSegment: 60,
+    minWordsPerSegment: 4,
+    silenceGapThreshold: 1,
 };
 
-mock.module('@/stores/transcriptStore/useTranscriptStore', () => ({
-    useTranscriptStore: (selector: any) => selector(storeState),
-}));
-
-import { FormatDialog } from './format-dialog';
+let setFormattingOptionsSpy: jest.Mock;
 
 describe('FormatDialog', () => {
     beforeEach(() => {
-        storeState.setFormattingOptions = jest.fn();
+        resetTranscriptStoreState();
+        setTranscriptFormatOptions(testFormatOptions);
         record.mockReset();
+        setFormattingOptionsSpy = jest
+            .spyOn(useTranscriptStore.getState(), 'setFormattingOptions')
+            .mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        setFormattingOptionsSpy.mockRestore();
+        resetTranscriptStoreState();
     });
 
     it('applies updated formatting preferences', () => {
@@ -70,7 +75,7 @@ describe('FormatDialog', () => {
 
         fireEvent.click(screen.getByText('Apply'));
 
-        expect(storeState.setFormattingOptions).toHaveBeenCalledWith(
+        expect(setFormattingOptionsSpy).toHaveBeenCalledWith(
             expect.objectContaining({
                 fillers: ['new-filler'],
                 flipPunctuation: true,

@@ -1,7 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import React from 'react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, jest, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+
+import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
+import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 
 const record = jest.fn();
 
@@ -26,15 +29,6 @@ mock.module('paragrafs', () => ({
     updateSegmentWithGroundTruth,
 }));
 
-const storeState: any = {
-    selectAllSegments: jest.fn(),
-    updateSegment: jest.fn(),
-};
-
-mock.module('@/stores/transcriptStore/useTranscriptStore', () => ({
-    useTranscriptStore: (selector: any) => selector(storeState),
-}));
-
 import { GroundingDialog } from './grounding-dialog';
 
 const segment = {
@@ -47,16 +41,37 @@ const segment = {
     ],
 };
 
+let updateSegmentSpy: jest.Mock;
+let selectAllSegmentsSpy: jest.Mock;
+
 describe('GroundingDialog', () => {
+    beforeEach(() => {
+        resetTranscriptStoreState();
+        updateSegmentSpy = jest
+            .spyOn(useTranscriptStore.getState(), 'updateSegment')
+            .mockImplementation(() => {});
+        selectAllSegmentsSpy = jest
+            .spyOn(useTranscriptStore.getState(), 'selectAllSegments')
+            .mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        updateSegmentSpy.mockRestore();
+        selectAllSegmentsSpy.mockRestore();
+        resetTranscriptStoreState();
+    });
+
     it('saves grounded segments', async () => {
         const user = userEvent.setup();
         render(<GroundingDialog segment={segment as any} />);
 
-        await user.click(screen.getByText('✔️ Save'));
+        await act(async () => {
+            await user.click(screen.getByText('✔️ Save'));
+        });
 
         expect(applyGroundTruthToSegment).toHaveBeenCalledWith(segment, segment.text);
-        expect(storeState.updateSegment).toHaveBeenCalled();
-        expect(storeState.selectAllSegments).toHaveBeenCalledWith(false);
+        expect(updateSegmentSpy).toHaveBeenCalledWith(segment.start, expect.objectContaining({ text: segment.text }), true);
+        expect(selectAllSegmentsSpy).toHaveBeenCalledWith(false);
         expect(record).toHaveBeenCalledWith('AcceptGroundTruth');
     });
 });

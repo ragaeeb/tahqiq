@@ -8,20 +8,6 @@ import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 const textRowCalls: any[] = [];
 
-mock.module('@tanstack/react-virtual', () => ({
-    useVirtualizer: ({ count }: { count: number }) => ({
-        getScrollElement: () => null,
-        getTotalSize: () => count * 60,
-        getVirtualItems: () =>
-            Array.from({ length: count }, (_, index) => ({
-                index,
-                key: `${index}`,
-                size: 60,
-                start: index * 60,
-            })),
-    }),
-}));
-
 const textRowSpy = jest.spyOn(TextRowModule, 'default');
 textRowSpy.mockImplementation(({ data, isNewPage, isSelected }: any) => {
     textRowCalls.push({ data, isNewPage, isSelected });
