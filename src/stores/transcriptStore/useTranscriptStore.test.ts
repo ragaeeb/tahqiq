@@ -47,7 +47,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getInitialState().mergeSegments();
 
             const state = useTranscriptStore.getState();
-            expect(state.selectedSegments).toBeEmpty();
+            expect(state.selectedSegments).toHaveLength(0);
             expect(state.transcripts[1]?.segments).toEqual([
                 {
                     end: 4,
@@ -119,7 +119,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getInitialState().mergeSegments();
 
             const state = useTranscriptStore.getState();
-            expect(state.selectedSegments).toBeEmpty();
+            expect(state.selectedSegments).toHaveLength(0);
             expect(state.transcripts[1]?.segments).toEqual([
                 {
                     end: 4,
@@ -270,7 +270,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getState().deleteSelectedSegments();
 
             const state = useTranscriptStore.getState();
-            expect(state.selectedSegments).toBeEmpty();
+            expect(state.selectedSegments).toHaveLength(0);
             expect(state.transcripts[1]?.segments).toEqual([segments[1]!]);
         });
     });
@@ -307,7 +307,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getState().markCompleted();
 
             const state = useTranscriptStore.getState();
-            expect(state.selectedSegments).toBeEmpty();
+            expect(state.selectedSegments).toHaveLength(0);
             expect(state.transcripts[1]?.segments[0]!.status).toBe('done');
             expect(state.transcripts[1]?.segments[1]!.status).toBeUndefined();
         });
@@ -379,7 +379,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getState().selectAllSegments(false);
 
             const state = useTranscriptStore.getState();
-            expect(state.selectedSegments).toBeEmpty();
+            expect(state.selectedSegments).toHaveLength(0);
         });
     });
 
@@ -429,7 +429,7 @@ describe('useTranscriptStore', () => {
 
             const state = useTranscriptStore.getState();
             expect(state.selectedPart).toBe(2);
-            expect(state.selectedSegments).toBeEmpty();
+            expect(state.selectedSegments).toHaveLength(0);
         });
     });
 

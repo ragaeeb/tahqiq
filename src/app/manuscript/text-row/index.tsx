@@ -24,6 +24,7 @@ function TextRow({ data, isNewPage, isSelected, onSelectionChange, previewPdf, s
             <td aria-label="Select" className="w-12 border-green-100 border-r px-4 py-4 text-center">
                 <Checkbox
                     checked={isSelected}
+                    aria-label={`Select row ${data.id}`}
                     onCheckedChange={(...args) => {
                         onSelectionChange(data, ...args);
                     }}
