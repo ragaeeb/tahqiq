@@ -23,7 +23,7 @@ Tahqiq is a specialized web application for Arabic transcript editing and manage
 
 ## Tech Stack
 
-- [Next.js 15](https://nextjs.org/) with App Router
+- [Next.js 16](https://nextjs.org/) with App Router
 - [React 19](https://react.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
@@ -31,6 +31,7 @@ Tahqiq is a specialized web application for Arabic transcript editing and manage
 - [Radix UI](https://www.radix-ui.com/) for accessible UI components
 - [Google Generative AI](https://ai.google.dev/) for translation capabilities
 - [Paragrafs](https://www.npmjs.com/package/paragrafs) for transcript segment handling
+- [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) + [happy-dom](https://github.com/capricorn86/happy-dom) for client-side component tests powered by Bun
 
 ## Getting Started
 
@@ -135,12 +136,24 @@ tahqiq/
 
 ### Testing
 
-Run tests using Vitest:
+Run tests with Bun's built-in runner. The `bunfig.toml` preloads a `happy-dom` environment so React components can be rendered with `@testing-library/react` APIs:
 
 ```bash
-bun test
-# or
+# run the entire suite with coverage reporting
+bun test --coverage
+
+# alternatively
 npm run test
+```
+
+### Production build
+
+Always verify production builds locally before pushing changes. The Next.js config enables
+system TLS certificates so Turbopack can download Google Fonts without needing to set
+additional environment variables:
+
+```bash
+bun run build
 ```
 
 ## Deployment

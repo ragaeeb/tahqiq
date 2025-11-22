@@ -1,0 +1,3 @@
+[test]
+preload = ["./test/setup.ts"]
+workers = 1
