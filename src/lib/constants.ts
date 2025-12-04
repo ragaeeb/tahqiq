@@ -10,7 +10,13 @@ export const DEFAULT_HINTS = [
     'جزاكم الله خيرا',
 ];
 
-export const LatestContractVersion = { Ajza: 'v0.1', Book: 'v1.0', Juz: 'v3.0', Transcript: 'v1.1' } as const;
+export const LatestContractVersion = {
+    Ajza: 'v0.1',
+    Book: 'v1.0',
+    Excerpts: 'v2.0',
+    Juz: 'v3.0',
+    Transcript: 'v1.1',
+} as const;
 
 export const DEFAULT_FILLER_WORDS = ['آآ', 'اه', 'ايه', 'وآآ', 'فآآ', 'مم', 'ها'];
 
