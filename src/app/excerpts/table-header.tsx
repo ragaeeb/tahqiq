@@ -1,6 +1,7 @@
 import { record } from 'nanolytics';
 
 import SubmittableInput from '@/components/submittable-input';
+import { createMatcher } from '@/lib/search';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
@@ -34,10 +35,12 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-gray-800 text-xl leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                         name="nass"
+                        dir="auto"
                         onSubmit={(query) => {
                             record('FilterExcerptsByArabic', query);
                             if (query) {
-                                filterExcerptsByIds(excerpts.filter((e) => e.nass?.includes(query)).map((e) => e.id));
+                                const matches = createMatcher(query);
+                                filterExcerptsByIds(excerpts.filter((e) => matches(e.nass)).map((e) => e.id));
                             } else {
                                 filterExcerptsByIds(undefined);
                             }
@@ -52,7 +55,8 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                         onSubmit={(query) => {
                             record('FilterExcerptsByTranslation', query);
                             if (query) {
-                                filterExcerptsByIds(excerpts.filter((e) => e.text?.includes(query)).map((e) => e.id));
+                                const matches = createMatcher(query);
+                                filterExcerptsByIds(excerpts.filter((e) => matches(e.text)).map((e) => e.id));
                             } else {
                                 filterExcerptsByIds(undefined);
                             }
@@ -92,7 +96,8 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                         onSubmit={(query) => {
                             record('FilterHeadingsByArabic', query);
                             if (query) {
-                                filterHeadingsByIds(headings.filter((h) => h.nass.includes(query)).map((h) => h.id));
+                                const matches = createMatcher(query);
+                                filterHeadingsByIds(headings.filter((h) => matches(h.nass)).map((h) => h.id));
                             } else {
                                 filterHeadingsByIds(undefined);
                             }
@@ -107,7 +112,8 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                         onSubmit={(query) => {
                             record('FilterHeadingsByTranslation', query);
                             if (query) {
-                                filterHeadingsByIds(headings.filter((h) => h.text?.includes(query)).map((h) => h.id));
+                                const matches = createMatcher(query);
+                                filterHeadingsByIds(headings.filter((h) => matches(h.text)).map((h) => h.id));
                             } else {
                                 filterHeadingsByIds(undefined);
                             }
@@ -146,7 +152,8 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                     onSubmit={(query) => {
                         record('FilterFootnotesByArabic', query);
                         if (query) {
-                            filterFootnotesByIds(footnotes.filter((f) => f.nass.includes(query)).map((f) => f.id));
+                            const matches = createMatcher(query);
+                            filterFootnotesByIds(footnotes.filter((f) => matches(f.nass)).map((f) => f.id));
                         } else {
                             filterFootnotesByIds(undefined);
                         }
@@ -161,7 +168,8 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                     onSubmit={(query) => {
                         record('FilterFootnotesByTranslation', query);
                         if (query) {
-                            filterFootnotesByIds(footnotes.filter((f) => f.text?.includes(query)).map((f) => f.id));
+                            const matches = createMatcher(query);
+                            filterFootnotesByIds(footnotes.filter((f) => matches(f.text)).map((f) => f.id));
                         } else {
                             filterFootnotesByIds(undefined);
                         }
