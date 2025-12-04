@@ -8,6 +8,7 @@ import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
 
 import '@/lib/analytics';
+import '@/stores/dev';
 
 import { ConfirmButton } from '@/components/confirm-button';
 import JsonDropZone from '@/components/json-drop-zone';
@@ -30,6 +31,7 @@ import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
+import ExcerptsTableHeader from './table-header';
 import VirtualizedList from './virtualized-list';
 
 /**
@@ -41,6 +43,10 @@ export default function ExcerptsPage() {
     const excerpts = useExcerptsStore(selectAllExcerpts);
     const headings = useExcerptsStore(selectAllHeadings);
     const footnotes = useExcerptsStore(selectAllFootnotes);
+    // Unfiltered data for filtering
+    const allExcerpts = useExcerptsStore((state) => state.excerpts);
+    const allHeadings = useExcerptsStore((state) => state.headings);
+    const allFootnotes = useExcerptsStore((state) => state.footnotes);
     const excerptsCount = useExcerptsStore(selectExcerptCount);
     const headingsCount = useExcerptsStore(selectHeadingCount);
     const footnotesCount = useExcerptsStore(selectFootnoteCount);
@@ -50,6 +56,7 @@ export default function ExcerptsPage() {
     const deleteExcerpts = useExcerptsStore((state) => state.deleteExcerpts);
     const deleteHeadings = useExcerptsStore((state) => state.deleteHeadings);
     const deleteFootnotes = useExcerptsStore((state) => state.deleteFootnotes);
+    const createExcerptFromExisting = useExcerptsStore((state) => state.createExcerptFromExisting);
     const applyTranslationFormatting = useExcerptsStore((state) => state.applyTranslationFormatting);
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
@@ -255,24 +262,17 @@ export default function ExcerptsPage() {
                                     data={excerpts}
                                     getKey={(item) => item.id}
                                     header={
-                                        <tr>
-                                            <th className="w-32 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                Info
-                                            </th>
-                                            <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm">
-                                                Arabic
-                                            </th>
-                                            <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
-                                                Translation
-                                            </th>
-                                            <th className="w-16 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                Actions
-                                            </th>
-                                        </tr>
+                                        <ExcerptsTableHeader
+                                            activeTab="excerpts"
+                                            excerpts={allExcerpts}
+                                            footnotes={allFootnotes}
+                                            headings={allHeadings}
+                                        />
                                     }
                                     renderRow={(item) => (
                                         <ExcerptRow
                                             data={item}
+                                            onCreateFromSelection={createExcerptFromExisting}
                                             onDelete={(id) => deleteExcerpts([id])}
                                             onUpdate={updateExcerpt}
                                         />

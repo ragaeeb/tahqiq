@@ -29,6 +29,11 @@ export const useExcerptsStore = create<ExcerptsState>()(
         contractVersion: undefined,
         createdAt: new Date(),
 
+        createExcerptFromExisting: (sourceId, newArabicText) =>
+            set((state) => {
+                actions.createExcerptFromExisting(state, sourceId, newArabicText);
+            }),
+
         deleteExcerpts: (ids) =>
             set((state) => {
                 actions.deleteExcerpts(state, ids);
@@ -44,6 +49,21 @@ export const useExcerptsStore = create<ExcerptsState>()(
                 actions.deleteHeadings(state, ids);
             }),
         excerpts: [],
+
+        filterExcerptsByIds: (ids) =>
+            set((state) => {
+                actions.filterExcerptsByIds(state, ids);
+            }),
+
+        filterFootnotesByIds: (ids) =>
+            set((state) => {
+                actions.filterFootnotesByIds(state, ids);
+            }),
+
+        filterHeadingsByIds: (ids) =>
+            set((state) => {
+                actions.filterHeadingsByIds(state, ids);
+            }),
         footnotes: [],
         headings: [],
 

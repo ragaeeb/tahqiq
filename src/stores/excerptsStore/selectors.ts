@@ -1,31 +1,65 @@
+import memoizeOne from 'memoize-one';
 import type { Entry, ExcerptsState, Footnote, Heading } from './types';
 
 /**
- * Selects all excerpts from the store
+ * Selects all excerpts from the store (respecting filters)
  */
-export const selectAllExcerpts = (state: ExcerptsState): Entry[] => state.excerpts;
+export const selectAllExcerpts = memoizeOne(
+    (state: ExcerptsState): Entry[] => {
+        if (state.filteredExcerptIds) {
+            const idSet = new Set(state.filteredExcerptIds);
+            return state.excerpts.filter((e) => idSet.has(e.id));
+        }
+        return state.excerpts;
+    },
+    // Custom equality: only recompute if excerpts array or filter IDs changed
+    ([prevState], [nextState]) =>
+        prevState.excerpts === nextState.excerpts && prevState.filteredExcerptIds === nextState.filteredExcerptIds,
+);
 
 /**
- * Selects all headings from the store
+ * Selects all headings from the store (respecting filters)
  */
-export const selectAllHeadings = (state: ExcerptsState): Heading[] => state.headings;
+export const selectAllHeadings = memoizeOne(
+    (state: ExcerptsState): Heading[] => {
+        if (state.filteredHeadingIds) {
+            const idSet = new Set(state.filteredHeadingIds);
+            return state.headings.filter((h) => idSet.has(h.id));
+        }
+        return state.headings;
+    },
+    // Custom equality: only recompute if headings array or filter IDs changed
+    ([prevState], [nextState]) =>
+        prevState.headings === nextState.headings && prevState.filteredHeadingIds === nextState.filteredHeadingIds,
+);
 
 /**
- * Selects all footnotes from the store
+ * Selects all footnotes from the store (respecting filters)
  */
-export const selectAllFootnotes = (state: ExcerptsState): Footnote[] => state.footnotes;
+export const selectAllFootnotes = memoizeOne(
+    (state: ExcerptsState): Footnote[] => {
+        if (state.filteredFootnoteIds) {
+            const idSet = new Set(state.filteredFootnoteIds);
+            return state.footnotes.filter((f) => idSet.has(f.id));
+        }
+        return state.footnotes;
+    },
+    // Custom equality: only recompute if footnotes array or filter IDs changed
+    ([prevState], [nextState]) =>
+        prevState.footnotes === nextState.footnotes && prevState.filteredFootnoteIds === nextState.filteredFootnoteIds,
+);
 
 /**
- * Gets the total number of excerpts
+ * Gets the total number of excerpts (unfiltered)
  */
 export const selectExcerptCount = (state: ExcerptsState): number => state.excerpts.length;
 
 /**
- * Gets the total number of headings
+ * Gets the total number of headings (unfiltered)
  */
 export const selectHeadingCount = (state: ExcerptsState): number => state.headings.length;
 
 /**
- * Gets the total number of footnotes
+ * Gets the total number of footnotes (unfiltered)
  */
 export const selectFootnoteCount = (state: ExcerptsState): number => state.footnotes.length;

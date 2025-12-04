@@ -208,6 +208,12 @@ export type ExcerptsStateCore = {
     postProcessingApps: PostProcessingApp[];
     /** Translation prompt */
     prompt?: string;
+    /** Filtered excerpt IDs (undefined = show all) */
+    filteredExcerptIds?: string[];
+    /** Filtered heading IDs (undefined = show all) */
+    filteredHeadingIds?: string[];
+    /** Filtered footnote IDs (undefined = show all) */
+    filteredFootnoteIds?: string[];
 };
 
 /**
@@ -245,6 +251,11 @@ export type ExcerptsActions = {
     updateExcerpt: (id: string, updates: Partial<Omit<Entry, 'id'>>) => void;
 
     /**
+     * Creates a new excerpt from an existing one with selected Arabic text
+     */
+    createExcerptFromExisting: (sourceId: string, newArabicText: string) => void;
+
+    /**
      * Updates a single footnote
      */
     updateFootnote: (id: string, updates: Partial<Omit<Footnote, 'id'>>) => void;
@@ -268,6 +279,21 @@ export type ExcerptsActions = {
      * Applies a formatting function to all footnote translations in bulk
      */
     applyFootnoteFormatting: (formatFn: (text: string) => string) => void;
+
+    /**
+     * Filters excerpts by IDs (undefined clears filter)
+     */
+    filterExcerptsByIds: (ids?: string[]) => void;
+
+    /**
+     * Filters headings by IDs (undefined clears filter)
+     */
+    filterHeadingsByIds: (ids?: string[]) => void;
+
+    /**
+     * Filters footnotes by IDs (undefined clears filter)
+     */
+    filterFootnotesByIds: (ids?: string[]) => void;
 };
 
 /**

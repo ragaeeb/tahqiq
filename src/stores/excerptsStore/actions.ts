@@ -31,6 +31,53 @@ export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Par
 };
 
 /**
+ * Creates a new excerpt from an existing one with selected Arabic text
+ * Copies all properties except sets new ID, new arabic text, and clears translation
+ */
+export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: string, newArabicText: string): void => {
+    const sourceIndex = state.excerpts.findIndex((e) => e.id === sourceId);
+
+    if (sourceIndex === -1) {
+        return;
+    }
+
+    const sourceExcerpt = state.excerpts[sourceIndex];
+
+    // Remove the extracted text from the source excerpt
+    const updatedSourceArabic = (sourceExcerpt.arabic || '').replace(newArabicText, '').trim();
+    state.excerpts[sourceIndex] = {
+        ...sourceExcerpt,
+        arabic: updatedSourceArabic,
+        lastUpdatedAt: Date.now(),
+    };
+
+    const newExcerpt: Entry = {
+        ...sourceExcerpt,
+        arabic: newArabicText,
+        id: `${sourceExcerpt.id}x`,
+        lastUpdatedAt: Date.now(),
+        translation: '', // Clear translation - user will fill manually
+    };
+
+    // Insert after the source excerpt
+    state.excerpts.splice(sourceIndex + 1, 0, newExcerpt);
+
+    // If a filter is active, add the new excerpt's ID to the filter so it's visible
+    if (state.filteredExcerptIds) {
+        const filterIndex = state.filteredExcerptIds.indexOf(sourceId);
+        if (filterIndex !== -1) {
+            // Insert after the source ID in the filter list too
+            state.filteredExcerptIds.splice(filterIndex + 1, 0, newExcerpt.id);
+        } else {
+            // Source not in filter but we still want to show the new one
+            state.filteredExcerptIds.push(newExcerpt.id);
+        }
+    }
+
+    state.lastUpdatedAt = new Date();
+};
+
+/**
  * Updates a single heading
  */
 export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Heading, 'id'>>): void => {
@@ -119,4 +166,25 @@ export const applyFootnoteFormatting = (state: ExcerptsStateCore, formatFn: (tex
         return footnote;
     });
     state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Filters excerpts by IDs
+ */
+export const filterExcerptsByIds = (state: ExcerptsStateCore, ids?: string[]): void => {
+    state.filteredExcerptIds = ids;
+};
+
+/**
+ * Filters headings by IDs
+ */
+export const filterHeadingsByIds = (state: ExcerptsStateCore, ids?: string[]): void => {
+    state.filteredHeadingIds = ids;
+};
+
+/**
+ * Filters footnotes by IDs
+ */
+export const filterFootnotesByIds = (state: ExcerptsStateCore, ids?: string[]): void => {
+    state.filteredFootnoteIds = ids;
 };
