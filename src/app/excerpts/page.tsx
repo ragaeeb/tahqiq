@@ -11,10 +11,10 @@ import '@/lib/analytics';
 import '@/stores/dev';
 
 import { ConfirmButton } from '@/components/confirm-button';
+import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
 import {
@@ -172,43 +172,34 @@ export default function ExcerptsPage() {
         footnotesCount,
     ]);
 
-    if (!hasData) {
-        return (
-            <>
-                <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
-                    <div className="max-w flex w-full flex-col">
-                        <h1 className="mb-6 font-bold text-3xl text-gray-800">Excerpts Editor</h1>
-                        <JsonDropZone
-                            description="Drag and drop an Excerpts JSON file"
-                            maxFiles={1}
-                            onFiles={(fileNameToData) => {
-                                const keys = Object.keys(fileNameToData);
-                                const data = fileNameToData[keys[0]];
-
-                                // Validate basic structure before casting
-                                if (
-                                    data &&
-                                    typeof data === 'object' &&
-                                    'excerpts' in data &&
-                                    'headings' in data &&
-                                    'footnotes' in data
-                                ) {
-                                    record('LoadExcerpts', keys[0]);
-                                    init(data as unknown as Excerpts, keys[0]);
-                                } else {
-                                    toast.error('Invalid Excerpts file format');
-                                }
-                            }}
-                        />
-                    </div>
-                </div>
-                <VersionFooter />
-            </>
-        );
-    }
-
     return (
-        <>
+        <DataGate
+            dropZone={
+                <JsonDropZone
+                    description="Drag and drop an Excerpts JSON file"
+                    maxFiles={1}
+                    onFiles={(fileNameToData) => {
+                        const keys = Object.keys(fileNameToData);
+                        const data = fileNameToData[keys[0]];
+
+                        // Validate basic structure before casting
+                        if (
+                            data &&
+                            typeof data === 'object' &&
+                            'excerpts' in data &&
+                            'headings' in data &&
+                            'footnotes' in data
+                        ) {
+                            record('LoadExcerpts', keys[0]);
+                            init(data as unknown as Excerpts, keys[0]);
+                        } else {
+                            toast.error('Invalid Excerpts file format');
+                        }
+                    }}
+                />
+            }
+            hasData={hasData}
+        >
             <div className="flex min-h-screen flex-col font-[family-name:var(--font-geist-sans)]">
                 <div className="w-full">
                     <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-3 shadow-sm">
@@ -346,7 +337,6 @@ export default function ExcerptsPage() {
                     </div>
                 </div>
             </div>
-            <VersionFooter />
-        </>
+        </DataGate>
     );
 }

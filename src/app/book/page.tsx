@@ -2,9 +2,9 @@
 
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
-import VersionFooter from '@/components/version-footer';
 import type { Kitab, Page } from '@/stores/bookStore/types';
 import type { Juz } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
@@ -84,30 +84,22 @@ export default function Book() {
         setSelectedPages(blankPages);
     }, [blankPages]);
 
-    if (!isInitialized) {
-        return (
-            <>
-                <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
-                    <div className="max-w flex w-full flex-col">
-                        <JsonDropZone
-                            allowedExtensions=".json"
-                            description="Drag and drop the parts"
-                            onFiles={(map) => {
-                                record('InitBookFromJuz', Object.keys(map).toString());
-                                initBook(map as unknown as Record<string, Juz | Kitab>);
-                            }}
-                        />
-                    </div>
-                </div>
-                <VersionFooter />
-            </>
-        );
-    }
-
     const arePagesSelected = selectedPages.length > 0;
 
     return (
-        <>
+        <DataGate
+            dropZone={
+                <JsonDropZone
+                    allowedExtensions=".json"
+                    description="Drag and drop the parts"
+                    onFiles={(map) => {
+                        record('InitBookFromJuz', Object.keys(map).toString());
+                        initBook(map as unknown as Record<string, Juz | Kitab>);
+                    }}
+                />
+            }
+            hasData={isInitialized}
+        >
             <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
                 <div className="max-w flex w-full flex-col">
                     <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-2">
@@ -152,7 +144,6 @@ export default function Book() {
                 </div>
             </div>
             <PageToolbar />
-            <VersionFooter />
-        </>
+        </DataGate>
     );
 }

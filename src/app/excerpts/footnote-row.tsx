@@ -5,12 +5,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Footnote } from '@/stores/excerptsStore/types';
+import type { Excerpt } from '@/stores/excerptsStore/types';
 
 type FootnoteRowProps = {
-    data: Footnote;
+    data: Excerpt;
     onDelete: (id: string) => void;
-    onUpdate: (id: string, updates: Partial<Omit<Footnote, 'id'>>) => void;
+    onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
 };
 
 function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {

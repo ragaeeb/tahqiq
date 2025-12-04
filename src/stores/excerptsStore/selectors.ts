@@ -1,11 +1,11 @@
 import memoizeOne from 'memoize-one';
-import type { Entry, ExcerptsState, Footnote, Heading } from './types';
+import type { Excerpt, ExcerptsState, Footnote, Heading } from './types';
 
 /**
  * Selects all excerpts from the store (respecting filters)
  */
 export const selectAllExcerpts = memoizeOne(
-    (state: ExcerptsState): Entry[] => {
+    (state: ExcerptsState): Excerpt[] => {
         if (state.filteredExcerptIds) {
             const idSet = new Set(state.filteredExcerptIds);
             return state.excerpts.filter((e) => idSet.has(e.id));

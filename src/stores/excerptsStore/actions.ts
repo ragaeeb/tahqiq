@@ -1,28 +1,31 @@
-import type { Entry, Excerpts, ExcerptsStateCore, Footnote, Heading } from './types';
+import { adaptExcerptsToLatest } from '@/lib/migration';
+import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
 /**
- * Initializes the store from Excerpts data
+ * Initializes the store from Excerpts data, migrating if necessary
  */
 export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore => {
+    const migrated = adaptExcerptsToLatest(data);
+
     return {
-        collection: data.collection,
-        contractVersion: data.contractVersion,
-        createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
-        excerpts: [...data.excerpts],
-        footnotes: [...data.footnotes],
-        headings: [...data.headings],
+        collection: migrated.collection,
+        contractVersion: migrated.contractVersion,
+        createdAt: migrated.createdAt ? new Date(migrated.createdAt) : new Date(),
+        excerpts: [...migrated.excerpts],
+        footnotes: [...migrated.footnotes],
+        headings: [...migrated.headings],
         inputFileName: fileName,
-        lastUpdatedAt: data.lastUpdatedAt ? new Date(data.lastUpdatedAt) : undefined,
-        options: data.options,
+        lastUpdatedAt: migrated.lastUpdatedAt ? new Date(migrated.lastUpdatedAt) : undefined,
+        options: migrated.options,
         postProcessingApps: [],
-        prompt: data.prompt,
+        prompt: migrated.prompt,
     };
 };
 
 /**
  * Updates a single excerpt
  */
-export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Entry, 'id'>>): void => {
+export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
     const index = state.excerpts.findIndex((e) => e.id === id);
     if (index !== -1) {
         state.excerpts[index] = { ...state.excerpts[index], ...updates, lastUpdatedAt: Date.now() };
@@ -32,9 +35,9 @@ export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Par
 
 /**
  * Creates a new excerpt from an existing one with selected Arabic text
- * Copies all properties except sets new ID, new arabic text, and clears translation
+ * Copies all properties except sets new ID, new nass text, and clears translation
  */
-export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: string, newArabicText: string): void => {
+export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: string, newNassText: string): void => {
     const sourceIndex = state.excerpts.findIndex((e) => e.id === sourceId);
 
     if (sourceIndex === -1) {
@@ -43,20 +46,18 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
 
     const sourceExcerpt = state.excerpts[sourceIndex];
 
-    // Remove the extracted text from the source excerpt
-    const updatedSourceArabic = (sourceExcerpt.arabic || '').replace(newArabicText, '').trim();
-    state.excerpts[sourceIndex] = {
-        ...sourceExcerpt,
-        arabic: updatedSourceArabic,
-        lastUpdatedAt: Date.now(),
-    };
+    const lastUpdatedAt = Date.now() / 1000;
 
-    const newExcerpt: Entry = {
+    // Remove the extracted text from the source excerpt
+    const updatedSourceNass = (sourceExcerpt.nass || '').replace(newNassText, '').trim();
+    state.excerpts[sourceIndex] = { ...sourceExcerpt, lastUpdatedAt, nass: updatedSourceNass };
+
+    const newExcerpt: Excerpt = {
         ...sourceExcerpt,
-        arabic: newArabicText,
-        id: `${sourceExcerpt.id}x`,
-        lastUpdatedAt: Date.now(),
-        translation: '', // Clear translation - user will fill manually
+        id: `${sourceExcerpt.id}${lastUpdatedAt}`,
+        lastUpdatedAt,
+        nass: newNassText,
+        text: '',
     };
 
     // Insert after the source excerpt
@@ -91,7 +92,7 @@ export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Par
 /**
  * Updates a single footnote
  */
-export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Footnote, 'id'>>): void => {
+export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
     const index = state.footnotes.findIndex((f) => f.id === id);
     if (index !== -1) {
         state.footnotes[index] = { ...state.footnotes[index], ...updates, lastUpdatedAt: Date.now() };
@@ -132,8 +133,8 @@ export const deleteFootnotes = (state: ExcerptsStateCore, ids: string[]): void =
 export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
     const now = Date.now();
     state.excerpts = state.excerpts.map((excerpt) => {
-        if (excerpt.translation) {
-            return { ...excerpt, lastUpdatedAt: now, translation: formatFn(excerpt.translation) };
+        if (excerpt.text) {
+            return { ...excerpt, lastUpdatedAt: now, text: formatFn(excerpt.text) };
         }
         return excerpt;
     });

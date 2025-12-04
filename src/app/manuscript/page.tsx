@@ -7,11 +7,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import RowToolbar from '@/app/manuscript/row-toolbar';
 import { ConfirmButton } from '@/components/confirm-button';
+import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
-import VersionFooter from '@/components/version-footer';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
@@ -93,36 +93,28 @@ export default function Manuscript() {
         [rows, setSelectedRows],
     );
 
-    if (!isInitialized) {
-        return (
-            <>
-                <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
-                    <div className="max-w flex w-full flex-col">
-                        <JsonDropZone
-                            allowedExtensions=".json,.txt"
-                            description="Drag and drop the manuscript"
-                            maxFiles={4}
-                            onFiles={(map) => {
-                                const fileNames = Object.keys(map);
-
-                                if (fileNames.length === 1 && fileNames[0].endsWith('.json')) {
-                                    record('LoadManuscriptsFromJuz');
-                                    initJuz(map[fileNames[0]] as unknown as Juz);
-                                } else {
-                                    record('LoadManuscriptsFromInputFiles');
-                                    initManuscript(map as unknown as RawInputFiles);
-                                }
-                            }}
-                        />
-                    </div>
-                </div>
-                <VersionFooter />
-            </>
-        );
-    }
-
     return (
-        <>
+        <DataGate
+            dropZone={
+                <JsonDropZone
+                    allowedExtensions=".json,.txt"
+                    description="Drag and drop the manuscript"
+                    maxFiles={4}
+                    onFiles={(map) => {
+                        const fileNames = Object.keys(map);
+
+                        if (fileNames.length === 1 && fileNames[0].endsWith('.json')) {
+                            record('LoadManuscriptsFromJuz');
+                            initJuz(map[fileNames[0]] as unknown as Juz);
+                        } else {
+                            record('LoadManuscriptsFromInputFiles');
+                            initManuscript(map as unknown as RawInputFiles);
+                        }
+                    }}
+                />
+            }
+            hasData={isInitialized}
+        >
             <div className="flex min-h-screen flex-col font-[family-name:var(--font-geist-sans)]">
                 <div className="flex w-full flex-col">
                     <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-2 shadow-sm">
@@ -209,7 +201,6 @@ export default function Manuscript() {
             </div>
             {pageToPreview ? <PdfDialog onClose={() => setPageToPreview(0)} page={pageToPreview} /> : null}
             <RowToolbar />
-            <VersionFooter />
-        </>
+        </DataGate>
     );
 }

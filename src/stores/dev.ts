@@ -27,7 +27,7 @@ if (typeof window !== 'undefined') {
         search: (regex: RegExp) => {
             const state = useExcerptsStore.getState();
             const ids = state.excerpts
-                .filter((e) => regex.test(e.arabic || '') || regex.test(e.translation || ''))
+                .filter((e) => regex.test(e.nass || '') || regex.test(e.text || ''))
                 .map((e) => e.id);
             state.filterExcerptsByIds(ids);
         },

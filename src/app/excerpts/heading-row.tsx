@@ -39,15 +39,15 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
             <td className="w-24 px-2 py-3 text-center align-top text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"
-                    defaultValue={data.parent?.toString() ?? ''}
+                    defaultValue={data.parent ?? ''}
                     key={`${data.id}/${data.lastUpdatedAt}/parent`}
                     onBlur={(e) => {
-                        const value = e.target.value ? Number.parseInt(e.target.value) : undefined;
+                        const value = e.target.value || undefined;
                         if (value !== data.parent) {
                             onUpdate(data.id, { parent: value });
                         }
                     }}
-                    type="number"
+                    placeholder="Parent ID"
                 />
             </td>
             <td className="px-4 py-3 align-top" dir="rtl">

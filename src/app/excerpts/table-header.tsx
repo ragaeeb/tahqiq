@@ -1,10 +1,10 @@
 import { record } from 'nanolytics';
 
 import SubmittableInput from '@/components/submittable-input';
-import type { Entry, Footnote, Heading } from '@/stores/excerptsStore/types';
+import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
-type ExcerptsTableHeaderProps = { activeTab: string; excerpts: Entry[]; footnotes: Footnote[]; headings: Heading[] };
+type ExcerptsTableHeaderProps = { activeTab: string; excerpts: Excerpt[]; footnotes: Excerpt[]; headings: Heading[] };
 
 export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, headings }: ExcerptsTableHeaderProps) {
     const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
@@ -33,11 +33,11 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                 <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm" dir="rtl">
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-gray-800 text-xl leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
-                        name="arabic"
+                        name="nass"
                         onSubmit={(query) => {
                             record('FilterExcerptsByArabic', query);
                             if (query) {
-                                filterExcerptsByIds(excerpts.filter((e) => e.arabic?.includes(query)).map((e) => e.id));
+                                filterExcerptsByIds(excerpts.filter((e) => e.nass?.includes(query)).map((e) => e.id));
                             } else {
                                 filterExcerptsByIds(undefined);
                             }
@@ -48,13 +48,11 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                 <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-1 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
-                        name="translation"
+                        name="text"
                         onSubmit={(query) => {
                             record('FilterExcerptsByTranslation', query);
                             if (query) {
-                                filterExcerptsByIds(
-                                    excerpts.filter((e) => e.translation?.includes(query)).map((e) => e.id),
-                                );
+                                filterExcerptsByIds(excerpts.filter((e) => e.text?.includes(query)).map((e) => e.id));
                             } else {
                                 filterExcerptsByIds(undefined);
                             }
@@ -76,7 +74,7 @@ export default function ExcerptsTableHeader({ activeTab, excerpts, footnotes, he
                         name="from"
                         onSubmit={(query) => {
                             record('FilterHeadingsByPage', query);
-                            const pageNum = Number.parseInt(query);
+                            const pageNum = Number.parseInt(query, 10);
                             if (!Number.isNaN(pageNum)) {
                                 filterHeadingsByIds(headings.filter((h) => h.from === pageNum).map((h) => h.id));
                             } else {

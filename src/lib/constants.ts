@@ -13,7 +13,7 @@ export const DEFAULT_HINTS = [
 export const LatestContractVersion = {
     Ajza: 'v0.1',
     Book: 'v1.0',
-    Excerpts: 'v2.0',
+    Excerpts: 'v3.0',
     Juz: 'v3.0',
     Transcript: 'v1.1',
 } as const;

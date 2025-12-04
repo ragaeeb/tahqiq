@@ -6,13 +6,13 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import type { Entry } from '@/stores/excerptsStore/types';
+import type { Excerpt } from '@/stores/excerptsStore/types';
 
 type ExcerptRowProps = {
-    data: Entry;
+    data: Excerpt;
     onCreateFromSelection: (sourceId: string, selectedText: string) => void;
     onDelete: (id: string) => void;
-    onUpdate: (id: string, updates: Partial<Omit<Entry, 'id'>>) => void;
+    onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
 };
 
 function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: ExcerptRowProps) {
@@ -98,12 +98,12 @@ function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: Excerpt
                 <td className="relative px-4 py-3 align-top" dir="rtl">
                     <Textarea
                         className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"
-                        defaultValue={data.arabic ?? ''}
-                        key={`${data.id}/${data.lastUpdatedAt}/arabic`}
+                        defaultValue={data.nass ?? ''}
+                        key={`${data.id}/${data.lastUpdatedAt}/nass`}
                         onBlur={(e) => {
-                            if (e.target.value !== (data.arabic ?? '')) {
+                            if (e.target.value !== (data.nass ?? '')) {
                                 autoResize(e.currentTarget);
-                                onUpdate(data.id, { arabic: e.target.value });
+                                onUpdate(data.id, { nass: e.target.value });
                             }
                             // Hide button when textarea loses focus (with delay for button click)
                             setTimeout(() => setShowExtractButton(false), 200);
@@ -121,12 +121,12 @@ function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: Excerpt
                 <td className="px-4 py-3 align-top">
                     <Textarea
                         className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-gray-700 text-sm leading-relaxed shadow-none focus:outline-none focus:ring-0"
-                        defaultValue={data.translation ?? ''}
-                        key={`${data.id}/${data.lastUpdatedAt}/translation`}
+                        defaultValue={data.text ?? ''}
+                        key={`${data.id}/${data.lastUpdatedAt}/text`}
                         onBlur={(e) => {
-                            if (e.target.value !== (data.translation ?? '')) {
+                            if (e.target.value !== (data.text ?? '')) {
                                 autoResize(e.currentTarget);
-                                onUpdate(data.id, { translation: e.target.value });
+                                onUpdate(data.id, { text: e.target.value });
                             }
                         }}
                         placeholder="Translation..."

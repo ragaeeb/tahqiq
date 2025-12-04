@@ -73,42 +73,68 @@ export type Entry = {
 };
 
 /**
- * Represents a heading/section marker
+ * Set if this is a title/heading of a book or chapter
  */
-export type Heading = {
-    /** Starting page/reference */
-    from: number;
-    /** Unique identifier */
-    id: string;
-    /** Timestamp when last updated */
-    lastUpdatedAt?: number;
-    /** Arabic text */
+type ExcerptType = 'book' | 'chapter';
+
+type RawExcerpt = {
+    /** The Arabic text of the excerpt */
     nass: string;
-    /** Parent heading ID */
-    parent?: number;
-    /** English translation */
-    text?: string;
-    /** Translator identifier */
-    translator?: number;
+
+    /** The page number in the book that this text was extracted from. */
+    from: number;
+
+    /** Set if this is a title/heading of a book or chapter */
+    type?: ExcerptType;
+
+    /** The page number in the book that this text spans until (if different from the starting page) */
+    to?: number;
 };
 
+type IndexedExcerpt = RawExcerpt & {
+    /** Unique ID of this excerpt */
+    id: string;
+
+    /** Volume number for this page */
+    vol: number;
+
+    /** The page in the volume (ie: this value would be 55 if the excerpt is from page 55 in the 7th volume). This is useful for citations. */
+    vp: number;
+};
+
+enum AITranslator {
+    ClaudeSonnet45 = 891,
+    Gemini3 = 890,
+    OpenAIGpt51Thinking = 889,
+    OpenAIGpt5 = 879,
+    Grok41ThinkingBeta = 892,
+}
+
+type AITranslation = {
+    /** The translated nass. */
+    text: string;
+
+    /** The AI model that translated it. */
+    translator: AITranslator;
+
+    /** The last time this translation was updated. */
+    lastUpdatedAt: number;
+};
+
+export type Excerpt = IndexedExcerpt & AITranslation;
+
 /**
- * Represents a footnote
+ * Represents a heading/section marker
  */
-export type Footnote = {
-    /** Starting page/reference */
-    from: number;
+type IndexedHeading = Pick<RawExcerpt, 'nass' | 'from'> & {
     /** Unique identifier */
     id: string;
-    /** Timestamp when last updated */
-    lastUpdatedAt?: number;
-    /** Arabic text */
-    nass: string;
-    /** English translation */
-    text?: string;
-    /** Translator identifier */
-    translator?: number;
+
+    /** Parent heading ID */
+    parent?: string;
 };
+
+export type Heading = IndexedHeading & AITranslation;
 
 /**
  * Pattern matching options (excluding deprecated fields)
@@ -119,7 +145,7 @@ export type PatternOptions = {
     /** Minimum page number to consider */
     minPage?: number;
     /** Type of entry to create */
-    type?: number;
+    type?: ExcerptType;
 };
 
 /**
@@ -169,9 +195,9 @@ export type Excerpts = {
     /** Timestamp when created */
     createdAt?: number;
     /** All excerpt entries */
-    excerpts: Entry[];
+    excerpts: Excerpt[];
     /** All footnotes */
-    footnotes: Footnote[];
+    footnotes: Excerpt[];
     /** All headings/sections */
     headings: Heading[];
     /** Timestamp when last updated */
@@ -193,9 +219,9 @@ export type ExcerptsStateCore = {
     /** Creation timestamp */
     createdAt: Date;
     /** All excerpt entries */
-    excerpts: Entry[];
+    excerpts: Excerpt[];
     /** All footnotes */
-    footnotes: Footnote[];
+    footnotes: Excerpt[];
     /** All headings */
     headings: Heading[];
     /** Input filename */
@@ -248,7 +274,7 @@ export type ExcerptsActions = {
     /**
      * Updates a single excerpt
      */
-    updateExcerpt: (id: string, updates: Partial<Omit<Entry, 'id'>>) => void;
+    updateExcerpt: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
 
     /**
      * Creates a new excerpt from an existing one with selected Arabic text
@@ -258,7 +284,7 @@ export type ExcerptsActions = {
     /**
      * Updates a single footnote
      */
-    updateFootnote: (id: string, updates: Partial<Omit<Footnote, 'id'>>) => void;
+    updateFootnote: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
 
     /**
      * Updates a single heading
