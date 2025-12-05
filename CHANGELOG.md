@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/ragaeeb/tahqiq/compare/v1.25.0...v1.26.0) (2025-12-05)
+
+
+### Features
+
+* **excerpts:** Add excerpts editor ([#98](https://github.com/ragaeeb/tahqiq/issues/98)) ([b0c7a01](https://github.com/ragaeeb/tahqiq/commit/b0c7a01cc58840211d6137003076e344165f5358))
+
 # [1.25.0](https://github.com/ragaeeb/tahqiq/compare/v1.24.0...v1.25.0) (2025-10-09)
 
 
