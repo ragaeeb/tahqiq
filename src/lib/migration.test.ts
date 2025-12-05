@@ -86,7 +86,7 @@ describe('migration', () => {
             expect(excerpt.from).toBe(10);
             expect(excerpt.to).toBe(12);
             expect(excerpt.translator).toBe(891);
-            expect(excerpt.lastUpdatedAt).toBe(1234567890);
+            expect(excerpt.lastUpdatedAt).toBe(1234567890 / 1000);
 
             // Check heading migration
             expect(result.headings).toHaveLength(1);
@@ -97,7 +97,7 @@ describe('migration', () => {
             expect(heading.from).toBe(10);
             expect(heading.parent).toBe('h0');
             expect(heading.translator).toBe(891);
-            expect(heading.lastUpdatedAt).toBe(1234567890);
+            expect(heading.lastUpdatedAt).toBe(1234567890 / 1000);
         });
 
         it('should migrate data without contractVersion', () => {

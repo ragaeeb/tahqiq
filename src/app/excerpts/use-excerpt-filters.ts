@@ -93,12 +93,10 @@ export function useExcerptFilters() {
         const filtersChanged = prevFiltersRef.current !== filtersKey;
 
         if (!filtersChanged && !isDataLoadEvent) {
-            console.log('[useExcerptFilters] Skipping - no changes');
             return;
         }
 
         if (!hasFilters) {
-            console.log('[useExcerptFilters] No filters to apply');
             prevFiltersRef.current = filtersKey;
             filterExcerptsByIds(undefined);
             filterHeadingsByIds(undefined);
@@ -107,16 +105,9 @@ export function useExcerptFilters() {
         }
 
         if (!hasData) {
-            console.log('[useExcerptFilters] No data yet, waiting...');
             return;
         }
 
-        console.log(
-            '[useExcerptFilters] Applying filters:',
-            filtersKey,
-            'reason:',
-            filtersChanged ? 'filtersChanged' : 'dataLoaded',
-        );
         prevFiltersRef.current = filtersKey;
 
         // Clear other tab filters
@@ -147,7 +138,6 @@ export function useExcerptFilters() {
                 }
                 return true;
             });
-            console.log('[useExcerptFilters] Filtered excerpts:', filtered.length);
             filterExcerptsByIds(filtered.map((e) => e.id));
         } else if (activeTab === 'headings') {
             const filtered = allHeadings.filter((h) => {
@@ -169,7 +159,7 @@ export function useExcerptFilters() {
         } else if (activeTab === 'footnotes') {
             const filtered = allFootnotes.filter((f) => {
                 if (filters.page) {
-                    const pageNum = Number.parseInt(filters.page);
+                    const pageNum = Number.parseInt(filters.page, 10);
                     if (!Number.isNaN(pageNum) && f.from !== pageNum) {
                         return false;
                     }

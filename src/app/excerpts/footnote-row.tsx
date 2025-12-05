@@ -28,7 +28,7 @@ function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {
                     key={`${data.id}/${data.lastUpdatedAt}/from`}
                     min={1}
                     onBlur={(e) => {
-                        const value = Number.parseInt(e.target.value);
+                        const value = Number.parseInt(e.target.value, 10);
                         if (!Number.isNaN(value) && value !== data.from) {
                             onUpdate(data.id, { from: value });
                         }

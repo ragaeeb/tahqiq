@@ -1,11 +1,13 @@
 'use client';
 
+import { ReplaceIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 
 import SubmittableInput from '@/components/submittable-input';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 
-import { SearchReplaceDialog } from './search-replace-dialog';
+import { SearchReplaceDialogContent } from './search-replace-dialog';
 import type { FilterField } from './use-excerpt-filters';
 
 type ExcerptsTableHeaderProps = {
@@ -16,6 +18,35 @@ type ExcerptsTableHeaderProps = {
     headings: Heading[];
     onFilterChange: (field: FilterField, value: string) => void;
 };
+
+/**
+ * Gets the currently selected text from the window
+ */
+function getSelectedText(): string {
+    return window.getSelection()?.toString().trim() || '';
+}
+
+/**
+ * Search/Replace button that captures selected text when opened
+ */
+function SearchReplaceButton({ activeTab }: { activeTab: string }) {
+    return (
+        <DialogTriggerButton
+            onClick={() => {
+                record('OpenSearchReplace');
+            }}
+            renderContent={() => {
+                const selectedText = getSelectedText();
+                return <SearchReplaceDialogContent activeTab={activeTab} initialSearchPattern={selectedText} />;
+            }}
+            size="sm"
+            title="Search and Replace"
+            variant="outline"
+        >
+            <ReplaceIcon className="h-4 w-4" />
+        </DialogTriggerButton>
+    );
+}
 
 export default function ExcerptsTableHeader({
     activeTab,
@@ -66,7 +97,7 @@ export default function ExcerptsTableHeader({
                     />
                 </th>
                 <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                    <SearchReplaceDialog activeTab={activeTab} />
+                    <SearchReplaceButton activeTab={activeTab} />
                 </th>
             </tr>
         );
@@ -113,7 +144,7 @@ export default function ExcerptsTableHeader({
                     />
                 </th>
                 <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                    <SearchReplaceDialog activeTab={activeTab} />
+                    <SearchReplaceButton activeTab={activeTab} />
                 </th>
             </tr>
         );
@@ -159,7 +190,7 @@ export default function ExcerptsTableHeader({
                 />
             </th>
             <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                <SearchReplaceDialog activeTab={activeTab} />
+                <SearchReplaceButton activeTab={activeTab} />
             </th>
         </tr>
     );

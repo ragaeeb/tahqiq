@@ -1,19 +1,17 @@
 'use client';
 
-import { AlertCircle, CheckCircle2, ReplaceIcon, SearchIcon } from 'lucide-react';
+import { AlertCircle, CheckCircle2, SearchIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
-    Dialog,
     DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +26,7 @@ type TargetScope = 'excerpts' | 'headings' | 'footnotes';
 
 type MatchResult = { id: string; original: string; replaced: string; field: TargetField };
 
-type SearchReplaceDialogProps = { activeTab: string };
+type SearchReplaceDialogContentProps = { activeTab: string; initialSearchPattern?: string };
 
 /**
  * Builds a RegExp from a search pattern string.
@@ -156,13 +154,13 @@ function TokenReference({ onInsert }: { onInsert: (token: string) => void }) {
 }
 
 /**
- * Search and Replace dialog for excerpts, headings, and footnotes.
+ * Search and Replace dialog content for excerpts, headings, and footnotes.
+ * This is the content component - use with DialogTriggerButton for lazy loading.
  */
-export function SearchReplaceDialog({ activeTab }: SearchReplaceDialogProps) {
-    const [searchPattern, setSearchPattern] = useState('');
+export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '' }: SearchReplaceDialogContentProps) {
+    const [searchPattern, setSearchPattern] = useState(initialSearchPattern);
     const [replacePattern, setReplacePattern] = useState('');
     const [targetField, setTargetField] = useState<TargetField>('nass');
-    const [isOpen, setIsOpen] = useState(false);
     const [appliedCount, setAppliedCount] = useState<number | null>(null);
 
     const excerpts = useExcerptsStore((state) => state.excerpts);
@@ -234,134 +232,120 @@ export function SearchReplaceDialog({ activeTab }: SearchReplaceDialogProps) {
         updateFootnote,
     ]);
 
-    const handleOpenChange = (open: boolean) => {
-        setIsOpen(open);
-        if (!open) {
-            setAppliedCount(null);
-        }
-    };
-
     const handleInsertToken = useCallback((token: string) => {
         setSearchPattern((prev) => `${prev}${token}`);
     }, []);
 
     return (
-        <Dialog onOpenChange={handleOpenChange} open={isOpen}>
-            <DialogTrigger asChild>
-                <Button size="sm" title="Search and Replace" variant="outline">
-                    <ReplaceIcon className="h-4 w-4" />
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="flex max-h-[85vh] w-[90vw] max-w-4xl flex-col">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <SearchIcon className="h-5 w-5" />
-                        Search & Replace
-                    </DialogTitle>
-                    <DialogDescription>
-                        Search using text, regex (/pattern/g), or tokens ({'{{raqms}}'}). Replace with text or capture
-                        groups ($1, $2).
-                    </DialogDescription>
-                </DialogHeader>
+        <DialogContent className="flex max-h-[85vh] w-[90vw] max-w-4xl flex-col">
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                    <SearchIcon className="h-5 w-5" />
+                    Search & Replace
+                </DialogTitle>
+                <DialogDescription>
+                    Search using text, regex (/pattern/g), or tokens ({'{{raqms}}'}). Replace with text or capture
+                    groups ($1, $2).
+                </DialogDescription>
+            </DialogHeader>
 
-                <div className="grid gap-4 py-4">
-                    {/* Target Field Selection */}
-                    <div className="flex items-center gap-4">
-                        <Label className="w-20">Field:</Label>
-                        <RadioGroup
-                            className="flex gap-4"
-                            onValueChange={(v: string) => setTargetField(v as TargetField)}
-                            value={targetField}
-                        >
-                            <div className="flex items-center gap-2">
-                                <RadioGroupItem id="nass" value="nass" />
-                                <Label htmlFor="nass">Arabic (nass)</Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <RadioGroupItem id="text" value="text" />
-                                <Label htmlFor="text">Translation (text)</Label>
-                            </div>
-                        </RadioGroup>
-                    </div>
-
-                    {/* Search Pattern */}
-                    <div className="flex items-center gap-4">
-                        <Label className="w-20" htmlFor="search">
-                            Find:
-                        </Label>
-                        <Input
-                            className="flex-1 font-mono"
-                            dir="auto"
-                            id="search"
-                            onChange={(e) => setSearchPattern(e.target.value)}
-                            placeholder="Text, /regex/g, or {{raqms}}"
-                            value={searchPattern}
-                        />
-                    </div>
-
-                    {/* Replace Pattern */}
-                    <div className="flex items-center gap-4">
-                        <Label className="w-20" htmlFor="replace">
-                            Replace:
-                        </Label>
-                        <Input
-                            className="flex-1 font-mono"
-                            dir="auto"
-                            id="replace"
-                            onChange={(e) => setReplacePattern(e.target.value)}
-                            placeholder="Replacement text or $1, $2..."
-                            value={replacePattern}
-                        />
-                    </div>
-
-                    <TokenReference onInsert={handleInsertToken} />
-
-                    {/* Preview Section */}
-                    {searchPattern && (
-                        <div className="rounded-lg border">
-                            <div className="flex items-center justify-between border-b bg-muted/50 px-3 py-2">
-                                <span className="font-medium text-sm">
-                                    Preview ({matches.length} match{matches.length !== 1 ? 'es' : ''})
-                                </span>
-                                {matches.length > 100 && (
-                                    <span className="text-muted-foreground text-xs">Showing first 100</span>
-                                )}
-                            </div>
-                            <ScrollArea className="h-[200px]">
-                                {matches.length === 0 ? (
-                                    <div className="flex items-center justify-center gap-2 p-4 text-muted-foreground">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <span>No matches found</span>
-                                    </div>
-                                ) : (
-                                    <div className="divide-y">
-                                        {matches.map((match) => (
-                                            <MatchPreviewItem key={match.id} match={match} />
-                                        ))}
-                                    </div>
-                                )}
-                            </ScrollArea>
+            <div className="grid gap-4 py-4">
+                {/* Target Field Selection */}
+                <div className="flex items-center gap-4">
+                    <Label className="w-20">Field:</Label>
+                    <RadioGroup
+                        className="flex gap-4"
+                        onValueChange={(v: string) => setTargetField(v as TargetField)}
+                        value={targetField}
+                    >
+                        <div className="flex items-center gap-2">
+                            <RadioGroupItem id="nass" value="nass" />
+                            <Label htmlFor="nass">Arabic (nass)</Label>
                         </div>
-                    )}
-
-                    {/* Success message */}
-                    {appliedCount !== null && (
-                        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-green-700">
-                            <CheckCircle2 className="h-4 w-4" />
-                            <span>Successfully replaced in {appliedCount} items</span>
+                        <div className="flex items-center gap-2">
+                            <RadioGroupItem id="text" value="text" />
+                            <Label htmlFor="text">Translation (text)</Label>
                         </div>
-                    )}
+                    </RadioGroup>
                 </div>
 
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button disabled={matches.length === 0} onClick={handleApply}>
-                        Replace All ({matches.length})
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                {/* Search Pattern */}
+                <div className="flex items-center gap-4">
+                    <Label className="w-20" htmlFor="search">
+                        Find:
+                    </Label>
+                    <Input
+                        className="flex-1 font-mono"
+                        dir="auto"
+                        id="search"
+                        onChange={(e) => setSearchPattern(e.target.value)}
+                        placeholder="Text, /regex/g, or {{raqms}}"
+                        value={searchPattern}
+                    />
+                </div>
+
+                {/* Replace Pattern */}
+                <div className="flex items-center gap-4">
+                    <Label className="w-20" htmlFor="replace">
+                        Replace:
+                    </Label>
+                    <Input
+                        className="flex-1 font-mono"
+                        dir="auto"
+                        id="replace"
+                        onChange={(e) => setReplacePattern(e.target.value)}
+                        placeholder="Replacement text or $1, $2..."
+                        value={replacePattern}
+                    />
+                </div>
+
+                <TokenReference onInsert={handleInsertToken} />
+
+                {/* Preview Section */}
+                {searchPattern && (
+                    <div className="rounded-lg border">
+                        <div className="flex items-center justify-between border-b bg-muted/50 px-3 py-2">
+                            <span className="font-medium text-sm">
+                                Preview ({matches.length} match{matches.length !== 1 ? 'es' : ''})
+                            </span>
+                            {matches.length > 100 && (
+                                <span className="text-muted-foreground text-xs">Showing first 100</span>
+                            )}
+                        </div>
+                        <ScrollArea className="h-[200px]">
+                            {matches.length === 0 ? (
+                                <div className="flex items-center justify-center gap-2 p-4 text-muted-foreground">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <span>No matches found</span>
+                                </div>
+                            ) : (
+                                <div className="divide-y">
+                                    {matches.map((match) => (
+                                        <MatchPreviewItem key={match.id} match={match} />
+                                    ))}
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </div>
+                )}
+
+                {/* Success message */}
+                {appliedCount !== null && (
+                    <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-green-700">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>Successfully replaced in {appliedCount} items</span>
+                    </div>
+                )}
+            </div>
+
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button disabled={matches.length === 0} onClick={handleApply}>
+                    Replace All ({matches.length})
+                </Button>
+            </DialogFooter>
+        </DialogContent>
     );
 }
