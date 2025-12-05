@@ -1,0 +1,94 @@
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+import * as actions from './actions';
+import type { ExcerptsState } from './types';
+
+/**
+ * Creates a Zustand store for managing excerpts state.
+ * Uses Immer for immutable updates which provides better DX and performance.
+ *
+ * @returns A Zustand store with excerpts state and actions
+ */
+export const useExcerptsStore = create<ExcerptsState>()(
+    immer((set) => ({
+        // Spread initial state values
+        ...actions.INITIAL_STATE,
+
+        applyFootnoteFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyFootnoteFormatting(state, formatFn);
+            }),
+
+        applyHeadingFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyHeadingFormatting(state, formatFn);
+            }),
+
+        applyTranslationFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyTranslationFormatting(state, formatFn);
+            }),
+
+        createExcerptFromExisting: (sourceId, newArabicText) =>
+            set((state) => {
+                actions.createExcerptFromExisting(state, sourceId, newArabicText);
+            }),
+
+        deleteExcerpts: (ids) =>
+            set((state) => {
+                actions.deleteExcerpts(state, ids);
+            }),
+
+        deleteFootnotes: (ids) =>
+            set((state) => {
+                actions.deleteFootnotes(state, ids);
+            }),
+
+        deleteHeadings: (ids) =>
+            set((state) => {
+                actions.deleteHeadings(state, ids);
+            }),
+
+        filterExcerptsByIds: (ids) =>
+            set((state) => {
+                actions.filterExcerptsByIds(state, ids);
+            }),
+
+        filterFootnotesByIds: (ids) =>
+            set((state) => {
+                actions.filterFootnotesByIds(state, ids);
+            }),
+
+        filterHeadingsByIds: (ids) =>
+            set((state) => {
+                actions.filterHeadingsByIds(state, ids);
+            }),
+
+        init: (data, fileName) =>
+            set((state) => {
+                const newState = actions.initStore(data, fileName);
+                Object.assign(state, newState);
+            }),
+
+        reset: () =>
+            set((state) => {
+                const newState = actions.resetStore();
+                Object.assign(state, newState);
+            }),
+
+        updateExcerpt: (id, updates) =>
+            set((state) => {
+                actions.updateExcerpt(state, id, updates);
+            }),
+
+        updateFootnote: (id, updates) =>
+            set((state) => {
+                actions.updateFootnote(state, id, updates);
+            }),
+
+        updateHeading: (id, updates) =>
+            set((state) => {
+                actions.updateHeading(state, id, updates);
+            }),
+    })),
+);

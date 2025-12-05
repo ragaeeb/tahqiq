@@ -1,12 +1,8 @@
 import { estimateSegmentFromToken } from 'paragrafs';
-
-import type { Transcript, TranscriptSeries, TranscriptStateCore } from '@/stores/transcriptStore/types';
-
 import packageJson from '@/../package.json';
-
-import type { BookTranscriptFormat, PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
-
+import type { Transcript, TranscriptSeries, TranscriptStateCore } from '@/stores/transcriptStore/types';
 import { LatestContractVersion } from './constants';
+import type { BookTranscriptFormat, PartsFormat, PartsWordsFormat, TranscriptSeriesV0 } from './legacyFormats';
 import { roundToDecimal } from './time';
 
 export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
@@ -17,10 +13,7 @@ export const adaptLegacyTranscripts = (input: any): TranscriptSeries => {
             ...data,
             transcripts: data.transcripts.map((t) => ({
                 ...t,
-                segments: t.segments.map((s) => ({
-                    ...s,
-                    tokens: s.tokens || estimateSegmentFromToken(s).tokens,
-                })),
+                segments: t.segments.map((s) => ({ ...s, tokens: s.tokens || estimateSegmentFromToken(s).tokens })),
             })),
         };
     }

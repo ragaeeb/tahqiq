@@ -4,10 +4,10 @@ import { PaperclipIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useEffect, useMemo } from 'react';
 
+import { DataGate } from '@/components/data-gate';
 import { JsonBrowseButton } from '@/components/json-browse-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
-import VersionFooter from '@/components/version-footer';
 import { loadCompressed, loadFiles } from '@/lib/io';
 import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/transcriptStore/selectors';
@@ -21,8 +21,6 @@ import UrlField from './url-field';
 
 /**
  * Displays and manages transcript segments with selection and file import capabilities.
- *
- * Renders a transcript viewer that allows users to import transcript files, select transcript parts, and interact with individual segments. If no transcript is loaded, prompts the user to * upload a JSON transcript file.
  */
 export default function Transcript() {
     const isInitialized = useTranscriptStore((state) => state.selectedPart > 0);
@@ -48,32 +46,24 @@ export default function Transcript() {
         });
     }, [initTranscripts]);
 
-    if (!isInitialized) {
-        return (
-            <>
-                <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-                    <div className="flex flex-col w-full max-w">
-                        <JsonDropZone
-                            onFiles={(fileNameToData) => {
-                                const fileName = Object.keys(fileNameToData)[0];
-                                record('LoadTranscriptFromFile', fileName);
-
-                                document.title = fileName;
-                                initTranscripts(adaptLegacyTranscripts(fileNameToData[fileName]));
-                            }}
-                        />
-                    </div>
-                </div>
-                <VersionFooter />
-            </>
-        );
-    }
-
     return (
-        <>
-            <div className="min-h-screen flex flex-col p-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-                <div className="flex flex-col w-full max-w">
-                    <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+        <DataGate
+            dropZone={
+                <JsonDropZone
+                    onFiles={(fileNameToData) => {
+                        const fileName = Object.keys(fileNameToData)[0];
+                        record('LoadTranscriptFromFile', fileName);
+
+                        document.title = fileName;
+                        initTranscripts(adaptLegacyTranscripts(fileNameToData[fileName]));
+                    }}
+                />
+            }
+            hasData={isInitialized}
+        >
+            <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
+                <div className="max-w flex w-full flex-col">
+                    <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-2">
                         <PartSelector />
                         <JsonBrowseButton
                             isMulti
@@ -97,17 +87,17 @@ export default function Transcript() {
                         <TranscriptToolbar />
                     </div>
 
-                    <div className="overflow-auto border rounded">
+                    <div className="overflow-auto rounded border">
                         <table className="w-full table-auto divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-2 py-1 w-8 text-left">
+                                    <th className="w-8 px-2 py-1 text-left">
                                         <Checkbox
                                             aria-label="Select all segments"
                                             onCheckedChange={(isSelected) => selectAllSegments(Boolean(isSelected))}
                                         />
                                     </th>
-                                    <th aria-label="Timestamp" className="px-2 py-1 w-36 text-left">
+                                    <th aria-label="Timestamp" className="w-36 px-2 py-1 text-left">
                                         Time:
                                     </th>
                                     <th aria-label="Text" className="px-4 py-1 text-right">
@@ -127,7 +117,6 @@ export default function Transcript() {
                     </div>
                 </div>
             </div>
-            <VersionFooter />
-        </>
+        </DataGate>
     );
 }
