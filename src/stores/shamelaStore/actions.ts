@@ -1,4 +1,4 @@
-import { sanitizePageContent, splitPageBodyFromFooter } from 'shamela/content';
+import { removeArabicNumericPageMarkers, sanitizePageContent, splitPageBodyFromFooter } from 'shamela/content';
 import type { ShamelaBook, ShamelaPage, ShamelaStateCore, ShamelaTitle } from './types';
 
 /**
@@ -121,4 +121,24 @@ export const filterPagesByIds = (state: ShamelaStateCore, ids?: number[]): void 
  */
 export const filterTitlesByIds = (state: ShamelaStateCore, ids?: number[]): void => {
     state.filteredTitleIds = ids;
+};
+
+/**
+ * Removes Arabic numeric page markers from all pages in a single batch update
+ */
+export const removePageMarkers = (state: ShamelaStateCore): void => {
+    for (const page of state.pages) {
+        const cleanedBody = removeArabicNumericPageMarkers(page.body);
+        if (cleanedBody !== page.body) {
+            page.body = cleanedBody;
+            // Reconstruct content from body and footnote
+            let content = cleanedBody;
+            if (page.footnote) {
+                content += `\n_________\n${page.footnote}`;
+            }
+            page.content = content;
+            page.lastUpdatedAt = Math.floor(Date.now() / 1000);
+        }
+    }
+    state.lastUpdatedAt = new Date();
 };

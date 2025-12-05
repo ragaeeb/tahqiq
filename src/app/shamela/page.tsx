@@ -1,8 +1,8 @@
 'use client';
 
-import { DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
@@ -10,10 +10,12 @@ import '@/lib/analytics';
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
+import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
+import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
@@ -40,18 +42,26 @@ function ShamelaPageContent() {
     const shamelaId = useShamelaStore((state) => state.shamelaId);
     const updatePage = useShamelaStore((state) => state.updatePage);
     const updateTitle = useShamelaStore((state) => state.updateTitle);
+    const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
+
+    const hydrateSettings = useSettingsStore((state) => state.hydrate);
+    const shamelaApiKey = useSettingsStore((state) => state.shamelaApiKey);
+    const shamelaBookEndpoint = useSettingsStore((state) => state.shamelaBookEndpoint);
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const { activeTab, filters, setActiveTab, setFilter } = useShamelaFilters();
     const hasData = pagesCount > 0 || titlesCount > 0;
 
     useEffect(() => {
+        hydrateSettings();
         loadCompressed('shamela').then((data) => {
             if (data) {
                 record('RestoreShamelaFromSession');
                 init(data as ShamelaBook);
             }
         });
-    }, [init]);
+    }, [init, hydrateSettings]);
 
     const handleSave = useCallback(() => {
         record('SaveShamela');
@@ -106,6 +116,12 @@ function ShamelaPageContent() {
         reset();
     }, [reset]);
 
+    const handleRemovePageMarkers = useCallback(() => {
+        record('RemovePageMarkers');
+        removePageMarkers();
+        toast.success('Removed Arabic page markers from all pages');
+    }, [removePageMarkers]);
+
     const handleTabChange = useCallback(
         (tab: string) => {
             setActiveTab(tab as 'pages' | 'titles');
@@ -113,25 +129,88 @@ function ShamelaPageContent() {
         [setActiveTab],
     );
 
+    const handleUrlSubmit = useCallback(
+        async (url: string) => {
+            // Parse book ID from URL like https://shamela.ws/book/1681
+            const match = url.match(/shamela\.ws\/book\/(\d+)/);
+            if (!match) {
+                toast.error('Invalid Shamela URL. Expected format: https://shamela.ws/book/1681');
+                return;
+            }
+
+            const bookId = parseInt(match[1], 10);
+            setIsLoading(true);
+            record('DownloadShamelaBook', bookId.toString());
+
+            try {
+                const response = await fetch(`/api/shamela?bookId=${bookId}`, {
+                    headers: { Authorization: `Bearer ${shamelaApiKey}`, 'X-Shamela-Endpoint': shamelaBookEndpoint },
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to download book');
+                }
+
+                const book: ShamelaBook = await response.json();
+                init(book, `shamela-${bookId}.json`);
+                toast.success(`Downloaded book ${bookId} from Shamela`);
+            } catch (error) {
+                console.error('Failed to download book:', error);
+                toast.error(error instanceof Error ? error.message : 'Failed to download book');
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [init, shamelaApiKey, shamelaBookEndpoint],
+    );
+
+    const canDownloadFromShamela = shamelaApiKey && shamelaBookEndpoint;
+
     return (
         <DataGate
             dropZone={
-                <JsonDropZone
-                    description="Drag and drop a Shamela book JSON file"
-                    maxFiles={1}
-                    onFiles={(fileNameToData) => {
-                        const keys = Object.keys(fileNameToData);
-                        const data = fileNameToData[keys[0]];
+                <div className="flex flex-col gap-6">
+                    {canDownloadFromShamela && (
+                        <>
+                            <div className="space-y-2">
+                                <p className="font-medium text-gray-700 text-sm">Download from Shamela URL</p>
+                                <SubmittableInput
+                                    className="w-full"
+                                    disabled={isLoading}
+                                    name="shamelaUrl"
+                                    onSubmit={handleUrlSubmit}
+                                    placeholder="Paste shamela.ws URL (e.g. https://shamela.ws/book/1681)"
+                                />
+                                {isLoading && <p className="text-gray-500 text-sm">Downloading book...</p>}
+                            </div>
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-white px-2 text-gray-500">Or</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    <JsonDropZone
+                        description="Drag and drop a Shamela book JSON file"
+                        maxFiles={1}
+                        onFiles={(fileNameToData) => {
+                            const keys = Object.keys(fileNameToData);
+                            const data = fileNameToData[keys[0]];
 
-                        // Validate basic structure before casting
-                        if (data && typeof data === 'object' && 'pages' in data && 'majorRelease' in data) {
-                            record('LoadShamela', keys[0]);
-                            init(data as unknown as ShamelaBook, keys[0]);
-                        } else {
-                            toast.error('Invalid Shamela book format');
-                        }
-                    }}
-                />
+                            // Validate basic structure before casting
+                            if (data && typeof data === 'object' && 'pages' in data && 'majorRelease' in data) {
+                                record('LoadShamela', keys[0]);
+                                init(data as unknown as ShamelaBook, keys[0]);
+                            } else {
+                                toast.error('Invalid Shamela book format');
+                            }
+                        }}
+                    />
+                </div>
             }
             hasData={hasData}
         >
@@ -146,6 +225,9 @@ function ShamelaPageContent() {
                             </span>
                         </div>
                         <div className="space-x-2">
+                            <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
+                                <EraserIcon />
+                            </Button>
                             <Button className="bg-emerald-500" onClick={handleSave}>
                                 <SaveIcon />
                             </Button>

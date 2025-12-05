@@ -38,6 +38,11 @@ export const useShamelaStore = create<ShamelaState>()(
                 Object.assign(state, newState);
             }),
 
+        removePageMarkers: () =>
+            set((state) => {
+                actions.removePageMarkers(state);
+            }),
+
         reset: () =>
             set((state) => {
                 const newState = actions.resetStore();

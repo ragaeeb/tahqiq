@@ -62,6 +62,11 @@ export type ShamelaActions = {
     init: (data: ShamelaBook, fileName?: string) => void;
 
     /**
+     * Removes Arabic numeric page markers from all page content
+     */
+    removePageMarkers: () => void;
+
+    /**
      * Resets the store to initial empty state
      */
     reset: () => void;
