@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { Rule } from 'trie-rules';
 
-const HOST = 'pastebin.com/raw';
-const RULES_ID = 'Bb3SjXtg';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
@@ -41,7 +39,7 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
  */
 export async function GET() {
     try {
-        const response = await fetchWithRetry(`https://${HOST}/${RULES_ID}`);
+        const response = await fetchWithRetry(process.env.RULES_ENDPOINT!);
         const rawRules = (await response.json()) as Rule[];
 
         if (!Array.isArray(rawRules) || rawRules.length === 0) {
