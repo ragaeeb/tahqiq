@@ -11,6 +11,9 @@ import type { ExcerptsState } from './types';
  */
 export const useExcerptsStore = create<ExcerptsState>()(
     immer((set) => ({
+        // Spread initial state values
+        ...actions.INITIAL_STATE,
+
         applyFootnoteFormatting: (formatFn) =>
             set((state) => {
                 actions.applyFootnoteFormatting(state, formatFn);
@@ -25,9 +28,6 @@ export const useExcerptsStore = create<ExcerptsState>()(
             set((state) => {
                 actions.applyTranslationFormatting(state, formatFn);
             }),
-        collection: undefined,
-        contractVersion: undefined,
-        createdAt: new Date(),
 
         createExcerptFromExisting: (sourceId, newArabicText) =>
             set((state) => {
@@ -48,7 +48,6 @@ export const useExcerptsStore = create<ExcerptsState>()(
             set((state) => {
                 actions.deleteHeadings(state, ids);
             }),
-        excerpts: [],
 
         filterExcerptsByIds: (ids) =>
             set((state) => {
@@ -64,36 +63,17 @@ export const useExcerptsStore = create<ExcerptsState>()(
             set((state) => {
                 actions.filterHeadingsByIds(state, ids);
             }),
-        footnotes: [],
-        headings: [],
 
         init: (data, fileName) =>
             set((state) => {
                 const newState = actions.initStore(data, fileName);
                 Object.assign(state, newState);
             }),
-        inputFileName: undefined,
-        lastUpdatedAt: undefined,
-        options: undefined,
-        postProcessingApps: [],
-        prompt: undefined,
 
         reset: () =>
             set((state) => {
-                state.collection = undefined;
-                state.contractVersion = undefined;
-                state.createdAt = new Date();
-                state.excerpts = [];
-                state.filteredExcerptIds = undefined;
-                state.filteredFootnoteIds = undefined;
-                state.filteredHeadingIds = undefined;
-                state.footnotes = [];
-                state.headings = [];
-                state.inputFileName = undefined;
-                state.lastUpdatedAt = undefined;
-                state.options = undefined;
-                state.postProcessingApps = [];
-                state.prompt = undefined;
+                const newState = actions.resetStore();
+                Object.assign(state, newState);
             }),
 
         updateExcerpt: (id, updates) =>

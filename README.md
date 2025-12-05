@@ -190,7 +190,7 @@ RULES_ENDPOINT=your_rules_endpoint_url
 
 ### Project Structure
 
-```
+```text
 tahqiq/
 ├── src/
 │   ├── app/                # Next.js App Router pages

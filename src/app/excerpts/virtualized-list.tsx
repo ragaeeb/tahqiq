@@ -108,9 +108,12 @@ function VirtualizedList<T>({ data, estimateSize, getKey, header, renderRow }: V
     const scrollTopRef = useRef(0);
     const prevDataVersionRef = useRef<string>('');
 
-    // Create a stable key based on item IDs - changes when items are added/removed/reordered
+    // Create a stable key based on structural changes (add/remove) - not all keys
+    // This avoids unnecessary remounts for content-only updates
     const dataVersion = useMemo(() => {
-        return data.map((item, index) => getKey(item, index)).join('|');
+        const first = data[0] ? getKey(data[0], 0) : '';
+        const last = data.at(-1) ? getKey(data.at(-1)!, data.length - 1) : '';
+        return `${data.length}-${first}-${last}`;
     }, [data, getKey]);
 
     // Capture scroll position before component remounts due to data change

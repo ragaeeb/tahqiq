@@ -29,9 +29,26 @@ export function isTemplatePattern(query: string): boolean {
 }
 
 /**
+ * Checks if a regex pattern is potentially unsafe (ReDoS risk).
+ * Detects patterns with nested quantifiers or catastrophic backtracking constructs.
+ * @returns true if pattern appears unsafe
+ */
+function isUnsafePattern(pattern: string): boolean {
+    // Detect nested quantifiers like (a+)+ or (a*)*
+    const nestedQuantifiers = /(\([^)]*[+*?][^)]*\))[+*?]|\([^)]*([+*?])[^)]*\2/;
+    // Detect overlapping alternations with quantifiers
+    const overlappingAlternations = /\([^)]*\|[^)]*\)[+*]/;
+    // Detect excessive repetition
+    const excessiveRepetition = /\{[0-9]{3,},?\}/;
+
+    return nestedQuantifiers.test(pattern) || overlappingAlternations.test(pattern) || excessiveRepetition.test(pattern);
+}
+
+/**
  * Parses regex string into RegExp object.
  * Handles Unicode patterns like /^[\u0660-\u0669]+/
- * @returns RegExp if valid, null if invalid
+ * Includes ReDoS protection by rejecting unsafe patterns.
+ * @returns RegExp if valid and safe, null if invalid or unsafe
  */
 export function parseRegex(query: string): RegExp | null {
     const match = query.match(REGEX_PATTERN);
@@ -40,6 +57,12 @@ export function parseRegex(query: string): RegExp | null {
     }
 
     const [, pattern, flags] = match;
+
+    // Check for potentially unsafe patterns (ReDoS risk)
+    if (isUnsafePattern(pattern)) {
+        return null;
+    }
+
     // Add unicode flag if not present for proper Arabic character handling
     const finalFlags = flags.includes('u') ? flags : `${flags}u`;
 
@@ -102,5 +125,5 @@ export function createMatcher(query: string): TextMatcher {
     }
 
     // Fallback to literal includes
-    return (text) => text != null && text.includes?.(query);
+    return (text) => text != null && text.includes(query);
 }

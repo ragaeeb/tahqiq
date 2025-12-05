@@ -26,7 +26,7 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 
 ### Directory Structure
 
-```
+```text
 src/
 ├── app/                    # Next.js App Router pages and components
 │   ├── book/               # Book viewing and translation dialogs

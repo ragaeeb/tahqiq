@@ -2,12 +2,40 @@ import { adaptExcerptsToLatest } from '@/lib/migration';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
 /**
+ * Returns the current Unix timestamp in seconds.
+ * Used for lastUpdatedAt fields which track time in seconds (not milliseconds).
+ */
+const nowInSeconds = () => Math.floor(Date.now() / 1000);
+
+/**
+ * Initial state for the excerpts store.
+ * Used by both initStore and reset to ensure consistency.
+ */
+export const INITIAL_STATE: ExcerptsStateCore = {
+    collection: undefined,
+    contractVersion: undefined,
+    createdAt: new Date(),
+    excerpts: [],
+    filteredExcerptIds: undefined,
+    filteredFootnoteIds: undefined,
+    filteredHeadingIds: undefined,
+    footnotes: [],
+    headings: [],
+    inputFileName: undefined,
+    lastUpdatedAt: undefined,
+    options: undefined,
+    postProcessingApps: [],
+    prompt: undefined,
+};
+
+/**
  * Initializes the store from Excerpts data, migrating if necessary
  */
 export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore => {
     const migrated = adaptExcerptsToLatest(data);
 
     return {
+        ...INITIAL_STATE,
         collection: migrated.collection,
         contractVersion: migrated.contractVersion,
         createdAt: migrated.createdAt ? new Date(migrated.createdAt) : new Date(),
@@ -17,10 +45,17 @@ export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore 
         inputFileName: fileName,
         lastUpdatedAt: migrated.lastUpdatedAt ? new Date(migrated.lastUpdatedAt) : undefined,
         options: migrated.options,
-        postProcessingApps: [],
         prompt: migrated.prompt,
     };
 };
+
+/**
+ * Resets the store to initial state
+ */
+export const resetStore = (): ExcerptsStateCore => ({
+    ...INITIAL_STATE,
+    createdAt: new Date(),
+});
 
 /**
  * Updates a single excerpt
@@ -28,7 +63,7 @@ export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore 
 export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
     const index = state.excerpts.findIndex((e) => e.id === id);
     if (index !== -1) {
-        state.excerpts[index] = { ...state.excerpts[index], ...updates, lastUpdatedAt: Date.now() };
+        state.excerpts[index] = { ...state.excerpts[index], ...updates, lastUpdatedAt: nowInSeconds() };
         state.lastUpdatedAt = new Date();
     }
 };
@@ -46,7 +81,7 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
 
     const sourceExcerpt = state.excerpts[sourceIndex];
 
-    const lastUpdatedAt = Date.now() / 1000;
+    const lastUpdatedAt = nowInSeconds();
 
     // Remove the extracted text from the source excerpt
     const updatedSourceNass = (sourceExcerpt.nass || '').replace(newNassText, '').trim();
@@ -84,7 +119,7 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
 export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Heading, 'id'>>): void => {
     const index = state.headings.findIndex((h) => h.id === id);
     if (index !== -1) {
-        state.headings[index] = { ...state.headings[index], ...updates, lastUpdatedAt: Date.now() };
+        state.headings[index] = { ...state.headings[index], ...updates, lastUpdatedAt: nowInSeconds() };
         state.lastUpdatedAt = new Date();
     }
 };
@@ -95,7 +130,7 @@ export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Par
 export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
     const index = state.footnotes.findIndex((f) => f.id === id);
     if (index !== -1) {
-        state.footnotes[index] = { ...state.footnotes[index], ...updates, lastUpdatedAt: Date.now() };
+        state.footnotes[index] = { ...state.footnotes[index], ...updates, lastUpdatedAt: nowInSeconds() };
         state.lastUpdatedAt = new Date();
     }
 };
@@ -131,7 +166,7 @@ export const deleteFootnotes = (state: ExcerptsStateCore, ids: string[]): void =
  * Applies a formatting function to all excerpt translations in bulk
  */
 export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
-    const now = Date.now();
+    const now = nowInSeconds();
     state.excerpts = state.excerpts.map((excerpt) => {
         if (excerpt.text) {
             return { ...excerpt, lastUpdatedAt: now, text: formatFn(excerpt.text) };
@@ -145,7 +180,7 @@ export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (
  * Applies a formatting function to all heading translations in bulk
  */
 export const applyHeadingFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
-    const now = Date.now();
+    const now = nowInSeconds();
     state.headings = state.headings.map((heading) => {
         if (heading.text) {
             return { ...heading, lastUpdatedAt: now, text: formatFn(heading.text) };
@@ -159,7 +194,7 @@ export const applyHeadingFormatting = (state: ExcerptsStateCore, formatFn: (text
  * Applies a formatting function to all footnote translations in bulk
  */
 export const applyFootnoteFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
-    const now = Date.now();
+    const now = nowInSeconds();
     state.footnotes = state.footnotes.map((footnote) => {
         if (footnote.text) {
             return { ...footnote, lastUpdatedAt: now, text: formatFn(footnote.text) };

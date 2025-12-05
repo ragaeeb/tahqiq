@@ -134,8 +134,12 @@ function ExcerptsPageContent() {
         try {
             record('ApplyALALCFormatting', activeTab);
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
             // Download rules from API
-            const response = await fetch('/api/rules');
+            const response = await fetch('/api/rules', { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (!response.ok) {
                 throw new Error('Failed to fetch formatting rules');
             }

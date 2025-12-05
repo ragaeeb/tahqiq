@@ -117,7 +117,7 @@ type AITranslation = {
     /** The AI model that translated it. */
     translator: AITranslator;
 
-    /** The last time this translation was updated. */
+    /** The last time this translation was updated (Unix timestamp in seconds). */
     lastUpdatedAt: number;
 };
 

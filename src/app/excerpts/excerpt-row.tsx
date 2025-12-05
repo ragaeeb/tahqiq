@@ -35,7 +35,8 @@ function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: Excerpt
             // Position button fixed near the selection
             const rect = textarea.getBoundingClientRect();
 
-            setButtonPosition({ left: rect.left + 10, top: rect.top - 40 });
+            const top = Math.max(10, rect.top - 40);
+            setButtonPosition({ left: rect.left + 10, top });
 
             setShowExtractButton(true);
         } else {

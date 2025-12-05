@@ -39,10 +39,10 @@ function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {
             <td className="px-4 py-3 align-top" dir="rtl">
                 <Textarea
                     className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-base text-gray-700 leading-relaxed shadow-none focus:outline-none focus:ring-0"
-                    defaultValue={data.nass}
+                    defaultValue={data.nass ?? ''}
                     key={`${data.id}/${data.lastUpdatedAt}/nass`}
                     onBlur={(e) => {
-                        if (e.target.value !== data.nass) {
+                        if (e.target.value !== (data.nass ?? '')) {
                             autoResize(e.currentTarget);
                             onUpdate(data.id, { nass: e.target.value });
                         }

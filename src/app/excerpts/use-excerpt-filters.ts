@@ -4,10 +4,41 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { createMatcher } from '@/lib/search';
+import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 export type FilterField = 'nass' | 'text' | 'page';
 export type FilterScope = 'excerpts' | 'headings' | 'footnotes';
+
+type Filters = {
+    nass: string;
+    page: string;
+    text: string;
+};
+
+/**
+ * Filters items based on page, nass, and text criteria
+ */
+function filterItems<T extends Pick<Excerpt, 'from' | 'nass' | 'text'> | Pick<Heading, 'from' | 'nass' | 'text'>>(
+    items: T[],
+    filters: Filters,
+): T[] {
+    return items.filter((item) => {
+        if (filters.page) {
+            const pageNum = Number.parseInt(filters.page, 10);
+            if (!Number.isNaN(pageNum) && item.from !== pageNum) {
+                return false;
+            }
+        }
+        if (filters.nass && !createMatcher(filters.nass)(item.nass)) {
+            return false;
+        }
+        if (filters.text && !createMatcher(filters.text)(item.text)) {
+            return false;
+        }
+        return true;
+    });
+}
 
 /**
  * Hook to manage URL-based filtering for excerpts, headings, and footnotes.
@@ -123,55 +154,13 @@ export function useExcerptFilters() {
 
         // Apply filter only to active tab
         if (activeTab === 'excerpts') {
-            const filtered = allExcerpts.filter((e) => {
-                if (filters.page) {
-                    const pageNum = Number.parseInt(filters.page);
-                    if (!Number.isNaN(pageNum) && e.from !== pageNum) {
-                        return false;
-                    }
-                }
-                if (filters.nass && !createMatcher(filters.nass)(e.nass)) {
-                    return false;
-                }
-                if (filters.text && !createMatcher(filters.text)(e.text)) {
-                    return false;
-                }
-                return true;
-            });
+            const filtered = filterItems(allExcerpts, filters);
             filterExcerptsByIds(filtered.map((e) => e.id));
         } else if (activeTab === 'headings') {
-            const filtered = allHeadings.filter((h) => {
-                if (filters.page) {
-                    const pageNum = Number.parseInt(filters.page);
-                    if (!Number.isNaN(pageNum) && h.from !== pageNum) {
-                        return false;
-                    }
-                }
-                if (filters.nass && !createMatcher(filters.nass)(h.nass)) {
-                    return false;
-                }
-                if (filters.text && !createMatcher(filters.text)(h.text)) {
-                    return false;
-                }
-                return true;
-            });
+            const filtered = filterItems(allHeadings, filters);
             filterHeadingsByIds(filtered.map((h) => h.id));
         } else if (activeTab === 'footnotes') {
-            const filtered = allFootnotes.filter((f) => {
-                if (filters.page) {
-                    const pageNum = Number.parseInt(filters.page, 10);
-                    if (!Number.isNaN(pageNum) && f.from !== pageNum) {
-                        return false;
-                    }
-                }
-                if (filters.nass && !createMatcher(filters.nass)(f.nass)) {
-                    return false;
-                }
-                if (filters.text && !createMatcher(filters.text)(f.text)) {
-                    return false;
-                }
-                return true;
-            });
+            const filtered = filterItems(allFootnotes, filters);
             filterFootnotesByIds(filtered.map((f) => f.id));
         }
     }, [

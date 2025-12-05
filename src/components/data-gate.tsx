@@ -22,7 +22,7 @@ export function DataGate({ children, dropZone, hasData }: DataGateProps) {
         return (
             <>
                 <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
-                    <div className="max-w flex w-full flex-col">{dropZone}</div>
+                    <div className="flex w-full max-w-4xl flex-col">{dropZone}</div>
                 </div>
                 <VersionFooter />
             </>
