@@ -87,7 +87,9 @@ export default function JsonDropZone({
 
     useEffect(() => {
         const dropZoneElement = dropZoneRef.current;
-        if (!dropZoneElement) return;
+        if (!dropZoneElement) {
+            return;
+        }
 
         // Add event listeners to the drop zone element instead of document.body
         dropZoneElement.addEventListener('dragenter', handleDragEnter as EventListener);
@@ -106,16 +108,16 @@ export default function JsonDropZone({
 
     return (
         <div
-            className={`w-full p-8 border-2 border-dashed rounded-lg transition-colors ${
+            className={`flex w-full flex-1 items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
                 isDragging
                     ? 'border-primary bg-primary/10'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    : 'border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500'
             }`}
             ref={dropZoneRef}
         >
             <div className="flex flex-col items-center justify-center text-center">
                 <svg
-                    className={`w-16 h-16 mb-4 ${isDragging ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`}
+                    className={`mb-4 h-20 w-20 ${isDragging ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`}
                     fill="none"
                     stroke="currentColor"
                     strokeLinecap="round"
@@ -124,10 +126,11 @@ export default function JsonDropZone({
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                 >
+                    <title>Upload file</title>
                     <path d="M19 14v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6M12 4v12M8 8l4-4 4 4" />
                 </svg>
-                <h3 className="mb-2 text-lg font-medium">{title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
+                <h3 className="mb-2 font-medium text-lg">{title}</h3>
+                <p className="text-gray-500 text-sm dark:text-gray-400">{description}</p>
             </div>
         </div>
     );

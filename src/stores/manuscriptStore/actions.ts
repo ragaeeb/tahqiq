@@ -13,7 +13,6 @@ import {
     mergeObservations,
     type Observation,
 } from 'kokokor';
-import { rawReturn } from 'mutative';
 
 import { getNextId } from '@/lib/common';
 import { SWS_SYMBOL } from '@/lib/constants';
@@ -89,7 +88,7 @@ type LegacyAltText = { text: string };
 export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
     const isLegacyAlt = juz.contractVersion.startsWith('v2.');
 
-    return rawReturn({
+    return {
         createdAt: new Date(juz.timestamp),
         isInitialized: true,
         ...(juz.postProcessingApps && { postProcessingApps: juz.postProcessingApps }),
@@ -99,7 +98,7 @@ export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
             page: s.page,
         })),
         url: juz.url,
-    });
+    };
 };
 
 export const initStore = (fileNameToData: RawInputFiles) => {
@@ -129,7 +128,7 @@ export const initStore = (fileNameToData: RawInputFiles) => {
         })
         .toSorted((a, b) => a.page - b.page);
 
-    return rawReturn({ isInitialized: true, sheets });
+    return { isInitialized: true, sheets };
 };
 
 export const splitAltAtLineBreak = (state: ManuscriptStateCore, page: number, id: number, alt: string) => {
@@ -408,7 +407,7 @@ export const filterByPages = (state: ManuscriptStateCore, pagesToFilterBy: numbe
         }
     }
 
-    return rawReturn({ idsFilter });
+    return { idsFilter };
 };
 
 export const filterBySimilar = (state: ManuscriptStateCore, ids: number[], threshold: number) => {
@@ -423,7 +422,7 @@ export const filterBySimilar = (state: ManuscriptStateCore, ids: number[], thres
         }
     }
 
-    return rawReturn({ idsFilter });
+    return { idsFilter };
 };
 
 export const searchAndReplace = (state: ManuscriptStateCore, pattern: RegExp | string, replacement: string) => {

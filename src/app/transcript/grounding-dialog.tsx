@@ -16,11 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { preformatArabicText } from '@/lib/textUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
-export function GroundingDialog({
-    segment,
-}: Readonly<{
-    segment: Segment;
-}>) {
+export function GroundingDialog({ segment }: Readonly<{ segment: Segment }>) {
     const [groundedSegment, setGroundedSegment] = useState<GroundedSegment>(segment);
     const updateSegment = useTranscriptStore((state) => state.updateSegment);
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);

@@ -5,9 +5,7 @@ import { describe, expect, it, jest, mock } from 'bun:test';
 const record = jest.fn();
 const formattingCalls: string[] = [];
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
 mock.module('blumbaben', () => ({
     FormattingToolbar: ({ children }: { children: (cb: (fn: () => string) => void) => React.ReactNode }) => {

@@ -7,16 +7,10 @@ if (typeof window !== 'undefined' && localStorage.getItem('user_id')) {
         await fetch('/api/analytics', {
             body: JSON.stringify({
                 data: events,
-                state: {
-                    ...userInfo,
-                    appName: packageJson.name,
-                    appVersion: packageJson.version,
-                },
+                state: { ...userInfo, appName: packageJson.name, appVersion: packageJson.version },
                 user_id: localStorage.getItem('user_id'),
             }),
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             method: 'POST',
         });
     }, {});

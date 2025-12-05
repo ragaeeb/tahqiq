@@ -10,11 +10,7 @@ import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 export type FilterField = 'nass' | 'text' | 'page';
 export type FilterScope = 'excerpts' | 'headings' | 'footnotes';
 
-type Filters = {
-    nass: string;
-    page: string;
-    text: string;
-};
+type Filters = { nass: string; page: string; text: string };
 
 /**
  * Filters items based on page, nass, and text criteria

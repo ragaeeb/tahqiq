@@ -54,11 +54,7 @@ describe('manuscript', () => {
                                 isPoetic: true,
                                 text: 'T',
                             },
-                            {
-                                bbox: { height: 1, width: 1, x: 1, y: 1 },
-                                isFootnote: true,
-                                text: 'F',
-                            },
+                            { bbox: { height: 1, width: 1, x: 1, y: 1 }, isFootnote: true, text: 'F' },
                         ],
                         page: 2,
                     },

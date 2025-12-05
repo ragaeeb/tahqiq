@@ -43,12 +43,7 @@ describe('textUtils', () => {
     });
 
     describe('findFirstTokenForText', () => {
-        const createToken = (text: string, start: number, end: number) => ({
-            end,
-            start,
-            text,
-            type: 'word' as const,
-        });
+        const createToken = (text: string, start: number, end: number) => ({ end, start, text, type: 'word' as const });
 
         it('should find single word match', () => {
             const tokens = [createToken('hello', 0, 5), createToken('world', 6, 11), createToken('test', 12, 16)];

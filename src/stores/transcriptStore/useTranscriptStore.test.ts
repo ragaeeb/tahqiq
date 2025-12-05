@@ -51,26 +51,10 @@ describe('useTranscriptStore', () => {
                     start: 0.001,
                     text: 'The quick\nbrown fox',
                     tokens: [
-                        {
-                            end: 1,
-                            start: 0,
-                            text: 'The',
-                        },
-                        {
-                            end: 2,
-                            start: 1,
-                            text: 'quick',
-                        },
-                        {
-                            end: 3.5,
-                            start: 3,
-                            text: 'brown',
-                        },
-                        {
-                            end: 4,
-                            start: 3.5,
-                            text: 'fox',
-                        },
+                        { end: 1, start: 0, text: 'The' },
+                        { end: 2, start: 1, text: 'quick' },
+                        { end: 3.5, start: 3, text: 'brown' },
+                        { end: 4, start: 3.5, text: 'fox' },
                     ],
                 },
             ]);
@@ -123,26 +107,10 @@ describe('useTranscriptStore', () => {
                     start: 0.001,
                     text: 'The quick\nbrown fox',
                     tokens: [
-                        {
-                            end: 1,
-                            start: 0,
-                            text: 'The',
-                        },
-                        {
-                            end: 2,
-                            start: 1,
-                            text: 'quick',
-                        },
-                        {
-                            end: 3.5,
-                            start: 3,
-                            text: 'brown',
-                        },
-                        {
-                            end: 4,
-                            start: 3.5,
-                            text: 'fox',
-                        },
+                        { end: 1, start: 0, text: 'The' },
+                        { end: 2, start: 1, text: 'quick' },
+                        { end: 3.5, start: 3, text: 'brown' },
+                        { end: 4, start: 3.5, text: 'fox' },
                     ],
                 },
                 {
@@ -553,10 +521,7 @@ describe('useTranscriptStore', () => {
             useTranscriptStore.getState().updateSegment(0, update);
 
             const state = useTranscriptStore.getState();
-            expect(state.transcripts[1]?.segments[0]).toEqual({
-                ...segments[0]!,
-                ...update,
-            });
+            expect(state.transcripts[1]?.segments[0]).toEqual({ ...segments[0]!, ...update });
             // Ensure other segments are not affected
             expect(state.transcripts[1]?.segments[1]).toBe(segments[1]!);
         });

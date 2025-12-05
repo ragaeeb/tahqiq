@@ -21,8 +21,8 @@ export function DataGate({ children, dropZone, hasData }: DataGateProps) {
     if (!hasData) {
         return (
             <>
-                <div className="flex min-h-screen flex-col p-8 font-[family-name:var(--font-geist-sans)] sm:p-20">
-                    <div className="flex w-full max-w-4xl flex-col">{dropZone}</div>
+                <div className="flex min-h-screen w-full flex-col px-8 py-4 font-[family-name:var(--font-geist-sans)]">
+                    <div className="flex w-full flex-1 flex-col">{dropZone}</div>
                 </div>
                 <VersionFooter />
             </>

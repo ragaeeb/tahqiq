@@ -45,14 +45,7 @@ describe('bookFormats', () => {
                 },
                 volumeToPages: {
                     1: [
-                        {
-                            id: 1,
-                            lastUpdate: Date.now(),
-                            page: 1,
-                            text: 'Introduction text',
-                            volume: 1,
-                            volumePage: 1,
-                        },
+                        { id: 1, lastUpdate: Date.now(), page: 1, text: 'Introduction text', volume: 1, volumePage: 1 },
                         {
                             footnotes: 'Some footnotes',
                             id: 2,
@@ -78,12 +71,7 @@ describe('bookFormats', () => {
                 ],
                 lastUpdatedAt: mockDate,
                 pages: [
-                    {
-                        page: 1,
-                        text: 'Introduction text',
-                        volume: 1,
-                        volumePage: 1,
-                    },
+                    { page: 1, text: 'Introduction text', volume: 1, volumePage: 1 },
                     {
                         footnotes: 'Some footnotes',
                         page: 10,
@@ -115,26 +103,8 @@ describe('bookFormats', () => {
                     ],
                 },
                 volumeToPages: {
-                    1: [
-                        {
-                            id: 1,
-                            lastUpdate: Date.now(),
-                            page: 1,
-                            text: 'Volume 1 intro',
-                            volume: 1,
-                            volumePage: 1,
-                        },
-                    ],
-                    2: [
-                        {
-                            id: 2,
-                            lastUpdate: Date.now(),
-                            page: 50,
-                            text: 'Volume 2 intro',
-                            volume: 2,
-                            volumePage: 1,
-                        },
-                    ],
+                    1: [{ id: 1, lastUpdate: Date.now(), page: 1, text: 'Volume 1 intro', volume: 1, volumePage: 1 }],
+                    2: [{ id: 2, lastUpdate: Date.now(), page: 50, text: 'Volume 2 intro', volume: 2, volumePage: 1 }],
                 },
             };
 
@@ -149,18 +119,8 @@ describe('bookFormats', () => {
             ]);
 
             expect(result.pages).toHaveLength(2);
-            expect(result.pages[0]).toEqual({
-                page: 1,
-                text: 'Volume 1 intro',
-                volume: 1,
-                volumePage: 1,
-            });
-            expect(result.pages[1]).toEqual({
-                page: 50,
-                text: 'Volume 2 intro',
-                volume: 2,
-                volumePage: 1,
-            });
+            expect(result.pages[0]).toEqual({ page: 1, text: 'Volume 1 intro', volume: 1, volumePage: 1 });
+            expect(result.pages[1]).toEqual({ page: 50, text: 'Volume 2 intro', volume: 2, volumePage: 1 });
         });
 
         it('should handle empty volumes', () => {
@@ -260,12 +220,7 @@ describe('bookFormats', () => {
                 ],
                 lastUpdatedAt: new Date('2023-06-15T10:30:00Z'),
                 pages: [
-                    {
-                        page: 1,
-                        text: 'Introduction content',
-                        volume: 1,
-                        volumePage: 1,
-                    },
+                    { page: 1, text: 'Introduction content', volume: 1, volumePage: 1 },
                     {
                         footnotes: 'Important footnote',
                         page: 25,
@@ -286,18 +241,8 @@ describe('bookFormats', () => {
                     { page: 25, title: 'Chapter 1', volume: 1 },
                 ],
                 pages: [
-                    {
-                        body: 'Introduction content',
-                        page: 1,
-                        part: 1,
-                        pp: 1,
-                    },
-                    {
-                        body: 'Chapter 1 content\n_\nImportant footnote',
-                        page: 25,
-                        part: 1,
-                        pp: 25,
-                    },
+                    { body: 'Introduction content', page: 1, part: 1, pp: 1 },
+                    { body: 'Chapter 1 content\n_\nImportant footnote', page: 25, part: 1, pp: 25 },
                 ],
             });
         });
@@ -308,14 +253,7 @@ describe('bookFormats', () => {
                 createdAt: new Date('2023-01-01T00:00:00Z'),
                 index: [],
                 lastUpdatedAt: new Date('2023-06-15T10:30:00Z'),
-                pages: [
-                    {
-                        page: 1,
-                        text: 'Content without footnotes',
-                        volume: 1,
-                        volumePage: 1,
-                    },
-                ],
+                pages: [{ page: 1, text: 'Content without footnotes', volume: 1, volumePage: 1 }],
                 type: 'book',
             };
 
@@ -330,15 +268,7 @@ describe('bookFormats', () => {
                 createdAt: new Date('2023-01-01T00:00:00Z'),
                 index: [],
                 lastUpdatedAt: new Date('2023-06-15T10:30:00Z'),
-                pages: [
-                    {
-                        footnotes: 'Only footnotes',
-                        page: 1,
-                        text: '',
-                        volume: 1,
-                        volumePage: 1,
-                    },
-                ],
+                pages: [{ footnotes: 'Only footnotes', page: 1, text: '', volume: 1, volumePage: 1 }],
                 type: 'book',
             };
 
@@ -365,12 +295,7 @@ describe('bookFormats', () => {
 
             const result = mapKitabToLegacyFormat(kitab);
 
-            expect(result.pages[0]).toEqual({
-                body: 'Content',
-                page: 1,
-                part: undefined,
-                pp: undefined,
-            });
+            expect(result.pages[0]).toEqual({ body: 'Content', page: 1, part: undefined, pp: undefined });
         });
 
         it('should handle empty pages and index', () => {
@@ -385,10 +310,7 @@ describe('bookFormats', () => {
 
             const result = mapKitabToLegacyFormat(kitab);
 
-            expect(result).toEqual({
-                bookmarks: [],
-                pages: [],
-            });
+            expect(result).toEqual({ bookmarks: [], pages: [] });
         });
 
         it('should filter out falsy values when joining text and footnotes', () => {

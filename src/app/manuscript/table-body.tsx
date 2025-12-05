@@ -57,13 +57,7 @@ function ManuscriptTableBody({ onSelectionChange, previewPdf, rows, selectedRows
 
     return (
         <div className="w-full overflow-auto" ref={parentRef} style={{ height: 'calc(100vh - 120px)' }}>
-            <div
-                style={{
-                    height: `${virtualizer.getTotalSize()}px`,
-                    position: 'relative',
-                    width: '100%',
-                }}
-            >
+            <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative', width: '100%' }}>
                 {virtualizer.getVirtualItems().map((virtualItem) => {
                     const row = rows[virtualItem.index];
 

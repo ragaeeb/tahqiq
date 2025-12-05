@@ -12,9 +12,7 @@ import {
 import { selectTableOfContents } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
-type TableOfContentsMenuProps = ButtonPropsType & {
-    onBookmarkClicked: () => void;
-};
+type TableOfContentsMenuProps = ButtonPropsType & { onBookmarkClicked: () => void };
 
 function TableOfContentsMenu({ onBookmarkClicked, ...props }: TableOfContentsMenuProps) {
     const tableOfContents = useBookStore(selectTableOfContents);

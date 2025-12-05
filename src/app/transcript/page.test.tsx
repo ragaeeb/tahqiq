@@ -7,9 +7,7 @@ import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 
 const record = jest.fn();
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
 mock.module('@/components/json-drop-zone', () => ({
     default: ({ description }: any) => <div data-testid="drop-zone">{description || 'drop zone'}</div>,
@@ -23,13 +21,9 @@ mock.module('@/components/json-browse-button', () => ({
     ),
 }));
 
-mock.module('@/components/version-footer', () => ({
-    default: () => <footer>version</footer>,
-}));
+mock.module('@/components/version-footer', () => ({ default: () => <footer>version</footer> }));
 
-mock.module('./part-selector', () => ({
-    default: () => <div>part-selector</div>,
-}));
+mock.module('./part-selector', () => ({ default: () => <div>part-selector</div> }));
 
 mock.module('./segment-item', () => ({
     default: ({ segment }: any) => (
@@ -39,18 +33,11 @@ mock.module('./segment-item', () => ({
     ),
 }));
 
-mock.module('./url-field', () => ({
-    default: () => <div>url-field</div>,
-}));
+mock.module('./url-field', () => ({ default: () => <div>url-field</div> }));
 
-mock.module('@/lib/io', () => ({
-    loadCompressed: () => Promise.resolve(undefined),
-    loadFiles: async () => ({}),
-}));
+mock.module('@/lib/io', () => ({ loadCompressed: () => Promise.resolve(undefined), loadFiles: async () => ({}) }));
 
-mock.module('@/lib/legacy', () => ({
-    adaptLegacyTranscripts: (value: any) => value,
-}));
+mock.module('@/lib/legacy', () => ({ adaptLegacyTranscripts: (value: any) => value }));
 
 import TranscriptPage from './page';
 
@@ -70,11 +57,7 @@ describe('Transcript page', () => {
             useTranscriptStore.setState({
                 selectedPart: 1,
                 transcripts: {
-                    1: {
-                        segments: [{ end: 5, start: 0, text: 'Segment text' }],
-                        timestamp: new Date(),
-                        volume: 1,
-                    },
+                    1: { segments: [{ end: 5, start: 0, text: 'Segment text' }], timestamp: new Date(), volume: 1 },
                 },
             });
         });

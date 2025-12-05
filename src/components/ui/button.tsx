@@ -14,10 +14,7 @@ const buttonVariants = cva(
         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
     ].join(' '),
     {
-        defaultVariants: {
-            size: 'default',
-            variant: 'default',
-        },
+        defaultVariants: { size: 'default', variant: 'default' },
         variants: {
             size: {
                 default: 'h-9 px-4 py-2 has-[>svg]:px-3',
@@ -40,9 +37,7 @@ const buttonVariants = cva(
 );
 
 export type ButtonPropsType = React.ComponentProps<'button'> &
-    VariantProps<typeof buttonVariants> & {
-        asChild?: boolean;
-    };
+    VariantProps<typeof buttonVariants> & { asChild?: boolean };
 
 /**
  * Renders a customizable button with variant-based styling and optional slot behavior.

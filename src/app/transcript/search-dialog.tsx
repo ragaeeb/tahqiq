@@ -8,11 +8,7 @@ import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog
 import { Label } from '@/components/ui/label';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
-type SearchResult = {
-    start: number;
-    text: string;
-    volume: number;
-};
+type SearchResult = { start: number; text: string; volume: number };
 
 /**
  * Displays a dialog for searching a transcript.

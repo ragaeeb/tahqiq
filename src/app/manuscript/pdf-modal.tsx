@@ -7,18 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
-type PdfDialogProps = {
-    onClose: () => void;
-    page: number;
-};
+type PdfDialogProps = { onClose: () => void; page: number };
 
 const DialogContainer = ({
     children,
     onCloseClicked,
-}: Readonly<{
-    children: React.ReactNode;
-    onCloseClicked: () => void;
-}>) => {
+}: Readonly<{ children: React.ReactNode; onCloseClicked: () => void }>) => {
     return (
         <Dialog modal={false} open>
             <DialogContent className="fixed top-0 right-0 left-auto h-full w-1/2 max-w-none translate-x-0 translate-y-0 rounded-none border-l border-t-0 border-r-0 border-b-0 p-0 flex flex-col [&>button]:hidden">
@@ -54,9 +48,7 @@ export function PdfDialog({ onClose, page }: PdfDialogProps) {
                         className="w-full h-full"
                         key={page}
                         src={`${url}#navpanes=0&scrollbar=0&page=${page}`}
-                        style={{
-                            border: 'none',
-                        }}
+                        style={{ border: 'none' }}
                         title={`PDF Viewer - Page ${page}`}
                     />
                 </div>

@@ -3,14 +3,9 @@ import React from 'react';
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
 
 const record = jest.fn();
-const storeState: any = {
-    setUrl: jest.fn(),
-    url: '',
-};
+const storeState: any = { setUrl: jest.fn(), url: '' };
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
 mock.module('@/stores/manuscriptStore/useManuscriptStore', () => ({
     useManuscriptStore: (selector: any) => selector(storeState),

@@ -6,10 +6,8 @@ import {
     mergeSegments,
     splitSegment,
 } from 'paragrafs';
-
-import type { Segment, SegmentStatus, Transcript, TranscriptSeries, TranscriptState } from './types';
-
 import { selectCurrentSegments, selectCurrentTranscript } from './selectors';
+import type { Segment, SegmentStatus, Transcript, TranscriptSeries, TranscriptState } from './types';
 
 const START_DIFF = 0.001; // hack to bust the key to re-render the textareas
 
@@ -36,7 +34,7 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
             }));
         }
 
-        const fillers = options.fillers.flatMap((token) => [token, token + '.', token + '؟']);
+        const fillers = options.fillers.flatMap((token) => [token, `${token}.`, `${token}؟`]);
         const marked = markAndCombineSegments(segments, {
             fillers,
             gapThreshold: options.silenceGapThreshold,
@@ -53,9 +51,7 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
         transcripts[part] = { ...transcript, segments };
     });
 
-    return {
-        transcripts,
-    };
+    return { transcripts };
 };
 
 export const addTranscriptsFromFiles = (state: TranscriptState, files: Record<string, any>) => {
@@ -66,10 +62,7 @@ export const addTranscriptsFromFiles = (state: TranscriptState, files: Record<st
         transcripts[transcript.volume] = transcript;
     });
 
-    return {
-        selectedPart: state.selectedPart || Object.values(transcripts)[0]!.volume,
-        transcripts,
-    };
+    return { selectedPart: state.selectedPart || Object.values(transcripts)[0]!.volume, transcripts };
 };
 
 /**
@@ -84,8 +77,11 @@ export const markSelectedDone = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
     const { selectedSegments, transcripts } = state;
 
+    // Use start time for comparison since immer proxies break reference equality
+    const selectedStarts = new Set(selectedSegments.map((s) => s.start));
+
     const segments = transcript.segments.map((segment) => {
-        if (selectedSegments.includes(segment)) {
+        if (selectedStarts.has(segment.start)) {
             return { ...segment, status: 'done' as SegmentStatus };
         }
 
@@ -123,22 +119,13 @@ export const mergeSelectedSegments = (state: TranscriptState) => {
 
     const updatedSegmentsForPart = [
         ...currentSegments.slice(0, fromIndex),
-        {
-            ...mergedContent,
-            start: mergedContent.start + START_DIFF,
-        },
+        { ...mergedContent, start: mergedContent.start + START_DIFF },
         ...currentSegments.slice(toIndex + 1),
     ];
 
     return {
         selectedSegments: [],
-        transcripts: {
-            ...transcripts,
-            [transcript.volume]: {
-                ...transcript,
-                segments: updatedSegmentsForPart,
-            },
-        },
+        transcripts: { ...transcripts, [transcript.volume]: { ...transcript, segments: updatedSegmentsForPart } },
     };
 };
 
@@ -164,9 +151,10 @@ export const selectAllSegments = (state: TranscriptState, isSelected: boolean) =
  */
 export const applySelection = (state: TranscriptState, segment: Segment, isSelected: boolean) => {
     return {
+        // Use start time for comparison since immer proxies break reference equality
         selectedSegments: isSelected
             ? state.selectedSegments.concat(segment)
-            : state.selectedSegments.filter((s) => segment !== s),
+            : state.selectedSegments.filter((s) => segment.start !== s.start),
     };
 };
 
@@ -202,15 +190,7 @@ export const rebuildSegmentFromTokens = (state: TranscriptState) => {
 export const setUrlsForTranscript = (state: TranscriptState, urls: string[]) => {
     const transcript = selectCurrentTranscript(state)!;
 
-    return {
-        transcripts: {
-            ...state.transcripts,
-            [transcript.volume]: {
-                ...transcript,
-                urls,
-            },
-        },
-    };
+    return { transcripts: { ...state.transcripts, [transcript.volume]: { ...transcript, urls } } };
 };
 
 /**
@@ -222,13 +202,16 @@ export const setUrlsForTranscript = (state: TranscriptState, urls: string[]) => 
  */
 export const removeSelectedSegments = (state: TranscriptState) => {
     const transcript = selectCurrentTranscript(state)!;
+    // Use start time for comparison since immer proxies break reference equality
+    const selectedStarts = new Set(state.selectedSegments.map((s) => s.start));
+
     return {
         selectedSegments: [],
         transcripts: {
             ...state.transcripts,
             [transcript.volume]: {
                 ...transcript,
-                segments: transcript.segments.filter((segment) => !state.selectedSegments.includes(segment)),
+                segments: transcript.segments.filter((segment) => !selectedStarts.has(segment.start)),
             },
         },
     };
@@ -264,12 +247,7 @@ export const updateSegmentWithDiff = (
         return seg;
     });
 
-    return {
-        transcripts: {
-            ...state.transcripts,
-            [transcript.volume]: { ...transcript, segments },
-        },
-    };
+    return { transcripts: { ...state.transcripts, [transcript.volume]: { ...transcript, segments } } };
 };
 
 /**

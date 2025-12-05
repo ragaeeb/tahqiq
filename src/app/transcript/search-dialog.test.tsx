@@ -7,9 +7,7 @@ import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 
 const record = jest.fn();
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
 mock.module('@/components/ui/dialog', () => ({
     DialogContent: ({ children }: any) => <div>{children}</div>,
@@ -32,9 +30,7 @@ describe('SearchDialog', () => {
                 },
             });
         });
-        setSelectedPartSpy = jest
-            .spyOn(useTranscriptStore.getState(), 'setSelectedPart')
-            .mockImplementation(() => {});
+        setSelectedPartSpy = jest.spyOn(useTranscriptStore.getState(), 'setSelectedPart').mockImplementation(() => {});
         record.mockReset();
     });
 

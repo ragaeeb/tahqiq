@@ -6,20 +6,11 @@ import { Toaster } from '@/components/ui/sonner';
 
 import './globals.css';
 
-const geistSans = Geist({
-    subsets: ['latin'],
-    variable: '--font-geist-sans',
-});
+const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
 
-const geistMono = Geist_Mono({
-    subsets: ['latin'],
-    variable: '--font-geist-mono',
-});
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
 
-export const metadata: Metadata = {
-    description: 'tahqiq',
-    title: 'Tahqiq',
-};
+export const metadata: Metadata = { description: 'tahqiq', title: 'Tahqiq' };
 
 /**
  * Defines the root layout for the application, applying global fonts and styles.
@@ -28,11 +19,7 @@ export const metadata: Metadata = {
  *
  * @param children - The content to be rendered within the layout.
  */
-export default function RootLayout({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
         <html lang="en">
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

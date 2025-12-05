@@ -95,11 +95,7 @@ export function ClickToReveal({
                 onBlur={handleInputChange}
                 placeholder={placeholder}
                 readOnly={readOnly}
-                style={
-                    {
-                        '--blur-amount': blurAmount,
-                    } as React.CSSProperties
-                }
+                style={{ '--blur-amount': blurAmount } as React.CSSProperties}
                 tabIndex={isRevealed ? 0 : -1}
             />
         </fieldset>
