@@ -6,15 +6,31 @@ import type { Excerpt, ExcerptsState, Heading } from './types';
  */
 export const selectAllExcerpts = memoizeOne(
     (state: ExcerptsState): Excerpt[] => {
+        console.log('[selectAllExcerpts] Called');
+        console.log('[selectAllExcerpts] state.excerpts.length:', state.excerpts.length);
+        console.log('[selectAllExcerpts] state.filteredExcerptIds:', state.filteredExcerptIds?.length ?? 'null');
+
         if (state.filteredExcerptIds) {
             const idSet = new Set(state.filteredExcerptIds);
-            return state.excerpts.filter((e) => idSet.has(e.id));
+            const result = state.excerpts.filter((e) => idSet.has(e.id));
+            console.log('[selectAllExcerpts] Filtered result.length:', result.length);
+            return result;
         }
         return state.excerpts;
     },
     // Custom equality: only recompute if excerpts array or filter IDs changed
-    ([prevState], [nextState]) =>
-        prevState.excerpts === nextState.excerpts && prevState.filteredExcerptIds === nextState.filteredExcerptIds,
+    ([prevState], [nextState]) => {
+        const excerptsSame = prevState.excerpts === nextState.excerpts;
+        const filtersSame = prevState.filteredExcerptIds === nextState.filteredExcerptIds;
+        console.log('[selectAllExcerpts] equality check: excerptsSame=', excerptsSame, 'filtersSame=', filtersSame);
+        console.log(
+            '[selectAllExcerpts] prev.excerpts.length=',
+            prevState.excerpts.length,
+            'next.excerpts.length=',
+            nextState.excerpts.length,
+        );
+        return excerptsSame && filtersSame;
+    },
 );
 
 /**

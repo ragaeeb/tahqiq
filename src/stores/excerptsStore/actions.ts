@@ -38,13 +38,18 @@ export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Par
  * Copies all properties except sets new ID, new nass text, and clears translation
  */
 export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: string, newNassText: string): void => {
+    console.log('[createExcerptFromExisting] Called with sourceId:', sourceId);
+    console.log('[createExcerptFromExisting] Before: excerpts.length =', state.excerpts.length);
+
     const sourceIndex = state.excerpts.findIndex((e) => e.id === sourceId);
 
     if (sourceIndex === -1) {
+        console.log('[createExcerptFromExisting] Source not found!');
         return;
     }
 
     const sourceExcerpt = state.excerpts[sourceIndex];
+    console.log('[createExcerptFromExisting] sourceIndex:', sourceIndex, 'sourceExcerpt.id:', sourceExcerpt.id);
 
     const lastUpdatedAt = Date.now() / 1000;
 
@@ -60,11 +65,18 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
         text: '',
     };
 
+    console.log('[createExcerptFromExisting] New excerpt id:', newExcerpt.id);
+
     // Insert after the source excerpt
     state.excerpts.splice(sourceIndex + 1, 0, newExcerpt);
+    console.log('[createExcerptFromExisting] After splice: excerpts.length =', state.excerpts.length);
 
     // If a filter is active, add the new excerpt's ID to the filter so it's visible
     if (state.filteredExcerptIds) {
+        console.log(
+            '[createExcerptFromExisting] Filter is active, filteredExcerptIds.length =',
+            state.filteredExcerptIds.length,
+        );
         const filterIndex = state.filteredExcerptIds.indexOf(sourceId);
         if (filterIndex !== -1) {
             // Insert after the source ID in the filter list too
@@ -73,9 +85,14 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
             // Source not in filter but we still want to show the new one
             state.filteredExcerptIds.push(newExcerpt.id);
         }
+        console.log(
+            '[createExcerptFromExisting] After filter update: filteredExcerptIds.length =',
+            state.filteredExcerptIds.length,
+        );
     }
 
     state.lastUpdatedAt = new Date();
+    console.log('[createExcerptFromExisting] Done');
 };
 
 /**

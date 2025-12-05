@@ -2,7 +2,7 @@
 
 import { DownloadIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -32,12 +32,14 @@ import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
 import ExcerptsTableHeader from './table-header';
+import type { FilterScope } from './use-excerpt-filters';
+import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
 
 /**
- * Excerpts editor page with virtualized lists for large datasets
+ * Inner component that uses useSearchParams (requires Suspense boundary)
  */
-export default function ExcerptsPage() {
+function ExcerptsPageContent() {
     const init = useExcerptsStore((state) => state.init);
     const reset = useExcerptsStore((state) => state.reset);
     const excerpts = useExcerptsStore(selectAllExcerpts);
@@ -61,7 +63,8 @@ export default function ExcerptsPage() {
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
 
-    const [activeTab, setActiveTab] = useState('excerpts');
+    const { activeTab, filters, setActiveTab, setFilter } = useExcerptFilters();
+
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
 
@@ -124,7 +127,7 @@ export default function ExcerptsPage() {
         record('ResetExcerpts');
         reset();
         setActiveTab('excerpts');
-    }, [reset]);
+    }, [reset, setActiveTab]);
 
     const handleApplyFormatting = useCallback(async () => {
         setIsFormattingLoading(true);
@@ -171,6 +174,13 @@ export default function ExcerptsPage() {
         headingsCount,
         footnotesCount,
     ]);
+
+    const handleTabChange = useCallback(
+        (tab: string) => {
+            setActiveTab(tab as FilterScope);
+        },
+        [setActiveTab],
+    );
 
     return (
         <DataGate
@@ -226,7 +236,7 @@ export default function ExcerptsPage() {
                     </div>
 
                     <div className="w-full">
-                        <Tabs className="w-full" onValueChange={setActiveTab} value={activeTab}>
+                        <Tabs className="w-full" onValueChange={handleTabChange} value={activeTab}>
                             <TabsList className="w-full justify-start rounded-none border-gray-200 border-b bg-white">
                                 <TabsTrigger value="excerpts">
                                     Excerpts
@@ -256,8 +266,10 @@ export default function ExcerptsPage() {
                                         <ExcerptsTableHeader
                                             activeTab="excerpts"
                                             excerpts={allExcerpts}
+                                            filters={filters}
                                             footnotes={allFootnotes}
                                             headings={allHeadings}
+                                            onFilterChange={setFilter}
                                         />
                                     }
                                     renderRow={(item) => (
@@ -276,23 +288,14 @@ export default function ExcerptsPage() {
                                     data={headings}
                                     getKey={(item) => item.id}
                                     header={
-                                        <tr>
-                                            <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                From
-                                            </th>
-                                            <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                Parent
-                                            </th>
-                                            <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm">
-                                                Arabic
-                                            </th>
-                                            <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
-                                                Translation
-                                            </th>
-                                            <th className="w-16 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                Actions
-                                            </th>
-                                        </tr>
+                                        <ExcerptsTableHeader
+                                            activeTab="headings"
+                                            excerpts={allExcerpts}
+                                            filters={filters}
+                                            footnotes={allFootnotes}
+                                            headings={allHeadings}
+                                            onFilterChange={setFilter}
+                                        />
                                     }
                                     renderRow={(item) => (
                                         <HeadingRow
@@ -309,20 +312,14 @@ export default function ExcerptsPage() {
                                     data={footnotes}
                                     getKey={(item) => item.id}
                                     header={
-                                        <tr>
-                                            <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                From
-                                            </th>
-                                            <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm">
-                                                Arabic
-                                            </th>
-                                            <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
-                                                Translation
-                                            </th>
-                                            <th className="w-16 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                                                Actions
-                                            </th>
-                                        </tr>
+                                        <ExcerptsTableHeader
+                                            activeTab="footnotes"
+                                            excerpts={allExcerpts}
+                                            filters={filters}
+                                            footnotes={allFootnotes}
+                                            headings={allHeadings}
+                                            onFilterChange={setFilter}
+                                        />
                                     }
                                     renderRow={(item) => (
                                         <FootnoteRow
@@ -338,5 +335,16 @@ export default function ExcerptsPage() {
                 </div>
             </div>
         </DataGate>
+    );
+}
+
+/**
+ * Excerpts editor page with virtualized lists for large datasets
+ */
+export default function ExcerptsPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+            <ExcerptsPageContent />
+        </Suspense>
     );
 }
