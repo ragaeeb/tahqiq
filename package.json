@@ -26,7 +26,6 @@
         "next": "16.0.7",
         "paragrafs": "^1.5.1",
         "react": "^19.2.1",
-        "react-contenteditable": "^3.3.7",
         "react-dom": "^19.2.1",
         "shamela": "^1.3.4",
         "sonner": "^2.0.7",

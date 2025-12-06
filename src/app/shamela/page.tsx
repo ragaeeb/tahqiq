@@ -2,7 +2,8 @@
 
 import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
@@ -48,7 +49,12 @@ function ShamelaPageContent() {
     const shamelaApiKey = useSettingsStore((state) => state.shamelaApiKey);
     const shamelaBookEndpoint = useSettingsStore((state) => state.shamelaBookEndpoint);
 
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
     const [isLoading, setIsLoading] = useState(false);
+    const hasAutoLoaded = useRef(false);
 
     const { activeTab, filters, setActiveTab, setFilter } = useShamelaFilters();
     const hasData = pagesCount > 0 || titlesCount > 0;
@@ -139,6 +145,12 @@ function ShamelaPageContent() {
             }
 
             const bookId = parseInt(match[1], 10);
+
+            // Update URL with the shamela URL param for bookmarking/sharing
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('url', url);
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
             setIsLoading(true);
             record('DownloadShamelaBook', bookId.toString());
 
@@ -162,8 +174,20 @@ function ShamelaPageContent() {
                 setIsLoading(false);
             }
         },
-        [init, shamelaApiKey, shamelaBookEndpoint],
+        [init, shamelaApiKey, shamelaBookEndpoint, searchParams, router, pathname],
     );
+
+    // Auto-load book from URL param if present (only once per mount)
+    useEffect(() => {
+        const urlParam = searchParams.get('url');
+        if (urlParam && !hasAutoLoaded.current && shamelaApiKey && shamelaBookEndpoint) {
+            hasAutoLoaded.current = true;
+            // Defer to next tick to ensure settings are hydrated
+            setTimeout(() => {
+                handleUrlSubmit(urlParam);
+            }, 0);
+        }
+    }, [searchParams, shamelaApiKey, shamelaBookEndpoint, handleUrlSubmit]);
 
     const canDownloadFromShamela = shamelaApiKey && shamelaBookEndpoint;
 

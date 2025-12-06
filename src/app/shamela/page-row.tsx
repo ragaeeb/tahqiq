@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import React, { useCallback, useRef } from 'react';
-import ContentEditable from 'react-contenteditable';
 import { normalizeHtml } from 'shamela/content';
+
+import EditableHTML from '@/components/editable-html';
 import { Textarea } from '@/components/ui/textarea';
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
 
@@ -60,7 +61,7 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
             <td className="w-20 px-2 py-3 text-center align-top text-gray-600 text-xs">{data.page}</td>
             <td className="w-32 px-2 py-3 text-center align-top text-gray-500 text-xs">{data.part}</td>
             <td className="px-4 py-3 align-top" dir="rtl">
-                <ContentEditable
+                <EditableHTML
                     className="shamela-content min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"
                     dir="rtl"
                     html={normalizeHtml(data.body)}
