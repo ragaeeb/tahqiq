@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
+import { segmentPages } from '@/lib/segmentation';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
@@ -122,6 +123,26 @@ function ShamelaPageContent() {
         removePageMarkers();
         toast.success('Removed Arabic page markers from all pages');
     }, [removePageMarkers]);
+
+    const handleSegment = useCallback(() => {
+        record('SegmentShamelaPages');
+        const segments = segmentPages(
+            allPages.map((p) => ({ content: p.content, id: p.id, page: p.page ?? 0, part: p.part ?? '1' })),
+            {
+                slices: [
+                    // Chapter headings: <span data-type='title' ...>
+                    { meta: { type: 'chapter' }, regex: '^<span data-type=[\'"]title[\'"]' },
+                    // Chapter headings: plain text starting with بَابُ (for unwrapped chapters)
+                    { meta: { type: 'chapter' }, regex: '^بَابُ' },
+                    // Hadith entries: Arabic number + dash
+                    { regex: '^([٠-٩]+) - ' },
+                ],
+                stripHtml: true,
+            },
+        );
+        console.log(segments.map((s) => ({ content: s.content, from: s.from, type: s.meta?.type })));
+        toast.success(`Found ${segments.length} segments`);
+    }, [allPages]);
 
     const handleTabChange = useCallback(
         (tab: string) => {
@@ -246,6 +267,9 @@ function ShamelaPageContent() {
                         <div className="space-x-2">
                             <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
                                 <EraserIcon />
+                            </Button>
+                            <Button onClick={handleSegment} title="Segment pages" variant="outline">
+                                <SplitIcon />
                             </Button>
                             <Button className="bg-emerald-500" onClick={handleSave}>
                                 <SaveIcon />
