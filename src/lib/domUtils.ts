@@ -82,3 +82,14 @@ export const downloadFile = (fileName: string, content: string, mimeType?: strin
         document.body.removeChild(element);
     }, 0);
 };
+
+/**
+ * Auto-resizes a textarea element to fit its content.
+ * Resets height to 'auto' first to get accurate scrollHeight, then sets to scrollHeight.
+ *
+ * @param el - The textarea element to resize
+ */
+export const autoResizeTextarea = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+};

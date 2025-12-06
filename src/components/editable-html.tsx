@@ -18,6 +18,10 @@ type EditableHTMLProps = {
  * - Preserves HTML structure (links, spans, etc.)
  * - Uses dangerouslySetInnerHTML for initial content
  * - Reports changes via innerHTML, not textContent
+ *
+ * SECURITY: The `html` prop is rendered via dangerouslySetInnerHTML.
+ * Callers MUST sanitize the HTML before passing it to this component.
+ * to remove potentially dangerous elements before rendering.
  */
 const EditableHTML = forwardRef<HTMLDivElement, EditableHTMLProps>(
     ({ className, dir, html, onBlur, onChange }, ref) => {
@@ -33,7 +37,7 @@ const EditableHTML = forwardRef<HTMLDivElement, EditableHTMLProps>(
             <div
                 className={className}
                 contentEditable
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: Required for rich HTML content editing
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: HTML must be sanitized by caller
                 dangerouslySetInnerHTML={{ __html: html }}
                 dir={dir}
                 onBlur={onBlur}

@@ -8,7 +8,13 @@ import type {
 } from '@/stores/excerptsStore/types';
 
 /**
- * SlicingOption type for the new format
+ * SlicingOption type for the new format.
+ *
+ * NOTE: Local type definitions are intentional for migration logic.
+ * These types represent the TARGET format for migration output and may differ
+ * from the runtime types in stores/excerptsStore/types.ts. Keeping them local
+ * ensures migration logic remains stable even if the runtime types evolve,
+ * and makes it clear these are migration-specific structures.
  */
 type SlicingOption = {
     lineStartsWith?: string[];
@@ -19,7 +25,8 @@ type SlicingOption = {
 };
 
 /**
- * Legacy pattern options from patternToOptions
+ * Legacy pattern options from patternToOptions.
+ * Local definition for migration stability (see SlicingOption comment).
  */
 type LegacyPatternOptions = { maxPage?: number; minPage?: number; type?: number };
 

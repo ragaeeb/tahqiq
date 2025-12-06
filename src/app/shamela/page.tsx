@@ -69,10 +69,13 @@ function ShamelaPageContent() {
         });
     }, [init, hydrateSettings]);
 
-    const handleSave = useCallback(() => {
-        record('SaveShamela');
+    /**
+     * Creates a ShamelaBook object from the current store state.
+     * Shared between save and download handlers to avoid duplication.
+     */
+    const getShamelaBookData = useCallback((): ShamelaBook => {
         const state = useShamelaStore.getState();
-        const data: ShamelaBook = {
+        return {
             majorRelease: state.majorRelease,
             pages: state.pages.map((p) => ({
                 content: p.content,
@@ -84,6 +87,11 @@ function ShamelaPageContent() {
             shamelaId: state.shamelaId,
             titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
         };
+    }, []);
+
+    const handleSave = useCallback(() => {
+        record('SaveShamela');
+        const data = getShamelaBookData();
 
         try {
             saveCompressed('shamela', data);
@@ -92,30 +100,17 @@ function ShamelaPageContent() {
             console.error('Could not save shamela', err);
             downloadFile(`shamela-${Date.now()}.json`, JSON.stringify(data, null, 2));
         }
-    }, []);
+    }, [getShamelaBookData]);
 
     const handleDownload = useCallback(() => {
         const name = prompt('Enter output file name');
 
         if (name) {
             record('DownloadShamela', name);
-            const state = useShamelaStore.getState();
-            const data: ShamelaBook = {
-                majorRelease: state.majorRelease,
-                pages: state.pages.map((p) => ({
-                    content: p.content,
-                    id: p.id,
-                    number: p.number,
-                    page: p.page,
-                    part: p.part,
-                })),
-                shamelaId: state.shamelaId,
-                titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
-            };
-
+            const data = getShamelaBookData();
             downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
         }
-    }, []);
+    }, [getShamelaBookData]);
 
     const handleReset = useCallback(() => {
         record('ResetShamela');

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { NextRequest } from 'next/server';
 
 import { GET } from './route';
@@ -17,12 +17,6 @@ mock.module('shamela', () => ({ configure: mockConfigure, getBook: mockGetBook, 
 
 describe('shamela API route', () => {
     beforeEach(() => {
-        mockConfigure.mockClear();
-        mockGetBook.mockClear();
-        mockResetConfig.mockClear();
-    });
-
-    afterEach(() => {
         mockConfigure.mockClear();
         mockGetBook.mockClear();
         mockResetConfig.mockClear();

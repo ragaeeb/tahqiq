@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import React from 'react';
+
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { autoResizeTextarea } from '@/lib/domUtils';
 import type { ShamelaTitle } from '@/stores/shamelaStore/types';
 
 type TitleRowProps = {
@@ -13,11 +15,6 @@ type TitleRowProps = {
 };
 
 function TitleRow({ data, onUpdate, shamelaId }: TitleRowProps) {
-    const autoResize = (el: HTMLTextAreaElement) => {
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-    };
-
     // Build shamela.ws link if shamelaId is available
     // For titles, we link to the page where the title appears
     const shamelaLink = shamelaId ? `https://shamela.ws/book/${shamelaId}/${data.page}#toc-${data.id}` : null;
@@ -74,15 +71,16 @@ function TitleRow({ data, onUpdate, shamelaId }: TitleRowProps) {
                     defaultValue={data.content}
                     key={`${data.id}/${data.lastUpdatedAt}/content`}
                     onBlur={(e) => {
+                        // Always resize on blur for consistency
+                        autoResizeTextarea(e.currentTarget);
                         if (e.target.value !== data.content) {
-                            autoResize(e.currentTarget);
                             onUpdate(data.id, { content: e.target.value });
                         }
                     }}
                     placeholder="عنوان..."
                     ref={(el) => {
                         if (el) {
-                            autoResize(el);
+                            autoResizeTextarea(el);
                         }
                     }}
                 />

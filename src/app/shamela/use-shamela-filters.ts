@@ -12,9 +12,10 @@ export type FilterScope = 'pages' | 'titles';
 type Filters = { content: string; id: string };
 
 /**
- * Filters pages based on id and content criteria
+ * Generic filter function for items with id and a content field.
+ * Consolidates the common filtering logic used by pages and titles.
  */
-function filterPages(items: ShamelaPage[], filters: Filters): ShamelaPage[] {
+function filterItems<T extends { id: number }>(items: T[], filters: Filters, getContent: (item: T) => string): T[] {
     return items.filter((item) => {
         if (filters.id) {
             const idNum = Number.parseInt(filters.id, 10);
@@ -22,30 +23,16 @@ function filterPages(items: ShamelaPage[], filters: Filters): ShamelaPage[] {
                 return false;
             }
         }
-        if (filters.content && !item.body.includes(filters.content)) {
+        if (filters.content && !getContent(item).includes(filters.content)) {
             return false;
         }
         return true;
     });
 }
 
-/**
- * Filters titles based on id and content criteria
- */
-function filterTitles(items: ShamelaTitle[], filters: Filters): ShamelaTitle[] {
-    return items.filter((item) => {
-        if (filters.id) {
-            const idNum = Number.parseInt(filters.id, 10);
-            if (!Number.isNaN(idNum) && item.id !== idNum) {
-                return false;
-            }
-        }
-        if (filters.content && !item.content.includes(filters.content)) {
-            return false;
-        }
-        return true;
-    });
-}
+const filterPages = (items: ShamelaPage[], filters: Filters) => filterItems(items, filters, (item) => item.body);
+
+const filterTitles = (items: ShamelaTitle[], filters: Filters) => filterItems(items, filters, (item) => item.content);
 
 /**
  * Hook to manage URL-based filtering for shamela pages and titles.

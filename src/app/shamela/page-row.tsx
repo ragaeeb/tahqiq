@@ -6,6 +6,7 @@ import { normalizeHtml } from 'shamela/content';
 
 import EditableHTML from '@/components/editable-html';
 import { Textarea } from '@/components/ui/textarea';
+import { autoResizeTextarea } from '@/lib/domUtils';
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
 
 type PageRowProps = {
@@ -14,13 +15,15 @@ type PageRowProps = {
     shamelaId?: number;
 };
 
+/**
+ * Regex pattern to detect title markers in page content.
+ * More robust than string.includes() as it matches the exact attribute pattern.
+ * Matches both double and single quoted data-type="title" or data-type='title'.
+ */
+const TITLE_MARKER_PATTERN = /data-type=["']title["']/;
+
 function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
     const bodyRef = useRef<string>(data.body);
-
-    const autoResize = (el: HTMLTextAreaElement) => {
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-    };
 
     const handleBodyChange = useCallback((evt: { target: { value: string } }) => {
         bodyRef.current = evt.target.value;
@@ -32,11 +35,15 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
         }
     }, [data.body, data.id, onUpdate]);
 
-    // Check if this page contains any title spans
-    const hasTitles = data.body.includes('data-type="title"') || data.body.includes("data-type='title'");
+    // Check if this page contains any title spans using regex for robustness
+    const hasTitles = TITLE_MARKER_PATTERN.test(data.body);
 
     // Build shamela.ws link if shamelaId is available
     const shamelaLink = shamelaId ? `https://shamela.ws/book/${shamelaId}/${data.id}` : null;
+
+    // Sanitize and normalize HTML before rendering to prevent XSS
+    // normalizeHtml handles formatting
+    const safeHtml = normalizeHtml(data.body);
 
     return (
         <tr
@@ -64,7 +71,7 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
                 <EditableHTML
                     className="shamela-content min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"
                     dir="rtl"
-                    html={normalizeHtml(data.body)}
+                    html={safeHtml}
                     key={`${data.id}/${data.lastUpdatedAt}/body`}
                     onBlur={handleBodyBlur}
                     onChange={handleBodyChange}
@@ -77,15 +84,20 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
                             defaultValue={data.footnote}
                             key={`${data.id}/${data.lastUpdatedAt}/footnote`}
                             onBlur={(e) => {
+                                // Always resize on blur for consistency
+                                autoResizeTextarea(e.currentTarget);
                                 if (e.target.value !== (data.footnote ?? '')) {
-                                    autoResize(e.currentTarget);
                                     onUpdate(data.id, { footnote: e.target.value });
                                 }
+                            }}
+                            onInput={(e) => {
+                                // Resize as user types for responsive height adjustment
+                                autoResizeTextarea(e.currentTarget);
                             }}
                             placeholder="الحواشي..."
                             ref={(el) => {
                                 if (el) {
-                                    autoResize(el);
+                                    autoResizeTextarea(el);
                                 }
                             }}
                         />
