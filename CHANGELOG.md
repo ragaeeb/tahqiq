@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/ragaeeb/tahqiq/compare/v1.26.0...v1.27.0) (2025-12-06)
+
+
+### Features
+
+* **shamela:** Add shamela editor ([#99](https://github.com/ragaeeb/tahqiq/issues/99)) ([7bf1935](https://github.com/ragaeeb/tahqiq/commit/7bf1935c893847ced90c51689fcbe51b2e93e1d0))
+
 # [1.26.0](https://github.com/ragaeeb/tahqiq/compare/v1.25.0...v1.26.0) (2025-12-05)
 
 
