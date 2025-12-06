@@ -15,6 +15,8 @@ export const TOKEN_PATTERNS: Record<string, string> = {
     raqm: '[\u0660-\u0669]',
     /** One or more Arabic-Indic digits */
     raqms: '[\u0660-\u0669]+',
+    /** Shamela title span tag */
+    title: '<span data-type=[\'"]title[\'"]',
 };
 
 /** Token pattern: {{tokenName}} */

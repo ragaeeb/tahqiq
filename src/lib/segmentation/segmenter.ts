@@ -1,3 +1,4 @@
+import { expandTokens } from '../search-tokens';
 import type { PageInput, Segment, SegmentationOptions, SlicingOption } from './types';
 
 /**
@@ -23,6 +24,7 @@ const splitIntoLines = (content: string): string[] => {
  */
 const buildSliceRegex = (slice: SlicingOption): RegExp | null => {
     if ('regex' in slice && slice.regex) {
+        // regex field is a literal regex pattern - no token expansion
         try {
             return new RegExp(slice.regex, 'u');
         } catch {
@@ -37,9 +39,10 @@ const buildSliceRegex = (slice: SlicingOption): RegExp | null => {
     }
 
     if ('template' in slice && slice.template) {
-        // TODO: Expand template tokens
+        // Expand template tokens like {{raqms}}, {{dash}}, {{title}}
         try {
-            return new RegExp(slice.template, 'u');
+            const expanded = expandTokens(slice.template);
+            return new RegExp(expanded, 'u');
         } catch {
             return null;
         }
@@ -74,9 +77,18 @@ type MatchResult = {
  */
 const matchesSlicePattern = (
     line: string,
-    patterns: Array<{ regex: RegExp; meta?: SlicingOption['meta']; hasCaptures: boolean }>,
+    patterns: Array<{ regex: RegExp; meta?: SlicingOption['meta']; hasCaptures: boolean; min?: number; max?: number }>,
+    pageNumber: number,
 ): MatchResult => {
-    for (const { regex, meta, hasCaptures } of patterns) {
+    for (const { regex, meta, hasCaptures, min, max } of patterns) {
+        // Skip patterns outside page range
+        if (min !== undefined && pageNumber < min) {
+            continue;
+        }
+        if (max !== undefined && pageNumber > max) {
+            continue;
+        }
+
         const match = regex.exec(line);
         if (match) {
             if (hasCaptures && match.length > 1) {
@@ -205,12 +217,18 @@ export function segmentPages(pages: PageInput[], options: SegmentationOptions): 
     const shouldStripHtml = options.stripHtml ?? false;
 
     // Build regex patterns from slicing options
-    const patterns: Array<{ regex: RegExp; meta?: SlicingOption['meta']; hasCaptures: boolean }> = [];
+    const patterns: Array<{
+        regex: RegExp;
+        meta?: SlicingOption['meta'];
+        hasCaptures: boolean;
+        min?: number;
+        max?: number;
+    }> = [];
     for (const slice of slices) {
         const regex = buildSliceRegex(slice);
         if (regex) {
             const hasCaptures = countCaptureGroups(regex) > 0;
-            patterns.push({ hasCaptures, meta: slice.meta, regex });
+            patterns.push({ hasCaptures, max: slice.max, meta: slice.meta, min: slice.min, regex });
         }
     }
 
@@ -232,7 +250,7 @@ export function segmentPages(pages: PageInput[], options: SegmentationOptions): 
 
             // Always match patterns against ORIGINAL HTML (for HTML-aware patterns)
             // Content output uses stripped text when stripHtml is true
-            const result = matchesSlicePattern(htmlLine, patterns);
+            const result = matchesSlicePattern(htmlLine, patterns, page.page);
 
             if (result.matched) {
                 // Finalize previous segment, start new one

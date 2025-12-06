@@ -219,5 +219,136 @@ describe('segmenter', () => {
             // Third hadith - single page, no HTML
             expect(result[2]).toMatchObject({ content: '٣ - الحديث الثالث', from: 101 });
         });
+
+        it('should only apply pattern when page is >= min', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
+                { content: '٢ - الحديث الثاني', id: 101, page: 5, part: '1' },
+                { content: '٣ - الحديث الثالث', id: 102, page: 10, part: '1' },
+            ];
+
+            const slices: SlicingOption[] = [
+                // Only match on pages >= 5
+                { min: 5, regex: '^[٠-٩]+ - ' },
+            ];
+
+            const result = segmentPages(pages, { slices });
+
+            // Page 1 should be skipped (below min)
+            // Pages 5 and 10 should be segmented
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
+            expect(result[1]).toMatchObject({ content: '٣ - الحديث الثالث', from: 102 });
+        });
+
+        it('should only apply pattern when page is <= max', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
+                { content: '٢ - الحديث الثاني', id: 101, page: 5, part: '1' },
+                { content: '٣ - الحديث الثالث', id: 102, page: 10, part: '1' },
+            ];
+
+            const slices: SlicingOption[] = [
+                // Only match on pages <= 5
+                { max: 5, regex: '^[٠-٩]+ - ' },
+            ];
+
+            const result = segmentPages(pages, { slices });
+
+            // Pages 1 and 5 should start segments
+            // Page 10 content (above max) appends to previous segment
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
+            // Segment 2 includes page 5 content + page 10 appended
+            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني ٣ - الحديث الثالث', from: 101, to: 102 });
+        });
+
+        it('should apply pattern only within min-max range', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
+                { content: '٢ - الحديث الثاني', id: 101, page: 5, part: '1' },
+                { content: '٣ - الحديث الثالث', id: 102, page: 10, part: '1' },
+                { content: '٤ - الحديث الرابع', id: 103, page: 15, part: '1' },
+            ];
+
+            const slices: SlicingOption[] = [
+                // Only match on pages 5-10 (inclusive)
+                { max: 10, min: 5, regex: '^[٠-٩]+ - ' },
+            ];
+
+            const result = segmentPages(pages, { slices });
+
+            // Page 1 is dropped (before min, no previous segment to append to)
+            // Pages 5 and 10 start segments
+            // Page 15 content (above max) appends to segment starting at page 10
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
+            expect(result[1]).toMatchObject({ content: '٣ - الحديث الثالث ٤ - الحديث الرابع', from: 102, to: 103 });
+        });
+
+        it('should expand {{raqms}} token in template patterns', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
+                { content: '٢ - الحديث الثاني', id: 101, page: 2, part: '1' },
+            ];
+
+            // Using {{raqms}} token in template field (expands to [٠-٩]+)
+            const slices: SlicingOption[] = [{ template: '^{{raqms}} - ' }];
+
+            const result = segmentPages(pages, { slices });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
+            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
+        });
+
+        it('should expand {{dash}} token in template patterns', () => {
+            const pages: PageInput[] = [
+                { content: '١ – الحديث الأول', id: 100, page: 1, part: '1' }, // en-dash
+                { content: '٢ — الحديث الثاني', id: 101, page: 2, part: '1' }, // em-dash
+            ];
+
+            // Using {{dash}} token to match any dash variant
+            const slices: SlicingOption[] = [{ template: '^{{raqms}} {{dash}} ' }];
+
+            const result = segmentPages(pages, { slices });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '١ – الحديث الأول', from: 100 });
+            expect(result[1]).toMatchObject({ content: '٢ — الحديث الثاني', from: 101 });
+        });
+
+        it('should expand {{title}} token in template patterns', () => {
+            const pages: PageInput[] = [
+                { content: '<span data-type="title" id=toc-1>باب الأول</span>\nنص الباب', id: 100, page: 1, part: '1' },
+            ];
+
+            // Using {{title}} token to match Shamela span tags
+            const slices: SlicingOption[] = [{ template: '^{{title}}' }];
+
+            const result = segmentPages(pages, { slices });
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toMatchObject({
+                content: '<span data-type="title" id=toc-1>باب الأول</span>\nنص الباب',
+                from: 100,
+            });
+        });
+
+        it('should support template field with token expansion', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
+                { content: '٢ - الحديث الثاني', id: 101, page: 2, part: '1' },
+            ];
+
+            // Using template field instead of regex
+            const slices: SlicingOption[] = [{ template: '^{{raqms}} {{dash}} ' }];
+
+            const result = segmentPages(pages, { slices });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
+            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
+        });
     });
 });
