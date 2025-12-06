@@ -145,10 +145,7 @@ describe('legacy', () => {
         });
 
         it('should throw an error for unrecognized formats', () => {
-            const invalidFormat = {
-                anotherProperty: 123,
-                someProperty: 'value',
-            };
+            const invalidFormat = { anotherProperty: 123, someProperty: 'value' };
 
             expect(() => adaptLegacyTranscripts(invalidFormat)).toThrow('Unrecognized transcript format');
         });
@@ -387,18 +384,8 @@ describe('legacy', () => {
                         part: 1,
                         timestamp,
                         transcripts: [
-                            {
-                                body: 'hello',
-                                end: 5,
-                                start: 0,
-                                tokens: [{ end: 5, start: 0, text: 'hello' }],
-                            },
-                            {
-                                body: 'world',
-                                end: 10,
-                                start: 5,
-                                tokens: [{ end: 10, start: 5, text: 'world' }],
-                            },
+                            { body: 'hello', end: 5, start: 0, tokens: [{ end: 5, start: 0, text: 'hello' }] },
+                            { body: 'world', end: 10, start: 5, tokens: [{ end: 10, start: 5, text: 'world' }] },
                         ],
                         urls: ['https://part-url.com'],
                     },
@@ -429,11 +416,7 @@ describe('legacy', () => {
 
         it('should handle empty parts array in PartsFormat', () => {
             const timestamp = new Date('2023-01-01');
-            const partsFormat = {
-                parts: [],
-                timestamp,
-                urls: ['https://example.com'],
-            };
+            const partsFormat = { parts: [], timestamp, urls: ['https://example.com'] };
 
             const result = adaptLegacyTranscripts(partsFormat);
 
@@ -447,26 +430,12 @@ describe('legacy', () => {
             const createdAt = new Date('2023-01-01');
             const transcripts: Transcript[] = [
                 {
-                    segments: [
-                        {
-                            end: 5.678901,
-                            start: 1.234567,
-                            text: 'test segment',
-                            tokens: [],
-                        },
-                    ],
+                    segments: [{ end: 5.678901, start: 1.234567, text: 'test segment', tokens: [] }],
                     timestamp: new Date('2023-01-02'),
                     volume: 2,
                 },
                 {
-                    segments: [
-                        {
-                            end: 3.456789,
-                            start: 0.123456,
-                            text: 'first segment',
-                            tokens: [],
-                        },
-                    ],
+                    segments: [{ end: 3.456789, start: 0.123456, text: 'first segment', tokens: [] }],
                     timestamp: new Date('2023-01-01'),
                     volume: 1,
                 },

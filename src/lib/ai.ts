@@ -51,12 +51,7 @@ const findAndConcatenateUntilPunctuation = (
     startIndex: number,
     initialText: string,
     textExtractor: (page: Page) => string,
-): {
-    concatenatedText: string;
-    endPageIndex: number;
-    found: boolean;
-    remainingText: string;
-} => {
+): { concatenatedText: string; endPageIndex: number; found: boolean; remainingText: string } => {
     let concatenatedText = initialText;
     let searchPageIndex = startIndex + 1;
 
@@ -80,12 +75,7 @@ const findAndConcatenateUntilPunctuation = (
         searchPageIndex++;
     }
 
-    return {
-        concatenatedText,
-        endPageIndex: pages.length - 1,
-        found: false,
-        remainingText: '',
-    };
+    return { concatenatedText, endPageIndex: pages.length - 1, found: false, remainingText: '' };
 };
 
 /**
@@ -97,21 +87,13 @@ const processMultiPageSegment = (
     initialText: string,
     textExtractor: (page: Page) => string,
     prefixGenerator: (page: Page) => string,
-): {
-    nextPageIndex: number;
-    remainingText: string;
-    segment: string;
-} => {
+): { nextPageIndex: number; remainingText: string; segment: string } => {
     const result = findAndConcatenateUntilPunctuation(pages, startPageIndex, initialText, textExtractor);
     const segment = createSegment(result.concatenatedText, startPageIndex, result.endPageIndex, pages, prefixGenerator);
 
     const nextPageIndex = result.remainingText ? result.endPageIndex : result.endPageIndex + 1;
 
-    return {
-        nextPageIndex,
-        remainingText: result.remainingText,
-        segment,
-    };
+    return { nextPageIndex, remainingText: result.remainingText, segment };
 };
 
 /**

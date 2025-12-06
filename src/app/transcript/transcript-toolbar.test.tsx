@@ -10,13 +10,9 @@ const toast = { success: jest.fn() };
 const saveCompressed = jest.fn();
 const downloadFile = jest.fn();
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
-mock.module('sonner', () => ({
-    toast,
-}));
+mock.module('sonner', () => ({ toast }));
 
 mock.module('@/components/ui/button', () => ({
     Button: ({ children, ...props }: any) => (
@@ -38,21 +34,13 @@ mock.module('paragrafs', () => ({
     formatSecondsToTimestamp: (seconds: number) => `00:00:${seconds.toString().padStart(2, '0')}`,
 }));
 
-mock.module('@/lib/transcriptUtils', () => ({
-    generateFormattedTranscriptFromState: () => 'formatted transcript',
-}));
+mock.module('@/lib/transcriptUtils', () => ({ generateFormattedTranscriptFromState: () => 'formatted transcript' }));
 
-mock.module('@/lib/legacy', () => ({
-    mapTranscriptsToLatestContract: () => ({ data: 'contract' }),
-}));
+mock.module('@/lib/legacy', () => ({ mapTranscriptsToLatestContract: () => ({ data: 'contract' }) }));
 
-mock.module('@/lib/io', () => ({
-    saveCompressed,
-}));
+mock.module('@/lib/io', () => ({ saveCompressed }));
 
-mock.module('@/lib/domUtils', () => ({
-    downloadFile,
-}));
+mock.module('@/lib/domUtils', () => ({ downloadFile }));
 
 import TranscriptToolbar from './transcript-toolbar';
 
@@ -82,9 +70,7 @@ describe('TranscriptToolbar', () => {
         const mergeSegmentsSpy = jest
             .spyOn(useTranscriptStore.getState(), 'mergeSegments')
             .mockImplementation(() => {});
-        const splitSegmentSpy = jest
-            .spyOn(useTranscriptStore.getState(), 'splitSegment')
-            .mockImplementation(() => {});
+        const splitSegmentSpy = jest.spyOn(useTranscriptStore.getState(), 'splitSegment').mockImplementation(() => {});
 
         render(<TranscriptToolbar />);
 
@@ -96,9 +82,7 @@ describe('TranscriptToolbar', () => {
     });
 
     it('shows ground truth dialog trigger for a single selection', () => {
-        useTranscriptStore.setState({
-            selectedSegments: [{ end: 5, start: 0, text: 'a' }],
-        });
+        useTranscriptStore.setState({ selectedSegments: [{ end: 5, start: 0, text: 'a' }] });
 
         render(<TranscriptToolbar />);
 
@@ -107,9 +91,7 @@ describe('TranscriptToolbar', () => {
     });
 
     it('handles destructive and completion actions', () => {
-        useTranscriptStore.setState({
-            selectedSegments: [{ end: 5, start: 0, text: 'a' }],
-        });
+        useTranscriptStore.setState({ selectedSegments: [{ end: 5, start: 0, text: 'a' }] });
         const deleteSegmentsSpy = jest
             .spyOn(useTranscriptStore.getState(), 'deleteSelectedSegments')
             .mockImplementation(() => {});

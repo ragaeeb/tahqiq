@@ -8,9 +8,7 @@ import { resetTranscriptStoreState, setTranscriptFormatOptions } from '@/test-ut
 
 const record = jest.fn();
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
 mock.module('@/components/ui/dialog', () => ({
     DialogClose: ({ children }: any) => <>{children}</>,
@@ -81,11 +79,7 @@ describe('FormatDialog', () => {
         });
 
         expect(setFormattingOptionsSpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                fillers: ['new-filler'],
-                flipPunctuation: true,
-                hints: ['new-hint'],
-            }),
+            expect.objectContaining({ fillers: ['new-filler'], flipPunctuation: true, hints: ['new-hint'] }),
         );
         expect(record).toHaveBeenCalledWith('ApplyFormattingOptions');
     });

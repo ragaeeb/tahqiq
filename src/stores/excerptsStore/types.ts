@@ -156,16 +156,61 @@ export type HeadingOptions = {
     preprompt?: Record<string, string>;
 };
 
+type TemplatePattern = { lineStartsWith?: string[] } | { template: string };
+
+type RegexPattern = { regex: string };
+
+type Match = TemplatePattern | RegexPattern;
+
+type SlicingOption = Match & { meta?: any; min?: number; max?: number };
+
+type OmitPageByPattern = { regex: string };
+
 /**
- * Options for parsing matn text (excluding deprecated fields)
+ * Omit pages starting from the "from" page number until the "to". If "to" is omitted, then we will omit all pages starting from the "from" until the end of the book.
+ */
+type OmitPageByRange = { from: number; to?: number };
+
+type OmitPageNumbers = { pages: number[] };
+
+type OmitPagesOption = OmitPageByPattern | OmitPageByRange | OmitPageNumbers;
+
+type Replacements = { from: Match; to: string; page?: number };
+
+/**
+ * Legacy/deprecated options for parsing matn text (v2.x and earlier)
+ * These fields are automatically migrated to their v3.0 equivalents
+ */
+export type LegacyMatnParseOptions = {
+    /** Surgical patches for typos in the book.
+     * @deprecated since v3.0, use replace
+     */
+    aslPatches?: Array<{ match: string; page: number; replacement: string }>;
+    /** Filters out page ranges
+     *
+     * @deprecated since v3.0, use omit
+     */
+    excludePages?: string[];
+    /** Removes pages matching any of these patterns
+     *
+     * @deprecated since v3.0, use omit
+     */
+    excludePagesWithPatterns?: string[];
+    /** Pattern to options mapping.
+     * @deprecated since v3.0, use slices
+     */
+    patternToOptions?: Record<string, PatternOptions>;
+    /** Preprocessing replacements
+     *
+     * @deprecated since v3.0, use replace
+     */
+    replacements?: Record<string, string>;
+};
+
+/**
+ * Options for parsing matn text (v3.0+)
  */
 export type MatnParseOptions = {
-    /** Surgical patches for typos in the book */
-    aslPatches?: Array<{ match: string; page: number; replacement: string }>;
-    /** Filters out page ranges */
-    excludePages?: string[];
-    /** Removes pages matching any of these patterns */
-    excludePagesWithPatterns?: string[];
     /** Should capture footnotes */
     footnotes?: boolean;
     /** Options for processing headings */
@@ -174,14 +219,25 @@ export type MatnParseOptions = {
     lineSeparator?: string;
     /** Controls text overflow at page breaks */
     overflow?: 'next' | 'punctuation';
-    /** Pattern to options mapping */
-    patternToOptions?: Record<string, PatternOptions>;
     /** Preprocessing replacements */
     preprompt?: Record<string, string>;
     /** Marker pattern if previous entry matches */
     prevEntryMarkerPattern?: string;
-    /** Preprocessing replacements */
-    replacements?: Record<string, string>;
+
+    /**
+     * @since v3.0
+     */
+    replace?: Replacements[];
+
+    /**
+     * @since v3.0
+     */
+    omit?: OmitPagesOption[];
+
+    /**
+     * @since v3.0
+     */
+    slices?: SlicingOption[];
 };
 
 /**

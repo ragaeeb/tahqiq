@@ -18,7 +18,9 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 - **Manuscript processing**: Editing, formatting, and correcting Arabic manuscript scans
 - **Transcript management**: Working with audio transcriptions for lecture content
 - **Excerpts management**: Organizing translated excerpts with filtering, search/replace, and virtualized lists
+- **Shamela editor**: Importing and editing Shamela library books with page marker cleanup
 - **Book browsing**: Static generation of browsable Islamic texts (Qur'an, Hadith collections)
+- **Settings management**: API key configuration for Gemini and Shamela services
 
 ---
 
@@ -29,10 +31,13 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 ```text
 src/
 ├── app/                    # Next.js App Router pages and components
+│   ├── api/                # API routes (translate, shamela, analytics)
 │   ├── book/               # Book viewing and translation dialogs
 │   ├── browse/             # Static browsable content pages
 │   ├── excerpts/           # Excerpts, headings, footnotes management
 │   ├── manuscript/         # Manuscript editing interface
+│   ├── settings/           # API key and configuration management
+│   ├── shamela/            # Shamela book editor
 │   └── transcript/         # Audio transcript editing
 ├── components/             # Shared React components
 │   ├── hooks/              # Custom React hooks
@@ -41,6 +46,8 @@ src/
 ├── stores/                 # Zustand state management stores
 │   ├── excerptsStore/      # Excerpts, headings, footnotes state
 │   ├── manuscriptStore/    # Manuscript editing state
+│   ├── settingsStore/      # App settings and API keys
+│   ├── shamelaStore/       # Shamela book editing state
 │   └── transcriptStore/    # Transcript editing state
 ├── test-utils/             # Testing utilities and helpers
 └── types/                  # TypeScript type definitions
@@ -53,17 +60,42 @@ We use **Zustand** with **Immer middleware** for immutable state updates:
 ```typescript
 // Store pattern (see src/stores/excerptsStore/)
 ├── types.ts           # State and action type definitions
-├── actions.ts         # Pure action functions (operate on state)
+├── actions.ts         # Pure action functions (operate on state via Immer)
 ├── selectors.ts       # Memoized selectors for derived state
-├── useExcerptsStore.ts # Zustand store with Immer
+├── useExcerptsStore.ts # Zustand store with Immer middleware
 └── *.test.ts          # Unit tests
 ```
 
 **Key patterns:**
-- Actions are pure functions that receive state as first argument
+- Use `zustand/middleware/immer` for immutable updates (NOT `mutative`)
+- Actions are pure functions that mutate draft state (Immer handles immutability)
 - Store wraps actions with `set((state) => actions.fn(state, ...args))`
 - Selectors use `memoize-one` for performance
 - Filter state (e.g., `filteredExcerptIds`) coexists with full data
+
+**Store setup example:**
+```typescript
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+
+export const useMyStore = create<MyState>()(
+    immer((set) => ({
+        ...INITIAL_STATE,
+        myAction: (id) => set((state) => {
+            // Mutate state directly - Immer handles immutability
+            state.items = state.items.filter(i => i.id !== id);
+        }),
+    }))
+);
+```
+
+### Settings Store
+
+The settings store (`src/stores/settingsStore/`) manages persisted configuration:
+
+- **Hydration pattern**: Initialize with empty defaults, call `hydrate()` in `useEffect` to avoid SSR mismatch
+- **Encryption**: API keys are base64-encoded before storing in localStorage
+- **Settings**: Gemini API keys, Shamela API key/endpoint, quick substitutions
 
 ---
 
@@ -212,12 +244,22 @@ type FilterState = {
 | Library | Purpose |
 |---------|---------|
 | `next` | App Router, SSG, API routes |
-| `zustand` + `immer` | State management |
+| `zustand` + `immer` | State management with immutable updates |
 | `@tanstack/react-virtual` | Virtualized lists |
 | `@radix-ui/*` | Accessible UI primitives |
+| `shamela` | Shamela library book downloading and parsing |
 | `sonner` | Toast notifications |
 | `nanolytics` | Event analytics |
 | `memoize-one` | Selector memoization |
+
+### API Routes
+
+| Route | Method | Purpose |
+|-------|--------|--------|
+| `/api/shamela` | GET | Download book from Shamela (requires auth header) |
+| `/api/translate` | POST | Translate text via Google Gemini |
+| `/api/analytics` | POST | Record analytics events |
+| `/api/rules` | GET | Fetch manuscript correction rules |
 
 ---
 

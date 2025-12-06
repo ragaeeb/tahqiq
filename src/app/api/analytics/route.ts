@@ -9,9 +9,7 @@ export async function POST(req: NextRequest) {
 
         const response = await fetch(process.env.NANOLYTICS_ENDPOINT, {
             body: await req.text(),
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             method: 'PUT',
         });
 

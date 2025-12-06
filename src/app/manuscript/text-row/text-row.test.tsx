@@ -6,13 +6,9 @@ import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 const record = jest.fn();
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
-mock.module('blumbaben', () => ({
-    withFormattingToolbar: (Component: any) => Component,
-}));
+mock.module('blumbaben', () => ({ withFormattingToolbar: (Component: any) => Component }));
 
 mock.module('@/components/ui/button', () => ({
     Button: ({ children, ...props }: any) => (
@@ -73,7 +69,6 @@ mock.module('@/components/confirm-dropdown-menu-item', () => ({
     ),
 }));
 
-
 const storeState: any = {
     alignPoetry: jest.fn(),
     clearOutPages: jest.fn(),
@@ -100,14 +95,15 @@ import AslContainer from './asl-container';
 import PageInfo from './page-info';
 import SupportContainer from './support-container';
 
-const createLine = (overrides: Partial<SheetLine>): SheetLine => ({
-    alt: overrides.alt ?? 'alt text',
-    id: overrides.id ?? 1,
-    lastUpdate: overrides.lastUpdate ?? Date.now(),
-    page: overrides.page ?? 1,
-    text: overrides.text ?? 'text',
-    ...overrides,
-} as SheetLine);
+const createLine = (overrides: Partial<SheetLine>): SheetLine =>
+    ({
+        alt: overrides.alt ?? 'alt text',
+        id: overrides.id ?? 1,
+        lastUpdate: overrides.lastUpdate ?? Date.now(),
+        page: overrides.page ?? 1,
+        text: overrides.text ?? 'text',
+        ...overrides,
+    }) as SheetLine;
 
 describe('Text Row suite', () => {
     afterEach(() => {

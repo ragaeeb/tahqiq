@@ -28,6 +28,19 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Extract to New Excerpt**: Select Arabic text and extract as a new excerpt
 - **Inline Editing**: Edit Arabic (nass) and translation (text) fields directly
 
+### Shamela Editor (`/shamela`)
+- **Direct Download**: Download books from shamela.ws by pasting URL
+- **JSON Import**: Drag and drop Shamela book JSON files
+- **Page Editing**: Edit page content with body/footnote separation
+- **Title Management**: Edit and organize book titles/chapters
+- **Page Marker Cleanup**: Remove Arabic numeric page markers in batch
+- **Export**: Download edited books as JSON
+
+### Settings (`/settings`)
+- **Gemini API Keys**: Configure multiple API keys for AI translation
+- **Shamela Configuration**: Set up API key and endpoint for book downloads
+- **Quick Substitutions**: Configure common text replacements
+
 ### Manuscript Processing
 - **OCR Correction**: Edit and correct Arabic manuscript scans
 - **Poetry Alignment**: Specialized handling for poetic text alignment
@@ -54,6 +67,7 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - [Radix UI](https://www.radix-ui.com/) for accessible UI components
 - [@tanstack/react-virtual](https://tanstack.com/virtual) for virtualized lists
 - [Google Generative AI](https://ai.google.dev/) for translation capabilities
+- [Shamela](https://www.npmjs.com/package/shamela) for Shamela library integration
 - [Paragrafs](https://www.npmjs.com/package/paragrafs) for transcript segment handling
 - [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) + [happy-dom](https://github.com/capricorn86/happy-dom) for component tests
 
@@ -126,6 +140,20 @@ RULES_ENDPOINT=your_rules_endpoint_url
 4. **Merge Rows**: Combine multiple rows into one
 5. **Find Similar**: Search for similar lines in the manuscript
 
+### Shamela Editor (`/shamela`)
+
+1. **Import Book**: Either paste a shamela.ws URL or drag and drop a JSON file
+2. **Navigate Tabs**: Switch between Pages and Titles tabs
+3. **Edit Content**: Click on fields to edit page body, footnotes, or title content
+4. **Clean Page Markers**: Click the eraser button to remove Arabic page markers
+5. **Save/Download**: Save to session storage or download as JSON
+
+### Settings (`/settings`)
+
+1. **Gemini API Keys**: Click to reveal and edit API keys (one per line)
+2. **Shamela Config**: Set your Shamela API key and books endpoint URL
+3. **Quick Subs**: Add common text substitutions for the manuscript editor
+
 ## JSON Formats
 
 ### Transcript Format
@@ -194,10 +222,13 @@ RULES_ENDPOINT=your_rules_endpoint_url
 tahqiq/
 ├── src/
 │   ├── app/                # Next.js App Router pages
+│   │   ├── api/            # API routes (shamela, translate, analytics)
 │   │   ├── book/           # Book viewing and translation
 │   │   ├── browse/         # Static browsable content
 │   │   ├── excerpts/       # Excerpts management
 │   │   ├── manuscript/     # Manuscript editing
+│   │   ├── settings/       # Configuration UI
+│   │   ├── shamela/        # Shamela book editor
 │   │   └── transcript/     # Audio transcript editing
 │   ├── components/         # Shared React components
 │   │   ├── hooks/          # Custom React hooks
@@ -206,6 +237,8 @@ tahqiq/
 │   ├── stores/             # Zustand state management
 │   │   ├── excerptsStore/  # Excerpts state
 │   │   ├── manuscriptStore/# Manuscript state
+│   │   ├── settingsStore/  # Settings and API keys
+│   │   ├── shamelaStore/   # Shamela book state
 │   │   └── transcriptStore/# Transcript state
 │   └── test-utils/         # Testing utilities
 ├── AGENTS.md               # AI agent contribution guidelines
@@ -214,10 +247,12 @@ tahqiq/
 
 ### Key Patterns
 
-- **State Management**: Zustand with Immer for immutable updates
+- **State Management**: Zustand with Immer middleware for immutable updates
+- **SSR Hydration**: Settings store initializes empty, hydrates from localStorage in useEffect
 - **Dialog Pattern**: `DialogTriggerButton` with lazy `renderContent` callback
 - **Virtualization**: `@tanstack/react-virtual` for large lists with scroll restoration
 - **URL State**: Filter state persisted in URL search params
+- **API Security**: Sensitive data (API keys) passed in headers, not query params
 
 ### Testing
 

@@ -8,10 +8,7 @@ const validateFields = (data: Record<string, any>, requiredFields: string[]) => 
 
     if (missing.length > 0) {
         return NextResponse.json(
-            {
-                error: `Missing required fields: ${missing.join(', ')}`,
-                fields: missing,
-            },
+            { error: `Missing required fields: ${missing.join(', ')}`, fields: missing },
             { status: 400 },
         );
     }
@@ -39,9 +36,7 @@ export async function POST(req: NextRequest) {
             return validationError;
         }
 
-        const client = new GoogleGenAI({
-            apiKey: body.apiKey,
-        });
+        const client = new GoogleGenAI({ apiKey: body.apiKey });
 
         const result = await client.models.generateContent({
             contents: createUserContent([body.prompt]),

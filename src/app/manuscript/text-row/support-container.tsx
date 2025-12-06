@@ -10,9 +10,7 @@ import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore'
 
 import { ActionButton } from './shared';
 
-type SupportContainerProps = {
-    data: SheetLine;
-};
+type SupportContainerProps = { data: SheetLine };
 
 const getAltTextAreaClassName = (data: SheetLine) => {
     return clsx(

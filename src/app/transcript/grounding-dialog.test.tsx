@@ -8,9 +8,7 @@ import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 
 const record = jest.fn();
 
-mock.module('nanolytics', () => ({
-    record,
-}));
+mock.module('nanolytics', () => ({ record }));
 
 mock.module('@/components/ui/dialog', () => ({
     DialogClose: ({ children }: any) => <>{children}</>,
@@ -47,9 +45,7 @@ let selectAllSegmentsSpy: jest.Mock;
 describe('GroundingDialog', () => {
     beforeEach(() => {
         resetTranscriptStoreState();
-        updateSegmentSpy = jest
-            .spyOn(useTranscriptStore.getState(), 'updateSegment')
-            .mockImplementation(() => {});
+        updateSegmentSpy = jest.spyOn(useTranscriptStore.getState(), 'updateSegment').mockImplementation(() => {});
         selectAllSegmentsSpy = jest
             .spyOn(useTranscriptStore.getState(), 'selectAllSegments')
             .mockImplementation(() => {});
@@ -72,7 +68,11 @@ describe('GroundingDialog', () => {
         });
 
         expect(applyGroundTruthToSegment).toHaveBeenCalledWith(segment, segment.text);
-        expect(updateSegmentSpy).toHaveBeenCalledWith(segment.start, expect.objectContaining({ text: segment.text }), true);
+        expect(updateSegmentSpy).toHaveBeenCalledWith(
+            segment.start,
+            expect.objectContaining({ text: segment.text }),
+            true,
+        );
         expect(selectAllSegmentsSpy).toHaveBeenCalledWith(false);
         expect(record).toHaveBeenCalledWith('AcceptGroundTruth');
     });

@@ -1,4 +1,4 @@
-import { BookOpenIcon, FileTextIcon, LayoutListIcon, SettingsIcon } from 'lucide-react';
+import { BookOpenIcon, FileTextIcon, LayoutListIcon, LibraryIcon, SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import VersionFooter from '@/components/version-footer';
@@ -17,6 +17,12 @@ const navigationCards: NavigationCard[] = [
         href: '/excerpts',
         icon: <LayoutListIcon className="h-8 w-8" />,
         title: 'Excerpts Editor',
+    },
+    {
+        description: 'Edit and manage Shamela exported books with page and title editing',
+        href: '/shamela',
+        icon: <LibraryIcon className="h-8 w-8" />,
+        title: 'Shamela Editor',
     },
     {
         description: 'Work with manuscript pages and manage transcriptions',

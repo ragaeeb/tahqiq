@@ -19,21 +19,19 @@ textRowSpy.mockImplementation(({ data, isNewPage, isSelected }: any) => {
     );
 });
 
-const createLine = (overrides: Partial<SheetLine>): SheetLine => ({
-    alt: overrides.alt ?? 'alt text',
-    id: overrides.id ?? Math.random(),
-    isFootnote: overrides.isFootnote ?? false,
-    lastUpdate: overrides.lastUpdate ?? Date.now(),
-    page: overrides.page ?? 1,
-    text: overrides.text ?? 'row',
-} as SheetLine);
+const createLine = (overrides: Partial<SheetLine>): SheetLine =>
+    ({
+        alt: overrides.alt ?? 'alt text',
+        id: overrides.id ?? Math.random(),
+        isFootnote: overrides.isFootnote ?? false,
+        lastUpdate: overrides.lastUpdate ?? Date.now(),
+        page: overrides.page ?? 1,
+        text: overrides.text ?? 'row',
+    }) as SheetLine;
 
 describe('ManuscriptTableBody', () => {
     it('renders virtualized rows with selection and page change markers', () => {
-        const rows = [
-            createLine({ id: 1, page: 1, text: 'First' }),
-            createLine({ id: 2, page: 2, text: 'Second' }),
-        ];
+        const rows = [createLine({ id: 1, page: 1, text: 'First' }), createLine({ id: 2, page: 2, text: 'Second' })];
         const onSelectionChange = jest.fn();
         const previewPdf = jest.fn();
 

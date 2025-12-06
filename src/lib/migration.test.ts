@@ -231,5 +231,339 @@ describe('migration', () => {
             expect(result.options).toEqual({ footnotes: true });
             expect(result.prompt).toBe('Custom prompt');
         });
+
+        it('should migrate patternToOptions to slices', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { patternToOptions: { '^((بَابُ|word2|word3).*)': { type: 2 }, '^(بَابٌ)': { type: 2 } } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.slices).toBeDefined();
+            expect(result.options?.slices).toHaveLength(2);
+
+            const firstOption = result.options!.slices![0]!;
+            expect(firstOption.lineStartsWith).toEqual(['بَابُ', 'word2', 'word3']);
+            expect(firstOption.meta).toEqual({ type: 'chapter' });
+
+            const secondOption = result.options!.slices![1]!;
+            expect(secondOption.lineStartsWith).toEqual(['بَابٌ']);
+            expect(secondOption.meta).toEqual({ type: 'chapter' });
+        });
+
+        it('should convert raqm patterns to template tokens', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { patternToOptions: { '^(([\\u0660-\\u0669]+\\s?[-–—ـ]).*)': {} } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.slices).toHaveLength(1);
+            const option = result.options!.slices![0]!;
+            expect(option.lineStartsWith).toEqual(['{{raqms}}\\s?{{dash}}']);
+            expect(option.meta).toBeUndefined();
+        });
+
+        it('should preserve min/max page constraints', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { patternToOptions: { '^(بَابُ.*)': { maxPage: 100, minPage: 10, type: 2 } } },
+            };
+
+            const result = adaptExcerptsToLatest(data);
+
+            const option = result.options!.slices![0]!;
+            expect(option.min).toBe(10);
+            expect(option.max).toBe(100);
+        });
+
+        it('should not override existing slices', () => {
+            const existingSlicingOptions = [{ lineStartsWith: ['existing'] }];
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { patternToOptions: { '^(بَابُ.*)': { type: 2 } }, slices: existingSlicingOptions },
+            };
+
+            const result = adaptExcerptsToLatest(data);
+
+            expect(result.options?.slices).toBe(existingSlicingOptions);
+        });
+
+        it('should handle empty patternToOptions', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { footnotes: true, patternToOptions: {} },
+            };
+
+            const result = adaptExcerptsToLatest(data);
+
+            expect(result.options?.slices).toBeUndefined();
+            expect(result.options?.footnotes).toBe(true);
+        });
+
+        it('should handle complex nested patterns', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { patternToOptions: { '^(([\\u0660-\\u0669]+\\s?[-–—ـ]|•|وَاعْلَمْ|حَدَّثَنَا).*)': {} } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.slices).toHaveLength(1);
+            const option = result.options!.slices![0]!;
+            expect(option.lineStartsWith).toEqual(['{{raqms}}\\s?{{dash}}', '•', 'وَاعْلَمْ', 'حَدَّثَنَا']);
+        });
+
+        it('should convert type 1 to book', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { patternToOptions: { '^(كِتَابُ.*)': { type: 1 } } },
+            };
+
+            const result = adaptExcerptsToLatest(data);
+
+            const option = result.options!.slices![0]!;
+            expect(option.meta).toEqual({ type: 'book' });
+        });
+
+        it('should migrate excludePages range to omit', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: ['1-33'] },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toHaveLength(1);
+            expect(result.options.omit[0]).toEqual({ from: 1, to: 33 });
+        });
+
+        it('should migrate excludePages list to omit', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: ['1,3,5'] },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toHaveLength(1);
+            expect(result.options.omit[0]).toEqual({ pages: [1, 3, 5] });
+        });
+
+        it('should migrate excludePages single page to omit', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: ['5'] },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toHaveLength(1);
+            expect(result.options.omit[0]).toEqual({ pages: [5] });
+        });
+
+        it('should migrate excludePagesWithPatterns to omit', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePagesWithPatterns: ['^\\d+'] },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toHaveLength(1);
+            expect(result.options.omit[0]).toEqual({ regex: '^\\d+' });
+        });
+
+        it('should migrate multiple excludePages entries to omit', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: ['1-33', '5', '10,20,30'] },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toHaveLength(3);
+            expect(result.options.omit[0]).toEqual({ from: 1, to: 33 });
+            expect(result.options.omit[1]).toEqual({ pages: [5] });
+            expect(result.options.omit[2]).toEqual({ pages: [10, 20, 30] });
+        });
+
+        it('should combine excludePages and excludePagesWithPatterns in omit', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: ['1-33'], excludePagesWithPatterns: ['^\\d+', 'pattern2'] },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toHaveLength(3);
+            expect(result.options.omit[0]).toEqual({ from: 1, to: 33 });
+            expect(result.options.omit[1]).toEqual({ regex: '^\\d+' });
+            expect(result.options.omit[2]).toEqual({ regex: 'pattern2' });
+        });
+
+        it('should not override existing omit', () => {
+            const existingOmit = [{ pages: [99] }];
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: ['1-33'], omit: existingOmit },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toBe(existingOmit);
+        });
+
+        it('should handle empty excludePages', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { excludePages: [], footnotes: true },
+            };
+
+            const result = adaptExcerptsToLatest(data);
+
+            expect(result.options?.omit).toBeUndefined();
+            expect(result.options?.footnotes).toBe(true);
+        });
+
+        it('should migrate replacements to replace', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { replacements: { Text: '', X: 'Y' } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.replace).toHaveLength(2);
+            expect(result.options.replace[0]).toEqual({ from: { regex: 'Text' }, to: '' });
+            expect(result.options.replace[1]).toEqual({ from: { regex: 'X' }, to: 'Y' });
+        });
+
+        it('should migrate single replacement to replace', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { replacements: { 'Remove This': '' } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.replace).toHaveLength(1);
+            expect(result.options.replace[0]).toEqual({ from: { regex: 'Remove This' }, to: '' });
+        });
+
+        it('should not override existing replace', () => {
+            const existingReplace = [{ from: { regex: 'existing' }, to: 'replaced' }];
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { replace: existingReplace, replacements: { Text: '' } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.replace).toBe(existingReplace);
+        });
+
+        it('should handle empty replacements', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { footnotes: true, replacements: {} },
+            };
+
+            const result = adaptExcerptsToLatest(data);
+
+            expect(result.options?.replace).toBeUndefined();
+            expect(result.options?.footnotes).toBe(true);
+        });
+
+        it('should convert Unicode patterns to template tokens in replacements', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { replacements: { '[-–—ـ]': '-', '[\\u0660-\\u0669]+': '' } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.replace).toHaveLength(2);
+            expect(result.options.replace).toContainEqual({ from: { template: '{{raqms}}' }, to: '' });
+            expect(result.options.replace).toContainEqual({ from: { template: '{{dash}}' }, to: '-' });
+        });
+
+        it('should use regex for non-convertible patterns in replacements', () => {
+            const data = {
+                contractVersion: 'v2.0',
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                options: { replacements: { '[\\u0660-\\u0669]+\\s?[-–—ـ]': '', 'plain text': 'replaced' } },
+            };
+
+            const result: any = adaptExcerptsToLatest(data);
+
+            expect(result.options?.replace).toHaveLength(2);
+            expect(result.options.replace).toContainEqual({ from: { regex: 'plain text' }, to: 'replaced' });
+            expect(result.options.replace).toContainEqual({ from: { template: '{{raqms}}\\s?{{dash}}' }, to: '' });
+        });
     });
 });

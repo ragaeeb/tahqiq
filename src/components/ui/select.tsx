@@ -121,9 +121,7 @@ function SelectTrigger({
     className,
     size = 'default',
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-    size?: 'default' | 'sm';
-}) {
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> & { size?: 'default' | 'sm' }) {
     return (
         <SelectPrimitive.Trigger
             className={cn(

@@ -41,7 +41,9 @@ function isUnsafePattern(pattern: string): boolean {
     // Detect excessive repetition
     const excessiveRepetition = /\{[0-9]{3,},?\}/;
 
-    return nestedQuantifiers.test(pattern) || overlappingAlternations.test(pattern) || excessiveRepetition.test(pattern);
+    return (
+        nestedQuantifiers.test(pattern) || overlappingAlternations.test(pattern) || excessiveRepetition.test(pattern)
+    );
 }
 
 /**

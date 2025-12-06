@@ -65,10 +65,7 @@ function DropdownMenuItem({
     inset,
     variant = 'default',
     ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
-    inset?: boolean;
-    variant?: 'default' | 'destructive';
-}) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & { inset?: boolean; variant?: 'default' | 'destructive' }) {
     return (
         <DropdownMenuPrimitive.Item
             className={cn(
@@ -87,9 +84,7 @@ function DropdownMenuLabel({
     className,
     inset,
     ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
-    inset?: boolean;
-}) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & { inset?: boolean }) {
     return (
         <DropdownMenuPrimitive.Label
             className={cn('px-2 py-1.5 text-sm font-medium data-[inset]:pl-8', className)}
@@ -177,9 +172,7 @@ function DropdownMenuSubTrigger({
     className,
     inset,
     ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
-    inset?: boolean;
-}) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & { inset?: boolean }) {
     return (
         <DropdownMenuPrimitive.SubTrigger
             className={cn(

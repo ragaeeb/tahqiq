@@ -21,14 +21,14 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
 
     return (
         <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
-            <td className="w-24 px-2 py-3 text-center align-top text-gray-700 text-sm">
+            <td className="w-24 px-2 py-3 text-center align-middle text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"
                     defaultValue={data.from.toString()}
                     key={`${data.id}/${data.lastUpdatedAt}/from`}
                     min={1}
                     onBlur={(e) => {
-                        const value = Number.parseInt(e.target.value);
+                        const value = Number.parseInt(e.target.value, 10);
                         if (!Number.isNaN(value) && value !== data.from) {
                             onUpdate(data.id, { from: value });
                         }
@@ -36,7 +36,7 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     type="number"
                 />
             </td>
-            <td className="w-24 px-2 py-3 text-center align-top text-gray-700 text-sm">
+            <td className="w-24 px-2 py-3 text-center align-middle text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"
                     defaultValue={data.parent ?? ''}

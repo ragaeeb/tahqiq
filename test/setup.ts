@@ -42,12 +42,7 @@ const registerGlobalMocks = () => {
             getScrollElement: () => null,
             getTotalSize: () => count * 60,
             getVirtualItems: () =>
-                Array.from({ length: count }, (_, index) => ({
-                    index,
-                    key: `${index}`,
-                    size: 60,
-                    start: index * 60,
-                })),
+                Array.from({ length: count }, (_, index) => ({ index, key: `${index}`, size: 60, start: index * 60 })),
         }),
     }));
 };

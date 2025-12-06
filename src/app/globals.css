@@ -149,3 +149,35 @@
     animation-delay: 4s;
   }
 }
+
+/* Shamela content semantic tag styling */
+.shamela-content {
+  white-space: pre-wrap; /* preserve \r and \n as line breaks */
+}
+
+.shamela-content span {
+  font-weight: bold;
+  color: #2563eb !important; /* bright blue for titles */
+}
+
+/*
+ * Narrator reference links (inr://man-NNNN)
+ * These are semantic references to narrators in the original Shamela data,
+ * NOT functional hyperlinks. They use <a> elements for styling consistency
+ * but are intentionally non-interactive since the URLs are internal Shamela
+ * references that don't resolve in a browser context.
+ * 
+ * Accessibility: Using aria-disabled styling pattern - the links remain
+ * in the tab order but are visually and functionally disabled.
+ */
+.shamela-content a {
+  color: #b91c1c !important; /* red for narrators */
+  text-decoration: none;
+  cursor: default;
+  /* Remove pointer-events: none to maintain accessibility */
+}
+
+/* Hadith text (converted from <hadeeth-N> to <span class="hadeeth">) */
+.shamela-content .hadeeth {
+  color: #15803d !important; /* green for hadith text */
+}

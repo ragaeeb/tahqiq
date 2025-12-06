@@ -52,10 +52,7 @@ export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore 
 /**
  * Resets the store to initial state
  */
-export const resetStore = (): ExcerptsStateCore => ({
-    ...INITIAL_STATE,
-    createdAt: new Date(),
-});
+export const resetStore = (): ExcerptsStateCore => ({ ...INITIAL_STATE, createdAt: new Date() });
 
 /**
  * Updates a single excerpt

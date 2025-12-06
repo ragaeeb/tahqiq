@@ -78,28 +78,12 @@ describe('actions', () => {
     describe('alignAndMergeAltPoetry', () => {
         it('should align the poetic alt', () => {
             const observations = [
-                {
-                    text: 'A',
-                },
-                {
-                    isPoetic: true,
-                    text: 'قد قُدِّم العَجْبُ على الرُّوَيس وشارف الوهدُ أبا قُبيسِ',
-                },
-                {
-                    isPoetic: true,
-                    text: 'وطاول البقلُ فروعَ الميْس وهبت العنز لقرع التيسِ',
-                },
-                {
-                    isPoetic: true,
-                    text: 'وادَّعت الروم أبًا في قيس واختلط الناس اختلاط الحيسِ',
-                },
-                {
-                    isPoetic: true,
-                    text: 'إذ قرا القاضي حليف الكيس معاني الشعر على العبيسي',
-                },
-                {
-                    text: 'B',
-                },
+                { text: 'A' },
+                { isPoetic: true, text: 'قد قُدِّم العَجْبُ على الرُّوَيس وشارف الوهدُ أبا قُبيسِ' },
+                { isPoetic: true, text: 'وطاول البقلُ فروعَ الميْس وهبت العنز لقرع التيسِ' },
+                { isPoetic: true, text: 'وادَّعت الروم أبًا في قيس واختلط الناس اختلاط الحيسِ' },
+                { isPoetic: true, text: 'إذ قرا القاضي حليف الكيس معاني الشعر على العبيسي' },
+                { text: 'B' },
             ];
 
             const alt = [
@@ -114,10 +98,7 @@ describe('actions', () => {
                 'B',
             ];
 
-            const merged = alignAndMergeAltPoetry({
-                alt,
-                observations,
-            } as any);
+            const merged = alignAndMergeAltPoetry({ alt, observations } as any);
 
             expect(merged).toEqual([
                 'A',
