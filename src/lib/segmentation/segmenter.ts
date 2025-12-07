@@ -20,35 +20,24 @@ const splitIntoLines = (content: string): string[] => {
 };
 
 /**
- * Builds a RegExp from a SlicingOption
+ * Builds a RegExp from a SlicingOption.
+ * Pipeline: lineStartsWith → template → regex → RegExp
  */
 const buildSliceRegex = (slice: SlicingOption): RegExp | null => {
-    if ('regex' in slice && slice.regex) {
-        // regex field is a literal regex pattern - no token expansion
-        try {
-            return new RegExp(slice.regex, 'u');
-        } catch {
-            return null;
-        }
+    // Local mutable copy for pipeline transformations
+    const s: { lineStartsWith?: string[]; template?: string; regex?: string } = { ...slice };
+
+    // Step 1: lineStartsWith → template (non-capturing group)
+    if (s.lineStartsWith?.length) {
+        s.template = `^(?:${s.lineStartsWith.join('|')})`;
     }
 
-    if ('lineStartsWith' in slice && slice.lineStartsWith?.length) {
-        // Escape special regex chars and create alternation
-        const escaped = slice.lineStartsWith.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        return new RegExp(`^(${escaped.join('|')})`, 'u');
+    // Step 2: template → regex (expand tokens)
+    if (s.template) {
+        s.regex = expandTokens(s.template);
     }
 
-    if ('template' in slice && slice.template) {
-        // Expand template tokens like {{raqms}}, {{dash}}, {{title}}
-        try {
-            const expanded = expandTokens(slice.template);
-            return new RegExp(expanded, 'u');
-        } catch {
-            return null;
-        }
-    }
-
-    return null;
+    return new RegExp(s.regex!, 'u');
 };
 
 /**

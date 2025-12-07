@@ -350,5 +350,29 @@ describe('segmenter', () => {
             expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
             expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
         });
+
+        it('should support lineStartsWith with multiple patterns', () => {
+            const pages: PageInput[] = [
+                { content: '<span data-type="title" id=toc-1>باب الأول</span>', id: 100, page: 1, part: '1' },
+                { content: 'بَابُ الثاني', id: 101, page: 2, part: '1' },
+                { content: '١ - الحديث الأول', id: 102, page: 3, part: '1' },
+            ];
+
+            // lineStartsWith: syntax sugar for template with ^(a|b|c)
+            const slices: SlicingOption[] = [
+                { lineStartsWith: ['{{title}}', 'بَابُ', '{{raqms}} - '], meta: { type: 'chapter' } },
+            ];
+
+            const result = segmentPages(pages, { slices });
+
+            expect(result).toHaveLength(3);
+            expect(result[0]).toMatchObject({
+                content: '<span data-type="title" id=toc-1>باب الأول</span>',
+                from: 100,
+                meta: { type: 'chapter' },
+            });
+            expect(result[1]).toMatchObject({ content: 'بَابُ الثاني', from: 101, meta: { type: 'chapter' } });
+            expect(result[2]).toMatchObject({ content: '١ - الحديث الأول', from: 102, meta: { type: 'chapter' } });
+        });
     });
 });
