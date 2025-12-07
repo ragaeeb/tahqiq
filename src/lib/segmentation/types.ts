@@ -1,59 +1,87 @@
+// ─────────────────────────────────────────────────────────────
+// Pattern Types (mutually exclusive - only ONE per rule)
+// ─────────────────────────────────────────────────────────────
+
+/** Literal regex pattern - no token expansion */
+type RegexPattern = { regex: string };
+
+/** Template pattern - expands {{tokens}} before compiling to regex */
+type TemplatePattern = { template: string };
+
+/** Syntax sugar: ^(?:a|b|c) with token expansion */
+type LineStartsWithPattern = { lineStartsWith: string[] };
+
+/** Syntax sugar: (?:a|b|c)$ with token expansion */
+type LineEndsWithPattern = { lineEndsWith: string[] };
+
+type PatternType = RegexPattern | TemplatePattern | LineStartsWithPattern | LineEndsWithPattern;
+
+// ─────────────────────────────────────────────────────────────
+// Split Behavior
+// ─────────────────────────────────────────────────────────────
+
+type SplitBehavior = {
+    /** Where to split relative to the match */
+    split: 'before' | 'after';
+
+    /**
+     * Which occurrence(s) to split on.
+     * - 'all': Split at every match (default)
+     * - 'first': Only first match
+     * - 'last': Only last match
+     */
+    occurrence?: 'first' | 'last' | 'all';
+
+    /**
+     * Maximum pages to span before forcing a split.
+     * When set, occurrence filtering is applied per page-group.
+     * - maxSpan: 1 = per-page (e.g., last punctuation on EACH page)
+     * - maxSpan: 2 = at most 2 pages per segment
+     * - undefined = no limit (entire content)
+     */
+    maxSpan?: number;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Constraints & Metadata
+// ─────────────────────────────────────────────────────────────
+
+type RuleConstraints = {
+    /** Minimum page number for this rule to apply */
+    min?: number;
+    /** Maximum page number for this rule to apply */
+    max?: number;
+    /** Arbitrary metadata attached to segments matching this rule */
+    meta?: Record<string, unknown>;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Combined Rule Type
+// ─────────────────────────────────────────────────────────────
+
+export type SplitRule = PatternType & SplitBehavior & RuleConstraints;
+
+// ─────────────────────────────────────────────────────────────
+// Input & Output
+// ─────────────────────────────────────────────────────────────
+
 /**
- * Input page structure (matches ShamelaPage essentials)
+ * Input page structure
  */
 export type PageInput = {
-    /** Unique page ID */
+    /** Unique page/entry ID (used for maxSpan grouping). */
     id: number;
     /** Raw content (may contain HTML) */
     content: string;
-    /** Physical page number */
-    page: number;
-    /** Volume/part number */
-    part: string;
-};
-
-/**
- * Template-based pattern: matches lines starting with specific text
- */
-type TemplatePattern = {
-    /** Lines starting with any of these strings match */
-    lineStartsWith?: string[];
-    /** Template string with {{tokens}} */
-    template?: string;
-};
-
-/**
- * Regex-based pattern
- */
-type RegexPattern = {
-    /** Regex pattern string */
-    regex: string;
-};
-
-/**
- * Pattern match type (one of template or regex)
- */
-type Match = TemplatePattern | RegexPattern;
-
-/**
- * Options for a slicing pattern
- */
-export type SlicingOption = Match & {
-    /** Optional metadata to attach to segments matching this pattern */
-    meta?: { type?: 'chapter' | 'book' };
-    /** Minimum page ID for this pattern to apply */
-    min?: number;
-    /** Maximum page ID for this pattern to apply */
-    max?: number;
 };
 
 /**
  * Segmentation options
  */
 export type SegmentationOptions = {
-    /** Slice patterns to identify segment boundaries */
-    slices?: SlicingOption[];
-    /** Strip HTML tags before pattern matching. When true, content will be plain text and html will preserve original. */
+    /** Rules applied in order - first matching rule wins for metadata */
+    rules: SplitRule[];
+    /** Strip HTML tags before matching (content will be plain text) */
     stripHtml?: boolean;
 };
 
@@ -61,16 +89,14 @@ export type SegmentationOptions = {
  * Output segment
  */
 export type Segment = {
-    /** The segment content (plain text if stripHtml was used) */
+    /** Segment content (plain text if stripHtml) */
     content: string;
-    /** Original content with HTML preserved (only populated when stripHtml is true) */
+    /** Original HTML (only if stripHtml was used) */
     html?: string;
-    /** Starting page ID */
+    /** Starting page number */
     from: number;
-    /** Ending page ID (if spans multiple pages) */
+    /** Ending page number (if spans multiple pages) */
     to?: number;
-    /** Optional metadata from matched pattern */
-    meta?: { type?: 'chapter' | 'book' };
-    /** Captured groups from regex pattern (only non-content groups) */
-    captures?: string[];
+    /** Metadata from matched rule */
+    meta?: Record<string, unknown>;
 };

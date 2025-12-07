@@ -127,15 +127,16 @@ function ShamelaPageContent() {
     const handleSegment = useCallback(() => {
         record('SegmentShamelaPages');
         const segments = segmentPages(
-            allPages.map((p) => ({ content: p.content, id: p.id, page: p.page ?? 0, part: p.part ?? '1' })),
+            allPages.map((p) => ({ content: p.content, id: p.id })),
             {
-                slices: [
-                    // Chapter headings: <span data-type='title' ...>
-                    { meta: { type: 'chapter' }, regex: '^<span data-type=[\'"]title[\'"]' },
-                    // Chapter headings: plain text starting with بَابُ (for unwrapped chapters)
-                    { meta: { type: 'chapter' }, regex: '^بَابُ' },
-                    // Hadith entries: Arabic number + dash
-                    { regex: '^([٠-٩]+) - ' },
+                rules: [
+                    // Editor's introduction (pages 1-8): split on last punctuation per page
+                    { max: 8, maxSpan: 1, occurrence: 'last', regex: '[؛.؟!]\\s*', split: 'after' },
+                    // Chapter headings: HTML spans OR plain text بَابُ
+                    { lineStartsWith: ['{{title}}', 'بَابُ'], meta: { type: 'chapter' }, min: 9, split: 'before' },
+                    { lineStartsWith: ['﷽'], split: 'before' },
+                    // Hadith entries: Arabic number + dash (using {{raqms}} token)
+                    { min: 9, split: 'before', template: '^{{raqms}} {{dash}} ' },
                 ],
                 stripHtml: true,
             },

@@ -1,378 +1,400 @@
 import { describe, expect, it } from 'bun:test';
 
 import { segmentPages } from './segmenter';
-import type { PageInput, SlicingOption } from './types';
+import type { PageInput, SplitRule } from './types';
 
 describe('segmenter', () => {
     describe('segmentPages', () => {
+        // ─────────────────────────────────────────────────────────────
+        // Basic split: 'before' tests (current behavior)
+        // ─────────────────────────────────────────────────────────────
+
         it('should segment a single plain-text page with 3 numeric markers', () => {
-            // Single page with 3 entries, each starting with Arabic numeral + dash
-            const pages: PageInput[] = [
-                { content: '١ - الحديث الأول\r٢ - الحديث الثاني\r٣ - الحديث الثالث', id: 100, page: 1, part: '1' },
-            ];
+            const pages: PageInput[] = [{ content: '١ - الحديث الأول\r٢ - الحديث الثاني\r٣ - الحديث الثالث', id: 1 }];
 
-            const slices: SlicingOption[] = [
-                { regex: '^[٠-٩]+ - ' }, // Match Arabic number + dash at line start
-            ];
+            const rules: SplitRule[] = [{ regex: '^[٠-٩]+ - ', split: 'before' }];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(3);
-            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
-            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 100 });
-            expect(result[2]).toMatchObject({ content: '٣ - الحديث الثالث', from: 100 });
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 1 });
+            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 1 });
+            expect(result[2]).toMatchObject({ content: '٣ - الحديث الثالث', from: 1 });
         });
 
         it('should segment a single page with HTML title markers', () => {
-            // Single page with HTML span markers for titles
             const pages: PageInput[] = [
                 {
                     content:
                         '<span data-type="title" id=toc-1>باب الأول</span>\rنص الباب الأول\r<span data-type="title" id=toc-2>باب الثاني</span>\rنص الباب الثاني',
-                    id: 200,
-                    page: 5,
-                    part: '1',
+                    id: 5,
                 },
             ];
 
-            const slices: SlicingOption[] = [
-                { regex: '^<span data-type="title"' }, // Match title span at line start
-            ];
+            const rules: SplitRule[] = [{ regex: '^<span data-type="title"', split: 'before' }];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(2);
             expect(result[0]).toMatchObject({
                 content: '<span data-type="title" id=toc-1>باب الأول</span>\nنص الباب الأول',
-                from: 200,
+                from: 5,
             });
             expect(result[1]).toMatchObject({
                 content: '<span data-type="title" id=toc-2>باب الثاني</span>\nنص الباب الثاني',
-                from: 200,
+                from: 5,
             });
         });
 
         it('should handle content spanning across 2 pages with space joining', () => {
-            // Page 1: entry 1 complete, entry 2 starts but continues to page 2
-            // Page 2: continuation of entry 2, then entry 3 starts
             const pages: PageInput[] = [
-                { content: '١ - الحديث الأول كامل\r٢ - بداية الحديث الثاني', id: 300, page: 10, part: '1' },
-                { content: 'تكملة الحديث الثاني\r٣ - الحديث الثالث', id: 301, page: 11, part: '1' },
+                { content: '١ - الحديث الأول كامل\r٢ - بداية الحديث الثاني', id: 10 },
+                { content: 'تكملة الحديث الثاني\r٣ - الحديث الثالث', id: 11 },
             ];
 
-            const slices: SlicingOption[] = [
-                { regex: '^[٠-٩]+ - ' }, // Match Arabic number + dash at line start
-            ];
+            const rules: SplitRule[] = [{ regex: '^[٠-٩]+ - ', split: 'before' }];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(3);
-            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول كامل', from: 300 });
-            // Entry 2 spans pages - should be joined with space, not newline
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول كامل', from: 10 });
             expect(result[1]).toMatchObject({
                 content: '٢ - بداية الحديث الثاني تكملة الحديث الثاني',
-                from: 300,
-                to: 301,
+                from: 10,
+                to: 11,
             });
-            expect(result[2]).toMatchObject({ content: '٣ - الحديث الثالث', from: 301 });
+            expect(result[2]).toMatchObject({ content: '٣ - الحديث الثالث', from: 11 });
         });
 
-        it('should extract capture groups when regex has them', () => {
-            // Use capture groups to extract content from markers
-            const pages: PageInput[] = [
-                { content: '١ - الحديث الأول\r٢ - الحديث الثاني', id: 400, page: 1, part: '1' },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Capture group: extract just the content after the marker
-                { regex: '^[٠-٩]+ - (.*)' },
-            ];
-
-            const result = segmentPages(pages, { slices });
-
-            expect(result).toHaveLength(2);
-            // Should return only the captured content, not the full match
-            expect(result[0]).toMatchObject({ content: 'الحديث الأول', from: 400 });
-            expect(result[1]).toMatchObject({ content: 'الحديث الثاني', from: 400 });
-        });
-
-        it('should extract title content from HTML span using capture groups', () => {
-            // Extract the text inside the span tag
-            const pages: PageInput[] = [
-                {
-                    content:
-                        '<span data-type="title" id=toc-1>باب الأول</span>\rنص الباب\r<span data-type="title" id=toc-2>باب الثاني</span>',
-                    id: 500,
-                    page: 1,
-                    part: '1',
-                },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Capture: extract text inside the span AND anything after the closing tag
-                { regex: '^<span data-type="title"[^>]*>([^<]+)</span>(.*)' },
-            ];
-
-            const result = segmentPages(pages, { slices });
-
-            expect(result).toHaveLength(2);
-            // First capture group + second capture group combined, plus continuation
-            expect(result[0]).toMatchObject({ content: 'باب الأول\nنص الباب', from: 500 });
-            expect(result[1]).toMatchObject({ content: 'باب الثاني', from: 500 });
-        });
-
-        it('should capture toc ID from HTML span when pattern includes ID capture', () => {
-            // Extract both ID and content from span
-            const pages: PageInput[] = [
-                {
-                    content: '<span data-type="title" id=toc-42>الفصل الأول</span>\rمحتوى الفصل',
-                    id: 600,
-                    page: 1,
-                    part: '1',
-                },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Capture ID in first group, content in second
-                { regex: '^<span data-type="title" id=toc-([0-9]+)>([^<]+)</span>' },
-            ];
-
-            const result = segmentPages(pages, { slices });
-
-            expect(result).toHaveLength(1);
-            // Captured groups are joined, then continuation added
-            expect(result[0]).toMatchObject({
-                // The ID should be exposed somehow - maybe in a captures property?
-                captures: ['42', 'الفصل الأول'],
-                content: 'الفصل الأول\nمحتوى الفصل',
-                from: 600,
-            });
-        });
-
-        it('should strip HTML for pattern matching when stripHtml option is true', () => {
-            // Real Bukhari hadith example with narrator links and hadeeth markers
-            const pages: PageInput[] = [
-                {
-                    content:
-                        '٦٦٩٦ - حَدَّثَنَا <a href="inr://man-5093">أَبُو نُعَيْمٍ، </a>حَدَّثَنَا <a href="inr://man-5361">مَالِكٌ، </a>عَنْ <a href="inr://man-2998">طَلْحَةَ بْنِ عَبْدِ الْمَلِكِ، </a>عَنِ <a href="inr://man-5159">الْقَاسِمِ، </a>عَنْ <a href="inr://man-3026">عَائِشَةَ </a>﵂، عَنِ النَّبِيِّ ﷺ قَالَ: <hadeeth-2359>«مَنْ نَذَرَ أَنْ يُطِيعَ اللهَ فَلْيُطِعْهُ، وَمَنْ نَذَرَ أَنْ يَعْصِيَهُ فَلَا يَعْصِهِ.» <hadeeth>',
-                    id: 9996,
-                    page: 142,
-                    part: '8',
-                },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Pattern without content capture - just detect the marker
-                // Use capture for hadith number only (for metadata)
-                { regex: '^([٠-٩]+) - ' },
-            ];
-
-            const result = segmentPages(pages, { slices, stripHtml: true });
-
-            expect(result).toHaveLength(1);
-            expect(result[0]).toMatchObject({
-                // captures should have just the hadith number
-                captures: ['٦٦٩٦'],
-                // content should be the full stripped line (since no content capture group)
-                content:
-                    '٦٦٩٦ - حَدَّثَنَا أَبُو نُعَيْمٍ، حَدَّثَنَا مَالِكٌ، عَنْ طَلْحَةَ بْنِ عَبْدِ الْمَلِكِ، عَنِ الْقَاسِمِ، عَنْ عَائِشَةَ ﵂، عَنِ النَّبِيِّ ﷺ قَالَ: «مَنْ نَذَرَ أَنْ يُطِيعَ اللهَ فَلْيُطِعْهُ، وَمَنْ نَذَرَ أَنْ يَعْصِيَهُ فَلَا يَعْصِهِ.» ',
-                from: 9996,
-                // html should preserve the original with tags
-                html: '٦٦٩٦ - حَدَّثَنَا <a href="inr://man-5093">أَبُو نُعَيْمٍ، </a>حَدَّثَنَا <a href="inr://man-5361">مَالِكٌ، </a>عَنْ <a href="inr://man-2998">طَلْحَةَ بْنِ عَبْدِ الْمَلِكِ، </a>عَنِ <a href="inr://man-5159">الْقَاسِمِ، </a>عَنْ <a href="inr://man-3026">عَائِشَةَ </a>﵂، عَنِ النَّبِيِّ ﷺ قَالَ: <hadeeth-2359>«مَنْ نَذَرَ أَنْ يُطِيعَ اللهَ فَلْيُطِعْهُ، وَمَنْ نَذَرَ أَنْ يَعْصِيَهُ فَلَا يَعْصِهِ.» <hadeeth>',
-            });
-        });
-
-        it('should segment hadith content with HTML and preserve structure across pages', () => {
-            // Two pages with hadiths, second hadith spans both pages
-            const pages: PageInput[] = [
-                {
-                    content:
-                        '١ - حَدَّثَنَا <a href="inr://man-123">فُلَانٌ</a> قَالَ: الحديث الأول\r٢ - حَدَّثَنَا <a href="inr://man-456">عِلَّانٌ</a>',
-                    id: 100,
-                    page: 1,
-                    part: '1',
-                },
-                { content: 'تَابِعٌ لِلْحَدِيثِ <hadeeth-1>الثَّانِي<hadeeth>\r٣ - الحديث الثالث', id: 101, page: 2, part: '1' },
-            ];
-
-            const slices: SlicingOption[] = [{ regex: '^[٠-٩]+ - ' }];
-
-            const result = segmentPages(pages, { slices, stripHtml: true });
-
-            expect(result).toHaveLength(3);
-
-            // First hadith - single page, HTML stripped
-            expect(result[0]).toMatchObject({
-                content: '١ - حَدَّثَنَا فُلَانٌ قَالَ: الحديث الأول',
-                from: 100,
-                html: '١ - حَدَّثَنَا <a href="inr://man-123">فُلَانٌ</a> قَالَ: الحديث الأول',
-            });
-
-            // Second hadith - spans pages, space-joined, HTML stripped
-            expect(result[1]).toMatchObject({
-                content: '٢ - حَدَّثَنَا عِلَّانٌ تَابِعٌ لِلْحَدِيثِ الثَّانِي',
-                from: 100,
-                html: '٢ - حَدَّثَنَا <a href="inr://man-456">عِلَّانٌ</a> تَابِعٌ لِلْحَدِيثِ <hadeeth-1>الثَّانِي<hadeeth>',
-                to: 101,
-            });
-
-            // Third hadith - single page, no HTML
-            expect(result[2]).toMatchObject({ content: '٣ - الحديث الثالث', from: 101 });
-        });
-
-        it('should only apply pattern when page is >= min', () => {
-            const pages: PageInput[] = [
-                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
-                { content: '٢ - الحديث الثاني', id: 101, page: 5, part: '1' },
-                { content: '٣ - الحديث الثالث', id: 102, page: 10, part: '1' },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Only match on pages >= 5
-                { min: 5, regex: '^[٠-٩]+ - ' },
-            ];
-
-            const result = segmentPages(pages, { slices });
-
-            // Page 1 should be skipped (below min)
-            // Pages 5 and 10 should be segmented
-            expect(result).toHaveLength(2);
-            expect(result[0]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
-            expect(result[1]).toMatchObject({ content: '٣ - الحديث الثالث', from: 102 });
-        });
-
-        it('should only apply pattern when page is <= max', () => {
-            const pages: PageInput[] = [
-                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
-                { content: '٢ - الحديث الثاني', id: 101, page: 5, part: '1' },
-                { content: '٣ - الحديث الثالث', id: 102, page: 10, part: '1' },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Only match on pages <= 5
-                { max: 5, regex: '^[٠-٩]+ - ' },
-            ];
-
-            const result = segmentPages(pages, { slices });
-
-            // Pages 1 and 5 should start segments
-            // Page 10 content (above max) appends to previous segment
-            expect(result).toHaveLength(2);
-            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
-            // Segment 2 includes page 5 content + page 10 appended
-            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني ٣ - الحديث الثالث', from: 101, to: 102 });
-        });
-
-        it('should apply pattern only within min-max range', () => {
-            const pages: PageInput[] = [
-                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
-                { content: '٢ - الحديث الثاني', id: 101, page: 5, part: '1' },
-                { content: '٣ - الحديث الثالث', id: 102, page: 10, part: '1' },
-                { content: '٤ - الحديث الرابع', id: 103, page: 15, part: '1' },
-            ];
-
-            const slices: SlicingOption[] = [
-                // Only match on pages 5-10 (inclusive)
-                { max: 10, min: 5, regex: '^[٠-٩]+ - ' },
-            ];
-
-            const result = segmentPages(pages, { slices });
-
-            // Page 1 is dropped (before min, no previous segment to append to)
-            // Pages 5 and 10 start segments
-            // Page 15 content (above max) appends to segment starting at page 10
-            expect(result).toHaveLength(2);
-            expect(result[0]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
-            expect(result[1]).toMatchObject({ content: '٣ - الحديث الثالث ٤ - الحديث الرابع', from: 102, to: 103 });
-        });
+        // ─────────────────────────────────────────────────────────────
+        // Template and token expansion tests
+        // ─────────────────────────────────────────────────────────────
 
         it('should expand {{raqms}} token in template patterns', () => {
             const pages: PageInput[] = [
-                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
-                { content: '٢ - الحديث الثاني', id: 101, page: 2, part: '1' },
+                { content: '١ - الحديث الأول', id: 1 },
+                { content: '٢ - الحديث الثاني', id: 2 },
             ];
 
-            // Using {{raqms}} token in template field (expands to [٠-٩]+)
-            const slices: SlicingOption[] = [{ template: '^{{raqms}} - ' }];
+            const rules: SplitRule[] = [{ split: 'before', template: '^{{raqms}} - ' }];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(2);
-            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
-            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 1 });
+            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 2 });
         });
 
         it('should expand {{dash}} token in template patterns', () => {
             const pages: PageInput[] = [
-                { content: '١ – الحديث الأول', id: 100, page: 1, part: '1' }, // en-dash
-                { content: '٢ — الحديث الثاني', id: 101, page: 2, part: '1' }, // em-dash
+                { content: '١ – الحديث الأول', id: 1 }, // en-dash
+                { content: '٢ — الحديث الثاني', id: 2 }, // em-dash
             ];
 
-            // Using {{dash}} token to match any dash variant
-            const slices: SlicingOption[] = [{ template: '^{{raqms}} {{dash}} ' }];
+            const rules: SplitRule[] = [{ split: 'before', template: '^{{raqms}} {{dash}} ' }];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(2);
-            expect(result[0]).toMatchObject({ content: '١ – الحديث الأول', from: 100 });
-            expect(result[1]).toMatchObject({ content: '٢ — الحديث الثاني', from: 101 });
+            expect(result[0]).toMatchObject({ content: '١ – الحديث الأول', from: 1 });
+            expect(result[1]).toMatchObject({ content: '٢ — الحديث الثاني', from: 2 });
         });
 
         it('should expand {{title}} token in template patterns', () => {
             const pages: PageInput[] = [
-                { content: '<span data-type="title" id=toc-1>باب الأول</span>\nنص الباب', id: 100, page: 1, part: '1' },
+                { content: '<span data-type="title" id=toc-1>باب الأول</span>\nنص الباب', id: 1 },
             ];
 
-            // Using {{title}} token to match Shamela span tags
-            const slices: SlicingOption[] = [{ template: '^{{title}}' }];
+            const rules: SplitRule[] = [{ split: 'before', template: '^{{title}}' }];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(1);
             expect(result[0]).toMatchObject({
                 content: '<span data-type="title" id=toc-1>باب الأول</span>\nنص الباب',
-                from: 100,
+                from: 1,
             });
         });
 
-        it('should support template field with token expansion', () => {
-            const pages: PageInput[] = [
-                { content: '١ - الحديث الأول', id: 100, page: 1, part: '1' },
-                { content: '٢ - الحديث الثاني', id: 101, page: 2, part: '1' },
-            ];
-
-            // Using template field instead of regex
-            const slices: SlicingOption[] = [{ template: '^{{raqms}} {{dash}} ' }];
-
-            const result = segmentPages(pages, { slices });
-
-            expect(result).toHaveLength(2);
-            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 100 });
-            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني', from: 101 });
-        });
+        // ─────────────────────────────────────────────────────────────
+        // lineStartsWith syntax sugar tests
+        // ─────────────────────────────────────────────────────────────
 
         it('should support lineStartsWith with multiple patterns', () => {
             const pages: PageInput[] = [
-                { content: '<span data-type="title" id=toc-1>باب الأول</span>', id: 100, page: 1, part: '1' },
-                { content: 'بَابُ الثاني', id: 101, page: 2, part: '1' },
-                { content: '١ - الحديث الأول', id: 102, page: 3, part: '1' },
+                { content: '<span data-type="title" id=toc-1>باب الأول</span>', id: 1 },
+                { content: 'بَابُ الثاني', id: 2 },
+                { content: '١ - الحديث الأول', id: 3 },
             ];
 
-            // lineStartsWith: syntax sugar for template with ^(a|b|c)
-            const slices: SlicingOption[] = [
-                { lineStartsWith: ['{{title}}', 'بَابُ', '{{raqms}} - '], meta: { type: 'chapter' } },
+            const rules: SplitRule[] = [
+                { lineStartsWith: ['{{title}}', 'بَابُ', '{{raqms}} - '], meta: { type: 'chapter' }, split: 'before' },
             ];
 
-            const result = segmentPages(pages, { slices });
+            const result = segmentPages(pages, { rules });
 
             expect(result).toHaveLength(3);
             expect(result[0]).toMatchObject({
                 content: '<span data-type="title" id=toc-1>باب الأول</span>',
-                from: 100,
+                from: 1,
                 meta: { type: 'chapter' },
             });
-            expect(result[1]).toMatchObject({ content: 'بَابُ الثاني', from: 101, meta: { type: 'chapter' } });
-            expect(result[2]).toMatchObject({ content: '١ - الحديث الأول', from: 102, meta: { type: 'chapter' } });
+            expect(result[1]).toMatchObject({ content: 'بَابُ الثاني', from: 2, meta: { type: 'chapter' } });
+            expect(result[2]).toMatchObject({ content: '١ - الحديث الأول', from: 3, meta: { type: 'chapter' } });
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        // Page constraints (min/max) tests
+        // ─────────────────────────────────────────────────────────────
+
+        it('should only apply pattern when page is >= min', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 1 },
+                { content: '٢ - الحديث الثاني', id: 5 },
+                { content: '٣ - الحديث الثالث', id: 10 },
+            ];
+
+            const rules: SplitRule[] = [{ min: 5, regex: '^[٠-٩]+ - ', split: 'before' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '٢ - الحديث الثاني', from: 5 });
+            expect(result[1]).toMatchObject({ content: '٣ - الحديث الثالث', from: 10 });
+        });
+
+        it('should only apply pattern when page is <= max', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 1 },
+                { content: '٢ - الحديث الثاني', id: 5 },
+                { content: '٣ - الحديث الثالث', id: 10 },
+            ];
+
+            const rules: SplitRule[] = [{ max: 5, regex: '^[٠-٩]+ - ', split: 'before' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '١ - الحديث الأول', from: 1 });
+            expect(result[1]).toMatchObject({ content: '٢ - الحديث الثاني ٣ - الحديث الثالث', from: 5, to: 10 });
+        });
+
+        it('should apply pattern only within min-max range', () => {
+            const pages: PageInput[] = [
+                { content: '١ - الحديث الأول', id: 1 },
+                { content: '٢ - الحديث الثاني', id: 5 },
+                { content: '٣ - الحديث الثالث', id: 10 },
+                { content: '٤ - الحديث الرابع', id: 15 },
+            ];
+
+            const rules: SplitRule[] = [{ max: 10, min: 5, regex: '^[٠-٩]+ - ', split: 'before' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: '٢ - الحديث الثاني', from: 5 });
+            expect(result[1]).toMatchObject({ content: '٣ - الحديث الثالث ٤ - الحديث الرابع', from: 10, to: 15 });
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        // stripHtml tests
+        // ─────────────────────────────────────────────────────────────
+
+        it('should strip HTML for pattern matching when stripHtml option is true', () => {
+            const pages: PageInput[] = [{ content: '٦٦٩٦ - حَدَّثَنَا <a href="inr://man-5093">أَبُو نُعَيْمٍ</a>', id: 142 }];
+
+            const rules: SplitRule[] = [{ regex: '^[٠-٩]+ - ', split: 'before' }];
+
+            const result = segmentPages(pages, { rules, stripHtml: true });
+
+            expect(result).toHaveLength(1);
+            // Content is stripped of HTML
+            expect(result[0].content).toBe('٦٦٩٦ - حَدَّثَنَا أَبُو نُعَيْمٍ');
+            expect(result[0].from).toBe(142);
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        // NEW: split: 'after' tests (end markers)
+        // ─────────────────────────────────────────────────────────────
+
+        it('should split after pattern when split is after', () => {
+            const pages: PageInput[] = [
+                { content: 'The quick brown fox jumps over the lazy dog', id: 1 },
+                { content: 'This is another sentence about the quick brown fox jumping over the lazy dog', id: 2 },
+            ];
+
+            const rules: SplitRule[] = [{ regex: 'lazy', split: 'after' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(3);
+            expect(result[0]).toMatchObject({ content: 'The quick brown fox jumps over the lazy', from: 1 });
+            expect(result[1]).toMatchObject({
+                content: ' dog This is another sentence about the quick brown fox jumping over the lazy',
+                from: 1,
+                to: 2,
+            });
+            expect(result[2]).toMatchObject({ content: ' dog', from: 2 });
+        });
+
+        it('should support lineEndsWith syntax sugar', () => {
+            const pages: PageInput[] = [{ content: 'Line a\nLine b\nLine c1\nLine d', id: 1 }];
+
+            // lineEndsWith: pattern at end of line
+            const rules: SplitRule[] = [{ lineEndsWith: ['\\d+'], split: 'after' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: 'Line a\nLine b\nLine c1', from: 1 });
+            expect(result[1]).toMatchObject({ content: '\nLine d', from: 1 });
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        // NEW: occurrence tests
+        // ─────────────────────────────────────────────────────────────
+
+        it('should only split at last occurrence when occurrence is last', () => {
+            const pages: PageInput[] = [{ content: 'Sentence 1. Sentence 2. Sentence 3', id: 1 }];
+
+            const rules: SplitRule[] = [{ occurrence: 'last', regex: '\\.\\s*', split: 'after' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(2);
+            // Trailing whitespace is trimmed from segments
+            expect(result[0]).toMatchObject({ content: 'Sentence 1. Sentence 2.', from: 1 });
+            expect(result[1]).toMatchObject({ content: 'Sentence 3', from: 1 });
+        });
+
+        it('should only split at first occurrence when occurrence is first', () => {
+            const pages: PageInput[] = [{ content: 'Hello. World. Foo.', id: 1 }];
+
+            const rules: SplitRule[] = [{ occurrence: 'first', regex: '\\.', split: 'before' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).toMatchObject({ content: 'Hello', from: 1 });
+            expect(result[1]).toMatchObject({ content: '. World. Foo.', from: 1 });
+        });
+
+        it('should split at all occurrences by default', () => {
+            const pages: PageInput[] = [{ content: 'A.B.C.D', id: 1 }];
+
+            const rules: SplitRule[] = [{ regex: '\\.', split: 'after' }];
+
+            const result = segmentPages(pages, { rules });
+
+            expect(result).toHaveLength(4);
+            expect(result[0]).toMatchObject({ content: 'A.', from: 1 });
+            expect(result[1]).toMatchObject({ content: 'B.', from: 1 });
+            expect(result[2]).toMatchObject({ content: 'C.', from: 1 });
+            expect(result[3]).toMatchObject({ content: 'D', from: 1 });
+        });
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // NEW: maxSpan tests (page-group occurrence filtering)
+    // ─────────────────────────────────────────────────────────────
+
+    describe('maxSpan option', () => {
+        // Test data: 4 entries with 0-indexed IDs (id 0, 1, 2, 3)
+        const multiPageContent: PageInput[] = [
+            { content: 'P1A. P1B. E1', id: 0 },
+            { content: 'P2A. P2B. E2', id: 1 },
+            { content: 'P3A. P3B. E3', id: 2 },
+            { content: 'P4A. P4B. E4', id: 3 },
+        ];
+
+        it('should apply occurrence globally when maxSpan is undefined', () => {
+            // occurrence: 'last' should find the LAST period across ALL pages (in page 4)
+            const rules: SplitRule[] = [{ occurrence: 'last', regex: '\\.', split: 'after' }];
+
+            const result = segmentPages(multiPageContent, { rules });
+
+            // 1 split point (last period in entry 3) = 2 segments
+            expect(result).toHaveLength(2);
+            expect(result[0].from).toBe(0);
+            expect(result[0].content).toContain('P1A');
+            expect(result[0].content).toContain('P4B.');
+            expect(result[1].content.trim()).toBe('E4');
+        });
+
+        it('should create split points per-page when maxSpan is 1', () => {
+            // occurrence: 'last' with maxSpan: 1 creates one split point per page
+            const rules: SplitRule[] = [{ maxSpan: 1, occurrence: 'last', regex: '\\.', split: 'after' }];
+
+            const result = segmentPages(multiPageContent, { rules });
+
+            // 4 entries = 4 split points = 5 segments
+            expect(result.length).toBe(5);
+
+            // First segment: from start to entry 0's last period
+            expect(result[0].from).toBe(0);
+            expect(result[0].content).toBe('P1A. P1B.');
+
+            // Last segment: after entry 3's last period to end
+            expect(result[result.length - 1].content.trim()).toBe('E4');
+        });
+
+        it('should create split points per 2-page group when maxSpan is 2', () => {
+            // occurrence: 'last' with maxSpan: 2 creates one split per 2-page group
+            const rules: SplitRule[] = [{ maxSpan: 2, occurrence: 'last', regex: '\\.', split: 'after' }];
+
+            const result = segmentPages(multiPageContent, { rules });
+
+            // 2 groups (id 0-1, id 2-3) = 2 split points = 3 segments
+            expect(result.length).toBe(3);
+
+            // First segment: from start to entry 1's last period
+            expect(result[0].from).toBe(0);
+            expect(result[0].content).toContain('P2B.');
+
+            // Last segment: after entry 3's last period
+            expect(result[result.length - 1].content.trim()).toBe('E4');
+        });
+
+        it('should treat maxSpan 0 as no grouping (entire content)', () => {
+            // maxSpan: 0 should behave like undefined (no grouping)
+            const rules: SplitRule[] = [{ maxSpan: 0, occurrence: 'last', regex: '\\.', split: 'after' }];
+
+            const result = segmentPages(multiPageContent, { rules });
+
+            // Same as undefined - 1 split = 2 segments
+            expect(result).toHaveLength(2);
+            expect(result[0].from).toBe(0);
+            expect(result[1].content.trim()).toBe('E4');
+        });
+
+        it('should work with occurrence first and maxSpan 1', () => {
+            // occurrence: 'first' with maxSpan: 1 finds FIRST period on EACH page
+            const rules: SplitRule[] = [{ maxSpan: 1, occurrence: 'first', regex: '\\.', split: 'before' }];
+
+            const result = segmentPages(multiPageContent, { rules });
+
+            // 4 split points (first period each entry) = 5 segments
+            expect(result.length).toBe(5);
+
+            // First segment: from start to first period on entry 0
+            expect(result[0].content).toBe('P1A');
+            expect(result[0].from).toBe(0);
+        });
+
+        it('should combine maxSpan with min/max page constraints', () => {
+            // Only apply to pages 2-3, with per-page occurrence
+            const rules: SplitRule[] = [
+                { max: 3, maxSpan: 1, min: 2, occurrence: 'last', regex: '\\.', split: 'after' },
+            ];
+
+            const result = segmentPages(multiPageContent, { rules });
+
+            // IDs 2 and 3 each have split = 2 split points
+            // Result: 2 segments
+            expect(result.length).toBe(2);
+
+            // First segment starts from id 2
+            expect(result[0].from).toBe(2);
         });
     });
 });

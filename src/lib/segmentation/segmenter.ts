@@ -1,276 +1,226 @@
 import { expandTokens } from '../search-tokens';
-import type { PageInput, Segment, SegmentationOptions, SlicingOption } from './types';
+import type { PageInput, Segment, SegmentationOptions, SplitRule } from './types';
 
-/**
- * Strips HTML tags from content, preserving text content
- */
-const stripHtmlTags = (content: string): string => {
-    return content.replace(/<[^>]*>/g, '');
-};
+const stripHtmlTags = (content: string): string => content.replace(/<[^>]*>/g, '');
 
-/**
- * Normalizes line endings and splits content into lines
- */
-const splitIntoLines = (content: string): string[] => {
-    return content
-        .replace(/\r\n/g, '\r')
-        .replace(/\n/g, '\r')
-        .split('\r')
-        .filter((line) => line.length > 0);
-};
+const normalizeLineEndings = (content: string): string => content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-/**
- * Builds a RegExp from a SlicingOption.
- * Pipeline: lineStartsWith → template → regex → RegExp
- */
-const buildSliceRegex = (slice: SlicingOption): RegExp | null => {
-    // Local mutable copy for pipeline transformations
-    const s: { lineStartsWith?: string[]; template?: string; regex?: string } = { ...slice };
+const buildRuleRegex = (rule: SplitRule): RegExp => {
+    const s: { lineStartsWith?: string[]; lineEndsWith?: string[]; template?: string; regex?: string } = { ...rule };
 
-    // Step 1: lineStartsWith → template (non-capturing group)
     if (s.lineStartsWith?.length) {
         s.template = `^(?:${s.lineStartsWith.join('|')})`;
     }
-
-    // Step 2: template → regex (expand tokens)
+    if (s.lineEndsWith?.length) {
+        s.template = `(?:${s.lineEndsWith.join('|')})$`;
+    }
     if (s.template) {
         s.regex = expandTokens(s.template);
     }
 
-    return new RegExp(s.regex!, 'u');
+    return new RegExp(s.regex!, 'gmu');
 };
 
-/**
- * Counts the number of capture groups in a regex pattern
- */
-const countCaptureGroups = (regex: RegExp): number => {
-    // Test with an empty-ish string to get the match structure
-    const testMatch = new RegExp(`${regex.source}|`).exec('');
-    return testMatch ? testMatch.length - 1 : 0;
-};
+type PageBoundary = { start: number; end: number; id: number };
+type PageMap = { getId: (offset: number) => number; boundaries: PageBoundary[]; pageBreaks: Set<number> };
 
-/**
- * Match result with optional captures
- */
-type MatchResult = {
-    matched: boolean;
-    meta?: SlicingOption['meta'];
-    /** Extracted content from capture groups (if any) - last non-empty capture */
-    extractedContent?: string;
-    /** All capture groups for metadata (including IDs) */
-    allCaptures?: string[];
-};
+const buildPageMap = (pages: PageInput[]): { content: string; pageMap: PageMap } => {
+    const boundaries: PageBoundary[] = [];
+    const pageBreaks = new Set<number>();
+    let offset = 0;
+    const parts: string[] = [];
 
-/**
- * Tests if a line matches any slice pattern and extracts captures
- */
-const matchesSlicePattern = (
-    line: string,
-    patterns: Array<{ regex: RegExp; meta?: SlicingOption['meta']; hasCaptures: boolean; min?: number; max?: number }>,
-    pageNumber: number,
-): MatchResult => {
-    for (const { regex, meta, hasCaptures, min, max } of patterns) {
-        // Skip patterns outside page range
-        if (min !== undefined && pageNumber < min) {
-            continue;
+    for (let i = 0; i < pages.length; i++) {
+        const normalized = normalizeLineEndings(pages[i].content);
+        boundaries.push({ end: offset + normalized.length, id: pages[i].id, start: offset });
+        parts.push(normalized);
+        if (i < pages.length - 1) {
+            pageBreaks.add(offset + normalized.length);
+            offset += normalized.length + 1;
+        } else {
+            offset += normalized.length;
         }
-        if (max !== undefined && pageNumber > max) {
-            continue;
-        }
+    }
 
-        const match = regex.exec(line);
-        if (match) {
-            if (hasCaptures && match.length > 1) {
-                // Has capture groups - extract content from them
-                const captures = match.slice(1).filter((c) => c !== undefined);
-                // Filter out empty strings for content, but keep all for metadata
-                const nonEmptyCaptures = captures.filter((c) => c.trim().length > 0);
-                // Use last non-empty capture as content (the main captured text)
-                const lastNonEmpty = nonEmptyCaptures[nonEmptyCaptures.length - 1];
-
-                return { allCaptures: captures, extractedContent: lastNonEmpty, matched: true, meta };
+    const findBoundary = (off: number): PageBoundary | undefined => {
+        for (const b of boundaries) {
+            if (off >= b.start && off <= b.end) {
+                return b;
             }
-            return { matched: true, meta };
         }
-    }
-    return { matched: false };
-};
+        return boundaries[boundaries.length - 1];
+    };
 
-/**
- * Segmentation context for tracking state during processing
- */
-type SegmentationContext = {
-    segments: Segment[];
-    current: {
-        /** Lines of content (plain text if stripHtml) */
-        lines: string[];
-        /** Lines of original HTML (only when stripHtml is true) */
-        htmlLines?: string[];
-        from: number;
-        to?: number;
-        meta?: SlicingOption['meta'];
-        captures?: string[];
-    } | null;
-    /** Whether to strip HTML from content */
-    stripHtml: boolean;
-};
-
-/**
- * Finalizes the current segment and adds it to results
- */
-const finalizeCurrentSegment = (ctx: SegmentationContext): void => {
-    if (ctx.current && ctx.current.lines.length > 0) {
-        const segment: Segment = { content: ctx.current.lines.join('\n'), from: ctx.current.from };
-        if (ctx.current.to !== undefined && ctx.current.to !== ctx.current.from) {
-            segment.to = ctx.current.to;
-        }
-        if (ctx.current.meta) {
-            segment.meta = ctx.current.meta;
-        }
-        if (ctx.current.captures && ctx.current.captures.length > 0) {
-            segment.captures = ctx.current.captures;
-        }
-        if (ctx.stripHtml && ctx.current.htmlLines && ctx.current.htmlLines.length > 0) {
-            segment.html = ctx.current.htmlLines.join('\n');
-        }
-        ctx.segments.push(segment);
-    }
-    ctx.current = null;
-};
-
-/**
- * Starts a new segment
- */
-const startNewSegment = (
-    ctx: SegmentationContext,
-    line: string,
-    htmlLine: string | undefined,
-    pageId: number,
-    meta?: SlicingOption['meta'],
-    captures?: string[],
-): void => {
-    ctx.current = {
-        captures,
-        from: pageId,
-        htmlLines: htmlLine !== undefined ? [htmlLine] : undefined,
-        lines: [line],
-        meta,
+    return {
+        content: parts.join('\n'),
+        pageMap: { boundaries, getId: (off: number) => findBoundary(off)?.id ?? 0, pageBreaks },
     };
 };
 
-/**
- * Appends a line to the current segment
- */
-const appendToCurrentSegment = (
-    ctx: SegmentationContext,
-    line: string,
-    htmlLine: string | undefined,
-    pageId: number,
-    useSpace: boolean,
-): void => {
-    if (ctx.current) {
-        if (useSpace) {
-            // Joining from previous page - use space instead of line break
-            const lastIndex = ctx.current.lines.length - 1;
-            ctx.current.lines[lastIndex] = `${ctx.current.lines[lastIndex]} ${line}`;
-            if (ctx.current.htmlLines && htmlLine !== undefined) {
-                ctx.current.htmlLines[lastIndex] = `${ctx.current.htmlLines[lastIndex]} ${htmlLine}`;
-            }
-        } else {
-            ctx.current.lines.push(line);
-            if (ctx.current.htmlLines && htmlLine !== undefined) {
-                ctx.current.htmlLines.push(htmlLine);
-            }
+type SplitPoint = { index: number; meta?: Record<string, unknown> };
+
+const findMatches = (content: string, regex: RegExp): Array<{ start: number; end: number }> => {
+    const matches: Array<{ start: number; end: number }> = [];
+    regex.lastIndex = 0;
+    let m = regex.exec(content);
+    while (m !== null) {
+        matches.push({ end: m.index + m[0].length, start: m.index });
+        if (m[0].length === 0) {
+            regex.lastIndex++;
         }
-        if (pageId !== ctx.current.from) {
-            ctx.current.to = pageId;
-        }
+        m = regex.exec(content);
     }
+    return matches;
 };
 
-/**
- * Segments pages into excerpts based on slicing options.
- *
- * Algorithm:
- * 1. For each page, split content into lines
- * 2. If stripHtml is true, also create stripped version for matching
- * 3. For each line, test against slice patterns (on stripped text if stripHtml)
- * 4. If pattern matches: finalize current segment, start new one
- *    - If pattern has capture groups, use captured content instead of full line
- * 5. If no match: append to current segment
- * 6. Cross-page content is joined with space (not newline)
- * 7. When stripHtml, content is plain text and html preserves original
- */
-export function segmentPages(pages: PageInput[], options: SegmentationOptions): Segment[] {
-    const slices = options.slices || [];
-    const shouldStripHtml = options.stripHtml ?? false;
-
-    // Build regex patterns from slicing options
-    const patterns: Array<{
-        regex: RegExp;
-        meta?: SlicingOption['meta'];
-        hasCaptures: boolean;
-        min?: number;
-        max?: number;
-    }> = [];
-    for (const slice of slices) {
-        const regex = buildSliceRegex(slice);
-        if (regex) {
-            const hasCaptures = countCaptureGroups(regex) > 0;
-            patterns.push({ hasCaptures, max: slice.max, meta: slice.meta, min: slice.min, regex });
-        }
+const filterByOccurrence = (
+    matches: Array<{ start: number; end: number }>,
+    occurrence?: 'first' | 'last' | 'all',
+): Array<{ start: number; end: number }> => {
+    if (!matches.length) {
+        return [];
     }
+    if (occurrence === 'first') {
+        return [matches[0]];
+    }
+    if (occurrence === 'last') {
+        return [matches[matches.length - 1]];
+    }
+    return matches;
+};
 
-    // If no patterns, return empty (nothing to segment by)
-    if (patterns.length === 0) {
+const convertPageBreaks = (content: string, startOffset: number, pageBreaks: Set<number>): string => {
+    return content
+        .split('')
+        .map((c, i) => (c === '\n' && pageBreaks.has(startOffset + i) ? ' ' : c))
+        .join('');
+};
+
+export function segmentPages(pages: PageInput[], options: SegmentationOptions): Segment[] {
+    const { rules = [], stripHtml = false } = options;
+    if (!rules.length || !pages.length) {
         return [];
     }
 
-    const ctx: SegmentationContext = { current: null, segments: [], stripHtml: shouldStripHtml };
+    // If stripHtml is true, strip HTML BEFORE building pageMap so boundaries are consistent
+    const processedPages = stripHtml ? pages.map((p) => ({ ...p, content: stripHtmlTags(p.content) })) : pages;
 
-    for (const page of pages) {
-        const htmlLines = splitIntoLines(page.content);
-        const strippedLines = shouldStripHtml ? htmlLines.map(stripHtmlTags) : htmlLines;
-        let isFirstLineOfPage = true;
+    const { content: matchContent, pageMap } = buildPageMap(processedPages);
 
-        for (let i = 0; i < strippedLines.length; i++) {
-            const strippedLine = strippedLines[i];
-            const htmlLine = htmlLines[i];
+    const splitPoints: SplitPoint[] = [];
+    for (const rule of rules) {
+        const regex = buildRuleRegex(rule);
+        const allMatches = findMatches(matchContent, regex);
 
-            // Always match patterns against ORIGINAL HTML (for HTML-aware patterns)
-            // Content output uses stripped text when stripHtml is true
-            const result = matchesSlicePattern(htmlLine, patterns, page.page);
-
-            if (result.matched) {
-                // Finalize previous segment, start new one
-                finalizeCurrentSegment(ctx);
-
-                // When stripHtml is true, use stripped line as content
-                // (HTML-based captures are stripped separately below)
-                // Otherwise, use extracted content if available
-                const content = shouldStripHtml ? strippedLine : (result.extractedContent ?? htmlLine);
-
-                // For captures, if we're stripping HTML, re-apply captures to stripped content
-                let captures = result.allCaptures;
-                if (shouldStripHtml && captures) {
-                    captures = captures.map(stripHtmlTags);
-                }
-
-                startNewSegment(ctx, content, shouldStripHtml ? htmlLine : undefined, page.id, result.meta, captures);
-            } else if (ctx.current) {
-                // Append to current segment
-                // Use space joining if this is the first line of a new page
-                const useSpace = isFirstLineOfPage && page.id !== ctx.current.from;
-                appendToCurrentSegment(ctx, strippedLine, shouldStripHtml ? htmlLine : undefined, page.id, useSpace);
+        // Filter matches by ID constraints first
+        const constrainedMatches = allMatches.filter((m) => {
+            const id = pageMap.getId(m.start);
+            if (rule.min !== undefined && id < rule.min) {
+                return false;
             }
-            // If no current segment and no match, the line is dropped (pre-first-marker content)
+            if (rule.max !== undefined && id > rule.max) {
+                return false;
+            }
+            return true;
+        });
 
-            isFirstLineOfPage = false;
+        // Apply occurrence filtering
+        let finalMatches: Array<{ start: number; end: number }>;
+
+        if (rule.maxSpan !== undefined && rule.maxSpan > 0) {
+            // Group matches by ID-groups of maxSpan size
+            // Uses unique ID (not page number) to handle duplicate page numbers
+            // e.g., maxSpan: 1 = per-entry, maxSpan: 2 = entries 0-1, 2-3, etc.
+            const matchesByGroup = new Map<number, Array<{ start: number; end: number }>>();
+            for (const m of constrainedMatches) {
+                const id = pageMap.getId(m.start);
+                const groupKey = Math.floor(id / rule.maxSpan);
+                if (!matchesByGroup.has(groupKey)) {
+                    matchesByGroup.set(groupKey, []);
+                }
+                matchesByGroup.get(groupKey)!.push(m);
+            }
+
+            finalMatches = [];
+            for (const groupMatches of matchesByGroup.values()) {
+                const filtered = filterByOccurrence(groupMatches, rule.occurrence);
+                finalMatches.push(...filtered);
+            }
+        } else {
+            // Global occurrence filtering (default)
+            finalMatches = filterByOccurrence(constrainedMatches, rule.occurrence);
+        }
+
+        for (const m of finalMatches) {
+            splitPoints.push({ index: rule.split === 'before' ? m.start : m.end, meta: rule.meta });
         }
     }
 
-    // Finalize any remaining segment
-    finalizeCurrentSegment(ctx);
+    splitPoints.sort((a, b) => a.index - b.index);
+    const unique = splitPoints.filter((p, i) => i === 0 || p.index !== splitPoints[i - 1].index);
 
-    return ctx.segments;
+    const segments: Segment[] = [];
+    const mkSeg = (start: number, end: number, meta?: Record<string, unknown>): Segment | null => {
+        let text = matchContent.slice(start, end).replace(/[\s\n]+$/, '');
+        if (!text) {
+            return null;
+        }
+        text = convertPageBreaks(text, start, pageMap.pageBreaks);
+        const from = pageMap.getId(start);
+        const to = pageMap.getId(start + text.length - 1);
+        const seg: Segment = { content: text, from };
+        if (to !== from) {
+            seg.to = to;
+        }
+        if (meta) {
+            seg.meta = meta;
+        }
+        return seg;
+    };
+
+    if (!unique.length) {
+        // No split points found - return entire content as one segment if ANY rule would allow it
+        const firstId = pageMap.getId(0);
+        const anyRuleAllows = rules.some((r) => {
+            const minOk = r.min === undefined || firstId >= r.min;
+            const maxOk = r.max === undefined || firstId <= r.max;
+            return minOk && maxOk;
+        });
+        if (anyRuleAllows) {
+            const s = mkSeg(0, matchContent.length);
+            if (s) {
+                segments.push(s);
+            }
+        }
+        return segments;
+    }
+
+    // Add first segment (0 to first split point) if there's content before first match
+    // Only include if ANY rule allows the starting ID (not excluded by all rules)
+    if (unique[0].index > 0) {
+        const firstSegId = pageMap.getId(0);
+        const anyRuleAllows = rules.some((r) => {
+            const minOk = r.min === undefined || firstSegId >= r.min;
+            const maxOk = r.max === undefined || firstSegId <= r.max;
+            return minOk && maxOk;
+        });
+        if (anyRuleAllows) {
+            const s = mkSeg(0, unique[0].index);
+            if (s) {
+                segments.push(s);
+            }
+        }
+    }
+
+    // Remaining segments from split points
+    for (let i = 0; i < unique.length; i++) {
+        const start = unique[i].index;
+        const end = i < unique.length - 1 ? unique[i + 1].index : matchContent.length;
+        const s = mkSeg(start, end, unique[i].meta);
+        if (s) {
+            segments.push(s);
+        }
+    }
+
+    return segments;
 }

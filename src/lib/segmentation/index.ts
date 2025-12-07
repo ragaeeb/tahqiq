@@ -1,2 +1,2 @@
 export { segmentPages } from './segmenter';
-export type { PageInput, Segment, SegmentationOptions, SlicingOption } from './types';
+export type { PageInput, Segment, SegmentationOptions, SplitRule } from './types';
