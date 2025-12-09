@@ -8,20 +8,22 @@ import { toast } from 'sonner';
 
 import '@/lib/analytics';
 
+import { segmentPages } from 'flappa-doormal';
+import { htmlToMarkdown } from 'shamela';
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LatestContractVersion } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
-import { segmentPages } from '@/lib/segmentation';
+import type { Excerpts } from '@/stores/excerptsStore/types';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-
 import VirtualizedList from '../excerpts/virtualized-list';
 import PageRow from './page-row';
 import ShamelaTableHeader from './table-header';
@@ -79,7 +81,7 @@ function ShamelaPageContent() {
         return {
             majorRelease: state.majorRelease,
             pages: state.pages.map((p) => ({
-                content: p.content,
+                content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
                 id: p.id,
                 number: p.number,
                 page: p.page,
@@ -126,24 +128,46 @@ function ShamelaPageContent() {
 
     const handleSegment = useCallback(() => {
         record('SegmentShamelaPages');
-        const segments = segmentPages(
-            allPages.map((p) => ({ content: p.content, id: p.id })),
-            {
-                rules: [
-                    // Editor's introduction (pages 1-8): split on last punctuation per page
-                    { max: 8, maxSpan: 1, occurrence: 'last', regex: '[؛.؟!]\\s*', split: 'after' },
-                    // Chapter headings: HTML spans OR plain text بَابُ
-                    { lineStartsWith: ['{{title}}', 'بَابُ'], meta: { type: 'chapter' }, min: 9, split: 'before' },
-                    { lineStartsWith: ['﷽'], split: 'before' },
-                    // Hadith entries: Arabic number + dash (using {{raqms}} token)
-                    { min: 9, split: 'before', template: '^{{raqms}} {{dash}} ' },
-                ],
-                stripHtml: true,
-            },
-        );
+        // Preprocess HTML to Markdown for easier pattern matching
+        const processedPages = allPages.map((p) => ({ content: htmlToMarkdown(p.body).replace(/舄/g, ''), id: p.id }));
+
+        const segments = segmentPages(processedPages, {
+            rules: [
+                { fallback: 'page', maxSpan: 1, occurrence: 'last', split: 'after', template: '{{tarqim}}\\s*' },
+                { fuzzy: true, lineStartsWith: ['{{basmalah}}'], split: 'at' },
+                { fuzzy: true, lineStartsWith: ['{{fasl}}'], split: 'at' },
+                { lineStartsAfter: ['## {{raqms:num}} {{dash}}'], meta: { type: 'chapter' }, min: 60, split: 'at' },
+                { lineStartsAfter: ['##'], meta: { type: 'chapter' }, split: 'at' },
+                { lineStartsAfter: ['{{raqms:num}} {{dash}}'], min: 60, split: 'at' },
+            ],
+        });
         console.log(segments.map((s) => ({ content: s.content, from: s.from, type: s.meta?.type })));
+
+        let idCount = 0;
+
+        const excerpts: Excerpts = {
+            contractVersion: LatestContractVersion.Excerpts,
+            excerpts: segments.map((s) => {
+                return {
+                    from: s.from,
+                    id: `P${++idCount}`,
+                    lastUpdatedAt: Date.now() / 1000,
+                    nass: s.content,
+                    text: '',
+                    translator: 879,
+                    vol: 1,
+                    vp: 1,
+                };
+            }),
+            footnotes: [],
+            headings: [],
+        };
+
+        saveCompressed('excerpts', excerpts);
+        router.push('/excerpts');
+
         toast.success(`Found ${segments.length} segments`);
-    }, [allPages]);
+    }, [allPages, router.push]);
 
     const handleTabChange = useCallback(
         (tab: string) => {
@@ -243,7 +267,7 @@ function ShamelaPageContent() {
                             const data = fileNameToData[keys[0]];
 
                             // Validate basic structure before casting
-                            if (data && typeof data === 'object' && 'pages' in data && 'majorRelease' in data) {
+                            if (typeof data === 'object' && 'pages' in data) {
                                 record('LoadShamela', keys[0]);
                                 init(data as unknown as ShamelaBook, keys[0]);
                             } else {

@@ -1,4 +1,4 @@
-import { removeArabicNumericPageMarkers, sanitizePageContent, splitPageBodyFromFooter } from 'shamela/content';
+import { removeArabicNumericPageMarkers, splitPageBodyFromFooter } from 'shamela/content';
 import type { ShamelaBook, ShamelaPage, ShamelaStateCore, ShamelaTitle } from './types';
 
 /**
@@ -9,41 +9,16 @@ const nowInSeconds = () => Math.floor(Date.now() / 1000);
 /**
  * Initial state for the Shamela store.
  */
-export const INITIAL_STATE: ShamelaStateCore = {
-    filteredPageIds: undefined,
-    filteredTitleIds: undefined,
-    inputFileName: undefined,
-    lastUpdatedAt: undefined,
-    majorRelease: 0,
-    pages: [],
-    shamelaId: undefined,
-    titles: [],
-};
-
-/**
- * Parses a page's content into body and footnote sections.
- * Preserves semantic HTML tags (spans, anchor links, hadeeth markers).
- */
-const parsePageContent = (content: string): { body: string; footnote?: string } => {
-    // Sanitize content (normalize Arabic, etc.) but preserve HTML structure
-    const sanitized = sanitizePageContent(content);
-
-    // Split body from footnotes
-    const [body, footnote] = splitPageBodyFromFooter(sanitized);
-
-    return { body: body.trim(), footnote: footnote?.trim() || undefined };
-};
+export const INITIAL_STATE: ShamelaStateCore = { majorRelease: 0, pages: [], titles: [] };
 
 /**
  * Initializes the store from Shamela book data
  */
 export const initStore = (data: ShamelaBook, fileName?: string): ShamelaStateCore => {
-    const pages: ShamelaPage[] = data.pages.map((page) => {
-        const { body, footnote } = parsePageContent(page.content);
+    const pages: ShamelaPage[] = data.pages.map(({ content, ...page }) => {
+        const [body, footnote] = splitPageBodyFromFooter(content);
         return { ...page, body, footnote };
     });
-
-    const titles: ShamelaTitle[] = (data.titles ?? []).map((title) => ({ ...title }));
 
     return {
         ...INITIAL_STATE,
@@ -51,7 +26,7 @@ export const initStore = (data: ShamelaBook, fileName?: string): ShamelaStateCor
         majorRelease: data.majorRelease,
         pages,
         shamelaId: data.shamelaId,
-        titles,
+        titles: data.titles || [],
     };
 };
 
@@ -68,16 +43,7 @@ export const updatePage = (state: ShamelaStateCore, id: number, updates: Partial
     if (index !== -1) {
         // When body or footnote is updated, reconstruct the content field
         const page = state.pages[index];
-        const newBody = updates.body ?? page.body;
-        const newFootnote = updates.footnote ?? page.footnote;
-
-        // Reconstruct content from body and footnote
-        let content = newBody;
-        if (newFootnote) {
-            content += `\n_________\n${newFootnote}`;
-        }
-
-        state.pages[index] = { ...page, ...updates, content, lastUpdatedAt: nowInSeconds() };
+        state.pages[index] = { ...page, ...updates, lastUpdatedAt: nowInSeconds() };
         state.lastUpdatedAt = new Date();
     }
 };
@@ -131,14 +97,9 @@ export const removePageMarkers = (state: ShamelaStateCore): void => {
         const cleanedBody = removeArabicNumericPageMarkers(page.body);
         if (cleanedBody !== page.body) {
             page.body = cleanedBody;
-            // Reconstruct content from body and footnote
-            let content = cleanedBody;
-            if (page.footnote) {
-                content += `\n_________\n${page.footnote}`;
-            }
-            page.content = content;
             page.lastUpdatedAt = Math.floor(Date.now() / 1000);
         }
     }
+
     state.lastUpdatedAt = new Date();
 };

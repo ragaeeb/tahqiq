@@ -3,7 +3,7 @@
  * Supports literal text matching, regex patterns, and template tokens.
  */
 
-import { containsTokens, templateToRegex } from './search-tokens';
+import { containsTokens, templateToRegex } from 'flappa-doormal';
 
 /** Search strategy types */
 export type SearchStrategy = 'literal' | 'regex' | 'template';
