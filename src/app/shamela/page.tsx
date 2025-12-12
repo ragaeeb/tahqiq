@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
@@ -20,9 +21,9 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-
 import VirtualizedList from '../excerpts/virtualized-list';
 import PageRow from './page-row';
+import { SegmentationDialogContent } from './segmentation-dialog';
 import ShamelaTableHeader from './table-header';
 import TitleRow from './title-row';
 import { useShamelaFilters } from './use-shamela-filters';
@@ -78,7 +79,7 @@ function ShamelaPageContent() {
         return {
             majorRelease: state.majorRelease,
             pages: state.pages.map((p) => ({
-                content: p.content,
+                content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
                 id: p.id,
                 number: p.number,
                 page: p.page,
@@ -122,6 +123,14 @@ function ShamelaPageContent() {
         removePageMarkers();
         toast.success('Removed Arabic page markers from all pages');
     }, [removePageMarkers]);
+
+    /**
+     * Get selected text from the page for pattern auto-detection
+     */
+    const getSelectedText = useCallback(() => {
+        const selection = window.getSelection();
+        return selection?.toString().trim() || '';
+    }, []);
 
     const handleTabChange = useCallback(
         (tab: string) => {
@@ -221,7 +230,7 @@ function ShamelaPageContent() {
                             const data = fileNameToData[keys[0]];
 
                             // Validate basic structure before casting
-                            if (data && typeof data === 'object' && 'pages' in data && 'majorRelease' in data) {
+                            if (typeof data === 'object' && 'pages' in data) {
                                 record('LoadShamela', keys[0]);
                                 init(data as unknown as ShamelaBook, keys[0]);
                             } else {
@@ -247,6 +256,17 @@ function ShamelaPageContent() {
                             <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
                                 <EraserIcon />
                             </Button>
+                            <DialogTriggerButton
+                                onClick={() => record('OpenSegmentationDialog')}
+                                renderContent={() => {
+                                    const selectedText = getSelectedText();
+                                    return <SegmentationDialogContent pages={allPages} selectedText={selectedText} />;
+                                }}
+                                title="Segment pages"
+                                variant="outline"
+                            >
+                                <SplitIcon />
+                            </DialogTriggerButton>
                             <Button className="bg-emerald-500" onClick={handleSave}>
                                 <SaveIcon />
                             </Button>

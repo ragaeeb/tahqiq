@@ -3,7 +3,7 @@ import type { BookData, Page as ShamelaPageBase, Title as ShamelaTitleBase } fro
 /**
  * Extended page type for the editor with parsed content
  */
-export type ShamelaPage = ShamelaPageBase & {
+export type ShamelaPage = Omit<ShamelaPageBase, 'content'> & {
     /** The page body content (without footnotes) */
     body: string;
     /** Footnote content separated from body */

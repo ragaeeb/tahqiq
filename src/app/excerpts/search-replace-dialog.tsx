@@ -1,9 +1,9 @@
 'use client';
 
+import { getAvailableTokens, TOKEN_PATTERNS } from 'flappa-doormal';
 import { AlertCircle, CheckCircle2, SearchIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useState } from 'react';
-
 import { Button } from '@/components/ui/button';
 import {
     DialogClose,
@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getAvailableTokens, TOKEN_PATTERNS } from '@/lib/search-tokens';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
