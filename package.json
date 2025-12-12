@@ -67,5 +67,5 @@
         "lint": "biome check",
         "start": "next start"
     },
-    "version": "1.27.0"
+    "version": "1.28.0"
 }

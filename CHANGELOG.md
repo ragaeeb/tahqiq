@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/ragaeeb/tahqiq/compare/v1.27.0...v1.28.0) (2025-12-12)
+
+
+### Features
+
+* **segmentation:** Add segmentation of shamela pages ([#100](https://github.com/ragaeeb/tahqiq/issues/100)) ([5b43607](https://github.com/ragaeeb/tahqiq/commit/5b43607a4f06ea0a6f566b92f755cde2064e7e66))
+
 # [1.27.0](https://github.com/ragaeeb/tahqiq/compare/v1.26.0...v1.27.0) (2025-12-06)
 
 
