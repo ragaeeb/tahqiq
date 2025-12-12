@@ -73,15 +73,15 @@ const convertRuleToSplitRule = (rule: RuleFormState): SplitRule | null => {
 
     switch (rule.patternType) {
         case 'lineStartsWith':
-            return { ...base, lineStartsWith: patterns, split: rule.split } as SplitRule;
+            return { ...base, lineStartsWith: patterns } as SplitRule;
         case 'lineStartsAfter':
-            return { ...base, lineStartsAfter: patterns, split: rule.split } as SplitRule;
+            return { ...base, lineStartsAfter: patterns } as SplitRule;
         case 'lineEndsWith':
-            return { ...base, lineEndsWith: patterns, split: rule.split } as SplitRule;
+            return { ...base, lineEndsWith: patterns } as SplitRule;
         case 'template':
-            return { ...base, split: rule.split, template: patterns[0] } as SplitRule;
+            return { ...base, template: patterns[0] } as SplitRule;
         case 'regex':
-            return { ...base, regex: patterns[0], split: rule.split } as SplitRule;
+            return { ...base, regex: patterns[0] } as SplitRule;
         default:
             return null;
     }
@@ -103,7 +103,7 @@ const convertBreakpointToBreakpoint = (bp: BreakpointFormState): Breakpoint => {
                       }
                       return parseInt(trimmed, 10);
                   })
-                  .filter((n) => !Number.isNaN(Array.isArray(n) ? n[0] : n))
+                  .filter((n) => (Array.isArray(n) ? !Number.isNaN(n[0]) && !Number.isNaN(n[1]) : !Number.isNaN(n)))
             : undefined;
 
         return {
@@ -252,7 +252,9 @@ function RuleEditor({
                     <Checkbox
                         checked={rule.fuzzy ?? false}
                         id={`fuzzy-${rule.id}`}
-                        onCheckedChange={(checked) => onUpdate({ fuzzy: checked })}
+                        onCheckedChange={(checked) =>
+                            onUpdate({ fuzzy: checked === true ? true : checked === false ? false : undefined })
+                        }
                     />
                     <Label className="text-xs" htmlFor={`fuzzy-${rule.id}`}>
                         Fuzzy
