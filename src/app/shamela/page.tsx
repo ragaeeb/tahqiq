@@ -8,24 +8,22 @@ import { toast } from 'sonner';
 
 import '@/lib/analytics';
 
-import { segmentPages } from 'flappa-doormal';
-import { htmlToMarkdown } from 'shamela';
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LatestContractVersion } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
-import type { Excerpts } from '@/stores/excerptsStore/types';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import VirtualizedList from '../excerpts/virtualized-list';
 import PageRow from './page-row';
+import { SegmentationDialogContent } from './segmentation-dialog';
 import ShamelaTableHeader from './table-header';
 import TitleRow from './title-row';
 import { useShamelaFilters } from './use-shamela-filters';
@@ -126,48 +124,13 @@ function ShamelaPageContent() {
         toast.success('Removed Arabic page markers from all pages');
     }, [removePageMarkers]);
 
-    const handleSegment = useCallback(() => {
-        record('SegmentShamelaPages');
-        // Preprocess HTML to Markdown for easier pattern matching
-        const processedPages = allPages.map((p) => ({ content: htmlToMarkdown(p.body).replace(/舄/g, ''), id: p.id }));
-
-        const segments = segmentPages(processedPages, {
-            rules: [
-                { fallback: 'page', maxSpan: 1, occurrence: 'last', split: 'after', template: '{{tarqim}}\\s*' },
-                { fuzzy: true, lineStartsWith: ['{{basmalah}}'], split: 'at' },
-                { fuzzy: true, lineStartsWith: ['{{fasl}}'], split: 'at' },
-                { lineStartsAfter: ['## {{raqms:num}} {{dash}}'], meta: { type: 'chapter' }, min: 60, split: 'at' },
-                { lineStartsAfter: ['##'], meta: { type: 'chapter' }, split: 'at' },
-                { lineStartsAfter: ['{{raqms:num}} {{dash}}'], min: 60, split: 'at' },
-            ],
-        });
-        console.log(segments.map((s) => ({ content: s.content, from: s.from, type: s.meta?.type })));
-
-        let idCount = 0;
-
-        const excerpts: Excerpts = {
-            contractVersion: LatestContractVersion.Excerpts,
-            excerpts: segments.map((s) => {
-                return {
-                    from: s.from,
-                    id: `P${++idCount}`,
-                    lastUpdatedAt: Date.now() / 1000,
-                    nass: s.content,
-                    text: '',
-                    translator: 879,
-                    vol: 1,
-                    vp: 1,
-                };
-            }),
-            footnotes: [],
-            headings: [],
-        };
-
-        saveCompressed('excerpts', excerpts);
-        router.push('/excerpts');
-
-        toast.success(`Found ${segments.length} segments`);
-    }, [allPages, router.push]);
+    /**
+     * Get selected text from the page for pattern auto-detection
+     */
+    const getSelectedText = useCallback(() => {
+        const selection = window.getSelection();
+        return selection?.toString().trim() || '';
+    }, []);
 
     const handleTabChange = useCallback(
         (tab: string) => {
@@ -293,9 +256,17 @@ function ShamelaPageContent() {
                             <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
                                 <EraserIcon />
                             </Button>
-                            <Button onClick={handleSegment} title="Segment pages" variant="outline">
+                            <DialogTriggerButton
+                                onClick={() => record('OpenSegmentationDialog')}
+                                renderContent={() => {
+                                    const selectedText = getSelectedText();
+                                    return <SegmentationDialogContent pages={allPages} selectedText={selectedText} />;
+                                }}
+                                title="Segment pages"
+                                variant="outline"
+                            >
                                 <SplitIcon />
-                            </Button>
+                            </DialogTriggerButton>
                             <Button className="bg-emerald-500" onClick={handleSave}>
                                 <SaveIcon />
                             </Button>
