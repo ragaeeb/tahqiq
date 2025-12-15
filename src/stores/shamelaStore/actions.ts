@@ -1,3 +1,4 @@
+import { removeFootnoteReferencesSimple, removeSingleDigitFootnoteReferences } from 'baburchi';
 import { removeArabicNumericPageMarkers, splitPageBodyFromFooter } from 'shamela/content';
 import type { ShamelaBook, ShamelaPage, ShamelaStateCore, ShamelaTitle } from './types';
 
@@ -98,6 +99,32 @@ export const removePageMarkers = (state: ShamelaStateCore): void => {
         if (cleanedBody !== page.body) {
             page.body = cleanedBody;
             page.lastUpdatedAt = Math.floor(Date.now() / 1000);
+        }
+    }
+
+    state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Removes footnote references from page bodies and clears footnote content.
+ * Uses baburchi's removeSingleDigitFootnoteReferences and removeFootnoteReferencesSimple.
+ */
+export const removeFootnoteReferences = (state: ShamelaStateCore): void => {
+    const now = nowInSeconds();
+
+    for (const page of state.pages) {
+        let cleanedBody = page.body;
+
+        // Apply both removal functions
+        cleanedBody = removeSingleDigitFootnoteReferences(cleanedBody);
+        cleanedBody = removeFootnoteReferencesSimple(cleanedBody);
+
+        const hasChanges = cleanedBody !== page.body || page.footnote;
+
+        if (hasChanges) {
+            page.body = cleanedBody;
+            page.footnote = undefined;
+            page.lastUpdatedAt = now;
         }
     }
 

@@ -84,8 +84,12 @@ type RawExcerpt = {
     /** The page number in the book that this text was extracted from. */
     from: number;
 
-    /** Set if this is a title/heading of a book or chapter */
-    type?: ExcerptType;
+    meta?: {
+        /** Set if this is a title/heading of a book or chapter */
+        type?: ExcerptType;
+
+        num?: string;
+    };
 
     /** The page number in the book that this text spans until (if different from the starting page) */
     to?: number;

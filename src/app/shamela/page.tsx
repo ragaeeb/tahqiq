@@ -1,6 +1,14 @@
 'use client';
 
-import { DownloadIcon, EraserIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
+import {
+    DownloadIcon,
+    EraserIcon,
+    FileTextIcon,
+    FootprintsIcon,
+    RefreshCwIcon,
+    SaveIcon,
+    SplitIcon,
+} from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -17,13 +25,15 @@ import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
+import { usePatchStore } from '@/stores/patchStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import VirtualizedList from '../excerpts/virtualized-list';
+import { JsonSegmentationDialogContent } from './json-segmentation-dialog';
 import PageRow from './page-row';
-import { SegmentationDialogContent } from './segmentation-dialog';
+import { PatchesDialogContent } from './patches-dialog';
 import ShamelaTableHeader from './table-header';
 import TitleRow from './title-row';
 import { useShamelaFilters } from './use-shamela-filters';
@@ -45,6 +55,10 @@ function ShamelaPageContent() {
     const updatePage = useShamelaStore((state) => state.updatePage);
     const updateTitle = useShamelaStore((state) => state.updateTitle);
     const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
+    const removeFootnoteReferences = useShamelaStore((state) => state.removeFootnoteReferences);
+
+    const patchCount = usePatchStore((state) => state.patches.length);
+    const setBookId = usePatchStore((state) => state.setBookId);
 
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
     const shamelaApiKey = useSettingsStore((state) => state.shamelaApiKey);
@@ -57,7 +71,8 @@ function ShamelaPageContent() {
     const [isLoading, setIsLoading] = useState(false);
     const hasAutoLoaded = useRef(false);
 
-    const { activeTab, filters, setActiveTab, setFilter } = useShamelaFilters();
+    const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } =
+        useShamelaFilters();
     const hasData = pagesCount > 0 || titlesCount > 0;
 
     useEffect(() => {
@@ -65,10 +80,11 @@ function ShamelaPageContent() {
         loadCompressed('shamela').then((data) => {
             if (data) {
                 record('RestoreShamelaFromSession');
+                setBookId((data as ShamelaBook).shamelaId);
                 init(data as ShamelaBook);
             }
         });
-    }, [init, hydrateSettings]);
+    }, [init, hydrateSettings, setBookId]);
 
     /**
      * Creates a ShamelaBook object from the current store state.
@@ -124,19 +140,28 @@ function ShamelaPageContent() {
         toast.success('Removed Arabic page markers from all pages');
     }, [removePageMarkers]);
 
-    /**
-     * Get selected text from the page for pattern auto-detection
-     */
-    const getSelectedText = useCallback(() => {
-        const selection = window.getSelection();
-        return selection?.toString().trim() || '';
-    }, []);
+    const handleRemoveFootnoteReferences = useCallback(() => {
+        record('RemoveFootnoteReferences');
+        removeFootnoteReferences();
+        toast.success('Removed footnote references and cleared footnotes from all pages');
+    }, [removeFootnoteReferences]);
 
     const handleTabChange = useCallback(
         (tab: string) => {
             setActiveTab(tab as 'pages' | 'titles');
         },
         [setActiveTab],
+    );
+
+    /**
+     * Navigate to a specific page in the Pages tab.
+     * This is used when clicking Page or Parent links in the Titles tab.
+     */
+    const handleNavigateToPage = useCallback(
+        (pageId: number) => {
+            navigateToItem('pages', pageId);
+        },
+        [navigateToItem],
     );
 
     const handleUrlSubmit = useCallback(
@@ -169,6 +194,7 @@ function ShamelaPageContent() {
                 }
 
                 const book: ShamelaBook = await response.json();
+                setBookId(book.shamelaId);
                 init(book, `shamela-${bookId}.json`);
                 toast.success(`Downloaded book ${bookId} from Shamela`);
             } catch (error) {
@@ -178,7 +204,7 @@ function ShamelaPageContent() {
                 setIsLoading(false);
             }
         },
-        [init, shamelaApiKey, shamelaBookEndpoint, searchParams, router, pathname],
+        [init, shamelaApiKey, shamelaBookEndpoint, searchParams, router, pathname, setBookId],
     );
 
     // Auto-load book from URL param if present (only once per mount)
@@ -256,16 +282,33 @@ function ShamelaPageContent() {
                             <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
                                 <EraserIcon />
                             </Button>
+                            <Button
+                                onClick={handleRemoveFootnoteReferences}
+                                title="Remove footnote references and clear footnotes"
+                                variant="outline"
+                            >
+                                <FootprintsIcon />
+                            </Button>
                             <DialogTriggerButton
                                 onClick={() => record('OpenSegmentationDialog')}
-                                renderContent={() => {
-                                    const selectedText = getSelectedText();
-                                    return <SegmentationDialogContent pages={allPages} selectedText={selectedText} />;
-                                }}
+                                renderContent={() => <JsonSegmentationDialogContent pages={allPages} />}
                                 title="Segment pages"
                                 variant="outline"
                             >
                                 <SplitIcon />
+                            </DialogTriggerButton>
+                            <DialogTriggerButton
+                                onClick={() => record('OpenPatchesDialog')}
+                                renderContent={() => <PatchesDialogContent />}
+                                title="View tracked patches"
+                                variant="outline"
+                            >
+                                <FileTextIcon />
+                                {patchCount > 0 && (
+                                    <span className="ml-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-orange-700 text-xs">
+                                        {patchCount}
+                                    </span>
+                                )}
                             </DialogTriggerButton>
                             <Button className="bg-emerald-500" onClick={handleSave}>
                                 <SaveIcon />
@@ -309,9 +352,11 @@ function ShamelaPageContent() {
                                             titles={allTitles}
                                         />
                                     }
+                                    onScrollToComplete={clearScrollTo}
                                     renderRow={(item) => (
                                         <PageRow data={item} onUpdate={updatePage} shamelaId={shamelaId} />
                                     )}
+                                    scrollToId={scrollToId}
                                 />
                             </TabsContent>
 
@@ -329,7 +374,13 @@ function ShamelaPageContent() {
                                         />
                                     }
                                     renderRow={(item) => (
-                                        <TitleRow data={item} onUpdate={updateTitle} shamelaId={shamelaId} />
+                                        <TitleRow
+                                            allTitles={allTitles}
+                                            data={item}
+                                            onNavigateToPage={handleNavigateToPage}
+                                            onUpdate={updateTitle}
+                                            shamelaId={shamelaId}
+                                        />
                                     )}
                                 />
                             </TabsContent>

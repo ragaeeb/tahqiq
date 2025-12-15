@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ShamelaPage, ShamelaTitle } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
@@ -38,7 +38,7 @@ const filterTitles = (items: ShamelaTitle[], filters: Filters) => filterItems(it
  * Hook to manage URL-based filtering for shamela pages and titles.
  * Persists filter queries in URL search params for refresh-persistence and shareability.
  *
- * URL format: ?tab=pages&content=pattern&id=50
+ * URL format: ?tab=pages&content=pattern&id=50#123 (where #123 scrolls to item with id 123)
  */
 export function useShamelaFilters() {
     const searchParams = useSearchParams();
@@ -57,6 +57,32 @@ export function useShamelaFilters() {
         () => ({ content: searchParams.get('content') || '', id: searchParams.get('id') || '' }),
         [searchParams],
     );
+
+    // Read scroll target from URL hash (e.g., #123)
+    // We need to use state since window.location.hash isn't available during SSR
+    const [scrollToId, setScrollToId] = useState<number | null>(null);
+
+    // Read hash on mount and listen for hashchange events
+    useEffect(() => {
+        const readHash = () => {
+            const hash = window.location.hash.slice(1); // Remove the # prefix
+            if (hash) {
+                const id = Number.parseInt(hash, 10);
+                if (!Number.isNaN(id)) {
+                    setScrollToId(id);
+                    return;
+                }
+            }
+            setScrollToId(null);
+        };
+
+        // Read initial hash on mount
+        readHash();
+
+        // Listen for hash changes (e.g., browser back/forward)
+        window.addEventListener('hashchange', readHash);
+        return () => window.removeEventListener('hashchange', readHash);
+    }, []);
 
     // Track if filters have been applied for current URL params + data state
     const prevFiltersRef = useRef<string>('');
@@ -94,6 +120,44 @@ export function useShamelaFilters() {
         },
         [searchParams, router, pathname],
     );
+
+    /**
+     * Navigate to a specific tab and scroll to a particular item by ID.
+     * Uses URL hash for the scroll target (e.g., ?tab=pages#123)
+     */
+    const navigateToItem = useCallback(
+        (tab: FilterScope, itemId: number) => {
+            // Set the scroll target immediately
+            setScrollToId(itemId);
+
+            // Navigate to the tab using Next.js router
+            const params = new URLSearchParams();
+            params.set('tab', tab);
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+            // Set the hash after router navigation completes
+            // We use setTimeout to ensure this happens after the async router.replace
+            setTimeout(() => {
+                // Use history.replaceState to update URL without triggering navigation
+                const currentUrl = new URL(window.location.href);
+                currentUrl.hash = itemId.toString();
+                window.history.replaceState(window.history.state, '', currentUrl.toString());
+            }, 100);
+        },
+        [pathname, router],
+    );
+
+    /**
+     * Clear the scrollTo state after scrolling is complete.
+     * The hash remains in the URL for shareability.
+     */
+    const clearScrollTo = useCallback(() => {
+        if (scrollToId) {
+            setScrollToId(null);
+            // Note: We intentionally keep the hash in the URL for shareability
+            // Users can copy the URL and share it, and it will scroll to the same item
+        }
+    }, [scrollToId]);
 
     // Helper to apply filters to the active tab
     const applyFiltersToTab = useCallback(() => {
@@ -135,5 +199,5 @@ export function useShamelaFilters() {
         }
     }, [filtersKey, hasData, filters, applyFiltersToTab, filterPagesByIds, filterTitlesByIds]);
 
-    return { activeTab, filters, setActiveTab, setFilter };
+    return { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter };
 }
