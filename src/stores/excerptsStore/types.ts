@@ -75,7 +75,14 @@ export type Entry = {
 /**
  * Set if this is a title/heading of a book or chapter
  */
-type ExcerptType = 'book' | 'chapter';
+export type ExcerptType = 'book' | 'chapter';
+
+type ExcerptMetadata = {
+    /** Set if this is a title/heading of a book or chapter */
+    type?: ExcerptType;
+
+    num?: string;
+};
 
 type RawExcerpt = {
     /** The Arabic text of the excerpt */
@@ -84,18 +91,13 @@ type RawExcerpt = {
     /** The page number in the book that this text was extracted from. */
     from: number;
 
-    meta?: {
-        /** Set if this is a title/heading of a book or chapter */
-        type?: ExcerptType;
-
-        num?: string;
-    };
+    meta?: ExcerptMetadata;
 
     /** The page number in the book that this text spans until (if different from the starting page) */
     to?: number;
 };
 
-type IndexedExcerpt = RawExcerpt & {
+export type IndexedExcerpt = RawExcerpt & {
     /** Unique ID of this excerpt */
     id: string;
 
@@ -130,7 +132,7 @@ export type Excerpt = IndexedExcerpt & AITranslation;
 /**
  * Represents a heading/section marker
  */
-type IndexedHeading = Pick<RawExcerpt, 'nass' | 'from'> & {
+export type IndexedHeading = Pick<RawExcerpt, 'nass' | 'from'> & {
     /** Unique identifier */
     id: string;
 

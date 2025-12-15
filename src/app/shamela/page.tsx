@@ -1,41 +1,26 @@
 'use client';
 
-import {
-    DownloadIcon,
-    EraserIcon,
-    FileTextIcon,
-    FootprintsIcon,
-    RefreshCwIcon,
-    SaveIcon,
-    SplitIcon,
-} from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
-
-import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import SubmittableInput from '@/components/submittable-input';
-import { Button } from '@/components/ui/button';
-import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { downloadFile } from '@/lib/domUtils';
-import { loadCompressed, saveCompressed } from '@/lib/io';
+import { loadCompressed } from '@/lib/io';
 import { usePatchStore } from '@/stores/patchStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import VirtualizedList from '../excerpts/virtualized-list';
-import { JsonSegmentationDialogContent } from './json-segmentation-dialog';
 import PageRow from './page-row';
-import { PatchesDialogContent } from './patches-dialog';
 import ShamelaTableHeader from './table-header';
 import TitleRow from './title-row';
+import { Toolbar } from './toolbar';
 import { useShamelaFilters } from './use-shamela-filters';
 
 /**
@@ -43,7 +28,6 @@ import { useShamelaFilters } from './use-shamela-filters';
  */
 function ShamelaPageContent() {
     const init = useShamelaStore((state) => state.init);
-    const reset = useShamelaStore((state) => state.reset);
     const pages = useShamelaStore(selectAllPages);
     const titles = useShamelaStore(selectAllTitles);
     const allPages = useShamelaStore((state) => state.pages);
@@ -54,10 +38,7 @@ function ShamelaPageContent() {
     const shamelaId = useShamelaStore((state) => state.shamelaId);
     const updatePage = useShamelaStore((state) => state.updatePage);
     const updateTitle = useShamelaStore((state) => state.updateTitle);
-    const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
-    const removeFootnoteReferences = useShamelaStore((state) => state.removeFootnoteReferences);
 
-    const patchCount = usePatchStore((state) => state.patches.length);
     const setBookId = usePatchStore((state) => state.setBookId);
 
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
@@ -85,66 +66,6 @@ function ShamelaPageContent() {
             }
         });
     }, [init, hydrateSettings, setBookId]);
-
-    /**
-     * Creates a ShamelaBook object from the current store state.
-     * Shared between save and download handlers to avoid duplication.
-     */
-    const getShamelaBookData = useCallback((): ShamelaBook => {
-        const state = useShamelaStore.getState();
-        return {
-            majorRelease: state.majorRelease,
-            pages: state.pages.map((p) => ({
-                content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
-                id: p.id,
-                number: p.number,
-                page: p.page,
-                part: p.part,
-            })),
-            shamelaId: state.shamelaId,
-            titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
-        };
-    }, []);
-
-    const handleSave = useCallback(() => {
-        record('SaveShamela');
-        const data = getShamelaBookData();
-
-        try {
-            saveCompressed('shamela', data);
-            toast.success('Saved state');
-        } catch (err) {
-            console.error('Could not save shamela', err);
-            downloadFile(`shamela-${Date.now()}.json`, JSON.stringify(data, null, 2));
-        }
-    }, [getShamelaBookData]);
-
-    const handleDownload = useCallback(() => {
-        const name = prompt('Enter output file name');
-
-        if (name) {
-            record('DownloadShamela', name);
-            const data = getShamelaBookData();
-            downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
-        }
-    }, [getShamelaBookData]);
-
-    const handleReset = useCallback(() => {
-        record('ResetShamela');
-        reset();
-    }, [reset]);
-
-    const handleRemovePageMarkers = useCallback(() => {
-        record('RemovePageMarkers');
-        removePageMarkers();
-        toast.success('Removed Arabic page markers from all pages');
-    }, [removePageMarkers]);
-
-    const handleRemoveFootnoteReferences = useCallback(() => {
-        record('RemoveFootnoteReferences');
-        removeFootnoteReferences();
-        toast.success('Removed footnote references and cleared footnotes from all pages');
-    }, [removeFootnoteReferences]);
 
     const handleTabChange = useCallback(
         (tab: string) => {
@@ -278,48 +199,7 @@ function ShamelaPageContent() {
                                 {shamelaId && ` • Book ID: ${shamelaId}`}
                             </span>
                         </div>
-                        <div className="space-x-2">
-                            <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
-                                <EraserIcon />
-                            </Button>
-                            <Button
-                                onClick={handleRemoveFootnoteReferences}
-                                title="Remove footnote references and clear footnotes"
-                                variant="outline"
-                            >
-                                <FootprintsIcon />
-                            </Button>
-                            <DialogTriggerButton
-                                onClick={() => record('OpenSegmentationDialog')}
-                                renderContent={() => <JsonSegmentationDialogContent pages={allPages} />}
-                                title="Segment pages"
-                                variant="outline"
-                            >
-                                <SplitIcon />
-                            </DialogTriggerButton>
-                            <DialogTriggerButton
-                                onClick={() => record('OpenPatchesDialog')}
-                                renderContent={() => <PatchesDialogContent />}
-                                title="View tracked patches"
-                                variant="outline"
-                            >
-                                <FileTextIcon />
-                                {patchCount > 0 && (
-                                    <span className="ml-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-orange-700 text-xs">
-                                        {patchCount}
-                                    </span>
-                                )}
-                            </DialogTriggerButton>
-                            <Button className="bg-emerald-500" onClick={handleSave}>
-                                <SaveIcon />
-                            </Button>
-                            <Button onClick={handleDownload}>
-                                <DownloadIcon />
-                            </Button>
-                            <ConfirmButton onClick={handleReset}>
-                                <RefreshCwIcon />
-                            </ConfirmButton>
-                        </div>
+                        <Toolbar />
                     </div>
 
                     <div className="w-full">
