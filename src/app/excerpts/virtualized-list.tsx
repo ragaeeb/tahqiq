@@ -6,10 +6,12 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 type VirtualizedListProps<T> = {
     data: T[];
     estimateSize?: (index: number) => number;
+    /** Optional custom function to find the index to scroll to. If not provided, uses getKey to match scrollToId. */
+    findScrollIndex?: (data: T[], scrollToId: string | number) => number;
     getKey: (item: T, index: number) => string | number;
     header: React.ReactNode;
     renderRow: (item: T, index: number) => React.ReactNode;
-    /** ID to scroll to - will find the item with this key and scroll to it */
+    /** ID or value to scroll to - will find the item using findScrollIndex or getKey and scroll to it */
     scrollToId?: string | number | null;
     /** Callback when scroll-to is complete */
     onScrollToComplete?: () => void;
@@ -30,6 +32,7 @@ type VirtualizerContentProps<T> = VirtualizedListProps<T> & {
 function VirtualizerContent<T>({
     data,
     estimateSize,
+    findScrollIndex,
     getKey,
     header,
     initialScrollTop,
@@ -68,8 +71,10 @@ function VirtualizerContent<T>({
     // Scroll to the specified ID when it changes
     useEffect(() => {
         if (scrollToId != null && scrollToId !== hasScrolledToIdRef.current) {
-            // Find the index of the item with this ID
-            const index = data.findIndex((item, i) => getKey(item, i) === scrollToId);
+            // Find the index - use custom finder if provided, otherwise match by key
+            const index = findScrollIndex
+                ? findScrollIndex(data, scrollToId)
+                : data.findIndex((item, i) => getKey(item, i) === scrollToId);
             if (index !== -1) {
                 hasScrolledToIdRef.current = scrollToId;
 
@@ -99,7 +104,7 @@ function VirtualizerContent<T>({
                 }, 100);
             }
         }
-    }, [scrollToId, data, getKey, virtualizer, onScrollToComplete, estimateSize, parentRef]);
+    }, [scrollToId, data, getKey, findScrollIndex, virtualizer, onScrollToComplete, estimateSize, parentRef]);
 
     const headerRef = useCallback((node: HTMLDivElement | null) => {
         if (node) {
@@ -149,6 +154,7 @@ function VirtualizerContent<T>({
 function VirtualizedList<T>({
     data,
     estimateSize,
+    findScrollIndex,
     getKey,
     header,
     onScrollToComplete,
@@ -192,6 +198,7 @@ function VirtualizedList<T>({
                 key={dataVersion}
                 data={data}
                 estimateSize={estimateSize}
+                findScrollIndex={findScrollIndex}
                 getKey={getKey}
                 header={header}
                 initialScrollTop={scrollTopRef.current}

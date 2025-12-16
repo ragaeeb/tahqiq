@@ -1,3 +1,4 @@
+import type { SegmentationOptions } from 'flappa-doormal';
 import type { PostProcessingApp } from '../commonTypes';
 
 /**
@@ -255,7 +256,7 @@ export type Excerpts = {
     /** Contract version for format compatibility */
     contractVersion: string;
     /** Timestamp when created */
-    createdAt?: number;
+    createdAt: number;
     /** All excerpt entries */
     excerpts: Excerpt[];
     /** All footnotes */
@@ -263,11 +264,9 @@ export type Excerpts = {
     /** All headings/sections */
     headings: Heading[];
     /** Timestamp when last updated */
-    lastUpdatedAt?: number;
+    lastUpdatedAt: number;
     /** Parsing options used */
-    options?: MatnParseOptions;
-    /** Prompt sent to LLM for translation */
-    prompt?: string;
+    options: SegmentationOptions;
 };
 
 /**
@@ -277,7 +276,7 @@ export type ExcerptsStateCore = {
     /** Optional collection metadata */
     collection?: Collection;
     /** Contract version */
-    contractVersion?: string;
+    contractVersion: string;
     /** Creation timestamp */
     createdAt: Date;
     /** All excerpt entries */
@@ -289,13 +288,11 @@ export type ExcerptsStateCore = {
     /** Input filename */
     inputFileName?: string;
     /** Last update timestamp */
-    lastUpdatedAt?: Date;
+    lastUpdatedAt: Date;
     /** Parsing options */
-    options?: MatnParseOptions;
+    options: SegmentationOptions;
     /** Apps used for post-processing */
     postProcessingApps: PostProcessingApp[];
-    /** Translation prompt */
-    prompt?: string;
     /** Filtered excerpt IDs (undefined = show all) */
     filteredExcerptIds?: string[];
     /** Filtered heading IDs (undefined = show all) */

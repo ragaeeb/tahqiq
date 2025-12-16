@@ -396,7 +396,6 @@ const migrateExcerpts = (data: LegacyExcerpts): Excerpts => {
         excerpts: data.excerpts.map(migrateEntry),
         headings: data.headings.map(migrateHeading),
         lastUpdatedAt: Date.now(),
-        options: migrateOptions(data.options),
     };
 };
 
@@ -407,7 +406,7 @@ export const adaptExcerptsToLatest = (data: unknown): Excerpts => {
     const excerpts = data as Excerpts | LegacyExcerpts;
 
     if (!excerpts.contractVersion?.startsWith('v3.')) {
-        return migrateExcerpts(excerpts as LegacyExcerpts);
+        //return migrateExcerpts(excerpts as LegacyExcerpts);
     }
 
     return excerpts as Excerpts;

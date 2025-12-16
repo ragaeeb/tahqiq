@@ -57,7 +57,7 @@ const htmlToMarkdown = (html: string) => {
 
 const getSegmentId = (s: Segment, totalExcerptsInPage: number) => {
     const type = s.meta?.type as ExcerptType;
-    const letter = String.fromCharCode(97 + totalExcerptsInPage);
+    const letter = String.fromCharCode(96 + totalExcerptsInPage);
     const id = `${s.from}${totalExcerptsInPage ? letter : ''}`;
 
     if (type === 'book') {
@@ -123,5 +123,6 @@ export const segmentShamelaPagesToExcerpts = (
             return { id: `T${t.id}`, ...(t.parent && { parent: `T${t.parent}` }), from: t.page, nass: t.content };
         }) as Heading[],
         lastUpdatedAt: Date.now() / 1000,
+        options,
     };
 };

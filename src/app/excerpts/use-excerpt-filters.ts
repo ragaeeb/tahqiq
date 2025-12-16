@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createMatcher } from '@/lib/search';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
@@ -40,7 +40,8 @@ function filterItems<T extends Pick<Excerpt, 'from' | 'nass' | 'text'> | Pick<He
  * Hook to manage URL-based filtering for excerpts, headings, and footnotes.
  * Persists filter queries in URL search params for refresh-persistence and shareability.
  *
- * URL format: ?tab=excerpts&nass=pattern&text=hello&page=50
+ * URL format: ?tab=excerpts&nass=pattern&text=hello&page=50#2333
+ * The hash (#2333) can be used to scroll to a row with that `from` value.
  */
 export function useExcerptFilters() {
     const searchParams = useSearchParams();
@@ -65,6 +66,32 @@ export function useExcerptFilters() {
         }),
         [searchParams],
     );
+
+    // Read scroll target from URL hash (e.g., #2333)
+    // This scrolls to the row with `from` matching this value
+    const [scrollToFrom, setScrollToFrom] = useState<number | null>(null);
+
+    // Read hash on mount and listen for hashchange events
+    useEffect(() => {
+        const readHash = () => {
+            const hash = window.location.hash.slice(1); // Remove the # prefix
+            if (hash) {
+                const fromValue = Number.parseInt(hash, 10);
+                if (!Number.isNaN(fromValue)) {
+                    setScrollToFrom(fromValue);
+                    return;
+                }
+            }
+            setScrollToFrom(null);
+        };
+
+        // Read initial hash on mount
+        readHash();
+
+        // Listen for hash changes (e.g., browser back/forward)
+        window.addEventListener('hashchange', readHash);
+        return () => window.removeEventListener('hashchange', readHash);
+    }, []);
 
     // Track if filters have been applied for current URL params + data state
     const prevFiltersRef = useRef<string>('');
@@ -103,6 +130,16 @@ export function useExcerptFilters() {
         },
         [searchParams, router, pathname],
     );
+
+    /**
+     * Clear the scrollToFrom state after scrolling is complete.
+     * The hash remains in the URL for shareability.
+     */
+    const clearScrollTo = useCallback(() => {
+        if (scrollToFrom) {
+            setScrollToFrom(null);
+        }
+    }, [scrollToFrom]);
 
     // Apply filters when URL params change OR when data is first loaded
     useEffect(() => {
@@ -172,5 +209,5 @@ export function useExcerptFilters() {
         filterFootnotesByIds,
     ]);
 
-    return { activeTab, filters, setActiveTab, setFilter };
+    return { activeTab, clearScrollTo, filters, scrollToFrom, setActiveTab, setFilter };
 }
