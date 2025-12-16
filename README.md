@@ -25,6 +25,7 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Three-Tab Interface**: Manage excerpts, headings, and footnotes separately
 - **Search & Replace**: Powerful regex-based search and replace with token support (Arabic numerals, diacritics)
 - **URL-Based Filtering**: Shareable filter state via URL parameters
+- **Hash-Based Scroll**: Navigate to specific rows via URL hash (e.g., `/excerpts#2333` scrolls to `from=2333`)
 - **Extract to New Excerpt**: Select Arabic text and extract as a new excerpt
 - **Inline Editing**: Edit Arabic (nass) and translation (text) fields directly
 
@@ -33,7 +34,11 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **JSON Import**: Drag and drop Shamela book JSON files
 - **Page Editing**: Edit page content with body/footnote separation
 - **Title Management**: Edit and organize book titles/chapters
+- **Title-to-Page Navigation**: Click page/parent links in Titles tab to scroll to associated page
+- **Hash-Based Scroll**: Navigate to specific pages via URL hash (e.g., `/shamela?tab=pages#123`)
 - **Page Marker Cleanup**: Remove Arabic numeric page markers in batch
+- **Segmentation Dialog**: Segment pages into excerpts using configurable rules and presets
+- **Patches System**: Track and export page edits as diffs for version control
 - **Export**: Download edited books as JSON
 
 ### Settings (`/settings`)
@@ -145,8 +150,12 @@ RULES_ENDPOINT=your_rules_endpoint_url
 1. **Import Book**: Either paste a shamela.ws URL or drag and drop a JSON file
 2. **Navigate Tabs**: Switch between Pages and Titles tabs
 3. **Edit Content**: Click on fields to edit page body, footnotes, or title content
-4. **Clean Page Markers**: Click the eraser button to remove Arabic page markers
-5. **Save/Download**: Save to session storage or download as JSON
+4. **Navigate from Titles**: Click page numbers in Titles tab to jump to that page in Pages tab
+5. **URL Hash Navigation**: Use `#123` in URL to scroll to specific page (e.g., `/shamela?tab=pages#123`)
+6. **Segment Pages**: Use the segmentation dialog to split pages into excerpts with pattern matching
+7. **Clean Page Markers**: Click the eraser button to remove Arabic page markers
+8. **Track Patches**: View and export page edit diffs via the patches dialog
+9. **Save/Download**: Save to session storage or download as JSON
 
 ### Settings (`/settings`)
 
@@ -225,18 +234,20 @@ tahqiq/
 │   │   ├── api/            # API routes (shamela, translate, analytics)
 │   │   ├── book/           # Book viewing and translation
 │   │   ├── browse/         # Static browsable content
-│   │   ├── excerpts/       # Excerpts management
+│   │   ├── excerpts/       # Excerpts management with virtualized lists
 │   │   ├── manuscript/     # Manuscript editing
 │   │   ├── settings/       # Configuration UI
-│   │   ├── shamela/        # Shamela book editor
+│   │   ├── shamela/        # Shamela book editor with segmentation
 │   │   └── transcript/     # Audio transcript editing
 │   ├── components/         # Shared React components
 │   │   ├── hooks/          # Custom React hooks
 │   │   └── ui/             # UI primitives (shadcn/ui style)
 │   ├── lib/                # Utility functions
 │   ├── stores/             # Zustand state management
+│   │   ├── bookStore/      # Book compilation state
 │   │   ├── excerptsStore/  # Excerpts state
 │   │   ├── manuscriptStore/# Manuscript state
+│   │   ├── patchStore/     # Page edit patches state
 │   │   ├── settingsStore/  # Settings and API keys
 │   │   ├── shamelaStore/   # Shamela book state
 │   │   └── transcriptStore/# Transcript state
@@ -251,7 +262,7 @@ tahqiq/
 - **SSR Hydration**: Settings store initializes empty, hydrates from localStorage in useEffect
 - **Dialog Pattern**: `DialogTriggerButton` with lazy `renderContent` callback
 - **Virtualization**: `@tanstack/react-virtual` for large lists with scroll restoration
-- **URL State**: Filter state persisted in URL search params
+- **URL State**: Filter state persisted in URL search params, scroll targets in hash
 - **API Security**: Sensitive data (API keys) passed in headers, not query params
 
 ### Testing
