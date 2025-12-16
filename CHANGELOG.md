@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/ragaeeb/tahqiq/compare/v1.28.0...v1.29.0) (2025-12-16)
+
+
+### Features
+
+* **export:** Add scroll navigation for shamela and excerpts ([#101](https://github.com/ragaeeb/tahqiq/issues/101)) ([228ec65](https://github.com/ragaeeb/tahqiq/commit/228ec65c4141c0aad0f84e408f6f4e077e6d7961))
+
 # [1.28.0](https://github.com/ragaeeb/tahqiq/compare/v1.27.0...v1.28.0) (2025-12-12)
 
 
