@@ -92,9 +92,17 @@ function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: Excerpt
 
     return (
         <>
-            <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
+            <tr
+                className={`border-gray-100 border-b transition-colors duration-150 ease-in-out ${
+                    data.meta?.type === 'chapter'
+                        ? 'bg-green-50 hover:bg-green-100'
+                        : data.meta?.type === 'book'
+                          ? 'bg-blue-50 hover:bg-blue-100'
+                          : 'hover:bg-gray-50'
+                }`}
+            >
                 <td className="w-32 px-2 py-3 text-center align-top text-gray-600 text-xs">
-                    {[data.from, data.to].filter(Boolean).join('-')}
+                    {[data.from, data.to].filter(Boolean).join('-')} {data.meta?.num && `#${data.meta?.num}`}
                 </td>
                 <td className="relative px-4 py-3 align-top" dir="rtl">
                     <Textarea

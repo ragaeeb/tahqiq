@@ -62,6 +62,11 @@ export type ShamelaActions = {
     init: (data: ShamelaBook, fileName?: string) => void;
 
     /**
+     * Removes footnote references from page bodies and clears footnote content
+     */
+    removeFootnoteReferences: () => void;
+
+    /**
      * Removes Arabic numeric page markers from all page content
      */
     removePageMarkers: () => void;

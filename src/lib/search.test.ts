@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createMatcher, detectStrategy, isRegexPattern, isTemplatePattern, parseRegex } from './search';
+import { createMatcher, detectStrategy, isRegexPattern, parseRegex } from './search';
 
 describe('search utilities', () => {
     describe('isRegexPattern', () => {
@@ -13,20 +13,6 @@ describe('search utilities', () => {
             expect(isRegexPattern('test')).toBe(false);
             expect(isRegexPattern('/incomplete')).toBe(false);
             expect(isRegexPattern('hello world')).toBe(false);
-        });
-    });
-
-    describe('isTemplatePattern', () => {
-        it('should detect template patterns', () => {
-            expect(isTemplatePattern('{{raqm}}')).toBe(true);
-            expect(isTemplatePattern('، {{raqms}}')).toBe(true);
-            expect(isTemplatePattern('{{harf}}{{dash}}')).toBe(true);
-        });
-
-        it('should reject non-template strings', () => {
-            expect(isTemplatePattern('hello')).toBe(false);
-            expect(isTemplatePattern('/regex/')).toBe(false);
-            expect(isTemplatePattern('{incomplete}')).toBe(false);
         });
     });
 

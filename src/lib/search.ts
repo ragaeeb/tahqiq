@@ -22,13 +22,6 @@ export function isRegexPattern(query: string): boolean {
 }
 
 /**
- * Detects if query contains template tokens: {{tokenName}}
- */
-export function isTemplatePattern(query: string): boolean {
-    return containsTokens(query);
-}
-
-/**
  * Checks if a regex pattern is potentially unsafe (ReDoS risk).
  * Detects patterns with nested quantifiers or catastrophic backtracking constructs.
  * @returns true if pattern appears unsafe
@@ -82,7 +75,7 @@ export function detectStrategy(query: string): SearchStrategy {
     if (isRegexPattern(query)) {
         return 'regex';
     }
-    if (isTemplatePattern(query)) {
+    if (containsTokens(query)) {
         return 'template';
     }
     return 'literal';
@@ -119,7 +112,7 @@ export function createMatcher(query: string): TextMatcher {
     }
 
     // Try template pattern: contains {{token}}
-    if (isTemplatePattern(query)) {
+    if (containsTokens(query)) {
         const regex = templateToRegex(query);
         if (regex) {
             return (text) => text != null && regex.test(text);
@@ -127,5 +120,5 @@ export function createMatcher(query: string): TextMatcher {
     }
 
     // Fallback to literal includes
-    return (text) => text != null && text.includes(query);
+    return (text) => Boolean(text?.includes(query));
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
+import { DownloadIcon, FileDownIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -63,7 +63,7 @@ function ExcerptsPageContent() {
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
 
-    const { activeTab, filters, setActiveTab, setFilter } = useExcerptFilters();
+    const { activeTab, clearScrollTo, filters, scrollToFrom, setActiveTab, setFilter } = useExcerptFilters();
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
@@ -82,14 +82,13 @@ function ExcerptsPageContent() {
         const state = useExcerptsStore.getState();
         const data: Excerpts = {
             collection: state.collection,
-            contractVersion: state.contractVersion || 'v1.0',
-            createdAt: state.createdAt.getTime(),
+            contractVersion: state.contractVersion,
+            createdAt: Math.floor(state.createdAt.getTime() / 1000),
             excerpts: state.excerpts,
             footnotes: state.footnotes,
             headings: state.headings,
-            lastUpdatedAt: state.lastUpdatedAt?.getTime(),
+            lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
             options: state.options,
-            prompt: state.prompt,
         };
 
         try {
@@ -109,17 +108,37 @@ function ExcerptsPageContent() {
             const state = useExcerptsStore.getState();
             const data: Excerpts = {
                 collection: state.collection,
-                contractVersion: state.contractVersion || 'v1.0',
-                createdAt: state.createdAt.getTime(),
+                contractVersion: state.contractVersion,
+                createdAt: Math.floor(state.createdAt.getTime() / 1000),
                 excerpts: state.excerpts,
                 footnotes: state.footnotes,
                 headings: state.headings,
-                lastUpdatedAt: state.lastUpdatedAt?.getTime(),
+                lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
                 options: state.options,
-                prompt: state.prompt,
             };
 
             downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
+        }
+    }, []);
+
+    const handleExportToTxt = useCallback(() => {
+        const name = prompt('Enter output file name', 'prompt.txt');
+
+        if (name) {
+            record('DownloadExcerpts', name);
+
+            try {
+                const state = useExcerptsStore.getState();
+                const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
+                const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
+
+                const lines = excerpts.join('\n\n') + headings.join('\n');
+
+                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines);
+            } catch (err) {
+                console.error('Export failed:', err);
+                toast.error('Failed to export to TXT');
+            }
         }
     }, []);
 
@@ -225,6 +244,9 @@ function ExcerptsPageContent() {
                             <Button onClick={handleDownload}>
                                 <DownloadIcon />
                             </Button>
+                            <Button onClick={handleExportToTxt}>
+                                <FileDownIcon />
+                            </Button>
                             <Button
                                 className="bg-blue-500"
                                 disabled={isFormattingLoading}
@@ -265,6 +287,9 @@ function ExcerptsPageContent() {
                             <TabsContent className="mt-0" value="excerpts">
                                 <VirtualizedList
                                     data={excerpts}
+                                    findScrollIndex={(data, fromValue) =>
+                                        data.findIndex((item) => item.from === fromValue)
+                                    }
                                     getKey={(item) => item.id}
                                     header={
                                         <ExcerptsTableHeader
@@ -276,6 +301,7 @@ function ExcerptsPageContent() {
                                             onFilterChange={setFilter}
                                         />
                                     }
+                                    onScrollToComplete={clearScrollTo}
                                     renderRow={(item) => (
                                         <ExcerptRow
                                             data={item}
@@ -284,6 +310,7 @@ function ExcerptsPageContent() {
                                             onUpdate={updateExcerpt}
                                         />
                                     )}
+                                    scrollToId={scrollToFrom}
                                 />
                             </TabsContent>
 

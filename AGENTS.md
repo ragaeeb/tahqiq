@@ -18,7 +18,8 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 - **Manuscript processing**: Editing, formatting, and correcting Arabic manuscript scans
 - **Transcript management**: Working with audio transcriptions for lecture content
 - **Excerpts management**: Organizing translated excerpts with filtering, search/replace, and virtualized lists
-- **Shamela editor**: Importing and editing Shamela library books with page marker cleanup
+- **Shamela editor**: Importing and editing Shamela library books with segmentation and page marker cleanup
+- **Book compilation**: Converting manuscripts to publishable book format with table of contents
 - **Book browsing**: Static generation of browsable Islamic texts (Qur'an, Hadith collections)
 - **Settings management**: API key configuration for Gemini and Shamela services
 
@@ -37,15 +38,17 @@ src/
 │   ├── excerpts/           # Excerpts, headings, footnotes management
 │   ├── manuscript/         # Manuscript editing interface
 │   ├── settings/           # API key and configuration management
-│   ├── shamela/            # Shamela book editor
+│   ├── shamela/            # Shamela book editor with segmentation
 │   └── transcript/         # Audio transcript editing
 ├── components/             # Shared React components
 │   ├── hooks/              # Custom React hooks
 │   └── ui/                 # UI primitives (shadcn/ui style)
 ├── lib/                    # Utility functions and helpers
 ├── stores/                 # Zustand state management stores
+│   ├── bookStore/          # Book compilation state (Kitab format)
 │   ├── excerptsStore/      # Excerpts, headings, footnotes state
 │   ├── manuscriptStore/    # Manuscript editing state
+│   ├── patchStore/         # Page edit diffs for version control
 │   ├── settingsStore/      # App settings and API keys
 │   ├── shamelaStore/       # Shamela book editing state
 │   └── transcriptStore/    # Transcript editing state
@@ -308,6 +311,42 @@ See `src/app/excerpts/use-excerpt-filters.ts` for pattern:
 - Read from `useSearchParams()`
 - Update with `router.replace()`
 - Apply side effects in `useEffect`
+
+### URL Hash Scrolling Pattern
+
+For scroll-to-row navigation via URL hash (e.g., `/excerpts#2333`):
+
+```tsx
+// In filter hook (use-excerpt-filters.ts):
+const [scrollToFrom, setScrollToFrom] = useState<number | null>(null);
+
+useEffect(() => {
+    const readHash = () => {
+        const hash = window.location.hash.slice(1);
+        if (hash) {
+            const value = Number.parseInt(hash, 10);
+            if (!Number.isNaN(value)) setScrollToFrom(value);
+        }
+    };
+    readHash();
+    window.addEventListener('hashchange', readHash);
+    return () => window.removeEventListener('hashchange', readHash);
+}, []);
+
+// In VirtualizedList, use findScrollIndex for custom matching:
+<VirtualizedList
+    scrollToId={scrollToFrom}
+    findScrollIndex={(data, value) => data.findIndex(item => item.from === value)}
+    onScrollToComplete={clearScrollTo}
+/>
+```
+
+### Adding Segmentation Rules
+
+See `src/app/shamela/segmentation-types.ts` for pattern types:
+- `RuleFormState`: Split rules with pattern matching
+- `BreakpointFormState`: Breakpoint patterns for page boundaries
+- `PRESETS`: Pre-configured templates for common book types
 
 ---
 

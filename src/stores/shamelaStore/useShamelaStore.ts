@@ -38,6 +38,11 @@ export const useShamelaStore = create<ShamelaState>()(
                 Object.assign(state, newState);
             }),
 
+        removeFootnoteReferences: () =>
+            set((state) => {
+                actions.removeFootnoteReferences(state);
+            }),
+
         removePageMarkers: () =>
             set((state) => {
                 actions.removePageMarkers(state);

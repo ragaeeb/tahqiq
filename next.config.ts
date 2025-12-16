@@ -1,10 +1,14 @@
-import { resolve } from 'node:path';
+import path from 'node:path';
 import type { NextConfig } from 'next';
 
+const transpilePackages: string[] = [];
+
 const nextConfig: NextConfig = {
-    experimental: { turbopackUseSystemTlsCerts: true },
-    transpilePackages: ['flappa-doormal'],
-    turbopack: { root: resolve(process.cwd(), '..') },
+    ...(transpilePackages.length && {
+        experimental: { turbopackUseSystemTlsCerts: true },
+        transpilePackages,
+        turbopack: { root: path.resolve(process.cwd(), '..') },
+    }),
 };
 
 export default nextConfig;

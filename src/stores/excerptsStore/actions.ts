@@ -1,3 +1,4 @@
+import { LatestContractVersion } from '@/lib/constants';
 import { adaptExcerptsToLatest } from '@/lib/migration';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
@@ -13,7 +14,7 @@ const nowInSeconds = () => Math.floor(Date.now() / 1000);
  */
 export const INITIAL_STATE: ExcerptsStateCore = {
     collection: undefined,
-    contractVersion: undefined,
+    contractVersion: LatestContractVersion.Excerpts,
     createdAt: new Date(),
     excerpts: [],
     filteredExcerptIds: undefined,
@@ -22,10 +23,9 @@ export const INITIAL_STATE: ExcerptsStateCore = {
     footnotes: [],
     headings: [],
     inputFileName: undefined,
-    lastUpdatedAt: undefined,
-    options: undefined,
+    lastUpdatedAt: new Date(),
+    options: {},
     postProcessingApps: [],
-    prompt: undefined,
 };
 
 /**
@@ -38,14 +38,13 @@ export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore 
         ...INITIAL_STATE,
         collection: migrated.collection,
         contractVersion: migrated.contractVersion,
-        createdAt: migrated.createdAt ? new Date(migrated.createdAt) : new Date(),
+        createdAt: new Date(migrated.createdAt * 1000),
         excerpts: [...migrated.excerpts],
         footnotes: [...migrated.footnotes],
         headings: [...migrated.headings],
         inputFileName: fileName,
-        lastUpdatedAt: migrated.lastUpdatedAt ? new Date(migrated.lastUpdatedAt) : undefined,
+        lastUpdatedAt: new Date(migrated.lastUpdatedAt * 1000),
         options: migrated.options,
-        prompt: migrated.prompt,
     };
 };
 

@@ -1,3 +1,4 @@
+import type { SegmentationOptions } from 'flappa-doormal';
 import type { PostProcessingApp } from '../commonTypes';
 
 /**
@@ -75,7 +76,14 @@ export type Entry = {
 /**
  * Set if this is a title/heading of a book or chapter
  */
-type ExcerptType = 'book' | 'chapter';
+export type ExcerptType = 'book' | 'chapter';
+
+type ExcerptMetadata = {
+    /** Set if this is a title/heading of a book or chapter */
+    type?: ExcerptType;
+
+    num?: string;
+};
 
 type RawExcerpt = {
     /** The Arabic text of the excerpt */
@@ -84,14 +92,13 @@ type RawExcerpt = {
     /** The page number in the book that this text was extracted from. */
     from: number;
 
-    /** Set if this is a title/heading of a book or chapter */
-    type?: ExcerptType;
+    meta?: ExcerptMetadata;
 
     /** The page number in the book that this text spans until (if different from the starting page) */
     to?: number;
 };
 
-type IndexedExcerpt = RawExcerpt & {
+export type IndexedExcerpt = RawExcerpt & {
     /** Unique ID of this excerpt */
     id: string;
 
@@ -126,7 +133,7 @@ export type Excerpt = IndexedExcerpt & AITranslation;
 /**
  * Represents a heading/section marker
  */
-type IndexedHeading = Pick<RawExcerpt, 'nass' | 'from'> & {
+export type IndexedHeading = Pick<RawExcerpt, 'nass' | 'from'> & {
     /** Unique identifier */
     id: string;
 
@@ -249,7 +256,7 @@ export type Excerpts = {
     /** Contract version for format compatibility */
     contractVersion: string;
     /** Timestamp when created */
-    createdAt?: number;
+    createdAt: number;
     /** All excerpt entries */
     excerpts: Excerpt[];
     /** All footnotes */
@@ -257,11 +264,9 @@ export type Excerpts = {
     /** All headings/sections */
     headings: Heading[];
     /** Timestamp when last updated */
-    lastUpdatedAt?: number;
+    lastUpdatedAt: number;
     /** Parsing options used */
-    options?: MatnParseOptions;
-    /** Prompt sent to LLM for translation */
-    prompt?: string;
+    options: SegmentationOptions;
 };
 
 /**
@@ -271,7 +276,7 @@ export type ExcerptsStateCore = {
     /** Optional collection metadata */
     collection?: Collection;
     /** Contract version */
-    contractVersion?: string;
+    contractVersion: string;
     /** Creation timestamp */
     createdAt: Date;
     /** All excerpt entries */
@@ -283,13 +288,11 @@ export type ExcerptsStateCore = {
     /** Input filename */
     inputFileName?: string;
     /** Last update timestamp */
-    lastUpdatedAt?: Date;
+    lastUpdatedAt: Date;
     /** Parsing options */
-    options?: MatnParseOptions;
+    options: SegmentationOptions;
     /** Apps used for post-processing */
     postProcessingApps: PostProcessingApp[];
-    /** Translation prompt */
-    prompt?: string;
     /** Filtered excerpt IDs (undefined = show all) */
     filteredExcerptIds?: string[];
     /** Filtered heading IDs (undefined = show all) */

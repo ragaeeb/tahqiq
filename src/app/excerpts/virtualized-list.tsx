@@ -1,14 +1,20 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 type VirtualizedListProps<T> = {
     data: T[];
     estimateSize?: (index: number) => number;
+    /** Optional custom function to find the index to scroll to. If not provided, uses getKey to match scrollToId. */
+    findScrollIndex?: (data: T[], scrollToId: string | number) => number;
     getKey: (item: T, index: number) => string | number;
     header: React.ReactNode;
     renderRow: (item: T, index: number) => React.ReactNode;
+    /** ID or value to scroll to - will find the item using findScrollIndex or getKey and scroll to it */
+    scrollToId?: string | number | null;
+    /** Callback when scroll-to is complete */
+    onScrollToComplete?: () => void;
 };
 
 // Height of the sticky table header in pixels
@@ -26,13 +32,17 @@ type VirtualizerContentProps<T> = VirtualizedListProps<T> & {
 function VirtualizerContent<T>({
     data,
     estimateSize,
+    findScrollIndex,
     getKey,
     header,
     initialScrollTop,
+    onScrollToComplete,
     parentRef,
     renderRow,
+    scrollToId,
 }: VirtualizerContentProps<T>) {
     const [headerHeight, setHeaderHeight] = useState(HEADER_HEIGHT);
+    const hasScrolledToIdRef = useRef<string | number | null>(null);
 
     // Increased default estimate to accommodate larger content
     const defaultEstimateSize = useCallback(() => 150, []);
@@ -57,6 +67,44 @@ function VirtualizerContent<T>({
             parentRef.current.scrollTop = initialScrollTop;
         }
     }, [parentRef, initialScrollTop]);
+
+    // Scroll to the specified ID when it changes
+    useEffect(() => {
+        if (scrollToId != null && scrollToId !== hasScrolledToIdRef.current) {
+            // Find the index - use custom finder if provided, otherwise match by key
+            const index = findScrollIndex
+                ? findScrollIndex(data, scrollToId)
+                : data.findIndex((item, i) => getKey(item, i) === scrollToId);
+            if (index !== -1) {
+                hasScrolledToIdRef.current = scrollToId;
+
+                // Use setTimeout to ensure the virtualizer is ready after tab switch
+                setTimeout(() => {
+                    // For dynamic sizes, use 'auto' behavior as 'smooth' doesn't work reliably
+                    // Also calculate the estimated offset as a fallback
+                    const estimatedOffset = index * (estimateSize?.(index) ?? 150);
+
+                    // Try scrollToIndex first with 'auto' behavior
+                    virtualizer.scrollToIndex(index, { align: 'start', behavior: 'auto' });
+
+                    // As additional insurance, also set scrollTop directly after a brief delay
+                    // This handles cases where scrollToIndex may not work with unmeasured items
+                    setTimeout(() => {
+                        if (parentRef.current) {
+                            const currentOffset = virtualizer.getOffsetForIndex(index, 'start');
+                            if (currentOffset != null) {
+                                parentRef.current.scrollTop = currentOffset[0];
+                            } else {
+                                // Fallback to estimated offset if getOffsetForIndex fails
+                                parentRef.current.scrollTop = estimatedOffset;
+                            }
+                        }
+                        onScrollToComplete?.();
+                    }, 50);
+                }, 100);
+            }
+        }
+    }, [scrollToId, data, getKey, findScrollIndex, virtualizer, onScrollToComplete, estimateSize, parentRef]);
 
     const headerRef = useCallback((node: HTMLDivElement | null) => {
         if (node) {
@@ -103,7 +151,16 @@ function VirtualizerContent<T>({
  * Virtualized list component that maintains scroll position across data changes
  * while ensuring measurement cache is cleared.
  */
-function VirtualizedList<T>({ data, estimateSize, getKey, header, renderRow }: VirtualizedListProps<T>) {
+function VirtualizedList<T>({
+    data,
+    estimateSize,
+    findScrollIndex,
+    getKey,
+    header,
+    onScrollToComplete,
+    renderRow,
+    scrollToId,
+}: VirtualizedListProps<T>) {
     const parentRef = useRef<HTMLDivElement>(null);
     const scrollTopRef = useRef(0);
     const prevDataVersionRef = useRef<string>('');
@@ -141,11 +198,14 @@ function VirtualizedList<T>({ data, estimateSize, getKey, header, renderRow }: V
                 key={dataVersion}
                 data={data}
                 estimateSize={estimateSize}
+                findScrollIndex={findScrollIndex}
                 getKey={getKey}
                 header={header}
                 initialScrollTop={scrollTopRef.current}
+                onScrollToComplete={onScrollToComplete}
                 parentRef={parentRef}
                 renderRow={renderRow}
+                scrollToId={scrollToId}
             />
         </div>
     );
