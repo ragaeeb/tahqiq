@@ -113,7 +113,7 @@ function ExcerptsPageContent() {
                 excerpts: state.excerpts,
                 footnotes: state.footnotes,
                 headings: state.headings,
-                lastUpdatedAt: Math.floor(state.createdAt.getTime() / 1000),
+                lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
                 options: state.options,
             };
 
@@ -126,13 +126,19 @@ function ExcerptsPageContent() {
 
         if (name) {
             record('DownloadExcerpts', name);
-            const state = useExcerptsStore.getState();
-            const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
-            const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
 
-            const lines = excerpts.join('\n\n') + headings.join('\n');
+            try {
+                const state = useExcerptsStore.getState();
+                const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
+                const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
 
-            downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines);
+                const lines = excerpts.join('\n\n') + headings.join('\n');
+
+                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines);
+            } catch (err) {
+                console.error('Export failed:', err);
+                toast.error('Failed to export to TXT');
+            }
         }
     }, []);
 

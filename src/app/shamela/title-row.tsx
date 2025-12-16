@@ -48,6 +48,7 @@ function TitleRow({ allTitles, data, onNavigateToPage, onUpdate, shamelaId }: Ti
             </td>
             <td className="w-24 px-2 py-3 text-center align-middle text-gray-700 text-sm">
                 <button
+                    aria-label={`Navigate to page ${data.page}`}
                     className="cursor-pointer text-blue-600 underline hover:text-blue-800"
                     onClick={() => onNavigateToPage(data.page)}
                     title={`Go to page ${data.page}`}

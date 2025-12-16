@@ -17,6 +17,11 @@ describe('patchStore/utils', () => {
             expect(patch).toContain(',');
         });
 
+        it('should handle empty strings', () => {
+            expect(createPatch('', '')).toBeNull();
+            expect(createPatch('', 'text')).not.toBeNull();
+        });
+
         it('should create a patch for character removal', () => {
             const old = 'Hello, World';
             const updated = 'Hello World';
@@ -65,6 +70,15 @@ describe('patchStore/utils', () => {
             const patch = createPatch(old, updated)!;
 
             expect(canApplyPatch(patch, old)).toBe(true);
+        });
+
+        it('should return false for malformed patches', () => {
+            expect(canApplyPatch('invalid patch', 'text')).toBe(false);
+        });
+
+        it('should return false when text is completely different', () => {
+            const patch = createPatch('Hello World', 'Hello, World')!;
+            expect(canApplyPatch(patch, 'Completely different text')).toBe(false);
         });
 
         it('should return true even when text has shifted slightly', () => {

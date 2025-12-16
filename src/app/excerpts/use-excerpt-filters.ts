@@ -136,10 +136,8 @@ export function useExcerptFilters() {
      * The hash remains in the URL for shareability.
      */
     const clearScrollTo = useCallback(() => {
-        if (scrollToFrom) {
-            setScrollToFrom(null);
-        }
-    }, [scrollToFrom]);
+        setScrollToFrom(null);
+    }, []);
 
     // Apply filters when URL params change OR when data is first loaded
     useEffect(() => {

@@ -47,12 +47,12 @@ export const Toolbar = () => {
         };
     }, []);
 
-    const handleSave = useCallback(() => {
+    const handleSave = useCallback(async () => {
         record('SaveShamela');
         const data = getShamelaBookData();
 
         try {
-            saveCompressed('shamela', data);
+            await saveCompressed('shamela', data);
             toast.success('Saved state');
         } catch (err) {
             console.error('Could not save shamela', err);

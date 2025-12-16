@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { normalizeHtml } from 'shamela/content';
 
 import EditableHTML from '@/components/editable-html';
@@ -28,6 +28,12 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
     const originalBodyRef = useRef<string>(data.body);
     const originalFootnoteRef = useRef<string | undefined>(data.footnote);
     const addPatch = usePatchStore((state) => state.addPatch);
+
+    useEffect(() => {
+        bodyRef.current = data.body;
+        originalBodyRef.current = data.body;
+        originalFootnoteRef.current = data.footnote;
+    }, [data.body, data.footnote]);
 
     const handleBodyChange = useCallback((evt: { target: { value: string } }) => {
         bodyRef.current = evt.target.value;

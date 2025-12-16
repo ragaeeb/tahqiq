@@ -127,22 +127,21 @@ export function useShamelaFilters() {
      */
     const navigateToItem = useCallback(
         (tab: FilterScope, itemId: number) => {
-            // Set the scroll target immediately
             setScrollToId(itemId);
 
-            // Navigate to the tab using Next.js router
             const params = new URLSearchParams();
             params.set('tab', tab);
+
+            // Try to use router's callback if available
             router.replace(`${pathname}?${params.toString()}`, { scroll: false });
 
-            // Set the hash after router navigation completes
-            // We use setTimeout to ensure this happens after the async router.replace
-            setTimeout(() => {
-                // Use history.replaceState to update URL without triggering navigation
+            // Queue hash update for next tick to ensure router navigation completes
+            // Consider using router.events if available for more reliable timing
+            requestAnimationFrame(() => {
                 const currentUrl = new URL(window.location.href);
                 currentUrl.hash = itemId.toString();
                 window.history.replaceState(window.history.state, '', currentUrl.toString());
-            }, 100);
+            });
         },
         [pathname, router],
     );
