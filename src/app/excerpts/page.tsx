@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, FileDownIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -15,8 +15,9 @@ import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { loadCompressed, saveCompressed } from '@/lib/io';
+import { loadFromOPFS, saveToOPFS } from '@/lib/io';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -27,7 +28,6 @@ import {
 } from '@/stores/excerptsStore/selectors';
 import type { Excerpts } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
-
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
@@ -45,7 +45,6 @@ function ExcerptsPageContent() {
     const excerpts = useExcerptsStore(selectAllExcerpts);
     const headings = useExcerptsStore(selectAllHeadings);
     const footnotes = useExcerptsStore(selectAllFootnotes);
-    // Unfiltered data for filtering
     const allExcerpts = useExcerptsStore((state) => state.excerpts);
     const allHeadings = useExcerptsStore((state) => state.headings);
     const allFootnotes = useExcerptsStore((state) => state.footnotes);
@@ -68,8 +67,11 @@ function ExcerptsPageContent() {
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
 
+    // Check if any excerpts have translations - if not, hide the column for more Arabic space
+    const hasAnyTranslations = allExcerpts.some((e) => e.text);
+
     useEffect(() => {
-        loadCompressed('excerpts').then((data) => {
+        loadFromOPFS('excerpts').then((data) => {
             if (data) {
                 record('RestoreExcerptsFromSession');
                 init(data as Excerpts);
@@ -92,7 +94,7 @@ function ExcerptsPageContent() {
         };
 
         try {
-            saveCompressed('excerpts', data);
+            saveToOPFS('excerpts', data);
             toast.success('Saved state');
         } catch (err) {
             console.error('Could not save excerpts', err);
@@ -132,9 +134,11 @@ function ExcerptsPageContent() {
                 const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
                 const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
 
-                const lines = excerpts.join('\n\n') + headings.join('\n');
+                const content = [TRANSLATE_EXCERPTS_PROMPT.join('\n'), excerpts.join('\n\n'), headings.join('\n')].join(
+                    '\n\n\n',
+                );
 
-                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines);
+                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, content);
             } catch (err) {
                 console.error('Export failed:', err);
                 toast.error('Failed to export to TXT');
@@ -245,7 +249,7 @@ function ExcerptsPageContent() {
                                 <DownloadIcon />
                             </Button>
                             <Button onClick={handleExportToTxt}>
-                                <FileDownIcon />
+                                <FileTextIcon />
                             </Button>
                             <Button
                                 className="bg-blue-500"
@@ -298,6 +302,7 @@ function ExcerptsPageContent() {
                                             filters={filters}
                                             footnotes={allFootnotes}
                                             headings={allHeadings}
+                                            hideTranslation={!hasAnyTranslations}
                                             onFilterChange={setFilter}
                                         />
                                     }
@@ -305,6 +310,7 @@ function ExcerptsPageContent() {
                                     renderRow={(item) => (
                                         <ExcerptRow
                                             data={item}
+                                            hideTranslation={!hasAnyTranslations}
                                             onCreateFromSelection={createExcerptFromExisting}
                                             onDelete={(id) => deleteExcerpts([id])}
                                             onUpdate={updateExcerpt}

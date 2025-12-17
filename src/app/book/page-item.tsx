@@ -50,8 +50,6 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
     const BodyTextArea = isHighlighterEnabled && bodyCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
     const FooterTextArea = isHighlighterEnabled && footnoteCharacterHighlights ? HTAWithToolbar : TextAreaWithToolbar;
 
-    console.log('updated page', page);
-
     return (
         <tr className={getBorderForRow(page)}>
             <td className="px-2 py-1 align-top">

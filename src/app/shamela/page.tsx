@@ -10,7 +10,7 @@ import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import SubmittableInput from '@/components/submittable-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { loadCompressed } from '@/lib/io';
+import { loadFromOPFS } from '@/lib/io';
 import { usePatchStore } from '@/stores/patchStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
@@ -58,7 +58,7 @@ function ShamelaPageContent() {
 
     useEffect(() => {
         hydrateSettings();
-        loadCompressed('shamela').then((data) => {
+        loadFromOPFS('shamela').then((data) => {
             if (data) {
                 record('RestoreShamelaFromSession');
                 setBookId((data as ShamelaBook).shamelaId);

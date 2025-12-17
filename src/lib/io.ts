@@ -1,89 +1,85 @@
 /**
- * Loads and decompresses data from sessionStorage using native Compression Streams API.
- * The stored base64 string is decoded, decompressed using gzip,
- * and then JSON parsed to reconstruct the original object.
- *
- * @template T - The expected type of the decompressed data
- * @param key - The sessionStorage key to retrieve the compressed data from
- * @returns The decompressed and parsed object, or null if not found or on error
+ * Storage utilities using Origin Private File System (OPFS).
+ * OPFS provides much larger storage capacity than sessionStorage/localStorage
+ * without requiring user permissions.
  */
-export async function loadCompressed<T>(key: string): Promise<null | T> {
+
+/**
+ * Loads data from OPFS.
+ * The stored JSON file is read and parsed to reconstruct the original object.
+ *
+ * @template T - The expected type of the stored data
+ * @param key - The storage key (used as filename)
+ * @returns The parsed object, or null if not found or on error
+ */
+export async function loadFromOPFS<T>(key: string): Promise<null | T> {
     try {
-        const base64 = sessionStorage.getItem(key);
-        if (!base64) return null;
-
-        // Convert base64 to Uint8Array without using spread operator
-        const compressedData = base64ToArrayBuffer(base64);
-
-        const ds = new DecompressionStream('gzip');
-        const stream = new Response(compressedData as BodyInit).body?.pipeThrough(ds);
-        const jsonString = await new Response(stream).text();
-
-        return JSON.parse(jsonString) as T;
+        const root = await navigator.storage.getDirectory();
+        const fileHandle = await root.getFileHandle(`${key}.json`);
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        return JSON.parse(text) as T;
     } catch (error) {
-        console.error('Error loading compressed data:', error);
+        // File doesn't exist or other error - return null
+        if (error instanceof DOMException && error.name === 'NotFoundError') {
+            return null;
+        }
+        console.error('Error loading from OPFS:', error);
         return null;
     }
 }
 
 /**
- * Compresses an object and saves it to sessionStorage using native Compression Streams API.
- * The object is first JSON stringified, then compressed using gzip,
- * and finally encoded as base64 for storage.
+ * Saves data to OPFS.
+ * The object is JSON stringified and stored as a file.
  *
- * @template T - The type of the data to compress and save
- * @param key - The sessionStorage key to use for storing the compressed data
- * @param data - The data object to compress and save
- * @throws {Error} When JSON stringification, compression, or storage fails
+ * @template T - The type of the data to save
+ * @param key - The storage key (used as filename)
+ * @param data - The data object to save
+ * @throws {Error} When storage fails
  */
-export async function saveCompressed<T>(key: string, data: T): Promise<void> {
+export async function saveToOPFS<T>(key: string, data: T): Promise<void> {
     try {
-        const jsonString = JSON.stringify(data);
-
-        const cs = new CompressionStream('gzip');
-        const stream = new Response(jsonString).body?.pipeThrough(cs);
-        const compressedData = await new Response(stream).arrayBuffer();
-
-        // Convert ArrayBuffer to base64 without using spread operator
-        const uint8Array = new Uint8Array(compressedData);
-        const base64 = arrayBufferToBase64(uint8Array);
-
-        sessionStorage.setItem(key, base64);
+        const root = await navigator.storage.getDirectory();
+        const fileHandle = await root.getFileHandle(`${key}.json`, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(data));
+        await writable.close();
     } catch (error) {
-        console.error('Error saving compressed data:', error);
+        console.error('Error saving to OPFS:', error);
         throw error;
     }
 }
 
 /**
- * Converts a Uint8Array to base64 string without using spread operator
- * to avoid call stack overflow on large arrays.
+ * Clears a specific key from OPFS storage.
+ *
+ * @param key - The storage key to clear
  */
-function arrayBufferToBase64(uint8Array: Uint8Array): string {
-    let binaryString = '';
-    const chunkSize = 8192; // Process in chunks to avoid call stack issues
-
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.slice(i, i + chunkSize);
-        binaryString += String.fromCharCode.apply(null, Array.from(chunk));
+export async function clearStorage(key: string): Promise<void> {
+    try {
+        const root = await navigator.storage.getDirectory();
+        await root.removeEntry(`${key}.json`);
+    } catch (error) {
+        // Ignore if file doesn't exist
+        if (!(error instanceof DOMException && error.name === 'NotFoundError')) {
+            console.error('Error clearing OPFS storage:', error);
+        }
     }
-
-    return btoa(binaryString);
 }
 
 /**
- * Converts a base64 string to Uint8Array without using spread operator
- * to avoid call stack overflow on large arrays.
+ * Clears all OPFS storage for this origin.
  */
-function base64ToArrayBuffer(base64: string): Uint8Array {
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-
-    for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+export async function clearAllStorage(): Promise<void> {
+    try {
+        const root = await navigator.storage.getDirectory();
+        for await (const name of (root as any).keys()) {
+            await root.removeEntry(name);
+        }
+    } catch (error) {
+        console.error('Error clearing all OPFS storage:', error);
     }
-
-    return bytes;
 }
 
 export const loadFiles = async (files: FileList) => {

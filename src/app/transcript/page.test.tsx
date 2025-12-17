@@ -1,6 +1,5 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
@@ -35,7 +34,7 @@ mock.module('./segment-item', () => ({
 
 mock.module('./url-field', () => ({ default: () => <div>url-field</div> }));
 
-mock.module('@/lib/io', () => ({ loadCompressed: () => Promise.resolve(undefined), loadFiles: async () => ({}) }));
+mock.module('@/lib/io', () => ({ loadFiles: async () => ({}), loadFromOPFS: () => Promise.resolve(undefined) }));
 
 mock.module('@/lib/legacy', () => ({ adaptLegacyTranscripts: (value: any) => value }));
 

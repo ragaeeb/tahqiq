@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
 import { downloadFile } from '@/lib/domUtils';
-import { loadCompressed, saveCompressed } from '@/lib/io';
+import { loadFromOPFS, saveToOPFS } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import '@/stores/dev';
@@ -77,7 +77,7 @@ export default function Manuscript() {
     );
 
     useEffect(() => {
-        loadCompressed('juz').then((juz) => {
+        loadFromOPFS('juz').then((juz) => {
             if (juz) {
                 record('RestoreJuzFromSession');
                 initJuz(juz as Juz);
@@ -128,7 +128,7 @@ export default function Manuscript() {
                                     const juz = mapManuscriptToJuz(useManuscriptStore.getState());
 
                                     try {
-                                        saveCompressed('juz', juz);
+                                        saveToOPFS('juz', juz);
                                         toast.success('Saved state');
                                     } catch (err) {
                                         console.error('Could not save juz', err);

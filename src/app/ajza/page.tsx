@@ -11,7 +11,7 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { LatestContractVersion } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { loadCompressed } from '@/lib/io';
+import { loadFromOPFS } from '@/lib/io';
 import type { Juz } from '@/stores/manuscriptStore/types';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
@@ -28,7 +28,7 @@ export default function AjzaPage() {
     const router = useRouter();
 
     useEffect(() => {
-        loadCompressed('ajza').then((ajza) => {
+        loadFromOPFS('ajza').then((ajza) => {
             if (ajza) {
                 record('RestoreAjzaFromSession');
                 setFileNameToJuz(ajza as AjzaData);

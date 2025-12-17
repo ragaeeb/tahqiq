@@ -8,7 +8,7 @@ import { DataGate } from '@/components/data-gate';
 import { JsonBrowseButton } from '@/components/json-browse-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
-import { loadCompressed, loadFiles } from '@/lib/io';
+import { loadFiles, loadFromOPFS } from '@/lib/io';
 import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
@@ -38,7 +38,7 @@ export default function Transcript() {
     }, [segments]);
 
     useEffect(() => {
-        loadCompressed('transcript').then((transcript) => {
+        loadFromOPFS('transcript').then((transcript) => {
             if (transcript) {
                 record('RestoreTranscriptFromSession');
                 initTranscripts(adaptLegacyTranscripts(transcript));
