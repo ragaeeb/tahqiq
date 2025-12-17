@@ -12,7 +12,7 @@
  * @param key - The storage key (used as filename)
  * @returns The parsed object, or null if not found or on error
  */
-export async function loadCompressed<T>(key: string): Promise<null | T> {
+export async function loadFromOPFS<T>(key: string): Promise<null | T> {
     try {
         const root = await navigator.storage.getDirectory();
         const fileHandle = await root.getFileHandle(`${key}.json`);
@@ -38,7 +38,7 @@ export async function loadCompressed<T>(key: string): Promise<null | T> {
  * @param data - The data object to save
  * @throws {Error} When storage fails
  */
-export async function saveCompressed<T>(key: string, data: T): Promise<void> {
+export async function saveToOPFS<T>(key: string, data: T): Promise<void> {
     try {
         const root = await navigator.storage.getDirectory();
         const fileHandle = await root.getFileHandle(`${key}.json`, { create: true });

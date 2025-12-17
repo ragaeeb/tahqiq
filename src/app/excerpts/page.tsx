@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { loadCompressed, saveCompressed } from '@/lib/io';
+import { loadFromOPFS, saveToOPFS } from '@/lib/io';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -45,7 +45,6 @@ function ExcerptsPageContent() {
     const excerpts = useExcerptsStore(selectAllExcerpts);
     const headings = useExcerptsStore(selectAllHeadings);
     const footnotes = useExcerptsStore(selectAllFootnotes);
-    // Unfiltered data for filtering
     const allExcerpts = useExcerptsStore((state) => state.excerpts);
     const allHeadings = useExcerptsStore((state) => state.headings);
     const allFootnotes = useExcerptsStore((state) => state.footnotes);
@@ -72,7 +71,7 @@ function ExcerptsPageContent() {
     const hasAnyTranslations = allExcerpts.some((e) => e.text);
 
     useEffect(() => {
-        loadCompressed('excerpts').then((data) => {
+        loadFromOPFS('excerpts').then((data) => {
             if (data) {
                 record('RestoreExcerptsFromSession');
                 init(data as Excerpts);
@@ -95,7 +94,7 @@ function ExcerptsPageContent() {
         };
 
         try {
-            saveCompressed('excerpts', data);
+            saveToOPFS('excerpts', data);
             toast.success('Saved state');
         } catch (err) {
             console.error('Could not save excerpts', err);
@@ -135,15 +134,11 @@ function ExcerptsPageContent() {
                 const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
                 const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
 
-                const lines = [
-                    TRANSLATE_EXCERPTS_PROMPT.join('\n'),
-                    '\n\n',
-                    excerpts.join('\n\n'),
-                    '\n\n',
-                    headings.join('\n'),
-                ];
+                const content = [TRANSLATE_EXCERPTS_PROMPT.join('\n'), excerpts.join('\n\n'), headings.join('\n')].join(
+                    '\n\n\n',
+                );
 
-                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines.join('\n'));
+                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, content);
             } catch (err) {
                 console.error('Export failed:', err);
                 toast.error('Failed to export to TXT');

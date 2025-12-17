@@ -1,13 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 
 const record = jest.fn();
 const toast = { success: jest.fn() };
-const saveCompressed = jest.fn();
+const saveToOPFS = jest.fn();
 const downloadFile = jest.fn();
 
 mock.module('nanolytics', () => ({ record }));
@@ -38,7 +37,7 @@ mock.module('@/lib/transcriptUtils', () => ({ generateFormattedTranscriptFromSta
 
 mock.module('@/lib/legacy', () => ({ mapTranscriptsToLatestContract: () => ({ data: 'contract' }) }));
 
-mock.module('@/lib/io', () => ({ saveCompressed }));
+mock.module('@/lib/io', () => ({ saveToOPFS }));
 
 mock.module('@/lib/domUtils', () => ({ downloadFile }));
 
@@ -49,7 +48,7 @@ describe('TranscriptToolbar', () => {
         resetTranscriptStoreState();
         record.mockReset();
         toast.success.mockReset();
-        saveCompressed.mockReset();
+        saveToOPFS.mockReset();
         downloadFile.mockReset();
     });
 

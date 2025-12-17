@@ -18,7 +18,7 @@ mock.module('./toolbar', () => ({ default: () => <div>toolbar</div> }));
 
 mock.module('@/stores/manuscriptStore/selectors', () => ({ selectAllSheetLines: (state: any) => state.rows }));
 
-mock.module('@/lib/io', () => ({ loadCompressed: () => Promise.resolve(undefined), saveCompressed: jest.fn() }));
+mock.module('@/lib/io', () => ({ loadFromOPFS: () => Promise.resolve(undefined), saveToOPFS: jest.fn() }));
 
 mock.module('@/lib/manuscript', () => ({ mapManuscriptToJuz: () => ({}) }));
 

@@ -14,7 +14,7 @@ import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { downloadFile } from '@/lib/domUtils';
-import { saveCompressed } from '@/lib/io';
+import { saveToOPFS } from '@/lib/io';
 import { usePatchStore } from '@/stores/patchStore';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
@@ -52,7 +52,7 @@ export const Toolbar = () => {
         const data = getShamelaBookData();
 
         try {
-            await saveCompressed('shamela', data);
+            await saveToOPFS('shamela', data);
             toast.success('Saved state');
         } catch (err) {
             console.error('Could not save shamela', err);
