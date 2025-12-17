@@ -10,6 +10,17 @@ export const DEFAULT_HINTS = [
     'جزاكم الله خيرا',
 ];
 
+/**
+ * Translation model options for the dropdown
+ */
+export const TRANSLATION_MODELS = [
+    { label: 'OpenAI GPT 5.2 Thinking', value: '893' },
+    { label: 'OpenAI GPT 5', value: '879' },
+    { label: 'Claude 4.5 Sonnet', value: '891' },
+    { label: 'Grok 4.1 Thinking Beta', value: '892' },
+    { label: 'Gemini 3.0 Pro', value: '890' },
+] as const;
+
 export const LatestContractVersion = {
     Ajza: 'v0.1',
     Book: 'v1.0',

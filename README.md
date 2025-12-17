@@ -24,6 +24,7 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Virtualized Lists**: Efficiently handle thousands of excerpts with smooth scrolling
 - **Three-Tab Interface**: Manage excerpts, headings, and footnotes separately
 - **Search & Replace**: Powerful regex-based search and replace with token support (Arabic numerals, diacritics)
+- **Bulk Translation**: Paste thousands of translations at once with automatic ID matching
 - **URL-Based Filtering**: Shareable filter state via URL parameters
 - **Hash-Based Scroll**: Navigate to specific rows via URL hash (e.g., `/excerpts#2333` scrolls to `from=2333`)
 - **Extract to New Excerpt**: Select Arabic text and extract as a new excerpt
@@ -135,7 +136,8 @@ RULES_ENDPOINT=your_rules_endpoint_url
 3. **Filter Content**: Use the table header inputs to filter by page, Arabic text, or translation
 4. **Edit Inline**: Click on any field to edit directly
 5. **Search & Replace**: Use the search/replace dialog for bulk edits with regex support
-6. **Extract Text**: Select Arabic text and click "Extract as New Excerpt" to create a new entry
+6. **Bulk Translation**: Click the + button to paste translations in bulk (format: `ID - Translation text`)
+7. **Extract Text**: Select Arabic text and click "Extract as New Excerpt" to create a new entry
 
 ### Manuscript Editor (`/manuscript`)
 
@@ -243,6 +245,7 @@ tahqiq/
 │   │   ├── hooks/          # Custom React hooks
 │   │   └── ui/             # UI primitives (shadcn/ui style)
 │   ├── lib/                # Utility functions
+│   │   └── transform/      # Data transformation utils (excerpts, translations)
 │   ├── stores/             # Zustand state management
 │   │   ├── bookStore/      # Book compilation state
 │   │   ├── excerptsStore/  # Excerpts state
@@ -260,7 +263,8 @@ tahqiq/
 
 - **State Management**: Zustand with Immer middleware for immutable updates
 - **SSR Hydration**: Settings store initializes empty, hydrates from localStorage in useEffect
-- **Dialog Pattern**: `DialogTriggerButton` with lazy `renderContent` callback
+- **Dialog Pattern**: `DialogTriggerButton` with lazy `renderContent` callback; use `!max-w-[90vw]` for full-width dialogs
+- **Component Library**: Always use ShadCN components from `@/components/ui/` over vanilla HTML elements
 - **Virtualization**: `@tanstack/react-virtual` for large lists with scroll restoration
 - **URL State**: Filter state persisted in URL search params, scroll targets in hash
 - **API Security**: Sensitive data (API keys) passed in headers, not query params

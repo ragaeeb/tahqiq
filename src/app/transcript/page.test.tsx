@@ -48,7 +48,7 @@ describe('Transcript page', () => {
 
     it('prompts for transcript upload when not initialized', () => {
         render(<TranscriptPage />);
-        expect(screen.getByTestId('drop-zone')).toBeInTheDocument();
+        expect(screen.getByTestId('drop-zone')).toBeTruthy();
     });
 
     it('renders transcript table once initialized', () => {
@@ -67,8 +67,8 @@ describe('Transcript page', () => {
 
         render(<TranscriptPage />);
 
-        expect(screen.getByText('part-selector')).toBeInTheDocument();
-        expect(screen.getByTestId('segment-row')).toHaveTextContent('Segment text');
+        expect(screen.getByText('part-selector')).toBeTruthy();
+        expect(screen.getByTestId('segment-row')?.textContent).toContain('Segment text');
 
         const selectAll = screen.getByLabelText('Select all segments');
         fireEvent.click(selectAll);

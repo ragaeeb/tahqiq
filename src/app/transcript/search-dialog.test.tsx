@@ -1,6 +1,5 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
@@ -54,7 +53,7 @@ describe('SearchDialog', () => {
             fireEvent.submit(queryField.closest('form')!);
         });
 
-        expect(await screen.findByText('match me')).toBeInTheDocument();
+        expect(await screen.findByText('match me')).toBeTruthy();
 
         const goToPart = await screen.findByRole('button', { name: '1' });
         await act(async () => {

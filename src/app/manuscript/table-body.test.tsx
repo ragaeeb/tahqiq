@@ -1,10 +1,8 @@
+import { afterAll, describe, expect, it, jest } from 'bun:test';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
-import { afterAll, describe, expect, it, jest, mock } from 'bun:test';
+import type { SheetLine } from '@/stores/manuscriptStore/types';
 import ManuscriptTableBody from './table-body';
 import * as TextRowModule from './text-row';
-
-import type { SheetLine } from '@/stores/manuscriptStore/types';
 
 const textRowCalls: any[] = [];
 
@@ -46,10 +44,10 @@ describe('ManuscriptTableBody', () => {
 
         const renderedRows = screen.getAllByTestId('text-row');
         expect(renderedRows).toHaveLength(2);
-        expect(renderedRows[0]).toHaveAttribute('data-new-page', 'false');
-        expect(renderedRows[0]).toHaveAttribute('data-selected', 'false');
-        expect(renderedRows[1]).toHaveAttribute('data-new-page', 'true');
-        expect(renderedRows[1]).toHaveAttribute('data-selected', 'true');
+        expect(renderedRows[0]?.getAttribute('data-new-page')).toBe('false');
+        expect(renderedRows[0]?.getAttribute('data-selected')).toBe('false');
+        expect(renderedRows[1]?.getAttribute('data-new-page')).toBe('true');
+        expect(renderedRows[1]?.getAttribute('data-selected')).toBe('true');
     });
 });
 

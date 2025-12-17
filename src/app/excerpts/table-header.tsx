@@ -1,12 +1,14 @@
 'use client';
 
-import { ReplaceIcon } from 'lucide-react';
+import { PlusIcon, ReplaceIcon } from 'lucide-react';
 import { record } from 'nanolytics';
+import { useState } from 'react';
 
 import SubmittableInput from '@/components/submittable-input';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 
+import { AddTranslationDialogContent } from './add-translation-dialog';
 import { SearchReplaceDialogContent } from './search-replace-dialog';
 import type { FilterField } from './use-excerpt-filters';
 
@@ -46,6 +48,29 @@ function SearchReplaceButton({ activeTab }: { activeTab: string }) {
             variant="outline"
         >
             <ReplaceIcon className="h-4 w-4" />
+        </DialogTriggerButton>
+    );
+}
+
+/**
+ * Add Translation button that opens bulk translation dialog
+ */
+function AddTranslationButton() {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <DialogTriggerButton
+            onClick={() => {
+                record('OpenAddTranslation');
+            }}
+            onOpenChange={setIsOpen}
+            open={isOpen}
+            renderContent={() => <AddTranslationDialogContent onClose={() => setIsOpen(false)} />}
+            size="sm"
+            title="Add Translation"
+            variant="outline"
+        >
+            <PlusIcon className="h-4 w-4" />
         </DialogTriggerButton>
     );
 }
@@ -101,8 +126,11 @@ export default function ExcerptsTableHeader({
                         />
                     </th>
                 )}
-                <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                    <SearchReplaceButton activeTab={activeTab} />
+                <th className="w-32 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+                    <div className="flex items-center justify-center gap-1">
+                        <AddTranslationButton />
+                        <SearchReplaceButton activeTab={activeTab} />
+                    </div>
                 </th>
             </tr>
         );
@@ -149,7 +177,10 @@ export default function ExcerptsTableHeader({
                     />
                 </th>
                 <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                    <SearchReplaceButton activeTab={activeTab} />
+                    <div className="flex items-center justify-center gap-1">
+                        <AddTranslationButton />
+                        <SearchReplaceButton activeTab={activeTab} />
+                    </div>
                 </th>
             </tr>
         );
@@ -194,8 +225,11 @@ export default function ExcerptsTableHeader({
                     placeholder="Translation"
                 />
             </th>
-            <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
-                <SearchReplaceButton activeTab={activeTab} />
+            <th className="w-32 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+                <div className="flex items-center justify-center gap-1">
+                    <AddTranslationButton />
+                    <SearchReplaceButton activeTab={activeTab} />
+                </div>
             </th>
         </tr>
     );

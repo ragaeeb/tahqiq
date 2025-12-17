@@ -379,6 +379,15 @@ export type ExcerptsActions = {
      * Filters footnotes by IDs (undefined clears filter)
      */
     filterFootnotesByIds: (ids?: string[]) => void;
+
+    /**
+     * Applies bulk translations to excerpts, headings, and footnotes efficiently
+     * @returns Result with count of updated items and total translations
+     */
+    applyBulkTranslations: (
+        translationMap: Map<string, string>,
+        translator: number,
+    ) => { updated: number; total: number };
 };
 
 /**

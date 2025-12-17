@@ -116,24 +116,62 @@ The settings store (`src/stores/settingsStore/`) manages persisted configuration
 - Prefer `useCallback` and `useMemo` for performance
 
 ### Dialog Pattern
-Use `DialogTriggerButton` for lazy-loaded dialog content:
+
+Use `DialogTriggerButton` from `@/components/ui/dialog-trigger` for lazy-loaded dialog content:
 
 ```tsx
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
+
 <DialogTriggerButton
     onClick={() => record('OpenDialog')}
     renderContent={() => {
         const selectedText = getSelectedText(); // Capture at open time
-        return <DialogContent initialValue={selectedText} />;
+        return <MyDialogContent initialValue={selectedText} onClose={() => setIsOpen(false)} />;
     }}
+    size="sm"
+    variant="outline"
 >
     Open Dialog
 </DialogTriggerButton>
 ```
 
 This pattern:
-1. Captures data (like selected text) when dialog opens
+1. Captures data (like selected text) when dialog opens via `renderContent`
 2. Lazily renders content only when opened
 3. Passes data as props to the content component
+4. Supports `onClose` callback for programmatic closing
+
+**Dialog Sizing:**
+
+For large dialogs that need to stretch horizontally, use `!max-w-[90vw]` to override the default max-width:
+
+```tsx
+// In your DialogContent component:
+<DialogContent className="!max-w-[90vw] flex h-[85vh] w-[90vw] flex-col">
+    {/* Dialog content */}
+</DialogContent>
+```
+
+The `!` prefix applies `!important` to override ShadCN's default `sm:max-w-lg` constraint.
+
+### ShadCN Components
+
+**Always prefer ShadCN UI components from `@/components/ui/` over vanilla HTML elements:**
+
+| Instead of | Use |
+|------------|-----|
+| `<button>` | `<Button>` from `@/components/ui/button` |
+| `<input>` | `<Input>` from `@/components/ui/input` |
+| `<textarea>` | `<Textarea>` from `@/components/ui/textarea` |
+| `<select>` | `<Select>` from `@/components/ui/select` |
+| Modal/popup | `<Dialog>` from `@/components/ui/dialog` |
+| Checkboxes | `<Checkbox>` from `@/components/ui/checkbox` |
+| Radio buttons | `<RadioGroup>` from `@/components/ui/radio-group` |
+| Labels | `<Label>` from `@/components/ui/label` |
+
+**Constants:**
+
+Shared constants like `TRANSLATION_MODELS` live in `@/lib/constants.ts` and should be imported from there.
 
 ### Virtualization
 For long lists, use `@tanstack/react-virtual`:
@@ -361,3 +399,34 @@ See `src/app/shamela/segmentation-types.ts` for pattern types:
 ---
 
 Following these practices keeps the codebase maintainable and test-friendly for all contributors.
+
+---
+
+## Bulk Operations
+
+For operations that may process thousands of items:
+
+1. **Use Maps for O(1) lookup** instead of array `.find()` calls
+2. **Single state update** - batch all changes into one `set()` call to minimize re-renders
+3. **Build index maps upfront** before iterating
+
+See `src/stores/excerptsStore/actions.ts` `applyBulkTranslations` for the pattern:
+
+```typescript
+// Build index maps for O(1) lookup
+const excerptIndexMap = new Map<string, number>();
+for (let i = 0; i < state.excerpts.length; i++) {
+    excerptIndexMap.set(state.excerpts[i].id, i);
+}
+
+// Apply updates using O(1) lookups
+for (const [id, text] of translationMap) {
+    const index = excerptIndexMap.get(id);
+    if (index !== undefined) {
+        state.excerpts[index] = { ...state.excerpts[index], text };
+    }
+}
+```
+
+Parsing utilities for bulk data live in `@/lib/transform/excerpts.ts`.
+

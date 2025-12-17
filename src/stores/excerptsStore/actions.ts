@@ -220,3 +220,80 @@ export const filterHeadingsByIds = (state: ExcerptsStateCore, ids?: string[]): v
 export const filterFootnotesByIds = (state: ExcerptsStateCore, ids?: string[]): void => {
     state.filteredFootnoteIds = ids;
 };
+
+/**
+ * Result of applying bulk translations
+ */
+export type ApplyBulkTranslationsResult = {
+    /** Number of translations successfully applied */
+    updated: number;
+    /** Total number of translations in the input */
+    total: number;
+};
+
+/**
+ * Applies bulk translations to excerpts, headings, and footnotes in a single state update.
+ * Uses Map for O(1) lookup to efficiently handle thousands of translations.
+ *
+ * @param state - The current excerpts state
+ * @param translationMap - Map of ID to translation text
+ * @param translator - The translator model ID
+ * @returns Result with count of updated items and total translations
+ */
+export const applyBulkTranslations = (
+    state: ExcerptsStateCore,
+    translationMap: Map<string, string>,
+    translator: number,
+): ApplyBulkTranslationsResult => {
+    const now = nowInSeconds();
+    let updated = 0;
+
+    // Build index maps for O(1) lookup of array positions
+    const excerptIndexMap = new Map<string, number>();
+    const headingIndexMap = new Map<string, number>();
+    const footnoteIndexMap = new Map<string, number>();
+
+    for (let i = 0; i < state.excerpts.length; i++) {
+        excerptIndexMap.set(state.excerpts[i].id, i);
+    }
+    for (let i = 0; i < state.headings.length; i++) {
+        headingIndexMap.set(state.headings[i].id, i);
+    }
+    for (let i = 0; i < state.footnotes.length; i++) {
+        footnoteIndexMap.set(state.footnotes[i].id, i);
+    }
+
+    // Apply translations using O(1) lookups
+    for (const [id, text] of translationMap) {
+        const excerptIndex = excerptIndexMap.get(id);
+        if (excerptIndex !== undefined) {
+            state.excerpts[excerptIndex] = { ...state.excerpts[excerptIndex], lastUpdatedAt: now, text, translator };
+            updated++;
+            continue;
+        }
+
+        const headingIndex = headingIndexMap.get(id);
+        if (headingIndex !== undefined) {
+            state.headings[headingIndex] = { ...state.headings[headingIndex], lastUpdatedAt: now, text, translator };
+            updated++;
+            continue;
+        }
+
+        const footnoteIndex = footnoteIndexMap.get(id);
+        if (footnoteIndex !== undefined) {
+            state.footnotes[footnoteIndex] = {
+                ...state.footnotes[footnoteIndex],
+                lastUpdatedAt: now,
+                text,
+                translator,
+            };
+            updated++;
+        }
+    }
+
+    if (updated > 0) {
+        state.lastUpdatedAt = new Date();
+    }
+
+    return { total: translationMap.size, updated };
+};

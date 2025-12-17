@@ -14,6 +14,14 @@ export const useExcerptsStore = create<ExcerptsState>()(
         // Spread initial state values
         ...actions.INITIAL_STATE,
 
+        applyBulkTranslations: (translationMap, translator) => {
+            let result = { total: 0, updated: 0 };
+            set((state) => {
+                result = actions.applyBulkTranslations(state, translationMap, translator);
+            });
+            return result;
+        },
+
         applyFootnoteFormatting: (formatFn) =>
             set((state) => {
                 actions.applyFootnoteFormatting(state, formatFn);

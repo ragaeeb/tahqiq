@@ -1,6 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 const record = jest.fn();
 const storeState: any = { setUrl: jest.fn(), url: '' };
@@ -26,7 +25,7 @@ describe('PdfDialog', () => {
         render(<PdfDialog onClose={() => {}} page={5} />);
 
         const iframe = screen.getByTitle('PDF Viewer - Page 5');
-        expect(iframe).toHaveAttribute('src', expect.stringContaining('page=5'));
+        expect(iframe?.getAttribute('src')).toContain('page=5');
     });
 
     it('accepts url input and stores value', () => {

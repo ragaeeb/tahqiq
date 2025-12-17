@@ -45,6 +45,6 @@ describe('Manuscript page', () => {
 
     it('asks users to upload data before initialization', () => {
         render(<ManuscriptPage />);
-        expect(screen.getByTestId('drop-zone')).toBeInTheDocument();
+        expect(screen.getByTestId('drop-zone')).toBeTruthy();
     });
 });

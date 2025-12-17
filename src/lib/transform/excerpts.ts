@@ -142,3 +142,93 @@ export const segmentShamelaPagesToExcerpts = (
         options,
     };
 };
+
+// ============================================================================
+// Translation Parsing Utilities
+// ============================================================================
+
+/**
+ * Components for building translation marker regex patterns
+ */
+export const TRANSLATION_MARKER_PARTS = {
+    /** Dash variations (hyphen, en dash, em dash) */
+    dashes: '[-–—]',
+    /** Numeric portion of the reference */
+    digits: '\\d+',
+    /** Valid marker prefixes (Book, Chapter, Footnote, Translation, Page) */
+    markers: '[BCFTPN]',
+    /** Optional whitespace before dash */
+    optionalSpace: '\\s?',
+    /** Valid single-letter suffixes */
+    suffix: '[a-z]',
+};
+
+export const MARKER_ID_PATTERN = `${TRANSLATION_MARKER_PARTS.markers}${TRANSLATION_MARKER_PARTS.digits}${TRANSLATION_MARKER_PARTS.suffix}?`;
+
+export type ParsedTranslation = { id: string; text: string };
+
+/**
+ * Result of parsing bulk translations
+ */
+export type ParseTranslationsResult = {
+    /** Map of ID to translation text for O(1) lookup */
+    translationMap: Map<string, string>;
+    /** Total number of translations parsed */
+    count: number;
+};
+
+/**
+ * Parses a single translation line and extracts the ID and text
+ * @param line - String line to process
+ * @returns Parsed translation with ID and text, or null if not a valid translation line
+ */
+export const parseTranslationLine = (line: string): ParsedTranslation | null => {
+    const { dashes, optionalSpace } = TRANSLATION_MARKER_PARTS;
+    const pattern = new RegExp(`^(${MARKER_ID_PATTERN})${optionalSpace}${dashes}(.*)$`);
+    const match = line.match(pattern);
+
+    if (match?.[2]) {
+        const [, id, text] = match;
+        return { id, text: text.trim() };
+    }
+
+    return null;
+};
+
+/**
+ * Parses bulk translation text into a Map for efficient O(1) lookup.
+ * Handles multi-line translations where subsequent lines without markers belong to the previous entry.
+ *
+ * @param rawText - Raw text containing translations in format "ID - Translation text"
+ * @returns ParseTranslationsResult with a Map for O(1) lookup and count
+ */
+export const parseTranslations = (rawText: string): ParseTranslationsResult => {
+    const translationMap = new Map<string, string>();
+    const lines = rawText.split('\n');
+    let currentId: string | null = null;
+
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        // Skip empty lines
+        if (!trimmedLine) {
+            continue;
+        }
+
+        // Try to parse as a new translation entry
+        const parsed = parseTranslationLine(trimmedLine);
+
+        if (parsed) {
+            // New translation entry
+            currentId = parsed.id;
+            translationMap.set(currentId, parsed.text);
+        } else if (currentId) {
+            // Continuation of previous translation - append with newline
+            const existing = translationMap.get(currentId)!;
+            translationMap.set(currentId, `${existing}\n${trimmedLine}`);
+        }
+        // Lines before first valid translation are ignored
+    }
+
+    return { count: translationMap.size, translationMap };
+};
