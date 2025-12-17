@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/ragaeeb/tahqiq/compare/v1.29.0...v1.30.0) (2025-12-17)
+
+
+### Features
+
+* **perf:** Performance improvements ([#102](https://github.com/ragaeeb/tahqiq/issues/102)) ([6eb2bda](https://github.com/ragaeeb/tahqiq/commit/6eb2bdaf35d78835d941cb951aabc6f5650f2a16))
+
 # [1.29.0](https://github.com/ragaeeb/tahqiq/compare/v1.28.0...v1.29.0) (2025-12-16)
 
 
