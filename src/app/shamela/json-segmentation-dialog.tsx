@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { saveCompressed } from '@/lib/io';
 import { DEFAULT_OPTIONS, segmentShamelaPagesToExcerpts } from '@/lib/transform/excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
@@ -59,12 +58,7 @@ export function JsonSegmentationDialogContent() {
                 options,
             );
 
-            try {
-                await saveCompressed('excerpts', excerpts);
-            } catch (err) {
-                console.warn('Failed to save excerpts to storage, loading directly into store:', err);
-                useExcerptsStore.getState().init(excerpts);
-            }
+            useExcerptsStore.getState().init(excerpts);
 
             router.push('/excerpts');
             toast.success(`Created ${excerpts.excerpts.length} segments`);

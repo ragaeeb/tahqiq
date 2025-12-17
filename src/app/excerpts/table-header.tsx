@@ -16,6 +16,8 @@ type ExcerptsTableHeaderProps = {
     filters: { nass: string; page: string; text: string };
     footnotes: Excerpt[];
     headings: Heading[];
+    /** Hide the translation column (only for excerpts tab) */
+    hideTranslation?: boolean;
     onFilterChange: (field: FilterField, value: string) => void;
 };
 
@@ -54,6 +56,7 @@ export default function ExcerptsTableHeader({
     filters,
     footnotes,
     headings,
+    hideTranslation,
     onFilterChange,
 }: ExcerptsTableHeaderProps) {
     if (activeTab === 'excerpts') {
@@ -84,18 +87,20 @@ export default function ExcerptsTableHeader({
                         placeholder={`Arabic (${excerpts.length})`}
                     />
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
-                    <SubmittableInput
-                        className="w-full border-none bg-transparent px-1 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
-                        defaultValue={filters.text}
-                        name="text"
-                        onSubmit={(query) => {
-                            record('FilterExcerptsByTranslation', query);
-                            onFilterChange('text', query);
-                        }}
-                        placeholder="Translation"
-                    />
-                </th>
+                {!hideTranslation && (
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
+                        <SubmittableInput
+                            className="w-full border-none bg-transparent px-1 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                            defaultValue={filters.text}
+                            name="text"
+                            onSubmit={(query) => {
+                                record('FilterExcerptsByTranslation', query);
+                                onFilterChange('text', query);
+                            }}
+                            placeholder="Translation"
+                        />
+                    </th>
+                )}
                 <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
                     <SearchReplaceButton activeTab={activeTab} />
                 </th>

@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, FileDownIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { loadCompressed, saveCompressed } from '@/lib/io';
 import {
@@ -27,7 +28,6 @@ import {
 } from '@/stores/excerptsStore/selectors';
 import type { Excerpts } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
-
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
@@ -67,6 +67,9 @@ function ExcerptsPageContent() {
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
+
+    // Check if any excerpts have translations - if not, hide the column for more Arabic space
+    const hasAnyTranslations = allExcerpts.some((e) => e.text);
 
     useEffect(() => {
         loadCompressed('excerpts').then((data) => {
@@ -132,9 +135,15 @@ function ExcerptsPageContent() {
                 const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
                 const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
 
-                const lines = excerpts.join('\n\n') + headings.join('\n');
+                const lines = [
+                    TRANSLATE_EXCERPTS_PROMPT.join('\n'),
+                    '\n\n',
+                    excerpts.join('\n\n'),
+                    '\n\n',
+                    headings.join('\n'),
+                ];
 
-                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines);
+                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, lines.join('\n'));
             } catch (err) {
                 console.error('Export failed:', err);
                 toast.error('Failed to export to TXT');
@@ -245,7 +254,7 @@ function ExcerptsPageContent() {
                                 <DownloadIcon />
                             </Button>
                             <Button onClick={handleExportToTxt}>
-                                <FileDownIcon />
+                                <FileTextIcon />
                             </Button>
                             <Button
                                 className="bg-blue-500"
@@ -298,6 +307,7 @@ function ExcerptsPageContent() {
                                             filters={filters}
                                             footnotes={allFootnotes}
                                             headings={allHeadings}
+                                            hideTranslation={!hasAnyTranslations}
                                             onFilterChange={setFilter}
                                         />
                                     }
@@ -305,6 +315,7 @@ function ExcerptsPageContent() {
                                     renderRow={(item) => (
                                         <ExcerptRow
                                             data={item}
+                                            hideTranslation={!hasAnyTranslations}
                                             onCreateFromSelection={createExcerptFromExisting}
                                             onDelete={(id) => deleteExcerpts([id])}
                                             onUpdate={updateExcerpt}

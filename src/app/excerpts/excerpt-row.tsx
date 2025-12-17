@@ -10,12 +10,14 @@ import type { Excerpt } from '@/stores/excerptsStore/types';
 
 type ExcerptRowProps = {
     data: Excerpt;
+    /** Hide the translation column to maximize Arabic text real estate */
+    hideTranslation?: boolean;
     onCreateFromSelection: (sourceId: string, selectedText: string) => void;
     onDelete: (id: string) => void;
     onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
 };
 
-function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: ExcerptRowProps) {
+function ExcerptRow({ data, hideTranslation, onCreateFromSelection, onDelete, onUpdate }: ExcerptRowProps) {
     const [selectedText, setSelectedText] = useState('');
     const [showExtractButton, setShowExtractButton] = useState(false);
     const [buttonPosition, setButtonPosition] = useState({ left: 0, top: 0 });
@@ -127,25 +129,27 @@ function ExcerptRow({ data, onCreateFromSelection, onDelete, onUpdate }: Excerpt
                         }}
                     />
                 </td>
-                <td className="px-4 py-3 align-top">
-                    <Textarea
-                        className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-gray-700 text-sm leading-relaxed shadow-none focus:outline-none focus:ring-0"
-                        defaultValue={data.text ?? ''}
-                        key={`${data.id}/${data.lastUpdatedAt}/text`}
-                        onBlur={(e) => {
-                            if (e.target.value !== (data.text ?? '')) {
-                                autoResize(e.currentTarget);
-                                onUpdate(data.id, { text: e.target.value });
-                            }
-                        }}
-                        placeholder="Translation..."
-                        ref={(el) => {
-                            if (el) {
-                                autoResize(el);
-                            }
-                        }}
-                    />
-                </td>
+                {!hideTranslation && (
+                    <td className="px-4 py-3 align-top">
+                        <Textarea
+                            className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-gray-700 text-sm leading-relaxed shadow-none focus:outline-none focus:ring-0"
+                            defaultValue={data.text ?? ''}
+                            key={`${data.id}/${data.lastUpdatedAt}/text`}
+                            onBlur={(e) => {
+                                if (e.target.value !== (data.text ?? '')) {
+                                    autoResize(e.currentTarget);
+                                    onUpdate(data.id, { text: e.target.value });
+                                }
+                            }}
+                            placeholder="Translation..."
+                            ref={(el) => {
+                                if (el) {
+                                    autoResize(el);
+                                }
+                            }}
+                        />
+                    </td>
+                )}
                 <td className="w-16 px-2 py-3 text-center align-top">
                     <Button
                         aria-label={`Delete excerpt ${data.id}`}

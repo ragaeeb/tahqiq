@@ -1,10 +1,10 @@
 import { sanitizeArabic } from 'baburchi';
+import { preformatArabicText } from 'bitaboom';
 import { type Page, type Segment, type SegmentationOptions, segmentPages } from 'flappa-doormal';
 import type { Title } from 'shamela';
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
 import { LatestContractVersion } from '../constants';
-import { preformatArabicText } from '../textUtils';
 
 export const DEFAULT_OPTIONS = `{
     "breakpoints": [{ "pattern": "{{tarqim}}\\\\s*" }, ""],
@@ -83,16 +83,32 @@ const getIndexedShamelaPages = (shamelaPages: ShamelaPage[]) => {
     return { idToPage, pages };
 };
 
+const segmentAndSanitize = (shamelaPages: ShamelaPage[], options: SegmentationOptions) => {
+    const { pages, idToPage } = getIndexedShamelaPages(shamelaPages);
+
+    const segments = segmentPages(pages, options);
+    let texts = segments.map((s) => s.content);
+    texts = preformatArabicText(texts);
+    const sanitized = sanitizeArabic(texts, 'aggressive');
+    const validSegments: Segment[] = [];
+
+    for (let i = 0; i < sanitized.length; i++) {
+        if (sanitized[i].length > 2) {
+            segments[i].content = texts[i];
+            validSegments.push(segments[i]);
+        }
+    }
+
+    return { idToPage, segments: validSegments };
+};
+
 export const segmentShamelaPagesToExcerpts = (
     shamelaPages: ShamelaPage[],
     titles: Title[],
     options: SegmentationOptions,
 ): Excerpts => {
-    const { pages, idToPage } = getIndexedShamelaPages(shamelaPages);
+    const { segments, idToPage } = segmentAndSanitize(shamelaPages, options);
 
-    const segments = segmentPages(pages, options).filter((s) => {
-        return sanitizeArabic(s.content, 'aggressive').length > 2;
-    });
     const excerpts: IndexedExcerpt[] = [];
     const idToPageCount = new Map<string, number>();
 
@@ -105,7 +121,7 @@ export const segmentShamelaPagesToExcerpts = (
             from: s.from,
             id: getSegmentId(s, totalExcerptsInPage),
             ...(s.meta && { meta: s.meta }),
-            nass: preformatArabicText(s.content),
+            nass: s.content,
             ...(s.to && { to: s.to }),
             vol: Number(shamelaPage.part) || 0,
             vp: Number(shamelaPage.page) || 0,
