@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/ragaeeb/tahqiq/compare/v1.30.0...v1.31.0) (2025-12-17)
+
+
+### Features
+
+* **translation:** Add the ability to assign translations to existing excerpts ([487d9f4](https://github.com/ragaeeb/tahqiq/commit/487d9f4f05c5fc380b43bc3e21f12c93cf91c950))
+
 # [1.30.0](https://github.com/ragaeeb/tahqiq/compare/v1.29.0...v1.30.0) (2025-12-17)
 
 
