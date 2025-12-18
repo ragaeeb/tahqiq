@@ -1,3 +1,10 @@
+# [1.33.0](https://github.com/ragaeeb/tahqiq/compare/v1.32.0...v1.33.0) (2025-12-18)
+
+
+### Features
+
+* **excerpts:** add translation overwrite confirmation and merge functionality ([6c4ccd5](https://github.com/ragaeeb/tahqiq/commit/6c4ccd5737ec1ffd9321b7fec95174d16424c0c7)), closes [#P123](https://github.com/ragaeeb/tahqiq/issues/P123) [#123](https://github.com/ragaeeb/tahqiq/issues/123) [#C123](https://github.com/ragaeeb/tahqiq/issues/C123)
+
 # [1.32.0](https://github.com/ragaeeb/tahqiq/compare/v1.31.0...v1.32.0) (2025-12-18)
 
 
