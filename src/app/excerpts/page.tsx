@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { loadFromOPFS, saveToOPFS } from '@/lib/io';
+import { clearStorage, loadFromOPFS, saveToOPFS } from '@/lib/io';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -148,6 +148,7 @@ function ExcerptsPageContent() {
 
     const handleReset = useCallback(() => {
         record('ResetExcerpts');
+        clearStorage('excerpts');
         reset();
         setActiveTab('excerpts');
     }, [reset, setActiveTab]);
@@ -286,6 +287,37 @@ function ExcerptsPageContent() {
                                         {footnotesCount}
                                     </span>
                                 </TabsTrigger>
+
+                                {/* Translation Progress */}
+                                {(() => {
+                                    const items =
+                                        activeTab === 'excerpts'
+                                            ? allExcerpts
+                                            : activeTab === 'headings'
+                                              ? allHeadings
+                                              : allFootnotes;
+                                    const total = items.length;
+                                    const translated = items.filter((item) => item.text?.trim()).length;
+                                    const remaining = total - translated;
+                                    const percentage = total > 0 ? Math.round((translated / total) * 100) : 0;
+
+                                    return (
+                                        <div className="ml-auto flex items-center gap-3 pr-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2 w-32 overflow-hidden rounded-full bg-gray-200">
+                                                    <div
+                                                        className="h-full bg-green-500 transition-all duration-300"
+                                                        style={{ width: `${percentage}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-gray-600 text-xs">
+                                                    {translated}/{total} ({percentage}%)
+                                                </span>
+                                            </div>
+                                            <span className="text-gray-400 text-xs">{remaining} remaining</span>
+                                        </div>
+                                    );
+                                })()}
                             </TabsList>
 
                             <TabsContent className="mt-0" value="excerpts">

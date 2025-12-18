@@ -11,15 +11,16 @@ export const DEFAULT_HINTS = [
 ];
 
 /**
- * Translation model options for the dropdown
+ * Translation model options for the toggle group (auto-sorted by numeric value)
+ * Colors include: base bg, selected bg, and opacity fade when unselected
  */
 export const TRANSLATION_MODELS = [
-    { label: 'OpenAI GPT 5.2 Thinking', value: '893' },
-    { label: 'OpenAI GPT 5', value: '879' },
-    { label: 'Claude 4.5 Sonnet', value: '891' },
-    { label: 'Grok 4.1 Thinking Beta', value: '892' },
-    { label: 'Gemini 3.0 Pro', value: '890' },
-] as const;
+    { color: 'emerald', label: 'OpenAI GPT 5', value: '879' },
+    { color: 'blue', label: 'Gemini 3.0 Pro', value: '890' },
+    { color: 'orange', label: 'Claude 4.5 Sonnet', value: '891' },
+    { color: 'purple', label: 'Grok 4.1 Thinking Beta', value: '892' },
+    { color: 'teal', label: 'OpenAI GPT 5.2 Thinking', value: '893' },
+].sort((a, b) => Number(a.value) - Number(b.value)) as readonly { label: string; value: string; color: string }[];
 
 export const LatestContractVersion = {
     Ajza: 'v0.1',
