@@ -67,22 +67,31 @@ export function useExcerptFilters() {
         [searchParams],
     );
 
-    // Read scroll target from URL hash (e.g., #2333)
-    // This scrolls to the row with `from` matching this value
+    // Read scroll target from URL hash
+    // For excerpts: #2333 scrolls to row with `from` matching 2333
+    // For headings: #C123 scrolls to row with `id` matching C123
     const [scrollToFrom, setScrollToFrom] = useState<number | null>(null);
+    const [scrollToId, setScrollToId] = useState<string | null>(null);
 
     // Read hash on mount and listen for hashchange events
     useEffect(() => {
         const readHash = () => {
             const hash = window.location.hash.slice(1); // Remove the # prefix
             if (hash) {
+                // If hash is purely numeric, treat as `from` value (for excerpts)
                 const fromValue = Number.parseInt(hash, 10);
-                if (!Number.isNaN(fromValue)) {
+                if (!Number.isNaN(fromValue) && hash === fromValue.toString()) {
                     setScrollToFrom(fromValue);
+                    setScrollToId(null);
                     return;
                 }
+                // Otherwise treat as ID (for headings)
+                setScrollToId(hash);
+                setScrollToFrom(null);
+                return;
             }
             setScrollToFrom(null);
+            setScrollToId(null);
         };
 
         // Read initial hash on mount
@@ -132,11 +141,12 @@ export function useExcerptFilters() {
     );
 
     /**
-     * Clear the scrollToFrom state after scrolling is complete.
+     * Clear the scroll state after scrolling is complete.
      * The hash remains in the URL for shareability.
      */
     const clearScrollTo = useCallback(() => {
         setScrollToFrom(null);
+        setScrollToId(null);
     }, []);
 
     // Apply filters when URL params change OR when data is first loaded
@@ -207,5 +217,5 @@ export function useExcerptFilters() {
         filterFootnotesByIds,
     ]);
 
-    return { activeTab, clearScrollTo, filters, scrollToFrom, setActiveTab, setFilter };
+    return { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter };
 }

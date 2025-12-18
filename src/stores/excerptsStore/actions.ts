@@ -297,3 +297,75 @@ export const applyBulkTranslations = (
 
     return { total: translationMap.size, updated };
 };
+
+/**
+ * Merges multiple adjacent excerpts into one.
+ * The first excerpt in the array becomes the merged result.
+ * nass and text fields are concatenated with newlines.
+ * id, translator fields come from the first excerpt.
+ *
+ * @param state - The current state
+ * @param ids - IDs of adjacent excerpts to merge (must be in order)
+ * @returns true if merge was successful
+ */
+export const mergeExcerpts = (state: ExcerptsStateCore, ids: string[]): boolean => {
+    if (ids.length < 2) {
+        return false;
+    }
+
+    // Find indices of all excerpts to merge
+    const indices: number[] = [];
+    for (const id of ids) {
+        const index = state.excerpts.findIndex((e) => e.id === id);
+        if (index === -1) {
+            return false; // ID not found
+        }
+        indices.push(index);
+    }
+
+    // Sort indices to ensure proper order
+    indices.sort((a, b) => a - b);
+
+    // Verify they are adjacent
+    for (let i = 1; i < indices.length; i++) {
+        if (indices[i] !== indices[i - 1] + 1) {
+            return false; // Not adjacent
+        }
+    }
+
+    // Get excerpts to merge
+    const excerptsToMerge = indices.map((i) => state.excerpts[i]);
+    const firstExcerpt = excerptsToMerge[0];
+
+    // Merge fields
+    const mergedNass = excerptsToMerge.map((e) => e.nass || '').join('\n');
+    const mergedText = excerptsToMerge
+        .map((e) => e.text || '')
+        .filter(Boolean)
+        .join('\n');
+    const lastTo = excerptsToMerge[excerptsToMerge.length - 1].to || excerptsToMerge[excerptsToMerge.length - 1].from;
+
+    const now = nowInSeconds();
+
+    // Create merged excerpt (using first excerpt's id and translator)
+    const mergedExcerpt: Excerpt = {
+        ...firstExcerpt,
+        lastUpdatedAt: now,
+        nass: mergedNass,
+        text: mergedText || firstExcerpt.text,
+        to: lastTo !== firstExcerpt.from ? lastTo : firstExcerpt.to,
+    };
+
+    // Remove all merged excerpts and insert the merged one at the first position
+    const firstIndex = indices[0];
+    state.excerpts.splice(firstIndex, indices.length, mergedExcerpt);
+
+    // Update filtered IDs if active
+    if (state.filteredExcerptIds) {
+        const idsToRemove = new Set(ids.slice(1)); // Keep first ID
+        state.filteredExcerptIds = state.filteredExcerptIds.filter((id) => !idsToRemove.has(id));
+    }
+
+    state.lastUpdatedAt = new Date();
+    return true;
+};

@@ -388,6 +388,14 @@ export type ExcerptsActions = {
         translationMap: Map<string, string>,
         translator: number,
     ) => { updated: number; total: number };
+
+    /**
+     * Merges multiple adjacent excerpts into one.
+     * The first excerpt becomes the merged result with concatenated nass/text.
+     * @param ids - IDs of adjacent excerpts to merge (in order)
+     * @returns true if merge was successful
+     */
+    mergeExcerpts: (ids: string[]) => boolean;
 };
 
 /**

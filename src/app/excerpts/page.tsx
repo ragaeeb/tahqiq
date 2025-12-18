@@ -1,8 +1,8 @@
 'use client';
 
-import { DownloadIcon, FileTextIcon, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -61,14 +61,81 @@ function ExcerptsPageContent() {
     const applyTranslationFormatting = useExcerptsStore((state) => state.applyTranslationFormatting);
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
+    const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
 
-    const { activeTab, clearScrollTo, filters, scrollToFrom, setActiveTab, setFilter } = useExcerptFilters();
+    const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter } =
+        useExcerptFilters();
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
 
     // Check if any excerpts have translations - if not, hide the column for more Arabic space
     const hasAnyTranslations = allExcerpts.some((e) => e.text);
+
+    // Toggle selection for an excerpt
+    const toggleSelection = useCallback((id: string) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    }, []);
+
+    // Check if selected IDs are adjacent (2+ and consecutive in excerpts array)
+    const canMerge = useMemo(() => {
+        if (selectedIds.size < 2) {
+            return false;
+        }
+
+        // Get indices of selected excerpts
+        const indices: number[] = [];
+        for (let i = 0; i < excerpts.length; i++) {
+            if (selectedIds.has(excerpts[i].id)) {
+                indices.push(i);
+            }
+        }
+
+        if (indices.length < 2) {
+            return false;
+        }
+
+        // Check if consecutive
+        indices.sort((a, b) => a - b);
+        for (let i = 1; i < indices.length; i++) {
+            if (indices[i] !== indices[i - 1] + 1) {
+                return false;
+            }
+        }
+        return true;
+    }, [selectedIds, excerpts]);
+
+    // Handle merge of selected excerpts
+    const handleMerge = useCallback(() => {
+        if (!canMerge) {
+            return;
+        }
+
+        // Get IDs in order
+        const idsInOrder: string[] = [];
+        for (const excerpt of excerpts) {
+            if (selectedIds.has(excerpt.id)) {
+                idsInOrder.push(excerpt.id);
+            }
+        }
+
+        const success = mergeExcerpts(idsInOrder);
+        if (success) {
+            toast.success(`Merged ${idsInOrder.length} excerpts`);
+            setSelectedIds(new Set());
+        } else {
+            toast.error('Failed to merge excerpts');
+        }
+    }, [canMerge, excerpts, selectedIds, mergeExcerpts]);
 
     useEffect(() => {
         loadFromOPFS('excerpts').then((data) => {
@@ -131,8 +198,11 @@ function ExcerptsPageContent() {
 
             try {
                 const state = useExcerptsStore.getState();
-                const excerpts = state.excerpts.map((e) => `${e.id} - ${e.nass}`).concat(['\n']);
-                const headings = state.headings.map((e) => `${e.id} - ${e.nass}`);
+                const excerpts = state.excerpts
+                    .filter((e) => !e.text)
+                    .map((e) => `${e.id} - ${e.nass}`)
+                    .concat(['\n']);
+                const headings = state.headings.filter((e) => !e.text).map((e) => `${e.id} - ${e.nass}`);
 
                 const content = [TRANSLATE_EXCERPTS_PROMPT.join('\n'), excerpts.join('\n\n'), headings.join('\n')].join(
                     '\n\n\n',
@@ -321,12 +391,31 @@ function ExcerptsPageContent() {
                             </TabsList>
 
                             <TabsContent className="mt-0" value="excerpts">
+                                {canMerge && (
+                                    <div className="mb-2 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2">
+                                        <span className="text-blue-700 text-sm">
+                                            {selectedIds.size} adjacent excerpts selected
+                                        </span>
+                                        <Button onClick={handleMerge} size="sm" variant="default">
+                                            <Merge className="mr-1 h-4 w-4" />
+                                            Merge
+                                        </Button>
+                                        <Button onClick={() => setSelectedIds(new Set())} size="sm" variant="outline">
+                                            Clear Selection
+                                        </Button>
+                                    </div>
+                                )}
                                 <VirtualizedList
                                     data={excerpts}
-                                    findScrollIndex={(data, fromValue) =>
-                                        data.findIndex((item) => item.from === fromValue)
-                                    }
-                                    getKey={(item) => item.id}
+                                    findScrollIndex={(data, scrollValue) => {
+                                        // If it's a number, search by from field
+                                        if (typeof scrollValue === 'number') {
+                                            return data.findIndex((item) => item.from === scrollValue);
+                                        }
+                                        // If it's a string, search by id field (e.g., P233)
+                                        return data.findIndex((item) => item.id === scrollValue);
+                                    }}
+                                    getKey={(item) => `${item.id}/${item.lastUpdatedAt}`}
                                     header={
                                         <ExcerptsTableHeader
                                             activeTab="excerpts"
@@ -343,18 +432,21 @@ function ExcerptsPageContent() {
                                         <ExcerptRow
                                             data={item}
                                             hideTranslation={!hasAnyTranslations}
+                                            isSelected={selectedIds.has(item.id)}
                                             onCreateFromSelection={createExcerptFromExisting}
                                             onDelete={(id) => deleteExcerpts([id])}
+                                            onToggleSelect={toggleSelection}
                                             onUpdate={updateExcerpt}
                                         />
                                     )}
-                                    scrollToId={scrollToFrom}
+                                    scrollToId={scrollToId ?? scrollToFrom}
                                 />
                             </TabsContent>
 
                             <TabsContent className="mt-0" value="headings">
                                 <VirtualizedList
                                     data={headings}
+                                    findScrollIndex={(data, idValue) => data.findIndex((item) => item.id === idValue)}
                                     getKey={(item) => item.id}
                                     header={
                                         <ExcerptsTableHeader
@@ -366,6 +458,7 @@ function ExcerptsPageContent() {
                                             onFilterChange={setFilter}
                                         />
                                     }
+                                    onScrollToComplete={clearScrollTo}
                                     renderRow={(item) => (
                                         <HeadingRow
                                             data={item}
@@ -373,6 +466,7 @@ function ExcerptsPageContent() {
                                             onUpdate={updateHeading}
                                         />
                                     )}
+                                    scrollToId={scrollToId}
                                 />
                             </TabsContent>
 

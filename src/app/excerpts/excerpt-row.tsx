@@ -5,6 +5,7 @@ import { record } from 'nanolytics';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import type { Excerpt } from '@/stores/excerptsStore/types';
 
@@ -12,12 +13,24 @@ type ExcerptRowProps = {
     data: Excerpt;
     /** Hide the translation column to maximize Arabic text real estate */
     hideTranslation?: boolean;
+    /** Whether this row is selected */
+    isSelected?: boolean;
     onCreateFromSelection: (sourceId: string, selectedText: string) => void;
     onDelete: (id: string) => void;
+    /** Toggle selection for this row */
+    onToggleSelect?: (id: string) => void;
     onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
 };
 
-function ExcerptRow({ data, hideTranslation, onCreateFromSelection, onDelete, onUpdate }: ExcerptRowProps) {
+function ExcerptRow({
+    data,
+    hideTranslation,
+    isSelected,
+    onCreateFromSelection,
+    onDelete,
+    onToggleSelect,
+    onUpdate,
+}: ExcerptRowProps) {
     const [selectedText, setSelectedText] = useState('');
     const [showExtractButton, setShowExtractButton] = useState(false);
     const [buttonPosition, setButtonPosition] = useState({ left: 0, top: 0 });
@@ -96,13 +109,20 @@ function ExcerptRow({ data, hideTranslation, onCreateFromSelection, onDelete, on
         <>
             <tr
                 className={`border-gray-100 border-b transition-colors duration-150 ease-in-out ${
-                    data.meta?.type === 'chapter'
-                        ? 'bg-green-50 hover:bg-green-100'
-                        : data.meta?.type === 'book'
-                          ? 'bg-blue-50 hover:bg-blue-100'
-                          : 'hover:bg-gray-50'
+                    isSelected
+                        ? 'bg-blue-100 hover:bg-blue-200'
+                        : data.meta?.type === 'chapter'
+                          ? 'bg-green-50 hover:bg-green-100'
+                          : data.meta?.type === 'book'
+                            ? 'bg-blue-50 hover:bg-blue-100'
+                            : 'hover:bg-gray-50'
                 }`}
             >
+                {onToggleSelect && (
+                    <td className="w-10 px-2 py-3 text-center align-top">
+                        <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(data.id)} />
+                    </td>
+                )}
                 <td className="w-32 px-2 py-3 text-center align-top text-gray-600 text-xs">
                     {[data.from, data.to].filter(Boolean).join('-')} {data.meta?.num && `#${data.meta?.num}`}
                 </td>

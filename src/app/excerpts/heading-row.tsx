@@ -21,6 +21,7 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
 
     return (
         <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
+            <td className="w-20 px-2 py-3 text-center align-middle font-mono text-gray-500 text-xs">{data.id}</td>
             <td className="w-24 px-2 py-3 text-center align-middle text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"

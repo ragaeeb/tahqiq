@@ -78,6 +78,14 @@ export const useExcerptsStore = create<ExcerptsState>()(
                 Object.assign(state, newState);
             }),
 
+        mergeExcerpts: (ids) => {
+            let result = false;
+            set((state) => {
+                result = actions.mergeExcerpts(state, ids);
+            });
+            return result;
+        },
+
         reset: () =>
             set((state) => {
                 const newState = actions.resetStore();

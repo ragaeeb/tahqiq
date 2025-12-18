@@ -46,6 +46,9 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [selectedModel, setSelectedModelState] = useState<string>(getSavedModel);
     const [validationError, setValidationError] = useState<string | undefined>();
+    const [pendingOverwrites, setPendingOverwrites] = useState<{ duplicates: string[]; overwrites: string[] } | null>(
+        null,
+    );
 
     const setSelectedModel = useCallback((value: string) => {
         setSelectedModelState(value);
@@ -70,6 +73,27 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
             ids.push(f.id);
         }
         return ids;
+    }, [excerpts, headings, footnotes]);
+
+    // Build map of IDs that already have translations
+    const existingTranslations = useMemo(() => {
+        const map = new Map<string, boolean>();
+        for (const e of excerpts) {
+            if (e.text?.trim()) {
+                map.set(e.id, true);
+            }
+        }
+        for (const h of headings) {
+            if (h.text?.trim()) {
+                map.set(h.id, true);
+            }
+        }
+        for (const f of footnotes) {
+            if (f.text?.trim()) {
+                map.set(f.id, true);
+            }
+        }
+        return map;
     }, [excerpts, headings, footnotes]);
 
     // Track if we just pasted to avoid clearing the error (paste triggers onChange)
@@ -126,7 +150,33 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
         if (validationError) {
             setValidationError(undefined);
         }
-    }, [validationError]);
+        // Clear pending overwrites when user edits
+        if (pendingOverwrites) {
+            setPendingOverwrites(null);
+        }
+    }, [validationError, pendingOverwrites]);
+
+    const doSubmit = useCallback(
+        (translationMap: Map<string, string>, translatorValue: number, total: number) => {
+            const { updated } = applyBulkTranslations(translationMap, translatorValue);
+
+            record('AddBulkTranslations', `${updated}/${total}`);
+
+            if (updated === 0) {
+                toast.error(`No matching excerpts found for ${total} translations`);
+                return;
+            }
+
+            if (updated < total) {
+                toast.warning(`Updated ${updated} of ${total} translations`);
+            } else {
+                toast.success(`Successfully updated ${updated} translations`);
+            }
+
+            onClose?.();
+        },
+        [applyBulkTranslations, onClose],
+    );
 
     const handleSubmit = useCallback(
         (e: React.FormEvent) => {
@@ -147,6 +197,18 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
                 return;
             }
 
+            // Check for duplicates in pasted content
+            const idCounts = new Map<string, number>();
+            for (const id of validation.parsedIds) {
+                idCounts.set(id, (idCounts.get(id) || 0) + 1);
+            }
+            const duplicates: string[] = [];
+            for (const [id, count] of idCounts) {
+                if (count > 1) {
+                    duplicates.push(`${id} (×${count})`);
+                }
+            }
+
             const { translationMap, count } = parseTranslations(validation.normalizedText);
 
             if (count === 0) {
@@ -154,25 +216,29 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
                 return;
             }
 
+            // Check for overwrites of existing translations
+            const overwrites: string[] = [];
+            for (const id of translationMap.keys()) {
+                if (existingTranslations.has(id)) {
+                    overwrites.push(id);
+                }
+            }
+
             const translatorValue = Number.parseInt(selectedModel, 10);
-            const { updated, total } = applyBulkTranslations(translationMap, translatorValue);
 
-            record('AddBulkTranslations', `${updated}/${total}`);
-
-            if (updated === 0) {
-                toast.error(`No matching excerpts found for ${total} translations`);
+            // Combine issues for confirmation
+            const hasIssues = overwrites.length > 0 || duplicates.length > 0;
+            if (hasIssues && !pendingOverwrites) {
+                // Show confirmation - don't proceed yet
+                setPendingOverwrites({ duplicates, overwrites });
                 return;
             }
 
-            if (updated < total) {
-                toast.warning(`Updated ${updated} of ${total} translations`);
-            } else {
-                toast.success(`Successfully updated ${updated} translations`);
-            }
-
-            onClose?.();
+            // Either no issues or user confirmed
+            setPendingOverwrites(null);
+            doSubmit(translationMap, translatorValue, count);
         },
-        [selectedModel, applyBulkTranslations, onClose, expectedIds],
+        [selectedModel, expectedIds, existingTranslations, pendingOverwrites, doSubmit],
     );
 
     return (
@@ -227,6 +293,31 @@ Another line that should be appended to this existing excerpt.`}
                             ⚠️ {validationError}
                         </div>
                     )}
+                    {pendingOverwrites && (
+                        <div className="space-y-2">
+                            {pendingOverwrites.duplicates.length > 0 && (
+                                <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-orange-800 text-sm">
+                                    <div className="font-medium">
+                                        ⚠️ Duplicate IDs in pasted text (later entries will override earlier ones):
+                                    </div>
+                                    <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
+                                        {pendingOverwrites.duplicates.join(', ')}
+                                    </div>
+                                </div>
+                            )}
+                            {pendingOverwrites.overwrites.length > 0 && (
+                                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
+                                    <div className="font-medium">
+                                        ⚠️ {pendingOverwrites.overwrites.length} excerpt(s) already have translations
+                                        that will be overwritten:
+                                    </div>
+                                    <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
+                                        {pendingOverwrites.overwrites.join(', ')}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <DialogFooter>
@@ -235,9 +326,21 @@ Another line that should be appended to this existing excerpt.`}
                             Cancel
                         </Button>
                     </DialogClose>
-                    <Button disabled={!!validationError} type="submit">
-                        Save Translations
-                    </Button>
+                    {pendingOverwrites ? (
+                        <>
+                            <Button onClick={() => setPendingOverwrites(null)} type="button" variant="outline">
+                                Go Back
+                            </Button>
+                            <Button className="bg-amber-500 hover:bg-amber-600" type="submit">
+                                Confirm ({pendingOverwrites.duplicates.length + pendingOverwrites.overwrites.length}{' '}
+                                issues)
+                            </Button>
+                        </>
+                    ) : (
+                        <Button disabled={!!validationError} type="submit">
+                            Save Translations
+                        </Button>
+                    )}
                 </DialogFooter>
             </form>
         </DialogContent>

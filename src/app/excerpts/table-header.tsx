@@ -139,6 +139,7 @@ export default function ExcerptsTableHeader({
     if (activeTab === 'headings') {
         return (
             <tr>
+                <th className="w-20 px-2 py-3 text-center font-semibold text-gray-700 text-sm">ID</th>
                 <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-1 py-1 text-center text-gray-800 text-xs leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
