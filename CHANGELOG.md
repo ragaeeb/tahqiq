@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/ragaeeb/tahqiq/compare/v1.31.0...v1.32.0) (2025-12-18)
+
+
+### Features
+
+* **excerpts:** Implement excerpt saving with translators ([2a9bff1](https://github.com/ragaeeb/tahqiq/commit/2a9bff12947dec3dd64cdecf830745286db9b29b))
+
 # [1.31.0](https://github.com/ragaeeb/tahqiq/compare/v1.30.0...v1.31.0) (2025-12-17)
 
 
