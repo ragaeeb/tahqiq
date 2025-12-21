@@ -8,7 +8,7 @@ import {
     SplitIcon,
 } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import { saveToOPFS } from '@/lib/io';
 import { usePatchStore } from '@/stores/patchStore';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-import { JsonSegmentationDialogContent } from './json-segmentation-dialog';
+import { SegmentationPanel } from './json-segmentation-dialog';
 import { PatchesDialogContent } from './patches-dialog';
 
 export const Toolbar = () => {
@@ -26,6 +26,7 @@ export const Toolbar = () => {
     const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
     const removeFootnoteReferences = useShamelaStore((state) => state.removeFootnoteReferences);
     const reset = useShamelaStore((state) => state.reset);
+    const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
 
     /**
      * Creates a ShamelaBook object from the current store state.
@@ -99,14 +100,17 @@ export const Toolbar = () => {
             >
                 <FootprintsIcon />
             </Button>
-            <DialogTriggerButton
-                onClick={() => record('OpenSegmentationDialog')}
-                renderContent={() => <JsonSegmentationDialogContent />}
+            <Button
+                onClick={() => {
+                    record('OpenSegmentationPanel');
+                    setIsSegmentationPanelOpen(true);
+                }}
                 title="Segment pages"
                 variant="outline"
             >
                 <SplitIcon />
-            </DialogTriggerButton>
+            </Button>
+            {isSegmentationPanelOpen && <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} />}
             <DialogTriggerButton
                 onClick={() => record('OpenPatchesDialog')}
                 renderContent={() => <PatchesDialogContent />}

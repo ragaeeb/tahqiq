@@ -1,7 +1,7 @@
 import { sanitizeArabic } from 'baburchi';
 import { preformatArabicText } from 'bitaboom';
 import { type Page, type Segment, type SegmentationOptions, segmentPages } from 'flappa-doormal';
-import type { Title } from 'shamela';
+import { convertContentToMarkdown, mapPageCharacterContent, type Title } from 'shamela';
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
 import { LatestContractVersion } from '../constants';
@@ -40,21 +40,6 @@ export const DEFAULT_OPTIONS = `{
     ]
 }`;
 
-const htmlToMarkdown = (html: string) => {
-    return (
-        html
-            // Move content after line break (or at start) but before title span INTO the span
-            .replace(/(^|\r)([^\r]*?)<span[^>]*data-type=["']title["'][^>]*>/gi, '$1<span data-type="title">$2')
-            // Convert title spans to markdown headers
-            .replace(/<span[^>]*data-type=["']title["'][^>]*>(.*?)<\/span>/gi, '## $1')
-            // Strip narrator links but keep text
-            .replace(/<a[^>]*href=["']inr:\/\/[^"']*["'][^>]*>(.*?)<\/a>/gi, '$1')
-            // Strip all remaining HTML tags
-            .replace(/<[^>]*>/g, '')
-            .replace(/舄/g, '')
-    );
-};
-
 const getSegmentId = (s: Segment, totalExcerptsInPage: number) => {
     const type = s.meta?.type as ExcerptType;
     const letter = String.fromCharCode(96 + totalExcerptsInPage);
@@ -77,7 +62,11 @@ const getIndexedShamelaPages = (shamelaPages: ShamelaPage[]) => {
 
     for (const page of shamelaPages) {
         idToPage.set(page.id, page);
-        pages.push({ content: htmlToMarkdown(page.body), id: page.id });
+
+        let content = mapPageCharacterContent(page.body, { 舄: '' });
+        content = convertContentToMarkdown(content);
+
+        pages.push({ content, id: page.id });
     }
 
     return { idToPage, pages };
