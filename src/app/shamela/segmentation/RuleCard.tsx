@@ -90,10 +90,22 @@ export const RuleCard = ({ index, rule, exampleLine, isFirst, isLast }: RuleCard
                     <Checkbox
                         checked={rule.fuzzy}
                         id={`fuzzy-${index}`}
-                        onCheckedChange={(fuzzy) => updateRuleConfig(index, { fuzzy })}
+                        onCheckedChange={(fuzzy) => updateRuleConfig(index, { fuzzy: fuzzy === true })}
                     />
                     <Label className="cursor-pointer text-xs" htmlFor={`fuzzy-${index}`}>
                         Fuzzy
+                    </Label>
+                </div>
+
+                {/* Page Start Guard */}
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={rule.pageStartGuard}
+                        id={`pageGuard-${index}`}
+                        onCheckedChange={(checked) => updateRuleConfig(index, { pageStartGuard: checked === true })}
+                    />
+                    <Label className="cursor-pointer text-xs" htmlFor={`pageGuard-${index}`}>
+                        Page Guard
                     </Label>
                 </div>
 

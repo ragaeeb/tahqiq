@@ -5,6 +5,7 @@ export type RuleConfig = {
     template: string; // Editable, defaults to pattern, used in JSON output
     patternType: 'lineStartsWith' | 'lineStartsAfter';
     fuzzy: boolean;
+    pageStartGuard: boolean;
     metaType: 'none' | 'book' | 'chapter';
     min?: number;
 };
@@ -29,6 +30,19 @@ export const COMMON_PATTERNS: CommonPattern[] = [
     { fuzzy: false, label: 'Heading (##)', metaType: 'chapter', pattern: '## ', patternType: 'lineStartsAfter' },
 ];
 
+/**
+ * Token mapping for auto-applying named groups to templates
+ */
+export type TokenMapping = {
+    token: string; // e.g., "raqms"
+    name: string; // e.g., "num" -> transforms {{raqms}} to {{raqms:num}}
+};
+
+export const DEFAULT_TOKEN_MAPPINGS: TokenMapping[] = [
+    { name: 'num', token: 'raqms' },
+    { name: 'rumuz', token: 'rumuz' },
+];
+
 export type SegmentationState = {
     // Pattern analysis
     allLineStarts: CommonLineStartPattern[];
@@ -38,6 +52,9 @@ export type SegmentationState = {
     ruleConfigs: RuleConfig[];
     sliceAtPunctuation: boolean;
 
+    // Token mappings (apply to all rules)
+    tokenMappings: TokenMapping[];
+
     // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
     togglePattern: (pattern: string) => void;
@@ -46,5 +63,6 @@ export type SegmentationState = {
     updateRuleConfig: (index: number, updates: Partial<RuleConfig>) => void;
     moveRule: (fromIndex: number, toIndex: number) => void;
     setSliceAtPunctuation: (value: boolean) => void;
+    setTokenMappings: (mappings: TokenMapping[]) => void;
     reset: () => void;
 };

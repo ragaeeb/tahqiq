@@ -12,7 +12,7 @@ import { buildGeneratedOptions } from './JsonTab';
  * Preview tab showing segmentation results with virtualization for performance
  */
 export const PreviewTab = () => {
-    const { ruleConfigs, sliceAtPunctuation } = useSegmentationStore();
+    const { ruleConfigs, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
     const pages = useShamelaStore((state) => state.pages);
 
     // Generate segments preview
@@ -22,7 +22,7 @@ export const PreviewTab = () => {
         }
 
         try {
-            const optionsJson = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation);
+            const optionsJson = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings);
             const options = JSON.parse(optionsJson) as SegmentationOptions;
 
             // Convert shamela pages to segmentation format
@@ -41,7 +41,7 @@ export const PreviewTab = () => {
         } catch (err) {
             return { error: err instanceof Error ? err.message : 'Unknown error', segments: [] };
         }
-    }, [ruleConfigs, sliceAtPunctuation, pages]);
+    }, [ruleConfigs, sliceAtPunctuation, tokenMappings, pages]);
 
     if (error) {
         return <div className="flex h-full items-center justify-center text-red-500">Error: {error}</div>;

@@ -1,7 +1,7 @@
 import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { RuleConfig, SegmentationState } from './types';
+import { DEFAULT_TOKEN_MAPPINGS, type RuleConfig, type SegmentationState, type TokenMapping } from './types';
 
 // Enable Immer's MapSet plugin for Set/Map support
 enableMapSet();
@@ -11,6 +11,7 @@ const INITIAL_STATE = {
     ruleConfigs: [],
     selectedPatterns: new Set<string>(),
     sliceAtPunctuation: true,
+    tokenMappings: DEFAULT_TOKEN_MAPPINGS as TokenMapping[],
 };
 
 /**
@@ -24,6 +25,7 @@ const createRuleConfigDefaults = (pattern: string): RuleConfig => {
     return {
         fuzzy: containsKitab || containsNaql,
         metaType: containsKitab ? 'book' : containsBab ? 'chapter' : 'none',
+        pageStartGuard: false,
         pattern,
         patternType: 'lineStartsAfter',
         template: pattern,
@@ -49,6 +51,7 @@ export const useSegmentationStore = create<SegmentationState>()(
                 state.ruleConfigs.push({
                     fuzzy: common.fuzzy,
                     metaType: common.metaType,
+                    pageStartGuard: false,
                     pattern: common.pattern,
                     patternType: common.patternType,
                     template: common.pattern,
@@ -88,6 +91,11 @@ export const useSegmentationStore = create<SegmentationState>()(
         setSliceAtPunctuation: (value) =>
             set((state) => {
                 state.sliceAtPunctuation = value;
+            }),
+
+        setTokenMappings: (mappings) =>
+            set((state) => {
+                state.tokenMappings = mappings;
             }),
 
         togglePattern: (pattern) =>

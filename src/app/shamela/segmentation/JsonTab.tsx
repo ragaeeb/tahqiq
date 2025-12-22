@@ -3,21 +3,45 @@
 import { useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { RuleConfig } from '@/stores/segmentationStore/types';
+import type { RuleConfig, TokenMapping } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
+
+/**
+ * Apply token mappings to a template string.
+ * Transforms {{token}} to {{token:name}} based on mappings.
+ * Tokens that already have a name ({{token:existing}}) are left unchanged.
+ */
+const applyTokenMappings = (template: string, mappings: TokenMapping[]): string => {
+    let result = template;
+    for (const { token, name } of mappings) {
+        // Match {{token}} but not {{token:something}}
+        // Regex: \{\{token\}\} but not \{\{token:[^}]+\}\}
+        const regex = new RegExp(`\\{\\{${token}\\}\\}`, 'g');
+        result = result.replace(regex, `{{${token}:${name}}}`);
+    }
+    return result;
+};
 
 /**
  * Builds the segmentation options object from rule configs
  */
-export const buildGeneratedOptions = (ruleConfigs: RuleConfig[], sliceAtPunctuation: boolean): string => {
+export const buildGeneratedOptions = (
+    ruleConfigs: RuleConfig[],
+    sliceAtPunctuation: boolean,
+    tokenMappings: TokenMapping[] = [],
+): string => {
     const options: Record<string, unknown> = {
         maxPages: 1,
-        rules: ruleConfigs.map((r) => ({
-            [r.patternType]: [r.template],
-            ...(r.fuzzy && { fuzzy: true }),
-            ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),
-            ...(r.min && { min: r.min }),
-        })),
+        rules: ruleConfigs.map((r) => {
+            const transformedTemplate = applyTokenMappings(r.template, tokenMappings);
+            return {
+                [r.patternType]: [transformedTemplate],
+                ...(r.fuzzy && { fuzzy: true }),
+                ...(r.pageStartGuard && { pageStartGuard: '{{tarqim}}' }),
+                ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),
+                ...(r.min && { min: r.min }),
+            };
+        }),
     };
 
     if (sliceAtPunctuation) {
@@ -56,6 +80,7 @@ const parseJsonToRuleConfigs = (json: string): RuleConfig[] | null => {
                 fuzzy: Boolean(rule.fuzzy),
                 metaType,
                 min: rule.min as number | undefined,
+                pageStartGuard: Boolean(rule.pageStartGuard),
                 pattern: template,
                 patternType,
                 template,
@@ -70,11 +95,12 @@ const parseJsonToRuleConfigs = (json: string): RuleConfig[] | null => {
  * JSON tab showing generated segmentation options (editable)
  */
 export const JsonTab = () => {
-    const { ruleConfigs, sliceAtPunctuation, setRuleConfigs, setSliceAtPunctuation } = useSegmentationStore();
+    const { ruleConfigs, sliceAtPunctuation, tokenMappings, setRuleConfigs, setSliceAtPunctuation } =
+        useSegmentationStore();
 
     const generatedOptions = useMemo(
-        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation),
-        [ruleConfigs, sliceAtPunctuation],
+        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings),
+        [ruleConfigs, sliceAtPunctuation, tokenMappings],
     );
 
     // Handle user edits - parse JSON and update ruleConfigs
@@ -96,13 +122,14 @@ export const JsonTab = () => {
     };
 
     return (
-        <div className="flex flex-1 flex-col space-y-4 overflow-hidden">
-            <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col">
                 <Label htmlFor="json-options">Segmentation Options (JSON)</Label>
                 <Textarea
-                    className="mt-2 min-h-0 flex-1 resize-none overflow-auto font-mono text-sm"
+                    className="mt-2 h-full min-h-0 flex-1 resize-none overflow-y-auto font-mono text-sm"
                     id="json-options"
                     onChange={handleChange}
+                    style={{ fieldSizing: 'fixed' }}
                     value={generatedOptions}
                 />
             </div>
@@ -114,7 +141,10 @@ export const JsonTab = () => {
  * Hook to get generated options JSON for external use
  */
 export const useGeneratedOptions = () => {
-    const { ruleConfigs, sliceAtPunctuation } = useSegmentationStore();
+    const { ruleConfigs, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
 
-    return useMemo(() => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation), [ruleConfigs, sliceAtPunctuation]);
+    return useMemo(
+        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings),
+        [ruleConfigs, sliceAtPunctuation, tokenMappings],
+    );
 };
