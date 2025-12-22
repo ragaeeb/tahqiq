@@ -1,3 +1,10 @@
+# [1.34.0](https://github.com/ragaeeb/tahqiq/compare/v1.33.0...v1.34.0) (2025-12-22)
+
+
+### Features
+
+* **segmentation:** Add rule building options for segmentation ([#103](https://github.com/ragaeeb/tahqiq/issues/103)) ([7dc994a](https://github.com/ragaeeb/tahqiq/commit/7dc994aa656e13854d06707164fba7ac3c755f9b))
+
 # [1.33.0](https://github.com/ragaeeb/tahqiq/compare/v1.32.0...v1.33.0) (2025-12-18)
 
 
