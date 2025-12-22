@@ -111,19 +111,19 @@ export const Toolbar = () => {
                 <SplitIcon />
             </Button>
             {isSegmentationPanelOpen && <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} />}
-            <DialogTriggerButton
-                onClick={() => record('OpenPatchesDialog')}
-                renderContent={() => <PatchesDialogContent />}
-                title="View tracked patches"
-                variant="outline"
-            >
-                <FileTextIcon />
-                {patchCount > 0 && (
+            {patchCount > 0 && (
+                <DialogTriggerButton
+                    onClick={() => record('OpenPatchesDialog')}
+                    renderContent={() => <PatchesDialogContent />}
+                    title="View tracked patches"
+                    variant="outline"
+                >
+                    <FileTextIcon />
                     <span className="ml-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-orange-700 text-xs">
                         {patchCount}
                     </span>
-                )}
-            </DialogTriggerButton>
+                </DialogTriggerButton>
+            )}
             <Button className="bg-emerald-500" onClick={handleSave}>
                 <SaveIcon />
             </Button>
