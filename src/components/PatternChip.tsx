@@ -2,6 +2,7 @@
 
 import type { CommonLineStartPattern } from 'flappa-doormal';
 import { PlusIcon, XIcon } from 'lucide-react';
+import { buildPatternTooltip } from '@/lib/segmentation';
 
 export type PatternChipProps = {
     colorScheme: 'blue' | 'red' | 'amber';
@@ -10,15 +11,6 @@ export type PatternChipProps = {
     pattern: CommonLineStartPattern;
     showCount?: boolean;
     tooltipBuilder?: (pattern: CommonLineStartPattern) => string;
-};
-
-const defaultTooltipBuilder = (pattern: CommonLineStartPattern): string => {
-    const lines = [`Count: ${pattern.count}`];
-    const examples = pattern.examples?.slice(0, 3) ?? [];
-    for (const ex of examples) {
-        lines.push(`• ${ex.line.slice(0, 50)}${ex.line.length > 50 ? '...' : ''}`);
-    }
-    return lines.join('\n');
 };
 
 /**
@@ -30,7 +22,7 @@ export const PatternChip = ({
     onAction,
     pattern,
     showCount = true,
-    tooltipBuilder = defaultTooltipBuilder,
+    tooltipBuilder = buildPatternTooltip,
 }: PatternChipProps) => {
     const colors = {
         amber: 'bg-amber-100 text-amber-800 hover:bg-amber-200',

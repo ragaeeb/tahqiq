@@ -52,15 +52,15 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         try {
             const result = analyzeTextForRule(selectedText);
 
-            // Check if similar rule already exists
-            const existing = detectedRules.find((r) => r.template === result?.template);
-            if (existing) {
-                toast.info('This pattern is already detected');
+            if (!result) {
+                toast.error('Could not analyze the selected text');
                 return;
             }
 
-            if (!result) {
-                toast.error('Could not analyze the selected text');
+            // Check if similar rule already exists
+            const existing = detectedRules.find((r) => r.template === result.template);
+            if (existing) {
+                toast.info('This pattern is already detected');
                 return;
             }
 
@@ -120,7 +120,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     }, [prefixChars, setAllLineStarts]);
 
     // Finalize and navigate to excerpts
-    const handleFinalize = useCallback(async () => {
+    const handleFinalize = useCallback(() => {
         const options = getOptions();
         if (!options) {
             return;

@@ -49,7 +49,7 @@ export const useSegmentationStore = create<SegmentationState>()(
 
         reset: () =>
             set((state) => {
-                Object.assign(state, { ...INITIAL_STATE, selectedPatterns: new Set<string>() });
+                Object.assign(state, INITIAL_STATE);
             }),
 
         setAllLineStarts: (patterns) =>

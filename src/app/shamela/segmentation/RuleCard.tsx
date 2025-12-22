@@ -26,7 +26,7 @@ export const RuleCard = ({ index, rule, exampleLine, isFirst, isLast }: RuleCard
             {exampleLine && (
                 <div className="mb-2 max-w-full truncate text-muted-foreground text-xs" dir="rtl" title={exampleLine}>
                     {exampleLine.slice(0, 80)}
-                    {exampleLine.length > 80 ? '...' : ''}
+                    {exampleLine.length > 80 ? '…' : ''}
                 </div>
             )}
             <div className="flex flex-wrap items-center gap-3">
@@ -90,7 +90,7 @@ export const RuleCard = ({ index, rule, exampleLine, isFirst, isLast }: RuleCard
                     <Checkbox
                         checked={rule.fuzzy}
                         id={`fuzzy-${index}`}
-                        onCheckedChange={(checked) => updateRuleConfig(index, { fuzzy: checked === true })}
+                        onCheckedChange={(fuzzy) => updateRuleConfig(index, { fuzzy })}
                     />
                     <Label className="cursor-pointer text-xs" htmlFor={`fuzzy-${index}`}>
                         Fuzzy

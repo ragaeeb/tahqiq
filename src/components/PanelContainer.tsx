@@ -1,9 +1,10 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-type PanelContainerProps = { children: React.ReactNode; onCloseClicked: () => void; title?: string };
+type PanelContainerProps = { children: ReactNode; onCloseClicked: () => void; title?: string };
 
 /**
  * Container component for a left-side slide-in panel

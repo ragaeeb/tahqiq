@@ -10,7 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import {
     SEGMENTATION_DEFAULT_MIN_COUNT,
-    SEGMENTATION_DEFAULT_PREFIX_CHARS,
     SEGMENTATION_DEFAULT_TOP_K,
     SEGMENTATION_SIMILARITY_THRESHOLD,
 } from '@/lib/constants';
@@ -29,7 +28,6 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
 
     // Local filter state
     const [topK, setTopK] = useState(SEGMENTATION_DEFAULT_TOP_K);
-    const [prefixChars, setPrefixChars] = useState(SEGMENTATION_DEFAULT_PREFIX_CHARS);
     const [minCount, setMinCount] = useState(SEGMENTATION_DEFAULT_MIN_COUNT);
 
     // Filter patterns locally based on topK and minCount
@@ -79,17 +77,6 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                         onValueChange={([value]) => setTopK(value)}
                         step={10}
                         value={[topK]}
-                    />
-                </div>
-                <div className="flex items-center gap-4">
-                    <Label className="w-28 shrink-0">Prefix: {prefixChars}</Label>
-                    <Slider
-                        className="flex-1"
-                        max={200}
-                        min={20}
-                        onValueChange={([value]) => setPrefixChars(value)}
-                        step={10}
-                        value={[prefixChars]}
                     />
                 </div>
                 <div className="flex items-center gap-4">
@@ -234,6 +221,13 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                             {filteredLineStarts.map((result) => {
                                 const example = result.examples?.[0];
                                 const isSelected = selectedPatterns.has(result.pattern);
+
+                                const updateAddressWithPageId = () => {
+                                    if (example.pageId) {
+                                        window.location.hash = `#${example.pageId}`;
+                                    }
+                                };
+
                                 return (
                                     <tr
                                         className={`cursor-pointer border-b hover:bg-muted/50 ${isSelected ? 'bg-blue-50' : ''}`}
@@ -248,11 +242,7 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                                         <td className="px-2 py-1">
                                             <button
                                                 className="w-full text-left font-mono text-xs hover:underline"
-                                                onClick={() => {
-                                                    if (example?.pageId) {
-                                                        window.location.hash = `#${example.pageId}`;
-                                                    }
-                                                }}
+                                                onClick={updateAddressWithPageId}
                                                 type="button"
                                             >
                                                 {result.pattern}
@@ -262,11 +252,7 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                                         <td className="px-2 py-1" dir="rtl">
                                             <button
                                                 className="w-full max-w-40 truncate text-right text-muted-foreground hover:underline"
-                                                onClick={() => {
-                                                    if (example?.pageId) {
-                                                        window.location.hash = `#${example.pageId}`;
-                                                    }
-                                                }}
+                                                onClick={updateAddressWithPageId}
                                                 title={example?.line}
                                                 type="button"
                                             >
