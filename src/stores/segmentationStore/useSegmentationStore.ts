@@ -98,6 +98,11 @@ export const useSegmentationStore = create<SegmentationState>()(
                 state.tokenMappings = mappings;
             }),
 
+        sortRulesByLength: () =>
+            set((state) => {
+                state.ruleConfigs.sort((a, b) => b.template.length - a.template.length);
+            }),
+
         togglePattern: (pattern) =>
             set((state) => {
                 const newSet = new Set(state.selectedPatterns);

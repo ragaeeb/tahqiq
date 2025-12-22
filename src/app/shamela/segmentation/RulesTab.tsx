@@ -1,13 +1,23 @@
 'use client';
 
-import { Plus, X } from 'lucide-react';
+import {
+    closestCenter,
+    DndContext,
+    type DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ArrowDownWideNarrowIcon, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
-import { RuleCard } from './RuleCard';
+import { SortableRuleCard } from './RuleCard';
 
 /**
  * Token Mappings section component
@@ -93,7 +103,24 @@ const TokenMappingsSection = () => {
  * Rules tab content with global settings and rule cards
  */
 export const RulesTab = () => {
-    const { allLineStarts, ruleConfigs, sliceAtPunctuation, setSliceAtPunctuation } = useSegmentationStore();
+    const { allLineStarts, moveRule, ruleConfigs, sliceAtPunctuation, setSliceAtPunctuation, sortRulesByLength } =
+        useSegmentationStore();
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = ruleConfigs.findIndex((r) => r.pattern === active.id);
+            const newIndex = ruleConfigs.findIndex((r) => r.pattern === over.id);
+            if (oldIndex !== -1 && newIndex !== -1) {
+                moveRule(oldIndex, newIndex);
+            }
+        }
+    };
 
     return (
         <ScrollArea className="min-h-0 flex-1">
@@ -101,35 +128,53 @@ export const RulesTab = () => {
             <TokenMappingsSection />
 
             {/* Global Settings */}
-            <div className="mb-4 flex items-center gap-2 rounded-lg border bg-gray-50 p-3">
-                <Checkbox
-                    checked={sliceAtPunctuation}
-                    id="slice-punctuation"
-                    onCheckedChange={(checked) => setSliceAtPunctuation(checked === true)}
-                />
-                <Label className="cursor-pointer" htmlFor="slice-punctuation">
-                    Slice at Last Punctuation (breakpoints)
-                </Label>
+            <div className="mb-4 flex items-center gap-4 rounded-lg border bg-gray-50 p-3">
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={sliceAtPunctuation}
+                        id="slice-punctuation"
+                        onCheckedChange={(checked) => setSliceAtPunctuation(checked === true)}
+                    />
+                    <Label className="cursor-pointer" htmlFor="slice-punctuation">
+                        Slice at Last Punctuation (breakpoints)
+                    </Label>
+                </div>
+
+                {ruleConfigs.length > 1 && (
+                    <Button
+                        className="ml-auto h-8 text-xs"
+                        onClick={sortRulesByLength}
+                        size="sm"
+                        title="Sort by length (longest first) - matches most specific rules first"
+                        variant="outline"
+                    >
+                        <ArrowDownWideNarrowIcon className="mr-1 h-4 w-4" />
+                        Sort by Length
+                    </Button>
+                )}
             </div>
 
             {ruleConfigs.length > 0 ? (
-                <div className="space-y-3">
-                    {ruleConfigs.map((rule, idx) => {
-                        const patternData = allLineStarts.find((p) => p.pattern === rule.pattern);
-                        const exampleLine = patternData?.examples?.[0]?.line;
+                <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
+                    <SortableContext items={ruleConfigs.map((r) => r.pattern)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-3">
+                            {ruleConfigs.map((rule, idx) => {
+                                const patternData = allLineStarts.find((p) => p.pattern === rule.pattern);
+                                const exampleLine = patternData?.examples?.[0]?.line;
 
-                        return (
-                            <RuleCard
-                                exampleLine={exampleLine}
-                                index={idx}
-                                isFirst={idx === 0}
-                                isLast={idx === ruleConfigs.length - 1}
-                                key={rule.pattern}
-                                rule={rule}
-                            />
-                        );
-                    })}
-                </div>
+                                return (
+                                    <SortableRuleCard
+                                        exampleLine={exampleLine}
+                                        id={rule.pattern}
+                                        index={idx}
+                                        key={rule.pattern}
+                                        rule={rule}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </SortableContext>
+                </DndContext>
             ) : (
                 <div className="flex h-32 items-center justify-center text-muted-foreground">
                     Select patterns in the Patterns tab to create rules

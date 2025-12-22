@@ -62,6 +62,7 @@ export type SegmentationState = {
     setRuleConfigs: (configs: RuleConfig[]) => void;
     updateRuleConfig: (index: number, updates: Partial<RuleConfig>) => void;
     moveRule: (fromIndex: number, toIndex: number) => void;
+    sortRulesByLength: () => void;
     setSliceAtPunctuation: (value: boolean) => void;
     setTokenMappings: (mappings: TokenMapping[]) => void;
     reset: () => void;

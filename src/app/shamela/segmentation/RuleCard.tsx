@@ -1,35 +1,56 @@
 'use client';
 
-import { ChevronDownIcon, ChevronUpIcon, XIcon } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVerticalIcon, XIcon } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { RuleConfig } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
-type RuleCardProps = { index: number; rule: RuleConfig; exampleLine?: string; isFirst: boolean; isLast: boolean };
+type SortableRuleCardProps = { id: string; index: number; rule: RuleConfig; exampleLine?: string };
 
 /**
- * Individual rule card with template input, dropdowns, and reorder buttons
+ * Individual rule card with template input, dropdowns, and drag-to-reorder handle
  */
-export const RuleCard = ({ index, rule, exampleLine, isFirst, isLast }: RuleCardProps) => {
-    const { updateRuleConfig, moveRule, togglePattern } = useSegmentationStore();
+export const SortableRuleCard = ({ id, index, rule, exampleLine }: SortableRuleCardProps) => {
+    const { updateRuleConfig, togglePattern } = useSegmentationStore();
+    const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({ id });
+
+    const style = { opacity: isDragging ? 0.5 : 1, transform: CSS.Transform.toString(transform), transition };
 
     return (
-        <div className="rounded-lg border bg-white p-3 shadow-sm">
-            <input
-                className="mb-1 w-full border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
-                onChange={(e) => updateRuleConfig(index, { template: e.target.value })}
-                title={`Original: ${rule.pattern}`}
-                value={rule.template}
-            />
+        <div className="rounded-lg border bg-white p-3 shadow-sm" ref={setNodeRef} style={style}>
+            <div className="mb-1 flex items-start gap-2">
+                {/* Drag Handle */}
+                <button
+                    className="mt-1 cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+                    type="button"
+                    {...attributes}
+                    {...listeners}
+                >
+                    <GripVerticalIcon className="h-4 w-4" />
+                </button>
+
+                <input
+                    className="flex-1 border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
+                    onChange={(e) => updateRuleConfig(index, { template: e.target.value })}
+                    title={`Original: ${rule.pattern}`}
+                    value={rule.template}
+                />
+            </div>
             {exampleLine && (
-                <div className="mb-2 max-w-full truncate text-muted-foreground text-xs" dir="rtl" title={exampleLine}>
+                <div
+                    className="mb-2 ml-6 max-w-full truncate text-muted-foreground text-xs"
+                    dir="rtl"
+                    title={exampleLine}
+                >
                     {exampleLine.slice(0, 80)}
                     {exampleLine.length > 80 ? '…' : ''}
                 </div>
             )}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="ml-6 flex flex-wrap items-center gap-3">
                 {/* Pattern Type */}
                 <div className="flex items-center gap-2">
                     <Label className="text-gray-500 text-xs">Type:</Label>
@@ -109,28 +130,8 @@ export const RuleCard = ({ index, rule, exampleLine, isFirst, isLast }: RuleCard
                     </Label>
                 </div>
 
-                {/* Reorder */}
-                <div className="ml-auto flex items-center gap-1">
-                    <button
-                        className="text-gray-400 hover:text-blue-500 disabled:opacity-30"
-                        disabled={isFirst}
-                        onClick={() => moveRule(index, index - 1)}
-                        title="Move up"
-                        type="button"
-                    >
-                        <ChevronUpIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                        className="text-gray-400 hover:text-blue-500 disabled:opacity-30"
-                        disabled={isLast}
-                        onClick={() => moveRule(index, index + 1)}
-                        title="Move down"
-                        type="button"
-                    >
-                        <ChevronDownIcon className="h-4 w-4" />
-                    </button>
-
-                    {/* Remove */}
+                {/* Remove */}
+                <div className="ml-auto">
                     <button
                         className="text-gray-400 hover:text-red-500"
                         onClick={() => togglePattern(rule.pattern)}
