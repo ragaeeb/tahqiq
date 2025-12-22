@@ -5,6 +5,7 @@ import {
     analyzeCommonLineStarts,
     analyzeTextForRule,
     type CommonLineStartPattern,
+    expandCompositeTokensInTemplate,
     type SegmentationOptions,
 } from 'flappa-doormal';
 import { Loader2, PlusIcon, XIcon } from 'lucide-react';
@@ -37,7 +38,8 @@ type SegmentationPanelProps = { onClose: () => void };
 type AnalyzedRule = { template: string; patternType: string; fuzzy: boolean; metaType: string };
 
 type RuleConfig = {
-    pattern: string;
+    pattern: string; // Original from selection (immutable, used for sync)
+    template: string; // Editable, defaults to pattern, used in JSON output
     patternType: 'lineStartsWith' | 'lineStartsAfter';
     fuzzy: boolean;
     metaType: 'none' | 'book' | 'chapter';
@@ -231,6 +233,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                         metaType: containsKitab ? 'book' : containsBab ? 'chapter' : 'none',
                         pattern,
                         patternType: 'lineStartsAfter',
+                        template: pattern,
                     });
                 }
             }
@@ -244,7 +247,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         const options: Record<string, unknown> = {
             maxPages: 1,
             rules: ruleConfigs.map((r) => ({
-                [r.patternType]: [r.pattern],
+                [r.patternType]: [r.template],
                 ...(r.fuzzy && { fuzzy: true }),
                 ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),
                 ...(r.min && { min: r.min }),
@@ -369,11 +372,19 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
             const pages = shamelaPages.map((p) => ({ content: convertContentToMarkdown(p.body), id: p.id }));
 
             // Fetch ALL patterns, we'll filter locally
-            const results = analyzeCommonLineStarts(pages, { prefixChars, sortBy: 'count', topK: FETCH_ALL_TOP_K });
+            const results = analyzeCommonLineStarts(pages, {
+                prefixChars,
+                sortBy: 'count',
+                topK: FETCH_ALL_TOP_K,
+                whitespace: 'space',
+            });
 
-            setAllLineStarts(results);
+            // Expand composite tokens to base forms for easier named group editing
+            const expandedResults = results.map((r) => ({ ...r, pattern: expandCompositeTokensInTemplate(r.pattern) }));
+
+            setAllLineStarts(expandedResults);
             setSelectedPatterns(new Set()); // Clear selections on re-analyze
-            toast.success(`Found ${results.length} patterns`);
+            toast.success(`Found ${expandedResults.length} patterns`);
         } catch (err) {
             console.error('Analysis failed:', err);
             toast.error(`Analysis failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -659,7 +670,18 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
 
                                     return (
                                         <div className="rounded-lg border bg-white p-3 shadow-sm" key={rule.pattern}>
-                                            <div className="mb-1 font-mono text-gray-700 text-sm">{rule.pattern}</div>
+                                            <input
+                                                className="mb-1 w-full border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
+                                                onChange={(e) => {
+                                                    setRuleConfigs((prev) =>
+                                                        prev.map((r, i) =>
+                                                            i === idx ? { ...r, template: e.target.value } : r,
+                                                        ),
+                                                    );
+                                                }}
+                                                title={`Original: ${rule.pattern}`}
+                                                value={rule.template}
+                                            />
                                             {example && (
                                                 <div
                                                     className="mb-2 max-w-full truncate text-muted-foreground text-xs"
