@@ -28,15 +28,72 @@ export const buildGeneratedOptions = (ruleConfigs: RuleConfig[], sliceAtPunctuat
 };
 
 /**
- * JSON tab showing generated segmentation options
+ * Parses JSON options back into RuleConfig array
+ */
+const parseJsonToRuleConfigs = (json: string): RuleConfig[] | null => {
+    try {
+        const parsed = JSON.parse(json);
+        if (!parsed.rules || !Array.isArray(parsed.rules)) {
+            return null;
+        }
+
+        return parsed.rules.map((rule: Record<string, unknown>) => {
+            // Determine pattern type and template
+            let patternType: 'lineStartsWith' | 'lineStartsAfter' = 'lineStartsAfter';
+            let template = '';
+
+            if (rule.lineStartsWith && Array.isArray(rule.lineStartsWith)) {
+                patternType = 'lineStartsWith';
+                template = rule.lineStartsWith[0] as string;
+            } else if (rule.lineStartsAfter && Array.isArray(rule.lineStartsAfter)) {
+                patternType = 'lineStartsAfter';
+                template = rule.lineStartsAfter[0] as string;
+            }
+
+            const metaType = ((rule.meta as { type?: string })?.type as 'none' | 'book' | 'chapter') || 'none';
+
+            return {
+                fuzzy: Boolean(rule.fuzzy),
+                metaType,
+                min: rule.min as number | undefined,
+                pattern: template,
+                patternType,
+                template,
+            };
+        });
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * JSON tab showing generated segmentation options (editable)
  */
 export const JsonTab = () => {
-    const { ruleConfigs, sliceAtPunctuation } = useSegmentationStore();
+    const { ruleConfigs, sliceAtPunctuation, setRuleConfigs, setSliceAtPunctuation } = useSegmentationStore();
 
     const generatedOptions = useMemo(
         () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation),
         [ruleConfigs, sliceAtPunctuation],
     );
+
+    // Handle user edits - parse JSON and update ruleConfigs
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value;
+        const parsed = parseJsonToRuleConfigs(newValue);
+
+        if (parsed) {
+            setRuleConfigs(parsed);
+
+            // Also sync sliceAtPunctuation from breakpoints
+            try {
+                const obj = JSON.parse(newValue);
+                setSliceAtPunctuation(Boolean(obj.breakpoints?.length));
+            } catch {
+                // ignore
+            }
+        }
+    };
 
     return (
         <div className="flex flex-1 flex-col space-y-4 overflow-hidden">
@@ -45,6 +102,7 @@ export const JsonTab = () => {
                 <Textarea
                     className="mt-2 min-h-0 flex-1 resize-none overflow-auto font-mono text-sm"
                     id="json-options"
+                    onChange={handleChange}
                     value={generatedOptions}
                 />
             </div>
