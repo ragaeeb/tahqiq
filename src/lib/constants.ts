@@ -19,7 +19,7 @@ export const TRANSLATION_MODELS = [
     { color: 'blue', label: 'Gemini 3.0 Pro', value: '890' },
     { color: 'orange', label: 'Claude 4.5 Sonnet', value: '891' },
     { color: 'purple', label: 'Grok 4.1 Thinking Beta', value: '892' },
-    { color: 'teal', label: 'OpenAI GPT 5.2 Thinking', value: '893' },
+    { color: 'green', label: 'OpenAI GPT 5.2 Thinking', value: '893' },
 ].sort((a, b) => Number(a.value) - Number(b.value)) as readonly { label: string; value: string; color: string }[];
 
 export const LatestContractVersion = {
@@ -87,3 +87,104 @@ export const TRANSLATE_EXCERPTS_PROMPT = [
 ];
 
 export const FOOTNOTES_DELIMITER = '\n_\n';
+
+export const SEGMENT_PROMPT = `You are an expert in Arabic text segmentation and you know the TypeScript library flappa-doormal. Your job is to help me generate segmentation rules that I can pass to segmentPages(pages, options) to split Shamela book pages into logical segments (books/chapters/sections/hadiths/masā’il/biography entries/etc).
+I will paste a random subset of pages from a Shamela book. Each page will have:
+id (page number, not necessarily consecutive)
+content (plain text; line breaks may be \n)
+Your output must be only a JSON object I can copy into TypeScript as SegmentationOptions (no prose), using this shape:
+rules: array of SplitRule objects. Each rule must use exactly one of:
+lineStartsWith: string[]
+lineStartsAfter: string[] (marker excluded from content)
+lineEndsWith: string[]
+template: string (regex string)
+regex: string (raw regex string)
+Optional per rule:
+split: "at" or "after" (default is "at")
+meta: object (e.g. { type: "chapter" })
+min: number (apply rule only when page id >= min)
+max: number (apply rule only when page id <= max)
+exclude: list of page numbers/ranges to skip for this rule (e.g. [1, [10,15]])
+occurrence: "first" or "last" (optional; use if needed)
+fuzzy: boolean (use for Arabic headings where diacritics vary)
+Global options (optional):
+maxPages: number (maximum pages a segment can span before breakpoints)
+breakpoints: ordered array of breakpoints (strings or objects { pattern, min?, max?, exclude? })
+Breakpoint patterns can use token templates and are applied after structural segmentation
+Empty string "" means “fall back to page boundary”
+prefer: "longer" or "shorter" for breakpoints matching in window
+IMPORTANT: Available template tokens
+You can use these inside lineStartsWith, lineStartsAfter, lineEndsWith, template, and breakpoint pattern strings:
+{{basmalah}} matches بسم الله or ﷽
+{{bab}} matches باب
+{{kitab}} matches كتاب
+{{fasl}} matches مسألة|فصل
+{{naql}} matches narration phrases like حدثنا|أخبرنا|حدثني|سمعت|...
+{{raqm}} Arabic-Indic digit [٠-٩]
+{{raqms}} one or more Arabic-Indic digits
+{{dash}} dash variants - – — ـ
+{{tarqim}} punctuation [.!?؟؛]
+{{harf}} Arabic letter [أ-ي]
+{{harfs}} abbreviation chunks like د ت سي ق, خ سي, دق, خت (short letter codes, optional spaces)
+Named captures:
+{{raqms:num}} captures digits into segment.meta.num
+{{harfs:rumuz}} captures abbreviation chunk into segment.meta.rumuz
+{{:name}} captures arbitrary text into segment.meta[name]
+What you need to do
+Given the sample pages I provide, do ALL of the following:
+1) Identify the document structure:
+Does it have “book” headers (كتاب)?
+“chapter” headers (باب)?
+“section/issue” markers (فصل / مسألة)?
+Hadith numbering like ١٢٣ - ... or similar?
+Biographical entry format like ١١٢٨ ع: ... (number + abbreviation codes + colon)?
+Markdown-like titles like ## ...? (sometimes my pipeline converts HTML titles to ##)
+2) Propose a robust set of rules that:
+Splits at the most meaningful structural boundaries first (book/chapter/section).
+Captures useful metadata (e.g., hadith/entry numbers) using named captures where applicable.
+Avoids accidental splits caused by common words appearing in body text.
+Works across pages (rules match across the concatenated text with ^ meaning line start because the library uses multiline matching).
+3) Provide guardrails using constraints:
+Use min/max when early pages are front matter with different formatting.
+Use exclude for known noisy pages (like title pages) if the sample shows it.
+Use occurrence: "first" or "last" only if it clearly improves accuracy.
+4) Choose whether to apply breakpoints:
+If segments can span many pages (e.g. long chapters), set maxPages and breakpoints.
+Use breakpoints that preserve readability:
+First choice: {{tarqim}}\\s* (split after punctuation)
+Next: \\n (split on newline)
+Fallback: "" (page boundary)
+Set prefer: "longer" unless there is a strong reason to keep segments shorter.
+5) Keep rules minimal but effective:
+Prefer lineStartsWith / lineStartsAfter for common structural markers.
+Use lineStartsAfter when the marker should NOT appear in segment.content (e.g. stripping ١٢٣ - ).
+Use fuzzy: true for Arabic headings like كتاب/باب when diacritics vary; do NOT use fuzzy where the pattern is mostly regex metacharacters.
+6) Output requirements
+Your output must be a single JSON object with:
+rules (required)
+Optional: maxPages, breakpoints, prefer
+No comments, no extra explanation, no code fences.
+Input format you will receive from me
+I will paste something like:
+PAGE 107:
+<text...>
+PAGE 108:
+<text...>
+... etc.
+You must infer patterns from this subset and generalize them.
+Extra caution
+Do NOT create rules that match mid-line unless you intentionally use regex/template without ^.
+Beware: {{harfs}} is for abbreviation codes, not arbitrary words.
+If you use regex rules with captures, understand:
+Named groups (?<name>...) become metadata
+Anonymous ( ... ) groups can affect which part is treated as “content”
+When in doubt, prefer simpler lineStartsWith/After patterns using tokens.
+Now wait for the sample pages.
+`;
+
+// Segmentation analysis constants
+export const SEGMENTATION_DEFAULT_TOP_K = 100;
+export const SEGMENTATION_DEFAULT_PREFIX_CHARS = 120;
+export const SEGMENTATION_DEFAULT_MIN_COUNT = 2;
+export const SEGMENTATION_SIMILARITY_THRESHOLD = 0.7;
+export const SEGMENTATION_FETCH_ALL_TOP_K = 10000;

@@ -1,6 +1,6 @@
 import { XIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import React from 'react';
+import type React from 'react';
 
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,12 @@ const DialogContainer = ({
 }: Readonly<{ children: React.ReactNode; onCloseClicked: () => void }>) => {
     return (
         <Dialog modal={false} open>
-            <DialogContent className="fixed top-0 right-0 left-auto h-full w-1/2 max-w-none translate-x-0 translate-y-0 rounded-none border-l border-t-0 border-r-0 border-b-0 p-0 flex flex-col [&>button]:hidden">
-                <DialogHeader className="p-4 border-b bg-gray-50 flex-shrink-0 flex flex-row items-center justify-between">
+            <DialogContent className="fixed top-0 right-0 left-auto flex h-full w-1/2 max-w-none translate-x-0 translate-y-0 flex-col rounded-none border-t-0 border-r-0 border-b-0 border-l p-0 [&>button]:hidden">
+                <DialogHeader className="flex flex-shrink-0 flex-row items-center justify-between border-b bg-gray-50 p-4">
                     <DialogTitle className="text-left">PDF</DialogTitle>
                     <DialogClose asChild>
                         <Button
-                            className="rounded-sm p-1 opacity-70 hover:opacity-100 hover:bg-red-100"
+                            className="rounded-sm p-1 opacity-70 hover:bg-red-100 hover:opacity-100"
                             onClick={onCloseClicked}
                             size="sm"
                             variant="ghost"
@@ -45,7 +45,7 @@ export function PdfDialog({ onClose, page }: PdfDialogProps) {
             <DialogContainer onCloseClicked={onClose}>
                 <div className="flex-1 overflow-hidden">
                     <iframe
-                        className="w-full h-full"
+                        className="h-full w-full"
                         key={page}
                         src={`${url}#navpanes=0&scrollbar=0&page=${page}`}
                         style={{ border: 'none' }}
@@ -59,7 +59,7 @@ export function PdfDialog({ onClose, page }: PdfDialogProps) {
     return (
         <DialogContainer onCloseClicked={onClose}>
             <SubmittableInput
-                className="border-1 shadow-none focus:ring-0 focus:outline-none"
+                className="border-1 shadow-none focus:outline-none focus:ring-0"
                 defaultValue={url}
                 name="pdfUrl"
                 onSubmit={(value) => {
