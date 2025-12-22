@@ -9,7 +9,7 @@ import {
 import { Loader2, PlusIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { convertContentToMarkdown } from 'shamela';
 import { toast } from 'sonner';
 import { PanelContainer } from '@/components/PanelContainer';
@@ -22,6 +22,7 @@ import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentation
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import { JsonTab, useGeneratedOptions } from './JsonTab';
 import { PatternsTab } from './PatternsTab';
+import { PreviewTab } from './PreviewTab';
 import { RulesTab } from './RulesTab';
 
 type SegmentationPanelProps = { onClose: () => void };
@@ -119,6 +120,15 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         }
     }, [prefixChars, setAllLineStarts]);
 
+    // Auto-analyze on first open if no results exist
+    const hasAutoAnalyzed = useRef(false);
+    useEffect(() => {
+        if (!hasAutoAnalyzed.current && allLineStarts.length === 0) {
+            hasAutoAnalyzed.current = true;
+            handleAnalyze();
+        }
+    }, [allLineStarts.length, handleAnalyze]);
+
     // Finalize and navigate to excerpts
     const handleFinalize = useCallback(() => {
         const options = getOptions();
@@ -150,14 +160,17 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     return (
         <PanelContainer onCloseClicked={onClose}>
             <Tabs className="flex flex-1 flex-col overflow-hidden" onValueChange={setActiveTab} value={activeTab}>
-                <TabsList className="mx-4 mt-4 w-fit">
+                <TabsList className="mx-auto mt-2 w-fit">
                     <TabsTrigger value="patterns">Patterns ({allLineStarts.length})</TabsTrigger>
                     <TabsTrigger value="rules">Rules ({ruleConfigs.length})</TabsTrigger>
+                    <TabsTrigger disabled={ruleConfigs.length === 0} value="preview">
+                        Preview
+                    </TabsTrigger>
                     <TabsTrigger value="json">JSON</TabsTrigger>
                 </TabsList>
 
                 {/* Patterns Tab */}
-                <TabsContent className="flex flex-1 flex-col overflow-hidden px-4" value="patterns">
+                <TabsContent className="flex flex-1 flex-col overflow-hidden px-3 pt-2" value="patterns">
                     <PatternsTab
                         detectedRules={detectedRules}
                         onRemoveDetectedRule={(idx: number) =>
@@ -167,13 +180,18 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                 </TabsContent>
 
                 {/* Rules Tab */}
-                <TabsContent className="flex flex-1 flex-col overflow-hidden px-4" value="rules">
+                <TabsContent className="flex flex-1 flex-col overflow-hidden px-3 pt-2" value="rules">
                     <RulesTab />
                 </TabsContent>
 
                 {/* JSON Tab */}
-                <TabsContent className="flex flex-1 flex-col overflow-hidden px-4" value="json">
+                <TabsContent className="flex flex-1 flex-col overflow-hidden px-3 pt-2" value="json">
                     <JsonTab />
+                </TabsContent>
+
+                {/* Preview Tab */}
+                <TabsContent className="flex flex-1 flex-col overflow-hidden" value="preview">
+                    <PreviewTab />
                 </TabsContent>
 
                 {/* Footer */}

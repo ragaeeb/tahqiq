@@ -1,6 +1,10 @@
+import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { RuleConfig, SegmentationState } from './types';
+
+// Enable Immer's MapSet plugin for Set/Map support
+enableMapSet();
 
 const INITIAL_STATE = {
     allLineStarts: [],
@@ -33,6 +37,23 @@ const createRuleConfigDefaults = (pattern: string): RuleConfig => {
 export const useSegmentationStore = create<SegmentationState>()(
     immer((set) => ({
         ...INITIAL_STATE,
+
+        addCommonPattern: (common) =>
+            set((state) => {
+                if (state.selectedPatterns.has(common.pattern)) {
+                    return; // Already selected
+                }
+                const newSet = new Set(state.selectedPatterns);
+                newSet.add(common.pattern);
+                state.selectedPatterns = newSet;
+                state.ruleConfigs.push({
+                    fuzzy: common.fuzzy,
+                    metaType: common.metaType,
+                    pattern: common.pattern,
+                    patternType: common.patternType,
+                    template: common.pattern,
+                });
+            }),
 
         moveRule: (fromIndex, toIndex) =>
             set((state) => {

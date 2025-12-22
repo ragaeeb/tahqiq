@@ -17,7 +17,6 @@ export const buildGeneratedOptions = (ruleConfigs: RuleConfig[], sliceAtPunctuat
             ...(r.fuzzy && { fuzzy: true }),
             ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),
             ...(r.min && { min: r.min }),
-            split: 'at',
         })),
     };
 
@@ -44,9 +43,8 @@ export const JsonTab = () => {
             <div className="flex flex-1 flex-col">
                 <Label htmlFor="json-options">Segmentation Options (JSON)</Label>
                 <Textarea
-                    className="mt-2 flex-1 font-mono text-sm"
+                    className="mt-2 min-h-0 flex-1 resize-none overflow-auto font-mono text-sm"
                     id="json-options"
-                    readOnly
                     value={generatedOptions}
                 />
             </div>

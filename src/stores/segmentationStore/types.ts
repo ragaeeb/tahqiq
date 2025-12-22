@@ -9,6 +9,26 @@ export type RuleConfig = {
     min?: number;
 };
 
+/**
+ * Common pattern presets with predefined configurations
+ */
+export type CommonPattern = {
+    pattern: string;
+    label: string;
+    patternType: 'lineStartsWith' | 'lineStartsAfter';
+    fuzzy: boolean;
+    metaType: 'none' | 'book' | 'chapter';
+};
+
+export const COMMON_PATTERNS: CommonPattern[] = [
+    { fuzzy: true, label: 'Fasl', metaType: 'none', pattern: '{{fasl}}', patternType: 'lineStartsWith' },
+    { fuzzy: true, label: 'Basmalah', metaType: 'none', pattern: '{{basmalah}}', patternType: 'lineStartsWith' },
+    { fuzzy: true, label: 'Naql', metaType: 'none', pattern: '{{naql}}', patternType: 'lineStartsWith' },
+    { fuzzy: true, label: 'Kitab', metaType: 'book', pattern: '{{kitab}} ', patternType: 'lineStartsWith' },
+    { fuzzy: true, label: 'Bab', metaType: 'chapter', pattern: '{{bab}} ', patternType: 'lineStartsWith' },
+    { fuzzy: false, label: 'Heading (##)', metaType: 'chapter', pattern: '## ', patternType: 'lineStartsAfter' },
+];
+
 export type SegmentationState = {
     // Pattern analysis
     allLineStarts: CommonLineStartPattern[];
@@ -21,6 +41,7 @@ export type SegmentationState = {
     // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
     togglePattern: (pattern: string) => void;
+    addCommonPattern: (common: CommonPattern) => void;
     setRuleConfigs: (configs: RuleConfig[]) => void;
     updateRuleConfig: (index: number, updates: Partial<RuleConfig>) => void;
     moveRule: (fromIndex: number, toIndex: number) => void;
