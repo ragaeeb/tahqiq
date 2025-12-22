@@ -18,8 +18,8 @@ import { saveToOPFS } from '@/lib/io';
 import { usePatchStore } from '@/stores/patchStore';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-import { SegmentationPanel } from './json-segmentation-dialog';
 import { PatchesDialogContent } from './patches-dialog';
+import { SegmentationPanel } from './segmentation/SegmentationPanel';
 
 export const Toolbar = () => {
     const patchCount = usePatchStore((state) => state.patches.length);

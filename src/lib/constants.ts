@@ -181,3 +181,10 @@ Anonymous ( ... ) groups can affect which part is treated as “content”
 When in doubt, prefer simpler lineStartsWith/After patterns using tokens.
 Now wait for the sample pages.
 `;
+
+// Segmentation analysis constants
+export const SEGMENTATION_DEFAULT_TOP_K = 100;
+export const SEGMENTATION_DEFAULT_PREFIX_CHARS = 120;
+export const SEGMENTATION_DEFAULT_MIN_COUNT = 2;
+export const SEGMENTATION_SIMILARITY_THRESHOLD = 0.7;
+export const SEGMENTATION_FETCH_ALL_TOP_K = 10000;
