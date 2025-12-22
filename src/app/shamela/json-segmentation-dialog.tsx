@@ -10,7 +10,7 @@ import {
 import { Loader2, PlusIcon, XIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { convertContentToMarkdown } from 'shamela';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,6 +35,14 @@ const FETCH_ALL_TOP_K = 10000; // Fetch all patterns, filter locally
 type SegmentationPanelProps = { onClose: () => void };
 
 type AnalyzedRule = { template: string; patternType: string; fuzzy: boolean; metaType: string };
+
+type RuleConfig = {
+    pattern: string;
+    patternType: 'lineStartsWith' | 'lineStartsAfter';
+    fuzzy: boolean;
+    metaType: 'none' | 'book' | 'chapter';
+    min?: number;
+};
 
 /**
  * Container component for the left-side slide-in panel
@@ -194,6 +203,61 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const [minCount, setMinCount] = useState(DEFAULT_MIN_COUNT);
     const [selectedPatterns, setSelectedPatterns] = useState<Set<string>>(new Set());
     const [detectedRules, setDetectedRules] = useState<AnalyzedRule[]>([]);
+    const [ruleConfigs, setRuleConfigs] = useState<RuleConfig[]>([]);
+    const [sliceAtPunctuation, setSliceAtPunctuation] = useState(true);
+
+    // Sync ruleConfigs with selectedPatterns
+    useEffect(() => {
+        setRuleConfigs((prev) => {
+            const existingPatterns = new Set(prev.map((r) => r.pattern));
+            const newConfigs: RuleConfig[] = [];
+
+            // Keep existing configs for patterns still selected
+            for (const config of prev) {
+                if (selectedPatterns.has(config.pattern)) {
+                    newConfigs.push(config);
+                }
+            }
+
+            // Add new configs for newly selected patterns
+            for (const pattern of selectedPatterns) {
+                if (!existingPatterns.has(pattern)) {
+                    const containsKitab = pattern.includes('{{kitab}}');
+                    const containsNaql = pattern.includes('{{naql}}');
+                    const containsBab = pattern.includes('{{bab}}') || pattern.includes('{{fasl}}');
+
+                    newConfigs.push({
+                        fuzzy: containsKitab || containsNaql,
+                        metaType: containsKitab ? 'book' : containsBab ? 'chapter' : 'none',
+                        pattern,
+                        patternType: 'lineStartsAfter',
+                    });
+                }
+            }
+
+            return newConfigs;
+        });
+    }, [selectedPatterns]);
+
+    // Generate JSON options from ruleConfigs
+    const generatedOptions = useMemo(() => {
+        const options: Record<string, unknown> = {
+            maxPages: 1,
+            rules: ruleConfigs.map((r) => ({
+                [r.patternType]: [r.pattern],
+                ...(r.fuzzy && { fuzzy: true }),
+                ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),
+                ...(r.min && { min: r.min }),
+                split: 'at',
+            })),
+        };
+
+        if (sliceAtPunctuation) {
+            options.breakpoints = [{ pattern: '{{tarqim}}\\s*' }, ''];
+        }
+
+        return JSON.stringify(options, null, 4);
+    }, [ruleConfigs, sliceAtPunctuation]);
 
     // Filter patterns locally based on topK and minCount
     const filteredLineStarts = useMemo(() => {
@@ -283,14 +347,16 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     // Parse JSON and validate
     const parseOptions = useCallback((): SegmentationOptions | null => {
         try {
-            const options = JSON.parse(jsonText) as SegmentationOptions;
+            // Use generated options if rules exist, otherwise use manually entered JSON
+            const textToParse = ruleConfigs.length > 0 ? generatedOptions : jsonText;
+            const options = JSON.parse(textToParse) as SegmentationOptions;
             setError(null);
             return options;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Invalid JSON');
             return null;
         }
-    }, [jsonText]);
+    }, [jsonText, ruleConfigs.length, generatedOptions]);
 
     // Analyze pages for common line starts
     const handleAnalyze = useCallback(() => {
@@ -349,6 +415,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
             <Tabs className="flex flex-1 flex-col overflow-hidden" onValueChange={setActiveTab} value={activeTab}>
                 <TabsList className="mx-4 mt-4 w-fit">
                     <TabsTrigger value="patterns">Patterns ({allLineStarts.length})</TabsTrigger>
+                    <TabsTrigger value="rules">Rules ({ruleConfigs.length})</TabsTrigger>
                     <TabsTrigger value="json">JSON</TabsTrigger>
                 </TabsList>
 
@@ -568,6 +635,157 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                     </ScrollArea>
                 </TabsContent>
 
+                {/* Rules Tab */}
+                <TabsContent className="flex flex-1 flex-col overflow-hidden px-4" value="rules">
+                    <ScrollArea className="min-h-0 flex-1">
+                        {/* Global Settings */}
+                        <div className="mb-4 flex items-center gap-2 rounded-lg border bg-gray-50 p-3">
+                            <Checkbox
+                                checked={sliceAtPunctuation}
+                                id="slice-punctuation"
+                                onCheckedChange={(checked) => setSliceAtPunctuation(checked === true)}
+                            />
+                            <Label className="cursor-pointer" htmlFor="slice-punctuation">
+                                Slice at Last Punctuation (breakpoints)
+                            </Label>
+                        </div>
+
+                        {ruleConfigs.length > 0 ? (
+                            <div className="space-y-3">
+                                {ruleConfigs.map((rule, idx) => {
+                                    // Find example from allLineStarts
+                                    const patternData = allLineStarts.find((p) => p.pattern === rule.pattern);
+                                    const example = patternData?.examples?.[0];
+
+                                    return (
+                                        <div className="rounded-lg border bg-white p-3 shadow-sm" key={rule.pattern}>
+                                            <div className="mb-1 font-mono text-gray-700 text-sm">{rule.pattern}</div>
+                                            {example && (
+                                                <div
+                                                    className="mb-2 max-w-full truncate text-muted-foreground text-xs"
+                                                    dir="rtl"
+                                                    title={example.line}
+                                                >
+                                                    {example.line.slice(0, 80)}
+                                                    {example.line.length > 80 ? '...' : ''}
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                {/* Pattern Type */}
+                                                <div className="flex items-center gap-2">
+                                                    <Label className="text-gray-500 text-xs">Type:</Label>
+                                                    <Select
+                                                        onValueChange={(
+                                                            value: 'lineStartsWith' | 'lineStartsAfter',
+                                                        ) => {
+                                                            setRuleConfigs((prev) =>
+                                                                prev.map((r, i) =>
+                                                                    i === idx ? { ...r, patternType: value } : r,
+                                                                ),
+                                                            );
+                                                        }}
+                                                        value={rule.patternType}
+                                                    >
+                                                        <SelectTrigger className="h-8 w-36 text-xs">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="lineStartsAfter">
+                                                                lineStartsAfter
+                                                            </SelectItem>
+                                                            <SelectItem value="lineStartsWith">
+                                                                lineStartsWith
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {/* Meta Type */}
+                                                <div className="flex items-center gap-2">
+                                                    <Label className="text-gray-500 text-xs">Meta:</Label>
+                                                    <Select
+                                                        onValueChange={(value: 'none' | 'book' | 'chapter') => {
+                                                            setRuleConfigs((prev) =>
+                                                                prev.map((r, i) =>
+                                                                    i === idx ? { ...r, metaType: value } : r,
+                                                                ),
+                                                            );
+                                                        }}
+                                                        value={rule.metaType}
+                                                    >
+                                                        <SelectTrigger className="h-8 w-24 text-xs">
+                                                            <SelectValue placeholder="none" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none">none</SelectItem>
+                                                            <SelectItem value="chapter">chapter</SelectItem>
+                                                            <SelectItem value="book">book</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {/* Min Page */}
+                                                <div className="flex items-center gap-2">
+                                                    <Label className="text-gray-500 text-xs">Min:</Label>
+                                                    <input
+                                                        className="h-8 w-16 rounded border px-2 text-xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                        min={1}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value
+                                                                ? parseInt(e.target.value, 10)
+                                                                : undefined;
+                                                            setRuleConfigs((prev) =>
+                                                                prev.map((r, i) =>
+                                                                    i === idx ? { ...r, min: value } : r,
+                                                                ),
+                                                            );
+                                                        }}
+                                                        placeholder="-"
+                                                        type="number"
+                                                        value={rule.min ?? ''}
+                                                    />
+                                                </div>
+
+                                                {/* Fuzzy */}
+                                                <div className="flex items-center gap-2">
+                                                    <Checkbox
+                                                        checked={rule.fuzzy}
+                                                        id={`fuzzy-${idx}`}
+                                                        onCheckedChange={(checked) => {
+                                                            setRuleConfigs((prev) =>
+                                                                prev.map((r, i) =>
+                                                                    i === idx ? { ...r, fuzzy: checked === true } : r,
+                                                                ),
+                                                            );
+                                                        }}
+                                                    />
+                                                    <Label className="cursor-pointer text-xs" htmlFor={`fuzzy-${idx}`}>
+                                                        Fuzzy
+                                                    </Label>
+                                                </div>
+
+                                                {/* Remove */}
+                                                <button
+                                                    className="ml-auto text-gray-400 hover:text-red-500"
+                                                    onClick={() => togglePattern(rule.pattern)}
+                                                    title="Remove rule"
+                                                    type="button"
+                                                >
+                                                    <XIcon className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="flex h-32 items-center justify-center text-muted-foreground">
+                                Select patterns in the Patterns tab to create rules
+                            </div>
+                        )}
+                    </ScrollArea>
+                </TabsContent>
+
                 {/* JSON Tab */}
                 <TabsContent className="flex flex-1 flex-col overflow-hidden px-4" value="json">
                     <div className="flex flex-1 flex-col space-y-4 overflow-hidden">
@@ -581,7 +799,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                                     setError(null);
                                 }}
                                 placeholder="Paste JSON options here..."
-                                value={jsonText}
+                                value={ruleConfigs.length > 0 ? generatedOptions : jsonText}
                             />
                         </div>
                         {error && (
