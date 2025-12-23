@@ -1,3 +1,10 @@
+## [1.35.1](https://github.com/ragaeeb/tahqiq/compare/v1.35.0...v1.35.1) (2025-12-23)
+
+
+### Bug Fixes
+
+* **segmentation:** enhance JSON sync and add translation prompt storage ([2a65edf](https://github.com/ragaeeb/tahqiq/commit/2a65edf4f2c2413c3d6c4100c9a86067dbfef798))
+
 # [1.35.0](https://github.com/ragaeeb/tahqiq/compare/v1.34.0...v1.35.0) (2025-12-23)
 
 
