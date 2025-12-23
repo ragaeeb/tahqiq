@@ -33,9 +33,11 @@ export const buildGeneratedOptions = (
     const options: Record<string, unknown> = {
         maxPages: 1,
         rules: ruleConfigs.map((r) => {
-            const transformedTemplate = applyTokenMappings(r.template, tokenMappings);
+            // Handle both string and string[] templates
+            const templates = Array.isArray(r.template) ? r.template : [r.template];
+            const transformedTemplates = templates.map((t) => applyTokenMappings(t, tokenMappings));
             return {
-                [r.patternType]: [transformedTemplate],
+                [r.patternType]: transformedTemplates,
                 ...(r.fuzzy && { fuzzy: true }),
                 ...(r.pageStartGuard && { pageStartGuard: '{{tarqim}}' }),
                 ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),

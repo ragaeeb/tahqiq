@@ -10,7 +10,8 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowDownWideNarrowIcon, Plus, X } from 'lucide-react';
+import { ArrowDownWideNarrowIcon, MergeIcon, Plus, X } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -103,8 +104,17 @@ const TokenMappingsSection = () => {
  * Rules tab content with global settings and rule cards
  */
 export const RulesTab = () => {
-    const { allLineStarts, moveRule, ruleConfigs, sliceAtPunctuation, setSliceAtPunctuation, sortRulesByLength } =
-        useSegmentationStore();
+    const {
+        allLineStarts,
+        mergeSelectedRules,
+        moveRule,
+        ruleConfigs,
+        sliceAtPunctuation,
+        setSliceAtPunctuation,
+        sortRulesByLength,
+    } = useSegmentationStore();
+
+    const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -120,6 +130,37 @@ export const RulesTab = () => {
                 moveRule(oldIndex, newIndex);
             }
         }
+    };
+
+    const handleSelectForMerge = (pattern: string, checked: boolean) => {
+        setSelectedForMerge((prev) => {
+            const next = new Set(prev);
+            if (checked) {
+                next.add(pattern);
+            } else {
+                next.delete(pattern);
+            }
+            return next;
+        });
+    };
+
+    // Check if merge is possible (2+ selected, all same patternType)
+    const selectedRules = ruleConfigs.filter((r) => selectedForMerge.has(r.pattern));
+    const canMerge =
+        selectedRules.length >= 2 && selectedRules.every((r) => r.patternType === selectedRules[0].patternType);
+    const mergeDisabledReason =
+        selectedRules.length < 2
+            ? 'Select 2+ rules to merge'
+            : !canMerge
+              ? 'Cannot merge rules with different pattern types'
+              : undefined;
+
+    const handleMerge = () => {
+        if (!canMerge) {
+            return;
+        }
+        mergeSelectedRules(Array.from(selectedForMerge));
+        setSelectedForMerge(new Set());
     };
 
     return (
@@ -140,18 +181,33 @@ export const RulesTab = () => {
                     </Label>
                 </div>
 
-                {ruleConfigs.length > 1 && (
-                    <Button
-                        className="ml-auto h-8 text-xs"
-                        onClick={sortRulesByLength}
-                        size="sm"
-                        title="Sort by length (longest first) - matches most specific rules first"
-                        variant="outline"
-                    >
-                        <ArrowDownWideNarrowIcon className="mr-1 h-4 w-4" />
-                        Sort by Length
-                    </Button>
-                )}
+                <div className="ml-auto flex items-center gap-2">
+                    {selectedForMerge.size > 0 && (
+                        <Button
+                            className="h-8 text-xs"
+                            disabled={!canMerge}
+                            onClick={handleMerge}
+                            size="sm"
+                            title={mergeDisabledReason}
+                            variant="default"
+                        >
+                            <MergeIcon className="mr-1 h-4 w-4" />
+                            Merge ({selectedForMerge.size})
+                        </Button>
+                    )}
+                    {ruleConfigs.length > 1 && (
+                        <Button
+                            className="h-8 text-xs"
+                            onClick={sortRulesByLength}
+                            size="sm"
+                            title="Sort by length (longest first) - matches most specific rules first"
+                            variant="outline"
+                        >
+                            <ArrowDownWideNarrowIcon className="mr-1 h-4 w-4" />
+                            Sort by Length
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {ruleConfigs.length > 0 ? (
@@ -159,16 +215,23 @@ export const RulesTab = () => {
                     <SortableContext items={ruleConfigs.map((r) => r.pattern)} strategy={verticalListSortingStrategy}>
                         <div className="space-y-3">
                             {ruleConfigs.map((rule, idx) => {
-                                const patternData = allLineStarts.find((p) => p.pattern === rule.pattern);
-                                const exampleLine = patternData?.examples?.[0]?.line;
+                                // Collect examples for each template in the rule
+                                const templates = Array.isArray(rule.template) ? rule.template : [rule.template];
+                                const exampleLines = templates.map((t) => {
+                                    // Find example for this template - check if any pattern data matches
+                                    const patternData = allLineStarts.find((p) => p.pattern === t);
+                                    return patternData?.examples?.[0]?.line;
+                                });
 
                                 return (
                                     <SortableRuleCard
-                                        exampleLine={exampleLine}
+                                        exampleLines={exampleLines}
                                         id={rule.pattern}
                                         index={idx}
                                         key={rule.pattern}
+                                        onSelect={handleSelectForMerge}
                                         rule={rule}
+                                        selected={selectedForMerge.has(rule.pattern)}
                                     />
                                 );
                             })}

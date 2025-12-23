@@ -58,6 +58,69 @@ export const useSegmentationStore = create<SegmentationState>()(
                 });
             }),
 
+        mergeSelectedRules: (selectedPatterns) =>
+            set((state) => {
+                if (selectedPatterns.length < 2) {
+                    return;
+                }
+
+                // Get rules in order they appear
+                const rulesToMerge = state.ruleConfigs.filter((r) => selectedPatterns.includes(r.pattern));
+                if (rulesToMerge.length < 2) {
+                    return;
+                }
+
+                // Validate all have same patternType
+                const firstType = rulesToMerge[0].patternType;
+                if (!rulesToMerge.every((r) => r.patternType === firstType)) {
+                    return;
+                }
+
+                // Find insertion index (first rule's position)
+                const insertIndex = state.ruleConfigs.findIndex((r) => r.pattern === rulesToMerge[0].pattern);
+
+                // Collect all templates (flatten arrays)
+                const allTemplates: string[] = [];
+                for (const rule of rulesToMerge) {
+                    if (Array.isArray(rule.template)) {
+                        allTemplates.push(...rule.template);
+                    } else {
+                        allTemplates.push(rule.template);
+                    }
+                }
+
+                // Create merged rule, spreading props from subsequent rules onto first
+                const mergedRule = { ...rulesToMerge[0] };
+                for (let i = 1; i < rulesToMerge.length; i++) {
+                    const r = rulesToMerge[i];
+                    // Spread truthy/defined props from subsequent rules
+                    if (r.fuzzy) {
+                        mergedRule.fuzzy = true;
+                    }
+                    if (r.pageStartGuard) {
+                        mergedRule.pageStartGuard = true;
+                    }
+                    if (r.metaType !== 'none') {
+                        mergedRule.metaType = r.metaType;
+                    }
+                    if (r.min !== undefined) {
+                        mergedRule.min = r.min;
+                    }
+                }
+                mergedRule.template = allTemplates;
+
+                // Remove merged rules and insert merged rule
+                state.ruleConfigs = state.ruleConfigs.filter((r) => !selectedPatterns.includes(r.pattern));
+                state.ruleConfigs.splice(insertIndex, 0, mergedRule);
+
+                // Update selectedPatterns set - remove merged patterns except first
+                const newSet = new Set(state.selectedPatterns);
+                for (let i = 1; i < rulesToMerge.length; i++) {
+                    newSet.delete(rulesToMerge[i].pattern);
+                }
+                state.selectedPatterns = newSet;
+            }),
+
         moveRule: (fromIndex, toIndex) =>
             set((state) => {
                 if (
@@ -100,7 +163,9 @@ export const useSegmentationStore = create<SegmentationState>()(
 
         sortRulesByLength: () =>
             set((state) => {
-                state.ruleConfigs.sort((a, b) => b.template.length - a.template.length);
+                // For sorting, use first template if array, otherwise the string
+                const getLength = (t: string | string[]) => (Array.isArray(t) ? (t[0]?.length ?? 0) : t.length);
+                state.ruleConfigs.sort((a, b) => getLength(b.template) - getLength(a.template));
             }),
 
         togglePattern: (pattern) =>

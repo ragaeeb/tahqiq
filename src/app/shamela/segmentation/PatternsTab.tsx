@@ -94,8 +94,12 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
     }, [selectedPatterns, allLineStarts]);
 
     // Filter common patterns to only show unselected ones
+    // Also filter out ones whose trimmed version matches a selected pattern's trimmed version
     const unselectedCommonPatterns = useMemo(() => {
-        return COMMON_PATTERNS.filter((c) => !selectedPatterns.has(c.pattern));
+        const selectedTrimmed = new Set(Array.from(selectedPatterns).map((p) => p.trim()));
+        return COMMON_PATTERNS.filter(
+            (c) => !selectedPatterns.has(c.pattern) && !selectedTrimmed.has(c.pattern.trim()),
+        );
     }, [selectedPatterns]);
 
     return (

@@ -2,7 +2,7 @@ import type { CommonLineStartPattern } from 'flappa-doormal';
 
 export type RuleConfig = {
     pattern: string; // Original from selection (immutable, used for sync)
-    template: string; // Editable, defaults to pattern, used in JSON output
+    template: string | string[]; // Editable, can be array for merged rules
     patternType: 'lineStartsWith' | 'lineStartsAfter';
     fuzzy: boolean;
     pageStartGuard: boolean;
@@ -63,6 +63,7 @@ export type SegmentationState = {
     updateRuleConfig: (index: number, updates: Partial<RuleConfig>) => void;
     moveRule: (fromIndex: number, toIndex: number) => void;
     sortRulesByLength: () => void;
+    mergeSelectedRules: (selectedPatterns: string[]) => void;
     setSliceAtPunctuation: (value: boolean) => void;
     setTokenMappings: (mappings: TokenMapping[]) => void;
     reset: () => void;

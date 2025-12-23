@@ -9,20 +9,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { RuleConfig } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
-type SortableRuleCardProps = { id: string; index: number; rule: RuleConfig; exampleLine?: string };
+type SortableRuleCardProps = {
+    id: string;
+    index: number;
+    rule: RuleConfig;
+    exampleLines?: (string | undefined)[];
+    selected?: boolean;
+    onSelect?: (pattern: string, checked: boolean) => void;
+};
 
 /**
  * Individual rule card with template input, dropdowns, and drag-to-reorder handle
  */
-export const SortableRuleCard = ({ id, index, rule, exampleLine }: SortableRuleCardProps) => {
+export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSelect }: SortableRuleCardProps) => {
     const { updateRuleConfig, togglePattern } = useSegmentationStore();
     const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
     const style = { opacity: isDragging ? 0.5 : 1, transform: CSS.Transform.toString(transform), transition };
 
+    // Handle template display - can be string or array
+    const templates = Array.isArray(rule.template) ? rule.template : [rule.template];
+    const isMultiTemplate = templates.length > 1;
+
+    const handleTemplateChange = (newValue: string | string[]) => {
+        updateRuleConfig(index, { template: newValue });
+    };
+
     return (
-        <div className="rounded-lg border bg-white p-3 shadow-sm" ref={setNodeRef} style={style}>
+        <div
+            className={`rounded-lg border bg-white p-3 shadow-sm ${selected ? 'ring-2 ring-blue-500' : ''}`}
+            ref={setNodeRef}
+            style={style}
+        >
             <div className="mb-1 flex items-start gap-2">
+                {/* Selection Checkbox */}
+                {onSelect && (
+                    <Checkbox
+                        checked={selected}
+                        className="mt-1"
+                        onCheckedChange={(checked) => onSelect(rule.pattern, checked === true)}
+                    />
+                )}
+
                 {/* Drag Handle */}
                 <button
                     className="mt-1 cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
@@ -33,24 +61,46 @@ export const SortableRuleCard = ({ id, index, rule, exampleLine }: SortableRuleC
                     <GripVerticalIcon className="h-4 w-4" />
                 </button>
 
-                <input
-                    className="flex-1 border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
-                    onChange={(e) => updateRuleConfig(index, { template: e.target.value })}
-                    title={`Original: ${rule.pattern}`}
-                    value={rule.template}
-                />
-            </div>
-            {exampleLine && (
-                <div
-                    className="mb-2 ml-6 max-w-full truncate text-muted-foreground text-xs"
-                    dir="rtl"
-                    title={exampleLine}
-                >
-                    {exampleLine.slice(0, 80)}
-                    {exampleLine.length > 80 ? '…' : ''}
+                {/* Template input(s) */}
+                <div className="flex-1">
+                    {isMultiTemplate ? (
+                        <div className="space-y-1">
+                            {templates.map((t, idx) => (
+                                <div className="flex items-center gap-1" key={t}>
+                                    <span className="text-muted-foreground text-xs">{idx + 1}.</span>
+                                    <input
+                                        className="flex-1 border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
+                                        onChange={(e) => {
+                                            const newTemplates = [...templates];
+                                            newTemplates[idx] = e.target.value;
+                                            handleTemplateChange(newTemplates);
+                                        }}
+                                        title={`Template ${idx + 1}`}
+                                        value={t}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <input
+                            className="w-full border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
+                            onChange={(e) => handleTemplateChange(e.target.value)}
+                            title={`Original: ${rule.pattern}`}
+                            value={templates[0]}
+                        />
+                    )}
                 </div>
-            )}
-            <div className="ml-6 flex flex-wrap items-center gap-3">
+            </div>
+            {/* Show examples for each template */}
+            <div className="mb-2 ml-12 space-y-0.5">
+                {exampleLines?.filter(Boolean).map((ex) => (
+                    <div className="max-w-full truncate text-muted-foreground text-xs" dir="rtl" key={ex} title={ex}>
+                        {ex!.slice(0, 80)}
+                        {ex!.length > 80 ? '…' : ''}
+                    </div>
+                ))}
+            </div>
+            <div className="ml-12 flex flex-wrap items-center gap-3">
                 {/* Pattern Type */}
                 <div className="flex items-center gap-2">
                     <Label className="text-gray-500 text-xs">Type:</Label>
