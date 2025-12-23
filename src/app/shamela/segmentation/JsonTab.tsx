@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Replacement, RuleConfig, TokenMapping } from '@/stores/segmentationStore/types';
@@ -15,7 +14,6 @@ const applyTokenMappings = (template: string, mappings: TokenMapping[]): string 
     let result = template;
     for (const { token, name } of mappings) {
         // Match {{token}} but not {{token:something}}
-        // Regex: \{\{token\}\} but not \{\{token:[^}]+\}\}
         const regex = new RegExp(`\\{\\{${token}\\}\\}`, 'g');
         result = result.replace(regex, `{{${token}:${name}}}`);
     }
@@ -34,7 +32,6 @@ export const buildGeneratedOptions = (
     const options: Record<string, unknown> = {
         maxPages: 1,
         rules: ruleConfigs.map((r) => {
-            // Handle both string and string[] templates
             const templates = Array.isArray(r.template) ? r.template : [r.template];
             const transformedTemplates = templates.map((t) => applyTokenMappings(t, tokenMappings));
             return {
@@ -51,7 +48,6 @@ export const buildGeneratedOptions = (
         options.breakpoints = [{ pattern: '{{tarqim}}\\s*' }, ''];
     }
 
-    // Only include replace if there are non-empty replacements
     const validReplacements = replacements.filter((r) => r.regex.trim() !== '');
     if (validReplacements.length > 0) {
         options.replace = validReplacements;
@@ -61,85 +57,28 @@ export const buildGeneratedOptions = (
 };
 
 /**
- * Parses JSON options back into RuleConfig array
- */
-const parseJsonToRuleConfigs = (json: string): RuleConfig[] | null => {
-    try {
-        const parsed = JSON.parse(json);
-        if (!parsed.rules || !Array.isArray(parsed.rules)) {
-            return null;
-        }
-
-        return parsed.rules.map((rule: Record<string, unknown>) => {
-            // Determine pattern type and template
-            let patternType: 'lineStartsWith' | 'lineStartsAfter' = 'lineStartsAfter';
-            let template = '';
-
-            if (rule.lineStartsWith && Array.isArray(rule.lineStartsWith)) {
-                patternType = 'lineStartsWith';
-                template = rule.lineStartsWith[0] as string;
-            } else if (rule.lineStartsAfter && Array.isArray(rule.lineStartsAfter)) {
-                patternType = 'lineStartsAfter';
-                template = rule.lineStartsAfter[0] as string;
-            }
-
-            const metaType = ((rule.meta as { type?: string })?.type as 'none' | 'book' | 'chapter') || 'none';
-
-            return {
-                fuzzy: Boolean(rule.fuzzy),
-                metaType,
-                min: rule.min as number | undefined,
-                pageStartGuard: Boolean(rule.pageStartGuard),
-                pattern: template,
-                patternType,
-                template,
-            };
-        });
-    } catch {
-        return null;
-    }
-};
-
-/**
- * JSON tab showing generated segmentation options (editable)
+ * JSON tab showing generated segmentation options.
+ * Uncontrolled textarea - initializes with generated JSON but edits don't sync back.
+ * This is the final step before segmentation, allowing manual JSON tweaks.
  */
 export const JsonTab = () => {
-    const { ruleConfigs, replacements, sliceAtPunctuation, tokenMappings, setRuleConfigs, setSliceAtPunctuation } =
-        useSegmentationStore();
+    const { ruleConfigs, replacements, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
 
-    const generatedOptions = useMemo(
-        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements),
-        [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements],
-    );
-
-    // Handle user edits - parse JSON and update ruleConfigs
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newValue = e.target.value;
-        const parsed = parseJsonToRuleConfigs(newValue);
-
-        if (parsed) {
-            setRuleConfigs(parsed);
-
-            // Also sync sliceAtPunctuation from breakpoints
-            try {
-                const obj = JSON.parse(newValue);
-                setSliceAtPunctuation(Boolean(obj.breakpoints?.length));
-            } catch {
-                // ignore
-            }
-        }
-    };
+    // Generate initial value from current state
+    const initialValue = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements);
 
     return (
         <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex min-h-0 flex-1 flex-col">
                 <Label htmlFor="json-options">Segmentation Options (JSON)</Label>
+                <p className="mb-2 text-muted-foreground text-xs">
+                    Edit the raw JSON options. Changes here won't sync back to other tabs.
+                </p>
                 <Textarea
-                    className="mt-2 h-full min-h-0 flex-1 resize-none overflow-y-auto font-mono text-sm"
+                    className="h-full min-h-0 flex-1 resize-none overflow-y-auto font-mono text-sm"
+                    defaultValue={initialValue}
                     id="json-options"
-                    onChange={handleChange}
                     style={{ fieldSizing: 'fixed' }}
-                    value={generatedOptions}
                 />
             </div>
         </div>
@@ -147,13 +86,12 @@ export const JsonTab = () => {
 };
 
 /**
- * Hook to get generated options JSON for external use
+ * Hook to get the current JSON from the textarea (for finalization).
+ * Returns a function that reads the textarea value directly.
  */
-export const useGeneratedOptions = () => {
-    const { ruleConfigs, replacements, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
-
-    return useMemo(
-        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements),
-        [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements],
-    );
+export const useJsonTextareaValue = () => {
+    return () => {
+        const textarea = document.getElementById('json-options') as HTMLTextAreaElement | null;
+        return textarea?.value ?? '';
+    };
 };

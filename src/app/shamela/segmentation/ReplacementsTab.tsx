@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusIcon, Trash2Icon } from 'lucide-react';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import { convertContentToMarkdown } from 'shamela';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,9 +48,6 @@ type ReplacementRowProps = {
  * Single row for a replacement pair with uncontrolled inputs
  */
 const ReplacementRow = ({ index, replacement, matchCount, onUpdate, onDelete }: ReplacementRowProps) => {
-    const regexRef = useRef<HTMLInputElement>(null);
-    const replacementRef = useRef<HTMLInputElement>(null);
-
     const matchLabel =
         matchCount === -1 ? (
             <span className="text-destructive">Invalid regex</span>
@@ -64,14 +61,12 @@ const ReplacementRow = ({ index, replacement, matchCount, onUpdate, onDelete }: 
         <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
                 <Input
-                    ref={regexRef}
                     className="flex-1 font-mono text-sm"
                     defaultValue={replacement.regex}
                     onBlur={(e) => onUpdate(index, 'regex', e.target.value)}
                     placeholder="Regex pattern"
                 />
                 <Input
-                    ref={replacementRef}
                     className="flex-1 font-mono text-sm"
                     defaultValue={replacement.replacement}
                     onBlur={(e) => onUpdate(index, 'replacement', e.target.value)}
@@ -122,7 +117,7 @@ export const ReplacementsTab = () => {
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
             <div className="space-y-1">
                 <Label>Pre-processing Replacements</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                     Define regex patterns and their replacements. These are applied to page content before segmentation.
                 </p>
             </div>
@@ -130,7 +125,7 @@ export const ReplacementsTab = () => {
             <div className="flex flex-col gap-3">
                 {replacements.map((replacement, index) => (
                     <ReplacementRow
-                        key={index}
+                        key={`${index}-${replacement.regex}`}
                         index={index}
                         matchCount={matchCounts[index]}
                         onDelete={handleDelete}
@@ -140,7 +135,7 @@ export const ReplacementsTab = () => {
                 ))}
 
                 {replacements.length === 0 && (
-                    <p className="text-sm italic text-muted-foreground">No replacements configured.</p>
+                    <p className="text-muted-foreground text-sm italic">No replacements configured.</p>
                 )}
             </div>
 

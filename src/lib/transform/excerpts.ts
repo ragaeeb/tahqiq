@@ -6,40 +6,6 @@ import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
 import { LatestContractVersion } from '../constants';
 
-export const DEFAULT_OPTIONS = `{
-    "breakpoints": [{ "pattern": "{{tarqim}}\\\\s*" }, ""],
-    "maxPages": 1,
-    "prefer": "longer",
-    "rules": [
-        {
-            "fuzzy": true,
-            "lineStartsWith": ["{{basmalah}}"],
-            "split": "at"
-        },
-        {
-            "fuzzy": true,
-            "lineStartsWith": ["{{bab}}"],
-            "meta": { "type": "chapter" },
-            "split": "at"
-        },
-        {
-            "lineStartsAfter": ["##"],
-            "meta": { "type": "chapter" },
-            "split": "at"
-        },
-        {
-            "fuzzy": true,
-            "lineStartsWith": ["{{kitab}}"],
-            "meta": { "type": "book" },
-            "split": "at"
-        },
-        {
-            "lineStartsAfter": ["{{raqms:num}} {{dash}}"],
-            "split": "at"
-        }
-    ]
-}`;
-
 const getSegmentId = (s: Segment, totalExcerptsInPage: number) => {
     const type = s.meta?.type as ExcerptType;
     const letter = String.fromCharCode(96 + totalExcerptsInPage);

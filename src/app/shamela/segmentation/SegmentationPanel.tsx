@@ -20,7 +20,7 @@ import { segmentShamelaPagesToExcerpts } from '@/lib/transform/excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-import { JsonTab, useGeneratedOptions } from './JsonTab';
+import { JsonTab, useJsonTextareaValue } from './JsonTab';
 import { PatternsTab } from './PatternsTab';
 import { PreviewTab } from './PreviewTab';
 import { ReplacementsTab } from './ReplacementsTab';
@@ -38,10 +38,9 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [activeTab, setActiveTab] = useState('patterns');
     const [detectedRules, setDetectedRules] = useState<AnalyzedRule[]>([]);
-    const [prefixChars] = useState(SEGMENTATION_DEFAULT_PREFIX_CHARS);
 
     const { allLineStarts, replacements, ruleConfigs, setAllLineStarts } = useSegmentationStore();
-    const generatedOptions = useGeneratedOptions();
+    const getJsonTextareaValue = useJsonTextareaValue();
 
     // Add rule from selected text
     const handleAddFromSelection = useCallback(() => {
@@ -83,15 +82,16 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         }
     }, [detectedRules]);
 
-    // Parse and get options
+    // Parse and get options from JSON textarea
     const getOptions = useCallback((): SegmentationOptions | null => {
         try {
-            return JSON.parse(generatedOptions) as SegmentationOptions;
+            const jsonValue = getJsonTextareaValue();
+            return JSON.parse(jsonValue) as SegmentationOptions;
         } catch {
             toast.error('Invalid JSON in options');
             return null;
         }
-    }, [generatedOptions]);
+    }, [getJsonTextareaValue]);
 
     // Analyze pages for common line starts
     const handleAnalyze = useCallback(() => {
@@ -103,7 +103,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
             const pages = shamelaPages.map((p) => ({ content: convertContentToMarkdown(p.body), id: p.id }));
 
             const results = analyzeCommonLineStarts(pages, {
-                prefixChars,
+                prefixChars: SEGMENTATION_DEFAULT_PREFIX_CHARS,
                 sortBy: 'count',
                 topK: SEGMENTATION_FETCH_ALL_TOP_K,
             });
@@ -119,7 +119,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         } finally {
             setIsAnalyzing(false);
         }
-    }, [prefixChars, setAllLineStarts]);
+    }, [setAllLineStarts]);
 
     // Auto-analyze on first open if no results exist
     const hasAutoAnalyzed = useRef(false);

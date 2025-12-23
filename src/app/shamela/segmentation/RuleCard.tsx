@@ -123,7 +123,7 @@ export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSe
                     {isMultiTemplate ? (
                         <div className="space-y-1">
                             {templates.map((t, idx) => (
-                                <div className="flex items-center gap-1" key={t}>
+                                <div className="flex items-center gap-1" key={`${idx}-${t}`}>
                                     <span className="text-muted-foreground text-xs">{idx + 1}.</span>
                                     <input
                                         className="flex-1 border-none bg-transparent font-mono text-gray-700 text-sm outline-none focus:bg-gray-50 focus:ring-1 focus:ring-blue-200"
@@ -150,7 +150,7 @@ export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSe
             </div>
 
             {/* Examples with segmentation preview - table layout */}
-            {exampleLines && exampleLines.some(Boolean) && (
+            {exampleLines?.some(Boolean) && (
                 <div className="mb-2 ml-12 overflow-hidden rounded-md border border-gray-200">
                     <table className="w-full text-xs">
                         <thead className="bg-gray-100">

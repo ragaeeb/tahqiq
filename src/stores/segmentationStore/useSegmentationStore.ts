@@ -83,8 +83,11 @@ export const useSegmentationStore = create<SegmentationState>()(
                     return;
                 }
 
-                // Find insertion index (first rule's position)
-                const insertIndex = state.ruleConfigs.findIndex((r) => r.pattern === rulesToMerge[0].pattern);
+                // Find insertion index by counting unmerged rules before first merged rule
+                const firstMergedIndex = state.ruleConfigs.findIndex((r) => r.pattern === rulesToMerge[0].pattern);
+                const insertIndex = state.ruleConfigs
+                    .slice(0, firstMergedIndex)
+                    .filter((r) => !selectedPatterns.includes(r.pattern)).length;
 
                 // Collect all templates (flatten arrays)
                 const allTemplates: string[] = [];
@@ -116,7 +119,7 @@ export const useSegmentationStore = create<SegmentationState>()(
                 }
                 mergedRule.template = allTemplates;
 
-                // Remove merged rules and insert merged rule
+                // Remove merged rules and insert merged rule at computed position
                 state.ruleConfigs = state.ruleConfigs.filter((r) => !selectedPatterns.includes(r.pattern));
                 state.ruleConfigs.splice(insertIndex, 0, mergedRule);
 
@@ -153,6 +156,11 @@ export const useSegmentationStore = create<SegmentationState>()(
                 state.ruleConfigs = [];
             }),
 
+        setReplacements: (replacements) =>
+            set((state) => {
+                state.replacements = replacements;
+            }),
+
         setRuleConfigs: (configs) =>
             set((state) => {
                 state.ruleConfigs = configs;
@@ -166,11 +174,6 @@ export const useSegmentationStore = create<SegmentationState>()(
         setTokenMappings: (mappings) =>
             set((state) => {
                 state.tokenMappings = mappings;
-            }),
-
-        setReplacements: (replacements) =>
-            set((state) => {
-                state.replacements = replacements;
             }),
 
         sortRulesByLength: () =>
