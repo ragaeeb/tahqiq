@@ -18,7 +18,7 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 - **Manuscript processing**: Editing, formatting, and correcting Arabic manuscript scans
 - **Transcript management**: Working with audio transcriptions for lecture content
 - **Excerpts management**: Organizing translated excerpts with filtering, search/replace, and virtualized lists
-- **Shamela editor**: Importing and editing Shamela library books with segmentation and page marker cleanup
+- **Shamela editor**: Importing and editing Shamela library books with powerful pattern-based segmentation
 - **Book compilation**: Converting manuscripts to publishable book format with table of contents
 - **Book browsing**: Static generation of browsable Islamic texts (Qur'an, Hadith collections)
 - **Settings management**: API key configuration for Gemini and Shamela services
@@ -38,7 +38,8 @@ src/
 │   ├── excerpts/           # Excerpts, headings, footnotes management
 │   ├── manuscript/         # Manuscript editing interface
 │   ├── settings/           # API key and configuration management
-│   ├── shamela/            # Shamela book editor with segmentation
+│   ├── shamela/            # Shamela book editor
+│   │   └── segmentation/   # Segmentation panel components
 │   └── transcript/         # Audio transcript editing
 ├── components/             # Shared React components
 │   ├── hooks/              # Custom React hooks
@@ -49,6 +50,7 @@ src/
 │   ├── excerptsStore/      # Excerpts, headings, footnotes state
 │   ├── manuscriptStore/    # Manuscript editing state
 │   ├── patchStore/         # Page edit diffs for version control
+│   ├── segmentationStore/  # Segmentation panel state (rules, patterns, replacements)
 │   ├── settingsStore/      # App settings and API keys
 │   ├── shamelaStore/       # Shamela book editing state
 │   └── transcriptStore/    # Transcript editing state
@@ -381,10 +383,42 @@ useEffect(() => {
 
 ### Adding Segmentation Rules
 
-See `src/app/shamela/segmentation-types.ts` for pattern types:
-- `RuleFormState`: Split rules with pattern matching
-- `BreakpointFormState`: Breakpoint patterns for page boundaries
-- `PRESETS`: Pre-configured templates for common book types
+The segmentation panel (`src/app/shamela/segmentation/`) uses [flappa-doormal](https://github.com/ragaeeb/flappa-doormal) for pattern-based page segmentation.
+
+**Store structure** (`src/stores/segmentationStore/types.ts`):
+```typescript
+type RuleConfig = {
+    pattern: string;              // Original pattern (immutable)
+    template: string | string[];  // Editable, can be array for merged rules
+    patternType: 'lineStartsWith' | 'lineStartsAfter';
+    fuzzy: boolean;               // Diacritic-insensitive matching
+    pageStartGuard: boolean;      // Skip matches at page boundaries
+    metaType: 'none' | 'book' | 'chapter';
+    min?: number;                 // Minimum page number
+};
+
+type Replacement = {
+    regex: string;       // Raw regex pattern
+    replacement: string; // Replacement text
+};
+
+type TokenMapping = {
+    token: string;  // e.g., "raqms"
+    name: string;   // e.g., "num" → transforms {{raqms}} to {{raqms:num}}
+};
+```
+
+**Panel tabs**:
+- `PatternsTab`: Line-start pattern analysis with auto-detection
+- `RulesTab`: Rule configuration with drag & drop, merge, and examples
+- `ReplacementsTab`: Pre-processing regex replacements with live match counts
+- `PreviewTab`: Live virtualized preview of segmentation results
+- `JsonTab`: Raw JSON options editor
+
+**Key patterns**:
+- Uncontrolled inputs with `defaultValue` + `onBlur` to avoid re-renders
+- `useMemo` for expensive computations (match counts, segment preview)
+- Store persists across panel open/close cycles
 
 ---
 

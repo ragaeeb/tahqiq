@@ -45,9 +45,31 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Title-to-Page Navigation**: Click page/parent links in Titles tab to scroll to associated page
 - **Hash-Based Scroll**: Navigate to specific pages via URL hash (e.g., `/shamela?tab=pages#123`)
 - **Page Marker Cleanup**: Remove Arabic numeric page markers in batch
-- **Segmentation Dialog**: Segment pages into excerpts using configurable rules and presets
 - **Patches System**: Track and export page edits as diffs for version control
 - **Export**: Download edited books as JSON
+
+#### Segmentation Dialog
+Powerful pattern-based page segmentation powered by [flappa-doormal](https://github.com/ragaeeb/flappa-doormal):
+
+- **Patterns Tab**: Auto-analyze pages to detect common line start patterns with occurrence counts
+  - Sort patterns by count or length
+  - Common presets: Fasl, Basmalah, Naql, Kitab, Bab, Markdown headings
+  - Add patterns from text selection
+- **Rules Tab**: Configure segmentation rules with fine-grained control
+  - Pattern types: `lineStartsWith` or `lineStartsAfter`
+  - Fuzzy matching for diacritic-insensitive matching
+  - Page start guard to avoid false positives at page boundaries
+  - Meta types: `book`, `chapter`, or `none` for segment classification
+  - Merge multiple patterns into a single rule
+  - Drag & drop reordering and sort by template length
+  - Live example preview showing rule matches
+- **Replacements Tab**: Pre-processing regex replacements before segmentation
+  - Define regex patterns and replacement strings
+  - Live match count per pattern across all pages
+  - Invalid regex detection with error highlighting
+- **Token Mappings**: Auto-apply named capture groups (e.g., `{{raqms}}` → `{{raqms:num}}`)
+- **Preview Tab**: Live virtualized preview of segmentation results
+- **JSON Tab**: View and edit raw segmentation options JSON
 
 ### Settings (`/settings`)
 - **Gemini API Keys**: Configure multiple API keys for AI translation
@@ -165,10 +187,25 @@ RULES_ENDPOINT=your_rules_endpoint_url
 3. **Edit Content**: Click on fields to edit page body, footnotes, or title content
 4. **Navigate from Titles**: Click page numbers in Titles tab to jump to that page in Pages tab
 5. **URL Hash Navigation**: Use `#123` in URL to scroll to specific page (e.g., `/shamela?tab=pages#123`)
-6. **Segment Pages**: Use the segmentation dialog to split pages into excerpts with pattern matching
-7. **Clean Page Markers**: Click the eraser button to remove Arabic page markers
-8. **Track Patches**: View and export page edit diffs via the patches dialog
-9. **Save/Download**: Save to session storage or download as JSON
+6. **Clean Page Markers**: Click the eraser button to remove Arabic page markers
+7. **Track Patches**: View and export page edit diffs via the patches dialog
+8. **Save/Download**: Save to session storage or download as JSON
+
+#### Segmentation Workflow
+
+1. **Open Segmentation Dialog**: Click the segmentation button in the toolbar
+2. **Analyze Patterns**: Auto-detection runs on first open; click "Analyze Pages" to refresh
+3. **Select Patterns**: Click patterns in the Patterns tab to add them as rules
+4. **Configure Rules**: In the Rules tab, adjust:
+   - Pattern type (`lineStartsWith` / `lineStartsAfter`)
+   - Enable fuzzy matching for diacritic tolerance
+   - Enable page start guard to skip page-boundary matches
+   - Set meta type for segment classification
+5. **Add Replacements**: In the Replacements tab, add regex patterns to clean/normalize content before segmentation
+6. **Configure Token Mappings**: In the Rules tab header, set global token → name mappings
+7. **Preview Results**: Switch to Preview tab to see live segmentation output
+8. **Review JSON**: Check the JSON tab for the final options object
+9. **Finalize**: Click "Segment Pages" to generate excerpts and navigate to the Excerpts editor
 
 ### Settings (`/settings`)
 
@@ -262,6 +299,7 @@ tahqiq/
 │   │   ├── excerptsStore/  # Excerpts state
 │   │   ├── manuscriptStore/# Manuscript state
 │   │   ├── patchStore/     # Page edit patches state
+│   │   ├── segmentationStore/ # Segmentation panel state
 │   │   ├── settingsStore/  # Settings and API keys
 │   │   ├── shamelaStore/   # Shamela book state
 │   │   └── transcriptStore/# Transcript state
