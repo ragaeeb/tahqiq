@@ -29,7 +29,7 @@
         "clsx": "^2.1.1",
         "diff-match-patch-es": "^1.0.1",
         "dyelight": "^1.0.3",
-        "flappa-doormal": "^2.5.4",
+        "flappa-doormal": "^2.6.0",
         "immer": "^11.1.0",
         "kokokor": "^2.0.4",
         "lucide-react": "^0.562.0",
@@ -558,7 +558,7 @@
 
     "find-versions": ["find-versions@6.0.0", "", { "dependencies": { "semver-regex": "^4.0.5", "super-regex": "^1.0.0" } }, "sha512-2kCCtc+JvcZ86IGAz3Z2Y0A1baIz9fL31pH/0S1IqZr9Iwnjq8izfPtrCyQKO6TLMPELLsQMre7VDqeIKCsHkA=="],
 
-    "flappa-doormal": ["flappa-doormal@2.5.4", "", {}, "sha512-qcJ7O4QnmhEP3hP37blMC+xD+5xj2psTgQwNjFYe2DXsX/kCEygMggD6Etx5CyULEUTob26t3Qfq4gXhLgak3Q=="],
+    "flappa-doormal": ["flappa-doormal@2.6.0", "", {}, "sha512-GZGNIRWY/NamNy/yDwuTaa/42SCnwFYZ4hlUsrd5i9UPRuEfJvx5Oz7MDRyE4neR9XsFnKAo5bL2qmEpnGE8Ug=="],
 
     "foreground-child": ["foreground-child@3.3.1", "", { "dependencies": { "cross-spawn": "^7.0.6", "signal-exit": "^4.0.1" } }, "sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw=="],
 

@@ -23,6 +23,7 @@ import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import { JsonTab, useGeneratedOptions } from './JsonTab';
 import { PatternsTab } from './PatternsTab';
 import { PreviewTab } from './PreviewTab';
+import { ReplacementsTab } from './ReplacementsTab';
 import { RulesTab } from './RulesTab';
 
 type SegmentationPanelProps = { onClose: () => void };
@@ -39,7 +40,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const [detectedRules, setDetectedRules] = useState<AnalyzedRule[]>([]);
     const [prefixChars] = useState(SEGMENTATION_DEFAULT_PREFIX_CHARS);
 
-    const { allLineStarts, ruleConfigs, setAllLineStarts } = useSegmentationStore();
+    const { allLineStarts, replacements, ruleConfigs, setAllLineStarts } = useSegmentationStore();
     const generatedOptions = useGeneratedOptions();
 
     // Add rule from selected text
@@ -163,6 +164,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                 <TabsList className="mx-auto mt-2 w-fit">
                     <TabsTrigger value="patterns">Patterns ({allLineStarts.length})</TabsTrigger>
                     <TabsTrigger value="rules">Rules ({ruleConfigs.length})</TabsTrigger>
+                    <TabsTrigger value="replacements">Replacements ({replacements.length})</TabsTrigger>
                     <TabsTrigger disabled={ruleConfigs.length === 0} value="preview">
                         Preview
                     </TabsTrigger>
@@ -187,6 +189,11 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                 {/* JSON Tab */}
                 <TabsContent className="flex flex-1 flex-col overflow-hidden px-3 pt-2" value="json">
                     <JsonTab />
+                </TabsContent>
+
+                {/* Replacements Tab */}
+                <TabsContent className="flex flex-1 flex-col overflow-hidden px-3 pt-2" value="replacements">
+                    <ReplacementsTab />
                 </TabsContent>
 
                 {/* Preview Tab */}

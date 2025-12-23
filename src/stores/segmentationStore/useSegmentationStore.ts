@@ -1,13 +1,20 @@
 import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { DEFAULT_TOKEN_MAPPINGS, type RuleConfig, type SegmentationState, type TokenMapping } from './types';
+import {
+    DEFAULT_TOKEN_MAPPINGS,
+    type Replacement,
+    type RuleConfig,
+    type SegmentationState,
+    type TokenMapping,
+} from './types';
 
 // Enable Immer's MapSet plugin for Set/Map support
 enableMapSet();
 
 const INITIAL_STATE = {
     allLineStarts: [],
+    replacements: [] as Replacement[],
     ruleConfigs: [],
     selectedPatterns: new Set<string>(),
     sliceAtPunctuation: true,
@@ -159,6 +166,11 @@ export const useSegmentationStore = create<SegmentationState>()(
         setTokenMappings: (mappings) =>
             set((state) => {
                 state.tokenMappings = mappings;
+            }),
+
+        setReplacements: (replacements) =>
+            set((state) => {
+                state.replacements = replacements;
             }),
 
         sortRulesByLength: () =>

@@ -31,12 +31,7 @@ export const PreviewTab = () => {
                 id: p.id,
             }));
 
-            console.log('options', options);
             const result = segmentPages(segmentationPages, options);
-            console.log(
-                'result',
-                result.filter((r) => r.meta),
-            );
             return { error: null, segments: result };
         } catch (err) {
             return { error: err instanceof Error ? err.message : 'Unknown error', segments: [] };

@@ -2,11 +2,13 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { type Page, type Segment, type SegmentationOptions, segmentPages } from 'flappa-doormal';
 import { GripVerticalIcon, XIcon } from 'lucide-react';
+import { useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { RuleConfig } from '@/stores/segmentationStore/types';
+import type { RuleConfig, TokenMapping } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
 type SortableRuleCardProps = {
@@ -19,10 +21,57 @@ type SortableRuleCardProps = {
 };
 
 /**
+ * Apply token mappings to a template string (copied from JsonTab to avoid circular deps)
+ */
+const applyTokenMappings = (template: string, mappings: TokenMapping[]): string => {
+    let result = template;
+    for (const { token, name } of mappings) {
+        const regex = new RegExp(`\\{\\{${token}\\}\\}`, 'g');
+        result = result.replace(regex, `{{${token}:${name}}}`);
+    }
+    return result;
+};
+
+/**
+ * Run segmentation on example lines using the rule's configuration
+ */
+const segmentExamples = (
+    exampleLines: (string | undefined)[],
+    rule: RuleConfig,
+    tokenMappings: TokenMapping[],
+): (Segment | null)[] => {
+    const templates = Array.isArray(rule.template) ? rule.template : [rule.template];
+    const transformedTemplates = templates.map((t) => applyTokenMappings(t, tokenMappings));
+
+    const ruleObj = {
+        [rule.patternType]: transformedTemplates,
+        ...(rule.fuzzy && { fuzzy: true }),
+        ...(rule.metaType !== 'none' && { meta: { type: rule.metaType } }),
+    };
+
+    // Cast to bypass TypeScript inference issue with dynamic patternType key
+    const options = { rules: [ruleObj] } as unknown as SegmentationOptions;
+
+    return exampleLines.map((ex, idx) => {
+        if (!ex) {
+            return null;
+        }
+        try {
+            const pages: Page[] = [{ content: ex, id: idx + 1 }];
+            const segments = segmentPages(pages, options);
+            // Return the first segment that has content (not the whole page)
+            return segments.length > 0 ? segments[0] : null;
+        } catch {
+            return null;
+        }
+    });
+};
+
+/**
  * Individual rule card with template input, dropdowns, and drag-to-reorder handle
  */
 export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSelect }: SortableRuleCardProps) => {
-    const { updateRuleConfig, togglePattern } = useSegmentationStore();
+    const { updateRuleConfig, togglePattern, tokenMappings } = useSegmentationStore();
     const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
     const style = { opacity: isDragging ? 0.5 : 1, transform: CSS.Transform.toString(transform), transition };
@@ -34,6 +83,14 @@ export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSe
     const handleTemplateChange = (newValue: string | string[]) => {
         updateRuleConfig(index, { template: newValue });
     };
+
+    // Segment examples to show preview
+    const segmentedExamples = useMemo(() => {
+        if (!exampleLines || exampleLines.length === 0) {
+            return [];
+        }
+        return segmentExamples(exampleLines, rule, tokenMappings);
+    }, [exampleLines, rule, tokenMappings]);
 
     return (
         <div
@@ -91,15 +148,53 @@ export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSe
                     )}
                 </div>
             </div>
-            {/* Show examples for each template */}
-            <div className="mb-2 ml-12 space-y-0.5">
-                {exampleLines?.filter(Boolean).map((ex) => (
-                    <div className="max-w-full truncate text-muted-foreground text-xs" dir="rtl" key={ex} title={ex}>
-                        {ex!.slice(0, 80)}
-                        {ex!.length > 80 ? '…' : ''}
-                    </div>
-                ))}
-            </div>
+
+            {/* Examples with segmentation preview - table layout */}
+            {exampleLines && exampleLines.some(Boolean) && (
+                <div className="mb-2 ml-12 overflow-hidden rounded-md border border-gray-200">
+                    <table className="w-full text-xs">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="border-gray-200 border-r px-3 py-1.5 text-left font-medium text-gray-600">
+                                    Example
+                                </th>
+                                <th className="px-3 py-1.5 text-left font-medium text-gray-600">Segment Result</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white">
+                            {exampleLines.map((ex, idx) => {
+                                if (!ex) {
+                                    return null;
+                                }
+                                const segment = segmentedExamples[idx];
+                                const segmentDisplay = segment
+                                    ? JSON.stringify({ content: segment.content?.slice(0, 40), meta: segment.meta })
+                                    : '—';
+
+                                return (
+                                    <tr className="border-gray-100 border-t" key={ex}>
+                                        <td
+                                            className="max-w-[200px] truncate border-gray-200 border-r px-3 py-1.5 text-gray-700"
+                                            dir="rtl"
+                                            title={ex}
+                                        >
+                                            {ex.slice(0, 50)}
+                                            {ex.length > 50 ? '…' : ''}
+                                        </td>
+                                        <td
+                                            className="max-w-[300px] truncate px-3 py-1.5 font-mono text-[10px] text-gray-500"
+                                            title={segmentDisplay}
+                                        >
+                                            {segmentDisplay}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
             <div className="ml-12 flex flex-wrap items-center gap-3">
                 {/* Pattern Type */}
                 <div className="flex items-center gap-2">

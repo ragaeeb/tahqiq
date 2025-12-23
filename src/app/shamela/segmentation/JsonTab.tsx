@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { RuleConfig, TokenMapping } from '@/stores/segmentationStore/types';
+import type { Replacement, RuleConfig, TokenMapping } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
 /**
@@ -29,6 +29,7 @@ export const buildGeneratedOptions = (
     ruleConfigs: RuleConfig[],
     sliceAtPunctuation: boolean,
     tokenMappings: TokenMapping[] = [],
+    replacements: Replacement[] = [],
 ): string => {
     const options: Record<string, unknown> = {
         maxPages: 1,
@@ -48,6 +49,12 @@ export const buildGeneratedOptions = (
 
     if (sliceAtPunctuation) {
         options.breakpoints = [{ pattern: '{{tarqim}}\\s*' }, ''];
+    }
+
+    // Only include replace if there are non-empty replacements
+    const validReplacements = replacements.filter((r) => r.regex.trim() !== '');
+    if (validReplacements.length > 0) {
+        options.replace = validReplacements;
     }
 
     return JSON.stringify(options, null, 4);
@@ -97,12 +104,12 @@ const parseJsonToRuleConfigs = (json: string): RuleConfig[] | null => {
  * JSON tab showing generated segmentation options (editable)
  */
 export const JsonTab = () => {
-    const { ruleConfigs, sliceAtPunctuation, tokenMappings, setRuleConfigs, setSliceAtPunctuation } =
+    const { ruleConfigs, replacements, sliceAtPunctuation, tokenMappings, setRuleConfigs, setSliceAtPunctuation } =
         useSegmentationStore();
 
     const generatedOptions = useMemo(
-        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings),
-        [ruleConfigs, sliceAtPunctuation, tokenMappings],
+        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements),
+        [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements],
     );
 
     // Handle user edits - parse JSON and update ruleConfigs
@@ -143,10 +150,10 @@ export const JsonTab = () => {
  * Hook to get generated options JSON for external use
  */
 export const useGeneratedOptions = () => {
-    const { ruleConfigs, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
+    const { ruleConfigs, replacements, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
 
     return useMemo(
-        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings),
-        [ruleConfigs, sliceAtPunctuation, tokenMappings],
+        () => buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements),
+        [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements],
     );
 };

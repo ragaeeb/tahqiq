@@ -43,6 +43,15 @@ export const DEFAULT_TOKEN_MAPPINGS: TokenMapping[] = [
     { name: 'rumuz', token: 'rumuz' },
 ];
 
+/**
+ * Replacement pair for pre-processing page content before segmentation.
+ * Matches the flappa-doormal Replacement type (without optional fields).
+ */
+export type Replacement = {
+    regex: string; // Raw regex source string
+    replacement: string; // Replacement string
+};
+
 export type SegmentationState = {
     // Pattern analysis
     allLineStarts: CommonLineStartPattern[];
@@ -55,6 +64,9 @@ export type SegmentationState = {
     // Token mappings (apply to all rules)
     tokenMappings: TokenMapping[];
 
+    // Pre-processing replacements
+    replacements: Replacement[];
+
     // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
     togglePattern: (pattern: string) => void;
@@ -66,5 +78,6 @@ export type SegmentationState = {
     mergeSelectedRules: (selectedPatterns: string[]) => void;
     setSliceAtPunctuation: (value: boolean) => void;
     setTokenMappings: (mappings: TokenMapping[]) => void;
+    setReplacements: (replacements: Replacement[]) => void;
     reset: () => void;
 };
