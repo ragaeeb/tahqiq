@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/ragaeeb/tahqiq/compare/v1.34.0...v1.35.0) (2025-12-23)
+
+
+### Features
+
+* **replace:** Add replace, rules, sorting and merging to segmentation dialog ([#104](https://github.com/ragaeeb/tahqiq/issues/104)) ([c3f3bbe](https://github.com/ragaeeb/tahqiq/commit/c3f3bbe0f526d341afb33a711c4de81554febd53))
+
 # [1.34.0](https://github.com/ragaeeb/tahqiq/compare/v1.33.0...v1.34.0) (2025-12-22)
 
 
