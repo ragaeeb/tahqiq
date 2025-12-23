@@ -2,9 +2,9 @@ import { sanitizeArabic } from 'baburchi';
 import { preformatArabicText } from 'bitaboom';
 import { type Page, type Segment, type SegmentationOptions, segmentPages } from 'flappa-doormal';
 import { convertContentToMarkdown, mapPageCharacterContent, type Title } from 'shamela';
+import { LatestContractVersion, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
-import { LatestContractVersion } from '../constants';
 
 const getSegmentId = (s: Segment, totalExcerptsInPage: number) => {
     const type = s.meta?.type as ExcerptType;
@@ -95,6 +95,7 @@ export const segmentShamelaPagesToExcerpts = (
         }) as Heading[],
         lastUpdatedAt: Date.now() / 1000,
         options,
+        promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
     };
 };
 

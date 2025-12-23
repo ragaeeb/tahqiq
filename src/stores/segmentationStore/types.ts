@@ -8,6 +8,7 @@ export type RuleConfig = {
     pageStartGuard: boolean;
     metaType: 'none' | 'book' | 'chapter';
     min?: number;
+    meta?: Record<string, unknown>; // Full meta object for custom values (takes precedence over metaType)
 };
 
 /**

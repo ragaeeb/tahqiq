@@ -266,7 +266,7 @@ describe('useSegmentationStore', () => {
             expect(configs[2]?.pattern).toBe('A');
         });
 
-        it('should use first template length for array templates', () => {
+        it('should sort template arrays within rules and then sort rules by longest template', () => {
             const rules: RuleConfig[] = [
                 {
                     fuzzy: false,
@@ -290,8 +290,11 @@ describe('useSegmentationStore', () => {
             useSegmentationStore.getState().sortRulesByLength();
 
             const configs = useSegmentationStore.getState().ruleConfigs;
-            expect(configs[0]?.pattern).toBe('B');
-            expect(configs[1]?.pattern).toBe('A');
+            // Rule A's template array gets sorted first: ['very long array element', 'short']
+            // Then rules are sorted by first template length: A (24 chars) > B (13 chars)
+            expect(configs[0]?.pattern).toBe('A');
+            expect(configs[0]?.template).toEqual(['very long array element', 'short']);
+            expect(configs[1]?.pattern).toBe('B');
         });
     });
 

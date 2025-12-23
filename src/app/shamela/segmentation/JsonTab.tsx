@@ -2,6 +2,7 @@
 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { parseJsonOptions } from '@/lib/segmentation';
 import type { Replacement, RuleConfig, TokenMapping } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
@@ -21,6 +22,16 @@ const applyTokenMappings = (template: string, mappings: TokenMapping[]): string 
 };
 
 /**
+ * Strip token mappings from a template string.
+ * Transforms {{token:name}} back to {{token}}.
+ * This is the reverse of applyTokenMappings.
+ */
+const stripTokenMappings = (template: string): string => {
+    // Match {{token:name}} and replace with {{token}}
+    return template.replace(/\{\{([^:}]+):[^}]+\}\}/g, '{{$1}}');
+};
+
+/**
  * Builds the segmentation options object from rule configs
  */
 export const buildGeneratedOptions = (
@@ -34,11 +45,13 @@ export const buildGeneratedOptions = (
         rules: ruleConfigs.map((r) => {
             const templates = Array.isArray(r.template) ? r.template : [r.template];
             const transformedTemplates = templates.map((t) => applyTokenMappings(t, tokenMappings));
+            // Use full meta object if present, otherwise generate from metaType
+            const meta = r.meta ?? (r.metaType !== 'none' ? { type: r.metaType } : undefined);
             return {
                 [r.patternType]: transformedTemplates,
                 ...(r.fuzzy && { fuzzy: true }),
                 ...(r.pageStartGuard && { pageStartGuard: '{{tarqim}}' }),
-                ...(r.metaType !== 'none' && { meta: { type: r.metaType } }),
+                ...(meta && { meta }),
                 ...(r.min && { min: r.min }),
             };
         }),
@@ -58,26 +71,57 @@ export const buildGeneratedOptions = (
 
 /**
  * JSON tab showing generated segmentation options.
- * Uncontrolled textarea - initializes with generated JSON but edits don't sync back.
- * This is the final step before segmentation, allowing manual JSON tweaks.
+ * Editable textarea that syncs changes back to store on blur.
+ * This allows users to paste existing JSON configurations.
  */
 export const JsonTab = () => {
-    const { ruleConfigs, replacements, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
+    const {
+        ruleConfigs,
+        replacements,
+        sliceAtPunctuation,
+        tokenMappings,
+        setRuleConfigs,
+        setSliceAtPunctuation,
+        setReplacements,
+    } = useSegmentationStore();
 
     // Generate initial value from current state
     const initialValue = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements);
+
+    const handleBlur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
+        const parsed = parseJsonOptions(event.target.value);
+        if (parsed) {
+            setRuleConfigs(parsed.ruleConfigs);
+            setSliceAtPunctuation(parsed.sliceAtPunctuation);
+            setReplacements(parsed.replacements);
+            // Sync selectedPatterns from all templates in parsed rules (flatten arrays)
+            // Strip token mappings so {{raqms:num}} becomes {{raqms}} to match allLineStarts
+            const patterns = new Set<string>();
+            for (const r of parsed.ruleConfigs) {
+                if (Array.isArray(r.template)) {
+                    for (const t of r.template) {
+                        patterns.add(stripTokenMappings(t));
+                    }
+                } else {
+                    patterns.add(stripTokenMappings(r.template));
+                }
+            }
+            useSegmentationStore.setState({ selectedPatterns: patterns });
+        }
+    };
 
     return (
         <div className="flex flex-1 flex-col overflow-hidden">
             <div className="flex min-h-0 flex-1 flex-col">
                 <Label htmlFor="json-options">Segmentation Options (JSON)</Label>
                 <p className="mb-2 text-muted-foreground text-xs">
-                    Edit the raw JSON options. Changes here won't sync back to other tabs.
+                    Paste or edit JSON options. Changes sync to other tabs on blur.
                 </p>
                 <Textarea
                     className="h-full min-h-0 flex-1 resize-none overflow-y-auto font-mono text-sm"
                     defaultValue={initialValue}
                     id="json-options"
+                    onBlur={handleBlur}
                     style={{ fieldSizing: 'fixed' }}
                 />
             </div>

@@ -1,5 +1,6 @@
 import { areSimilarAfterNormalization } from 'baburchi';
 import type { CommonLineStartPattern } from 'flappa-doormal';
+import type { Replacement, RuleConfig } from '@/stores/segmentationStore/types';
 
 /**
  * Finds patterns that are similar to the selected patterns (likely typos)
@@ -56,4 +57,67 @@ export const buildPatternTooltip = (pattern: CommonLineStartPattern): string => 
     }
 
     return lines.join('\n');
+};
+
+/**
+ * Result type for parseJsonOptions
+ */
+export type ParsedJsonOptions = { ruleConfigs: RuleConfig[]; sliceAtPunctuation: boolean; replacements: Replacement[] };
+
+/**
+ * Parse a JSON options object back into store state.
+ * Returns the extracted state values or null if parsing fails.
+ *
+ * @param json - JSON string containing segmentation options
+ * @returns Parsed options or null if invalid JSON
+ */
+export const parseJsonOptions = (json: string): ParsedJsonOptions | null => {
+    try {
+        const parsed = JSON.parse(json);
+
+        // Parse rules
+        const ruleConfigs: RuleConfig[] = [];
+        if (Array.isArray(parsed.rules)) {
+            for (const rule of parsed.rules) {
+                // Determine patternType based on which key exists
+                const patternType: 'lineStartsWith' | 'lineStartsAfter' = rule.lineStartsWith
+                    ? 'lineStartsWith'
+                    : 'lineStartsAfter';
+
+                const templates: string[] = rule[patternType] || [];
+                const template = templates.length === 1 ? templates[0] : templates;
+
+                // Use first template as pattern identifier
+                const pattern = templates[0] || '';
+
+                ruleConfigs.push({
+                    fuzzy: !!rule.fuzzy,
+                    meta: rule.meta, // Store full meta object for custom values
+                    metaType: rule.meta?.type || 'none',
+                    min: rule.min,
+                    pageStartGuard: !!rule.pageStartGuard,
+                    pattern,
+                    patternType,
+                    template,
+                });
+            }
+        }
+
+        // Parse sliceAtPunctuation from breakpoints
+        const sliceAtPunctuation = Array.isArray(parsed.breakpoints) && parsed.breakpoints.length > 0;
+
+        // Parse replacements
+        const replacements: Replacement[] = [];
+        if (Array.isArray(parsed.replace)) {
+            for (const r of parsed.replace) {
+                if (r.regex !== undefined && r.replacement !== undefined) {
+                    replacements.push({ regex: r.regex, replacement: r.replacement });
+                }
+            }
+        }
+
+        return { replacements, ruleConfigs, sliceAtPunctuation };
+    } catch {
+        return null;
+    }
 };

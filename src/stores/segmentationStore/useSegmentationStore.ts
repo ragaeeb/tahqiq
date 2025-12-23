@@ -178,7 +178,13 @@ export const useSegmentationStore = create<SegmentationState>()(
 
         sortRulesByLength: () =>
             set((state) => {
-                // For sorting, use first template if array, otherwise the string
+                // First, sort template arrays within each rule (longest first)
+                for (const rule of state.ruleConfigs) {
+                    if (Array.isArray(rule.template)) {
+                        rule.template.sort((a, b) => b.length - a.length);
+                    }
+                }
+                // Then sort rules by longest template (use first template if array)
                 const getLength = (t: string | string[]) => (Array.isArray(t) ? (t[0]?.length ?? 0) : t.length);
                 state.ruleConfigs.sort((a, b) => getLength(b.template) - getLength(a.template));
             }),

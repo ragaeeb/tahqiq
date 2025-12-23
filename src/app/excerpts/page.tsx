@@ -15,7 +15,6 @@ import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { clearStorage, loadFromOPFS, saveToOPFS } from '@/lib/io';
 import {
@@ -158,6 +157,7 @@ function ExcerptsPageContent() {
             headings: state.headings,
             lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
             options: state.options,
+            promptForTranslation: state.promptForTranslation,
         };
 
         try {
@@ -184,6 +184,7 @@ function ExcerptsPageContent() {
                 headings: state.headings,
                 lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
                 options: state.options,
+                promptForTranslation: state.promptForTranslation,
             };
 
             downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
@@ -204,9 +205,7 @@ function ExcerptsPageContent() {
                     .concat(['\n']);
                 const headings = state.headings.filter((e) => !e.text).map((e) => `${e.id} - ${e.nass}`);
 
-                const content = [TRANSLATE_EXCERPTS_PROMPT.join('\n'), excerpts.join('\n\n'), headings.join('\n')].join(
-                    '\n\n\n',
-                );
+                const content = [state.promptForTranslation, excerpts.join('\n\n'), headings.join('\n')].join('\n\n\n');
 
                 downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, content);
             } catch (err) {

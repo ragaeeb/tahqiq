@@ -1,4 +1,4 @@
-import { LatestContractVersion } from '@/lib/constants';
+import { LatestContractVersion, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { adaptExcerptsToLatest } from '@/lib/migration';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
@@ -26,6 +26,7 @@ export const INITIAL_STATE: ExcerptsStateCore = {
     lastUpdatedAt: new Date(),
     options: {},
     postProcessingApps: [],
+    promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
 };
 
 /**
@@ -45,6 +46,7 @@ export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore 
         inputFileName: fileName,
         lastUpdatedAt: new Date(migrated.lastUpdatedAt * 1000),
         options: migrated.options,
+        promptForTranslation: migrated.promptForTranslation || TRANSLATE_EXCERPTS_PROMPT.join('\n'),
     };
 };
 

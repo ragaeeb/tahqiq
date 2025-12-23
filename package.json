@@ -24,7 +24,7 @@
         "clsx": "^2.1.1",
         "diff-match-patch-es": "^1.0.1",
         "dyelight": "^1.0.3",
-        "flappa-doormal": "^2.6.0",
+        "flappa-doormal": "^2.6.1",
         "immer": "^11.1.0",
         "kokokor": "^2.0.4",
         "lucide-react": "^0.562.0",

@@ -267,6 +267,9 @@ export type Excerpts = {
     lastUpdatedAt: number;
     /** Parsing options used */
     options: SegmentationOptions;
+
+    /** The prompt used to translate the excerpts. */
+    promptForTranslation: string;
 };
 
 /**
@@ -293,6 +296,8 @@ export type ExcerptsStateCore = {
     options: SegmentationOptions;
     /** Apps used for post-processing */
     postProcessingApps: PostProcessingApp[];
+    /** The prompt used to translate the excerpts */
+    promptForTranslation: string;
     /** Filtered excerpt IDs (undefined = show all) */
     filteredExcerptIds?: string[];
     /** Filtered heading IDs (undefined = show all) */
