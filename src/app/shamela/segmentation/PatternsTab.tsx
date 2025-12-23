@@ -1,7 +1,7 @@
 'use client';
 
 import type { CommonLineStartPattern } from 'flappa-doormal';
-import { XIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, XIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PatternChip } from '@/components/PatternChip';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,7 @@ import {
     SEGMENTATION_SIMILARITY_THRESHOLD,
 } from '@/lib/constants';
 import { buildPatternTooltip, findSimilarPatterns } from '@/lib/segmentation';
+import { COMMON_PATTERNS } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
 type AnalyzedRule = { template: string; patternType: string; fuzzy: boolean; metaType: string };
@@ -24,16 +25,35 @@ type PatternsTabProps = { detectedRules: AnalyzedRule[]; onRemoveDetectedRule: (
  * Patterns tab with sliders, pattern table, and selection management
  */
 export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTabProps) => {
-    const { allLineStarts, selectedPatterns, togglePattern } = useSegmentationStore();
+    const { allLineStarts, selectedPatterns, togglePattern, addCommonPattern } = useSegmentationStore();
 
     // Local filter state
     const [topK, setTopK] = useState(SEGMENTATION_DEFAULT_TOP_K);
     const [minCount, setMinCount] = useState(SEGMENTATION_DEFAULT_MIN_COUNT);
+    const [sortBy, setSortBy] = useState<'count' | 'pattern'>('pattern');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-    // Filter patterns locally based on topK and minCount
+    // Toggle sort column/direction
+    const handleSort = (column: 'count' | 'pattern') => {
+        if (sortBy === column) {
+            setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortBy(column);
+            setSortDir(column === 'count' ? 'desc' : 'asc');
+        }
+    };
+
+    // Filter and sort patterns
     const filteredLineStarts = useMemo(() => {
-        return allLineStarts.filter((p) => p.count >= minCount).slice(0, topK);
-    }, [allLineStarts, topK, minCount]);
+        const filtered = allLineStarts.filter((p) => p.count >= minCount).slice(0, topK);
+        return [...filtered].sort((a, b) => {
+            const dir = sortDir === 'asc' ? 1 : -1;
+            if (sortBy === 'count') {
+                return (a.count - b.count) * dir;
+            }
+            return a.pattern.localeCompare(b.pattern) * dir;
+        });
+    }, [allLineStarts, topK, minCount, sortBy, sortDir]);
 
     // Set of patterns that appear in the filtered table
     const filteredPatternSet = useMemo(() => {
@@ -60,9 +80,27 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
     }, [similarPatterns, filteredPatternSet]);
 
     // Get selected pattern objects (for display)
+    // Include both patterns from analysis AND common patterns that were selected
     const selectedPatternObjects = useMemo(() => {
-        return allLineStarts.filter((p) => selectedPatterns.has(p.pattern));
+        const fromAnalysis = allLineStarts.filter((p) => selectedPatterns.has(p.pattern));
+        const analysisPatternSet = new Set(fromAnalysis.map((p) => p.pattern));
+
+        // Add common patterns that are selected but not in allLineStarts
+        const fromCommon = COMMON_PATTERNS.filter(
+            (c) => selectedPatterns.has(c.pattern) && !analysisPatternSet.has(c.pattern),
+        ).map((c) => ({ count: 0, examples: [], pattern: c.pattern }));
+
+        return [...fromAnalysis, ...fromCommon];
     }, [selectedPatterns, allLineStarts]);
+
+    // Filter common patterns to only show unselected ones
+    // Also filter out ones whose trimmed version matches a selected pattern's trimmed version
+    const unselectedCommonPatterns = useMemo(() => {
+        const selectedTrimmed = new Set(Array.from(selectedPatterns).map((p) => p.trim()));
+        return COMMON_PATTERNS.filter(
+            (c) => !selectedPatterns.has(c.pattern) && !selectedTrimmed.has(c.pattern.trim()),
+        );
+    }, [selectedPatterns]);
 
     return (
         <>
@@ -128,21 +166,43 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
             )}
 
             {/* Selected Patterns Section */}
-            {selectedPatterns.size > 0 && (
+            {(selectedPatterns.size > 0 || unselectedCommonPatterns.length > 0) && (
                 <div className="mb-4 space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
                     <div className="font-medium text-blue-800">Selected Patterns ({selectedPatterns.size})</div>
-                    <div className="flex flex-wrap gap-1">
-                        {selectedPatternObjects.map((p) => (
-                            <PatternChip
-                                colorScheme="blue"
-                                key={p.pattern}
-                                onAction={() => togglePattern(p.pattern)}
-                                pattern={p}
-                                showCount={false}
-                                tooltipBuilder={buildPatternTooltip}
-                            />
-                        ))}
-                    </div>
+                    {selectedPatterns.size > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                            {selectedPatternObjects.map((p) => (
+                                <PatternChip
+                                    colorScheme="blue"
+                                    key={p.pattern}
+                                    onAction={() => togglePattern(p.pattern)}
+                                    pattern={p}
+                                    showCount={false}
+                                    tooltipBuilder={buildPatternTooltip}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Common Patterns */}
+                    {unselectedCommonPatterns.length > 0 && (
+                        <div className="mt-3 border-blue-200 border-t pt-2">
+                            <div className="mb-1 text-purple-700 text-sm">Common Patterns:</div>
+                            <div className="flex flex-wrap gap-1">
+                                {unselectedCommonPatterns.map((c) => (
+                                    <button
+                                        className="rounded bg-purple-100 px-2 py-0.5 font-mono text-purple-800 text-xs hover:bg-purple-200"
+                                        key={c.pattern}
+                                        onClick={() => addCommonPattern(c)}
+                                        title={`Add ${c.label} (${c.patternType}${c.fuzzy ? ', fuzzy' : ''}${c.metaType !== 'none' ? `, ${c.metaType}` : ''})`}
+                                        type="button"
+                                    >
+                                        + {c.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Similar Patterns (Typos) */}
                     {similarPatterns.length > 0 && (
@@ -210,8 +270,36 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                         <thead className="sticky top-0 border-b bg-background">
                             <tr>
                                 <th className="w-8 px-2 py-1" />
-                                <th className="px-2 py-1 text-left font-medium">Pattern</th>
-                                <th className="w-16 px-2 py-1 text-right font-medium">Count</th>
+                                <th className="px-2 py-1 text-left font-medium">
+                                    <button
+                                        className="flex items-center gap-1 hover:text-blue-600"
+                                        onClick={() => handleSort('pattern')}
+                                        type="button"
+                                    >
+                                        Pattern
+                                        {sortBy === 'pattern' &&
+                                            (sortDir === 'asc' ? (
+                                                <ArrowUpIcon className="h-3 w-3" />
+                                            ) : (
+                                                <ArrowDownIcon className="h-3 w-3" />
+                                            ))}
+                                    </button>
+                                </th>
+                                <th className="w-16 px-2 py-1 text-right font-medium">
+                                    <button
+                                        className="flex items-center justify-end gap-1 hover:text-blue-600"
+                                        onClick={() => handleSort('count')}
+                                        type="button"
+                                    >
+                                        Count
+                                        {sortBy === 'count' &&
+                                            (sortDir === 'asc' ? (
+                                                <ArrowUpIcon className="h-3 w-3" />
+                                            ) : (
+                                                <ArrowDownIcon className="h-3 w-3" />
+                                            ))}
+                                    </button>
+                                </th>
                                 <th className="px-2 py-1 text-right font-medium" dir="rtl">
                                     Example
                                 </th>
