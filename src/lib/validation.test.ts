@@ -313,3 +313,35 @@ P3 - Third`;
         });
     });
 });
+
+// Import and test findUnmatchedTranslationIds
+import { findUnmatchedTranslationIds } from './validation';
+
+describe('findUnmatchedTranslationIds', () => {
+    const storeIds = ['P1', 'P2', 'P3', 'C10', 'C11', 'B100'];
+
+    test('returns empty array when all IDs match', () => {
+        const translationIds = ['P1', 'P2', 'C10'];
+        expect(findUnmatchedTranslationIds(translationIds, storeIds)).toEqual([]);
+    });
+
+    test('returns unmatched IDs', () => {
+        const translationIds = ['P1', 'P99', 'C11', 'X999'];
+        const unmatched = findUnmatchedTranslationIds(translationIds, storeIds);
+        expect(unmatched).toEqual(['P99', 'X999']);
+    });
+
+    test('returns all IDs when none match', () => {
+        const translationIds = ['Z1', 'Z2', 'Z3'];
+        expect(findUnmatchedTranslationIds(translationIds, storeIds)).toEqual(['Z1', 'Z2', 'Z3']);
+    });
+
+    test('returns empty array for empty translation IDs', () => {
+        expect(findUnmatchedTranslationIds([], storeIds)).toEqual([]);
+    });
+
+    test('returns all IDs when store is empty', () => {
+        const translationIds = ['P1', 'P2'];
+        expect(findUnmatchedTranslationIds(translationIds, [])).toEqual(['P1', 'P2']);
+    });
+});

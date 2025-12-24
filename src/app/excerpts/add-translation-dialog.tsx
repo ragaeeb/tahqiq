@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { TRANSLATION_MODELS } from '@/lib/constants';
 import { parseTranslations } from '@/lib/transform/excerpts';
-import { validateTranslations } from '@/lib/validation';
+import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 const STORAGE_KEY = 'translation-model';
@@ -231,6 +231,17 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
             if (hasIssues && !pendingOverwrites) {
                 // Show confirmation - don't proceed yet
                 setPendingOverwrites({ duplicates, overwrites });
+                return;
+            }
+
+            // Validate that all translation IDs exist in the store before committing
+            const unmatchedIds = findUnmatchedTranslationIds(validation.parsedIds, expectedIds);
+            if (unmatchedIds.length > 0) {
+                const preview = unmatchedIds.slice(0, 10).join(', ');
+                const suffix = unmatchedIds.length > 10 ? ` and ${unmatchedIds.length - 10} more` : '';
+                setValidationError(
+                    `${unmatchedIds.length} translation ID(s) not found in excerpts: ${preview}${suffix}`,
+                );
                 return;
             }
 

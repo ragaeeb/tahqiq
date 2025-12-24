@@ -241,3 +241,16 @@ export const validateTranslations = (rawText: string, expectedIds: string[]): Tr
 
     return { isValid: true, normalizedText, parsedIds };
 };
+
+/**
+ * Finds translation IDs that don't exist in the expected store IDs.
+ * Used to validate that all pasted translations can be matched before committing.
+ *
+ * @param translationIds - IDs from parsed translations
+ * @param expectedIds - IDs from store (excerpts + headings + footnotes)
+ * @returns Array of IDs that exist in translations but not in the store
+ */
+export const findUnmatchedTranslationIds = (translationIds: string[], expectedIds: string[]): string[] => {
+    const expectedSet = new Set(expectedIds);
+    return translationIds.filter((id) => !expectedSet.has(id));
+};

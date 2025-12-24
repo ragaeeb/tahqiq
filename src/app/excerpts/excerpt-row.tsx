@@ -34,6 +34,7 @@ function ExcerptRow({
     const [selectedText, setSelectedText] = useState('');
     const [showExtractButton, setShowExtractButton] = useState(false);
     const [buttonPosition, setButtonPosition] = useState({ left: 0, top: 0 });
+    const [isEditingPages, setIsEditingPages] = useState(false);
 
     const autoResize = (el: HTMLTextAreaElement) => {
         el.style.height = 'auto';
@@ -124,7 +125,60 @@ function ExcerptRow({
                     </td>
                 )}
                 <td className="w-32 px-2 py-3 text-center align-top text-gray-600 text-xs">
-                    {[data.from, data.to].filter(Boolean).join('-')} {data.meta?.num && `#${data.meta?.num}`}
+                    {isEditingPages ? (
+                        <input
+                            className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
+                            defaultValue={[data.from, data.to].filter(Boolean).join('-')}
+                            onBlur={(e) => {
+                                const value = e.target.value.trim();
+                                const parts = value.split('-').map((p) => Number.parseInt(p.trim(), 10));
+                                const newFrom = parts[0];
+                                const newTo = parts.length > 1 ? parts[1] : undefined;
+
+                                // Check if values actually changed
+                                const fromChanged = !Number.isNaN(newFrom) && newFrom !== data.from;
+                                const toChanged =
+                                    newTo !== undefined
+                                        ? !Number.isNaN(newTo) && newTo !== data.to
+                                        : data.to !== undefined;
+
+                                if (fromChanged || toChanged) {
+                                    const updates: { from?: number; to?: number } = {};
+                                    if (!Number.isNaN(newFrom)) {
+                                        updates.from = newFrom;
+                                    }
+                                    if (newTo !== undefined && !Number.isNaN(newTo)) {
+                                        updates.to = newTo;
+                                    } else if (newTo === undefined && data.to !== undefined) {
+                                        // User removed the 'to' value (e.g., changed "100-200" to "100")
+                                        updates.to = undefined;
+                                    }
+                                    if (Object.keys(updates).length > 0) {
+                                        onUpdate(data.id, updates);
+                                    }
+                                }
+                                setIsEditingPages(false);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                } else if (e.key === 'Escape') {
+                                    setIsEditingPages(false);
+                                }
+                            }}
+                            ref={(el) => el?.focus()}
+                            type="text"
+                        />
+                    ) : (
+                        <button
+                            className="cursor-pointer bg-transparent"
+                            onDoubleClick={() => setIsEditingPages(true)}
+                            title="Double-click to edit"
+                            type="button"
+                        >
+                            {[data.from, data.to].filter(Boolean).join('-')} {data.meta?.num && `#${data.meta?.num}`}
+                        </button>
+                    )}
                 </td>
                 <td className="relative px-4 py-3 align-top" dir="rtl">
                     <Textarea

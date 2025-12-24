@@ -1,6 +1,6 @@
 'use client';
 
-import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, TypeIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -144,6 +144,23 @@ function ExcerptsPageContent() {
             }
         });
     }, [init]);
+
+    // Find the first "gap" - an excerpt without translation surrounded by excerpts with translations
+    const handleFindGap = useCallback(() => {
+        for (let i = 1; i < allExcerpts.length - 1; i++) {
+            const prev = allExcerpts[i - 1];
+            const curr = allExcerpts[i];
+            const next = allExcerpts[i + 1];
+
+            // Gap: previous has translation, current doesn't, next has translation
+            if (prev.text?.trim() && !curr.text?.trim() && next.text?.trim()) {
+                window.location.hash = curr.id;
+                toast.info(`Found gap at ${curr.id}`);
+                return;
+            }
+        }
+        toast.info('No gaps found');
+    }, [allExcerpts]);
 
     const handleSave = useCallback(() => {
         record('SaveExcerpts');
@@ -320,6 +337,9 @@ function ExcerptsPageContent() {
                             </Button>
                             <Button onClick={handleExportToTxt}>
                                 <FileTextIcon />
+                            </Button>
+                            <Button className="bg-amber-500" onClick={handleFindGap} title="Find first translation gap">
+                                <SearchIcon />
                             </Button>
                             <Button
                                 className="bg-blue-500"
