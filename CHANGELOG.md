@@ -1,3 +1,10 @@
+# [1.36.0](https://github.com/ragaeeb/tahqiq/compare/v1.35.1...v1.36.0) (2025-12-24)
+
+
+### Features
+
+* **gaps:** Add gap finder and translation validation ([6317d59](https://github.com/ragaeeb/tahqiq/commit/6317d59f85d0f055904f16344148aa54daaef460))
+
 ## [1.35.1](https://github.com/ragaeeb/tahqiq/compare/v1.35.0...v1.35.1) (2025-12-23)
 
 
