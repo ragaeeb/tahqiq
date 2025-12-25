@@ -1,19 +1,24 @@
 'use client';
 
 import { type Page, type Segment, type SegmentationOptions, segmentPages } from 'flappa-doormal';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { convertContentToMarkdown } from 'shamela';
 import VirtualizedList from '@/app/excerpts/virtualized-list';
+import SubmittableInput from '@/components/submittable-input';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import { buildGeneratedOptions } from './JsonTab';
 
 /**
- * Preview tab showing segmentation results with virtualization for performance
+ * Preview tab showing segmentation results with virtualization for performance.
+ * Includes a page filter to quickly jump to segments by page number.
  */
 export const PreviewTab = () => {
     const { ruleConfigs, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
     const pages = useShamelaStore((state) => state.pages);
+
+    // State for scrolling to a specific page
+    const [scrollToPage, setScrollToPage] = useState<number | null>(null);
 
     // Generate segments preview
     const { segments, error } = useMemo(() => {
@@ -38,6 +43,34 @@ export const PreviewTab = () => {
         }
     }, [ruleConfigs, sliceAtPunctuation, tokenMappings, pages]);
 
+    // Find segment index by page number (from or to)
+    const findScrollIndex = useCallback((data: Segment[], pageNum: number | string) => {
+        const targetPage = typeof pageNum === 'string' ? parseInt(pageNum, 10) : pageNum;
+        if (Number.isNaN(targetPage)) {
+            return -1;
+        }
+
+        // Find first segment where from <= targetPage <= to (or from === targetPage if no to)
+        return data.findIndex((segment) => {
+            const from = segment.from;
+            const to = segment.to ?? from;
+            return targetPage >= from && targetPage <= to;
+        });
+    }, []);
+
+    // Clear scroll target after scrolling completes
+    const handleScrollComplete = useCallback(() => {
+        setScrollToPage(null);
+    }, []);
+
+    // Handle page filter submission
+    const handlePageFilter = useCallback((value: string) => {
+        const pageNum = parseInt(value, 10);
+        if (!Number.isNaN(pageNum)) {
+            setScrollToPage(pageNum);
+        }
+    }, []);
+
     if (error) {
         return <div className="flex h-full items-center justify-center text-red-500">Error: {error}</div>;
     }
@@ -58,17 +91,29 @@ export const PreviewTab = () => {
             <VirtualizedList
                 data={segments}
                 estimateSize={() => 80}
+                findScrollIndex={findScrollIndex}
                 getKey={(item, index) => `${item.from}-${index}`}
-                header={<PreviewHeader />}
+                header={<PreviewHeader onPageFilter={handlePageFilter} segmentCount={segments.length} />}
+                onScrollToComplete={handleScrollComplete}
                 renderRow={(item, index) => <PreviewRow index={index} segment={item} />}
+                scrollToId={scrollToPage}
             />
         </div>
     );
 };
 
-const PreviewHeader = () => (
+type PreviewHeaderProps = { onPageFilter: (value: string) => void; segmentCount: number };
+
+const PreviewHeader = ({ onPageFilter }: PreviewHeaderProps) => (
     <tr className="bg-muted/50 text-xs">
-        <th className="w-16 px-2 py-1.5 text-left font-medium">Pages</th>
+        <th className="w-16 px-2 py-1.5 text-left font-medium">
+            <SubmittableInput
+                className="w-full border-none bg-transparent px-0 py-0 text-left text-gray-800 text-xs outline-none transition-colors duration-150 placeholder:text-muted-foreground focus:rounded focus:bg-gray-50"
+                name="page-filter"
+                onSubmit={onPageFilter}
+                placeholder="Page"
+            />
+        </th>
         <th className="px-2 py-1.5 text-right font-medium" dir="rtl">
             Content
         </th>

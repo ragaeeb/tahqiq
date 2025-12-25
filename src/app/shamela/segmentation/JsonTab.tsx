@@ -1,5 +1,9 @@
 'use client';
 
+import { type SplitRule, validateRules } from 'flappa-doormal';
+import { AlertCircleIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { parseJsonOptions } from '@/lib/segmentation';
@@ -70,9 +74,55 @@ export const buildGeneratedOptions = (
 };
 
 /**
+ * Formats validation issues into readable error messages.
+ * Takes the raw result from validateRules and extracts human-readable messages.
+ */
+const formatValidationIssues = (results: ReturnType<typeof validateRules>): string[] => {
+    const errors: string[] = [];
+
+    results.forEach((result, ruleIndex) => {
+        if (!result) {
+            return;
+        }
+
+        // Each result is a Record with pattern types as keys (lineStartsWith, lineStartsAfter, etc.)
+        // and arrays of ValidationIssue as values
+        for (const [patternType, issues] of Object.entries(result)) {
+            if (!issues || !Array.isArray(issues)) {
+                continue;
+            }
+
+            for (const issue of issues) {
+                if (!issue) {
+                    continue;
+                }
+                const location = `Rule ${ruleIndex + 1}, ${patternType}`;
+
+                // Handle different issue types with proper type checking
+                const issueType = issue.type as string;
+                if (issueType === 'missing_braces' && 'token' in issue) {
+                    errors.push(`${location}: Missing {{}} around token "${issue.token}"`);
+                } else if (issueType === 'unknown_token' && 'token' in issue) {
+                    errors.push(`${location}: Unknown token "{{${issue.token}}}"`);
+                } else if (issueType === 'duplicate' && 'pattern' in issue) {
+                    errors.push(`${location}: Duplicate pattern "${issue.pattern}"`);
+                } else if (issue.message) {
+                    errors.push(`${location}: ${issue.message}`);
+                } else {
+                    errors.push(`${location}: ${issueType}`);
+                }
+            }
+        }
+    });
+
+    return errors;
+};
+
+/**
  * JSON tab showing generated segmentation options.
  * Editable textarea that syncs changes back to store on blur.
  * This allows users to paste existing JSON configurations.
+ * Validates rules using flappa-doormal's validateRules function.
  */
 export const JsonTab = () => {
     const {
@@ -85,19 +135,67 @@ export const JsonTab = () => {
         setReplacements,
     } = useSegmentationStore();
 
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
     // Generate initial value from current state
     const initialValue = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements);
 
+    // Validate rules from current store state
+    const storeValidationErrors = useMemo(() => {
+        try {
+            const parsed = JSON.parse(initialValue);
+            if (parsed?.rules && Array.isArray(parsed.rules)) {
+                const issues = validateRules(parsed.rules as SplitRule[]);
+                // Filter out undefined/null results and empty issue objects
+                const nonEmptyResults = issues.filter(
+                    (result): result is NonNullable<typeof result> => result != null && Object.keys(result).length > 0,
+                );
+                return formatValidationIssues(nonEmptyResults);
+            }
+        } catch {
+            // Invalid JSON, will be caught elsewhere
+        }
+        return [];
+    }, [initialValue]);
+
+    // Combine store validation errors with textarea validation errors
+    const allErrors = validationErrors.length > 0 ? validationErrors : storeValidationErrors;
+
     const handleBlur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
-        const parsed = parseJsonOptions(event.target.value);
-        if (parsed) {
-            setRuleConfigs(parsed.ruleConfigs);
-            setSliceAtPunctuation(parsed.sliceAtPunctuation);
-            setReplacements(parsed.replacements);
+        const value = event.target.value;
+
+        // First try to parse JSON
+        let parsed: { rules?: unknown[] } | undefined;
+        try {
+            parsed = JSON.parse(value) as { rules?: unknown[] };
+        } catch {
+            setValidationErrors(['Invalid JSON syntax']);
+            return;
+        }
+
+        // Validate rules if present
+        if (parsed?.rules && Array.isArray(parsed.rules)) {
+            const issues = validateRules(parsed.rules as SplitRule[]);
+            // Filter out undefined/null results and empty issue objects
+            const nonEmptyResults = issues.filter(
+                (result): result is NonNullable<typeof result> => result != null && Object.keys(result).length > 0,
+            );
+            const errors = formatValidationIssues(nonEmptyResults);
+            setValidationErrors(errors);
+        } else {
+            setValidationErrors([]);
+        }
+
+        // Parse and sync to store
+        const parsedOptions = parseJsonOptions(value);
+        if (parsedOptions) {
+            setRuleConfigs(parsedOptions.ruleConfigs);
+            setSliceAtPunctuation(parsedOptions.sliceAtPunctuation);
+            setReplacements(parsedOptions.replacements);
             // Sync selectedPatterns from all templates in parsed rules (flatten arrays)
             // Strip token mappings so {{raqms:num}} becomes {{raqms}} to match allLineStarts
             const patterns = new Set<string>();
-            for (const r of parsed.ruleConfigs) {
+            for (const r of parsedOptions.ruleConfigs) {
                 if (Array.isArray(r.template)) {
                     for (const t of r.template) {
                         patterns.add(stripTokenMappings(t));
@@ -124,6 +222,21 @@ export const JsonTab = () => {
                     onBlur={handleBlur}
                     style={{ fieldSizing: 'fixed' }}
                 />
+                {allErrors.length > 0 && (
+                    <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-3">
+                        <div className="flex items-start gap-2">
+                            <AlertCircleIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
+                            <div className="flex-1">
+                                <p className="font-medium text-red-800 text-sm">Rule Validation Errors</p>
+                                <ul className="mt-1 list-inside list-disc space-y-0.5 text-red-700 text-xs">
+                                    {allErrors.map((error) => (
+                                        <li key={error}>{error}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

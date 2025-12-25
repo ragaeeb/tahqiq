@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createMatcher } from '@/lib/search';
 import type { ShamelaPage, ShamelaTitle } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 
@@ -14,8 +15,11 @@ type Filters = { content: string; id: string };
 /**
  * Generic filter function for items with id and a content field.
  * Consolidates the common filtering logic used by pages and titles.
+ * Supports literal text, regex patterns (/pattern/flags), and template tokens ({{rumuz}}, {{dash}}, etc.)
  */
 function filterItems<T extends { id: number }>(items: T[], filters: Filters, getContent: (item: T) => string): T[] {
+    const contentMatcher = filters.content ? createMatcher(filters.content) : null;
+
     return items.filter((item) => {
         if (filters.id) {
             const idNum = Number.parseInt(filters.id, 10);
@@ -23,7 +27,7 @@ function filterItems<T extends { id: number }>(items: T[], filters: Filters, get
                 return false;
             }
         }
-        if (filters.content && !getContent(item).includes(filters.content)) {
+        if (contentMatcher && !contentMatcher(getContent(item))) {
             return false;
         }
         return true;

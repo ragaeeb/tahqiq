@@ -1,4 +1,5 @@
 import { removeFootnoteReferencesSimple, removeSingleDigitFootnoteReferences } from 'baburchi';
+import { cleanMultilines } from 'bitaboom';
 import { removeArabicNumericPageMarkers, splitPageBodyFromFooter } from 'shamela/content';
 import type { ShamelaBook, ShamelaPage, ShamelaStateCore, ShamelaTitle } from './types';
 
@@ -118,6 +119,7 @@ export const removeFootnoteReferences = (state: ShamelaStateCore): void => {
         // Apply both removal functions
         cleanedBody = removeSingleDigitFootnoteReferences(cleanedBody);
         cleanedBody = removeFootnoteReferencesSimple(cleanedBody);
+        cleanedBody = cleanMultilines(cleanedBody);
 
         const hasChanges = cleanedBody !== page.body || page.footnote;
 
