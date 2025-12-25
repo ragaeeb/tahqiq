@@ -1,3 +1,10 @@
+# [1.37.0](https://github.com/ragaeeb/tahqiq/compare/v1.36.0...v1.37.0) (2025-12-25)
+
+
+### Features
+
+* **validation:** Validate rules, and allow jumping to pages in preview ([4d24a2e](https://github.com/ragaeeb/tahqiq/commit/4d24a2e37c71499247778daf089ae106059d1e38))
+
 # [1.36.0](https://github.com/ragaeeb/tahqiq/compare/v1.35.1...v1.36.0) (2025-12-24)
 
 
