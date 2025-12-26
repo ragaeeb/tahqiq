@@ -58,7 +58,7 @@ describe('transcriptUtils', () => {
             expect(mockMarkAndCombineSegments).toHaveBeenCalledWith(mockSegments, {
                 fillers: ['um', 'um.', 'um؟', 'uh', 'uh.', 'uh؟'],
                 gapThreshold: 1,
-                hints: ['hint1', 'hint2'],
+                hints: [{ normalizeAlef: true, normalizeHamza: true, normalizeYa: true }, 'hint1', 'hint2'],
                 maxSecondsPerSegment: 60,
                 minWordsPerSegment: 4,
             });
@@ -77,7 +77,11 @@ describe('transcriptUtils', () => {
 
             generateFormattedTranscriptFromState(state);
 
-            expect(mockCreateHints).toHaveBeenCalledWith('hint1', 'hint2');
+            expect(mockCreateHints).toHaveBeenCalledWith(
+                { normalizeAlef: true, normalizeHamza: true, normalizeYa: true },
+                'hint1',
+                'hint2',
+            );
         });
 
         it('should replace single newlines with double newlines', () => {
