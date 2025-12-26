@@ -1,3 +1,10 @@
+## [1.38.2](https://github.com/ragaeeb/tahqiq/compare/v1.38.1...v1.38.2) (2025-12-26)
+
+
+### Bug Fixes
+
+* **hints:** Fix hints not creating separate segments ([b2ad940](https://github.com/ragaeeb/tahqiq/commit/b2ad940a709189a885dc876db35553df608490c6))
+
 ## [1.38.1](https://github.com/ragaeeb/tahqiq/compare/v1.38.0...v1.38.1) (2025-12-26)
 
 
