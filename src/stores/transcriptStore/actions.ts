@@ -38,7 +38,7 @@ export const groupAndSliceSegments = (state: TranscriptState) => {
         const marked = markAndCombineSegments(segments, {
             fillers,
             gapThreshold: options.silenceGapThreshold,
-            hints: createHints(...options.hints),
+            hints: createHints({ normalizeAlef: true, normalizeHamza: true, normalizeYa: true }, ...options.hints),
             maxSecondsPerSegment: options.maxSecondsPerSegment,
             minWordsPerSegment: options.minWordsPerSegment,
         });
