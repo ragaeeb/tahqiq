@@ -1,13 +1,16 @@
 'use client';
 
-import { Trash2Icon } from 'lucide-react';
+import { PencilIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { autoResizeTextarea } from '@/lib/domUtils';
 import type { Excerpt } from '@/stores/excerptsStore/types';
+import { EditExcerptDialogContent } from './edit-excerpt-dialog';
 
 type ExcerptRowProps = {
     data: Excerpt;
@@ -35,11 +38,7 @@ function ExcerptRow({
     const [showExtractButton, setShowExtractButton] = useState(false);
     const [buttonPosition, setButtonPosition] = useState({ left: 0, top: 0 });
     const [isEditingPages, setIsEditingPages] = useState(false);
-
-    const autoResize = (el: HTMLTextAreaElement) => {
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-    };
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
         const textarea = e.currentTarget;
@@ -187,7 +186,7 @@ function ExcerptRow({
                         key={`${data.id}/${data.lastUpdatedAt}/nass`}
                         onBlur={(e) => {
                             if (e.target.value !== (data.nass ?? '')) {
-                                autoResize(e.currentTarget);
+                                autoResizeTextarea(e.currentTarget);
                                 onUpdate(data.id, { nass: e.target.value });
                             }
                             // Hide button when textarea loses focus (with delay for button click)
@@ -196,11 +195,7 @@ function ExcerptRow({
                         onMouseUp={handleTextSelect}
                         onSelect={handleTextSelect}
                         placeholder="النص العربي..."
-                        ref={(el) => {
-                            if (el) {
-                                autoResize(el);
-                            }
-                        }}
+                        ref={autoResizeTextarea}
                     />
                 </td>
                 {!hideTranslation && (
@@ -211,28 +206,38 @@ function ExcerptRow({
                             key={`${data.id}/${data.lastUpdatedAt}/text`}
                             onBlur={(e) => {
                                 if (e.target.value !== (data.text ?? '')) {
-                                    autoResize(e.currentTarget);
+                                    autoResizeTextarea(e.currentTarget);
                                     onUpdate(data.id, { text: e.target.value });
                                 }
                             }}
                             placeholder="Translation..."
-                            ref={(el) => {
-                                if (el) {
-                                    autoResize(el);
-                                }
-                            }}
+                            ref={autoResizeTextarea}
                         />
                     </td>
                 )}
-                <td className="w-16 px-2 py-3 text-center align-top">
-                    <Button
-                        aria-label={`Delete excerpt ${data.id}`}
-                        onClick={() => onDelete(data.id)}
-                        size="sm"
-                        variant="ghost"
-                    >
-                        <Trash2Icon className="h-4 w-4 text-red-500" />
-                    </Button>
+                <td className="w-24 px-2 py-3 text-center align-top">
+                    <div className="flex items-center justify-center gap-1">
+                        <Dialog onOpenChange={setIsEditDialogOpen} open={isEditDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button aria-label={`Edit excerpt ${data.id}`} size="sm" variant="ghost">
+                                    <PencilIcon className="h-4 w-4 text-blue-500" />
+                                </Button>
+                            </DialogTrigger>
+                            <EditExcerptDialogContent
+                                excerpt={data}
+                                onClose={() => setIsEditDialogOpen(false)}
+                                onUpdate={onUpdate}
+                            />
+                        </Dialog>
+                        <Button
+                            aria-label={`Delete excerpt ${data.id}`}
+                            onClick={() => onDelete(data.id)}
+                            size="sm"
+                            variant="ghost"
+                        >
+                            <Trash2Icon className="h-4 w-4 text-red-500" />
+                        </Button>
+                    </div>
                 </td>
             </tr>
             {floatingButton}

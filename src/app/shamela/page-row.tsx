@@ -119,11 +119,7 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
                                 autoResizeTextarea(e.currentTarget);
                             }}
                             placeholder="الحواشي..."
-                            ref={(el) => {
-                                if (el) {
-                                    autoResizeTextarea(el);
-                                }
-                            }}
+                            ref={autoResizeTextarea}
                         />
                     </>
                 )}

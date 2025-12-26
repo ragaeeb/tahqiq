@@ -24,10 +24,29 @@ mock.module('@/components/ui/textarea', () => ({
     ),
 }));
 
+mock.module('@/components/ui/dialog', () => ({
+    Dialog: ({ children }: any) => <div data-testid="dialog">{children}</div>,
+    DialogTrigger: ({ children }: any) => <div data-testid="dialog-trigger">{children}</div>,
+}));
+
+mock.module('./edit-excerpt-dialog', () => ({
+    EditExcerptDialogContent: () => <div data-testid="edit-dialog-content" />,
+}));
+
 import ExcerptRow from './excerpt-row';
 
 describe('ExcerptRow', () => {
-    const mockData = { from: 1, id: 'E1', nass: 'النص العربي', text: 'Translation text', to: 2 } as any;
+    const mockData = {
+        from: 1,
+        id: 'E1',
+        lastUpdatedAt: 1234567890,
+        nass: 'النص العربي',
+        text: 'Translation text',
+        to: 2,
+        translator: 879,
+        vol: 1,
+        vp: 10,
+    } as any;
 
     it('renders excerpt data correctly', () => {
         render(

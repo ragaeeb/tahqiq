@@ -16,26 +16,11 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { TRANSLATION_MODELS } from '@/lib/constants';
 import { parseTranslations } from '@/lib/transform/excerpts';
 import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
-
-const STORAGE_KEY = 'translation-model';
-
-/** Get saved model from sessionStorage, falling back to first model */
-const getSavedModel = (): string => {
-    if (typeof window === 'undefined') {
-        return TRANSLATION_MODELS[0].value;
-    }
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    // Verify the saved model still exists in options
-    if (saved && TRANSLATION_MODELS.some((m) => m.value === saved)) {
-        return saved;
-    }
-    return TRANSLATION_MODELS[0].value;
-};
+import { getTranslatorValue, TranslatorSelect } from './translator-select';
 
 /**
  * Dialog content for adding bulk translations to excerpts.
@@ -44,16 +29,11 @@ const getSavedModel = (): string => {
  */
 export function AddTranslationDialogContent({ onClose }: { onClose?: () => void }) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [selectedModel, setSelectedModelState] = useState<string>(getSavedModel);
+    const [selectedModel, setSelectedModel] = useState<string>(TRANSLATION_MODELS[0].value);
     const [validationError, setValidationError] = useState<string | undefined>();
     const [pendingOverwrites, setPendingOverwrites] = useState<{ duplicates: string[]; overwrites: string[] } | null>(
         null,
     );
-
-    const setSelectedModel = useCallback((value: string) => {
-        setSelectedModelState(value);
-        sessionStorage.setItem(STORAGE_KEY, value);
-    }, []);
 
     const applyBulkTranslations = useExcerptsStore((state) => state.applyBulkTranslations);
     const excerpts = useExcerptsStore((state) => state.excerpts);
@@ -224,7 +204,7 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
                 }
             }
 
-            const translatorValue = Number.parseInt(selectedModel, 10);
+            const translatorValue = getTranslatorValue(selectedModel);
 
             // Combine issues for confirmation
             const hasIssues = overwrites.length > 0 || duplicates.length > 0;
@@ -265,24 +245,7 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
             </DialogHeader>
 
             <form className="flex flex-1 flex-col gap-4 overflow-hidden" onSubmit={handleSubmit}>
-                <div className="flex items-center gap-4">
-                    <Label htmlFor="model">Model:</Label>
-                    <ToggleGroup
-                        onValueChange={(value) => value && setSelectedModel(value)}
-                        type="single"
-                        value={selectedModel}
-                    >
-                        {TRANSLATION_MODELS.map((model) => (
-                            <ToggleGroupItem
-                                className={`text-xs bg-${model.color}-100 data-[state=on]:bg-${model.color}-400 data-[state=off]:opacity-50`}
-                                key={model.value}
-                                value={model.value}
-                            >
-                                [{model.value}] {model.label}
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
-                </div>
+                <TranslatorSelect onChange={setSelectedModel} value={selectedModel} />
 
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
                     <Label htmlFor="translations">Translations:</Label>

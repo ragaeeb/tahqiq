@@ -5,6 +5,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { autoResizeTextarea } from '@/lib/domUtils';
 import type { Excerpt } from '@/stores/excerptsStore/types';
 
 type FootnoteRowProps = {
@@ -14,11 +15,6 @@ type FootnoteRowProps = {
 };
 
 function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {
-    const autoResize = (el: HTMLTextAreaElement) => {
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-    };
-
     return (
         <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
             <td className="w-24 px-2 py-3 text-center align-top text-gray-700 text-sm">
@@ -43,16 +39,12 @@ function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {
                     key={`${data.id}/${data.lastUpdatedAt}/nass`}
                     onBlur={(e) => {
                         if (e.target.value !== (data.nass ?? '')) {
-                            autoResize(e.currentTarget);
+                            autoResizeTextarea(e.currentTarget);
                             onUpdate(data.id, { nass: e.target.value });
                         }
                     }}
                     placeholder="هامش..."
-                    ref={(el) => {
-                        if (el) {
-                            autoResize(el);
-                        }
-                    }}
+                    ref={autoResizeTextarea}
                 />
             </td>
             <td className="px-4 py-3 align-top">
@@ -62,16 +54,12 @@ function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {
                     key={`${data.id}/${data.lastUpdatedAt}/text`}
                     onBlur={(e) => {
                         if (e.target.value !== (data.text ?? '')) {
-                            autoResize(e.currentTarget);
+                            autoResizeTextarea(e.currentTarget);
                             onUpdate(data.id, { text: e.target.value });
                         }
                     }}
                     placeholder="Footnote translation..."
-                    ref={(el) => {
-                        if (el) {
-                            autoResize(el);
-                        }
-                    }}
+                    ref={autoResizeTextarea}
                 />
             </td>
             <td className="w-16 px-2 py-3 text-center align-top">

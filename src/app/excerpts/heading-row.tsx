@@ -5,6 +5,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { autoResizeTextarea } from '@/lib/domUtils';
 import type { Heading } from '@/stores/excerptsStore/types';
 
 type HeadingRowProps = {
@@ -14,11 +15,6 @@ type HeadingRowProps = {
 };
 
 function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
-    const autoResize = (el: HTMLTextAreaElement) => {
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-    };
-
     return (
         <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
             <td className="w-20 px-2 py-3 text-center align-middle font-mono text-gray-500 text-xs">{data.id}</td>
@@ -58,16 +54,12 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     key={`${data.id}/${data.lastUpdatedAt}/nass`}
                     onBlur={(e) => {
                         if (e.target.value !== data.nass) {
-                            autoResize(e.currentTarget);
+                            autoResizeTextarea(e.currentTarget);
                             onUpdate(data.id, { nass: e.target.value });
                         }
                     }}
                     placeholder="عنوان..."
-                    ref={(el) => {
-                        if (el) {
-                            autoResize(el);
-                        }
-                    }}
+                    ref={autoResizeTextarea}
                 />
             </td>
             <td className="px-4 py-3 align-top">
@@ -77,16 +69,12 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     key={`${data.id}/${data.lastUpdatedAt}/text`}
                     onBlur={(e) => {
                         if (e.target.value !== (data.text ?? '')) {
-                            autoResize(e.currentTarget);
+                            autoResizeTextarea(e.currentTarget);
                             onUpdate(data.id, { text: e.target.value });
                         }
                     }}
                     placeholder="Heading translation..."
-                    ref={(el) => {
-                        if (el) {
-                            autoResize(el);
-                        }
-                    }}
+                    ref={autoResizeTextarea}
                 />
             </td>
             <td className="w-16 px-2 py-3 text-center align-top">

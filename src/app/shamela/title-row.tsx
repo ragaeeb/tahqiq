@@ -84,11 +84,7 @@ function TitleRow({ allTitles, data, onNavigateToPage, onUpdate, shamelaId }: Ti
                         }
                     }}
                     placeholder="عنوان..."
-                    ref={(el) => {
-                        if (el) {
-                            autoResizeTextarea(el);
-                        }
-                    }}
+                    ref={autoResizeTextarea}
                 />
             </td>
         </tr>
