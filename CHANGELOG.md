@@ -1,3 +1,10 @@
+## [1.38.1](https://github.com/ragaeeb/tahqiq/compare/v1.38.0...v1.38.1) (2025-12-26)
+
+
+### Bug Fixes
+
+* **dialog:** Fix missing translator crash and lazy dialog render ([50fcbeb](https://github.com/ragaeeb/tahqiq/commit/50fcbeb6d5acd7af18d5099de7d7c840b1367773))
+
 # [1.38.0](https://github.com/ragaeeb/tahqiq/compare/v1.37.0...v1.38.0) (2025-12-26)
 
 
