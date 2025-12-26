@@ -1,3 +1,10 @@
+## [1.38.3](https://github.com/ragaeeb/tahqiq/compare/v1.38.2...v1.38.3) (2025-12-26)
+
+
+### Bug Fixes
+
+* **reset:** Fix resets not clearing storage ([058c35d](https://github.com/ragaeeb/tahqiq/commit/058c35d303be8003f349458bb190bf79d7630e32))
+
 ## [1.38.2](https://github.com/ragaeeb/tahqiq/compare/v1.38.1...v1.38.2) (2025-12-26)
 
 
