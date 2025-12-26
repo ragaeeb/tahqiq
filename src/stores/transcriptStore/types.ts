@@ -1,6 +1,6 @@
-import { type Segment as ParagrafsSegment, type Token } from 'paragrafs';
+import type { Segment as ParagrafsSegment, Token } from 'paragrafs';
 
-import { LatestContractVersion } from '@/lib/constants';
+import type { LatestContractVersion } from '@/lib/constants';
 
 import type { Kitab } from '../bookStore/types';
 import type { PostProcessingApp } from '../commonTypes';

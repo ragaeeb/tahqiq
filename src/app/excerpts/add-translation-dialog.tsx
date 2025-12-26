@@ -22,6 +22,20 @@ import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validat
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { getTranslatorValue, TranslatorSelect } from './translator-select';
 
+const STORAGE_KEY = 'translation-model';
+
+/** Get saved model from sessionStorage, falling back to first model */
+const getSavedModel = (): string => {
+    if (typeof window === 'undefined') {
+        return TRANSLATION_MODELS[0].value;
+    }
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved && TRANSLATION_MODELS.some((m) => m.value === saved)) {
+        return saved;
+    }
+    return TRANSLATION_MODELS[0].value;
+};
+
 /**
  * Dialog content for adding bulk translations to excerpts.
  * Uses uncontrolled textarea for performance and batch store updates.
@@ -29,7 +43,7 @@ import { getTranslatorValue, TranslatorSelect } from './translator-select';
  */
 export function AddTranslationDialogContent({ onClose }: { onClose?: () => void }) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [selectedModel, setSelectedModel] = useState<string>(TRANSLATION_MODELS[0].value);
+    const [selectedModel, setSelectedModel] = useState<string>(getSavedModel());
     const [validationError, setValidationError] = useState<string | undefined>();
     const [pendingOverwrites, setPendingOverwrites] = useState<{ duplicates: string[]; overwrites: string[] } | null>(
         null,

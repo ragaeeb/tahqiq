@@ -8,7 +8,7 @@ export const generateFormattedTranscriptFromState = (state: TranscriptStateCore)
     const markedSegments = markAndCombineSegments(transcript.segments, {
         fillers: formatOptions.fillers.flatMap((token) => [token, `${token}.`, `${token}؟`]),
         gapThreshold: formatOptions.silenceGapThreshold,
-        hints: createHints(...formatOptions.hints),
+        hints: createHints({ normalizeAlef: true, normalizeHamza: true, normalizeYa: true }, ...formatOptions.hints),
         maxSecondsPerSegment: formatOptions.maxSecondsPerSegment,
         minWordsPerSegment: formatOptions.minWordsPerSegment,
     });

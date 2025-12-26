@@ -70,8 +70,8 @@ Respond only with the translated plain text. Do not include any commentary from 
 The transcript will include the time segments, ensure your translated response includes these so they can be mapped back to the original Arabic. When a sentence continues from one segment to another, ensure considering the next segment for context in your translation.`;
 
 export const TRANSLATE_DRAFT_TRANSCRIPT_PROMPT = `${TRANSLATE_TRANSCRIPT_PROMPT}\nThe transcript was generated using AI so it may not be 100% accurate. Any parts that sound like a typo or incorrect transcription, use your best judgment based on the context of what is before and after. Revise your translation THREE times before sending.
-The first pass: Verify all translations are aligned with matching Arabic time markers.',
-The second pass: The translations are accurate based on the overall context.',
+The first pass: Verify all translations are aligned with matching Arabic time markers.
+The second pass: The translations are accurate based on the overall context.
 The third pass: Any transliterations used are accurate.`;
 
 export const TRANSLATE_EXCERPTS_PROMPT = [
