@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
 import { downloadFile } from '@/lib/domUtils';
-import { loadFromOPFS, saveToOPFS } from '@/lib/io';
+import { clearStorage, loadFromOPFS, saveToOPFS } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import '@/stores/dev';
@@ -48,8 +48,8 @@ export default function Manuscript() {
                         // Find indices of both items in the full data array
                         // You'll need to pass your full data array to this function or access it from context/store
                         // Assuming you have access to `allItems` array here
-                        const previousIndex = rows.findIndex((i) => i === previousItem);
-                        const currentIndex = rows.findIndex((i) => i === item);
+                        const previousIndex = rows.indexOf(previousItem);
+                        const currentIndex = rows.indexOf(item);
 
                         if (previousIndex !== -1 && currentIndex !== -1) {
                             const start = Math.min(previousIndex, currentIndex);
@@ -161,6 +161,7 @@ export default function Manuscript() {
                                 onClick={() => {
                                     record('ResetManuscript');
                                     reset();
+                                    clearStorage('juz');
                                 }}
                             >
                                 <RefreshCwIcon />

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { saveToOPFS } from '@/lib/io';
+import { clearStorage, saveToOPFS } from '@/lib/io';
 import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
@@ -190,6 +190,7 @@ export default function TranscriptToolbar() {
                 onClick={() => {
                     record('ResetTranscript');
                     reset();
+                    clearStorage('transcript');
                 }}
             >
                 <RefreshCwIcon />

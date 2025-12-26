@@ -14,7 +14,7 @@ import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { downloadFile } from '@/lib/domUtils';
-import { saveToOPFS } from '@/lib/io';
+import { clearStorage, saveToOPFS } from '@/lib/io';
 import { usePatchStore } from '@/stores/patchStore';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
@@ -74,6 +74,7 @@ export const Toolbar = () => {
     const handleReset = useCallback(() => {
         record('ResetShamela');
         reset();
+        clearStorage('shamela');
     }, [reset]);
 
     const handleRemovePageMarkers = useCallback(() => {
