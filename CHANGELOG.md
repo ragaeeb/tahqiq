@@ -1,3 +1,10 @@
+# [1.38.0](https://github.com/ragaeeb/tahqiq/compare/v1.37.0...v1.38.0) (2025-12-26)
+
+
+### Features
+
+* **edit:** add edit excerpt modal with comprehensive field editing ([7782ac6](https://github.com/ragaeeb/tahqiq/commit/7782ac6a05e7670a53c6b2c4ed43acb86898e315))
+
 # [1.37.0](https://github.com/ragaeeb/tahqiq/compare/v1.36.0...v1.37.0) (2025-12-25)
 
 
