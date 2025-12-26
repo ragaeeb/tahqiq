@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Textarea } from '@/components/ui/textarea';
 import { autoResizeTextarea } from '@/lib/domUtils';
 import type { Excerpt } from '@/stores/excerptsStore/types';
@@ -38,7 +38,6 @@ function ExcerptRow({
     const [showExtractButton, setShowExtractButton] = useState(false);
     const [buttonPosition, setButtonPosition] = useState({ left: 0, top: 0 });
     const [isEditingPages, setIsEditingPages] = useState(false);
-    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
         const textarea = e.currentTarget;
@@ -217,18 +216,15 @@ function ExcerptRow({
                 )}
                 <td className="w-24 px-2 py-3 text-center align-top">
                     <div className="flex items-center justify-center gap-1">
-                        <Dialog onOpenChange={setIsEditDialogOpen} open={isEditDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button aria-label={`Edit excerpt ${data.id}`} size="sm" variant="ghost">
-                                    <PencilIcon className="h-4 w-4 text-blue-500" />
-                                </Button>
-                            </DialogTrigger>
-                            <EditExcerptDialogContent
-                                excerpt={data}
-                                onClose={() => setIsEditDialogOpen(false)}
-                                onUpdate={onUpdate}
-                            />
-                        </Dialog>
+                        <DialogTriggerButton
+                            aria-label={`Edit excerpt ${data.id}`}
+                            onClick={() => record('EditExcerptOpen', data.id)}
+                            renderContent={() => <EditExcerptDialogContent excerpt={data} onUpdate={onUpdate} />}
+                            size="sm"
+                            variant="ghost"
+                        >
+                            <PencilIcon className="h-4 w-4 text-blue-500" />
+                        </DialogTriggerButton>
                         <Button
                             aria-label={`Delete excerpt ${data.id}`}
                             onClick={() => onDelete(data.id)}

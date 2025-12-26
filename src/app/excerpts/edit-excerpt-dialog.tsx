@@ -117,7 +117,7 @@ export function EditExcerptDialogContent({ excerpt, onClose, onUpdate }: EditExc
                 </div>
 
                 {/* Translator selector - uncontrolled with name for form submission */}
-                <TranslatorSelect defaultValue={excerpt.translator.toString()} name="translator" persist={false} />
+                <TranslatorSelect defaultValue={excerpt.translator?.toString()} name="translator" persist={false} />
 
                 {/* Arabic text */}
                 <div className="space-y-2">
