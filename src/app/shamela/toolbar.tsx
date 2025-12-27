@@ -11,10 +11,10 @@ import { record } from 'nanolytics';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
+import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
-import { downloadFile } from '@/lib/domUtils';
-import { clearStorage, saveToOPFS } from '@/lib/io';
+import { STORAGE_KEYS } from '@/lib/constants';
 import { usePatchStore } from '@/stores/patchStore';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
@@ -32,7 +32,7 @@ export const Toolbar = () => {
      * Creates a ShamelaBook object from the current store state.
      * Shared between save and download handlers to avoid duplication.
      */
-    const getShamelaBookData = useCallback((): ShamelaBook => {
+    const getExportData = useCallback((): ShamelaBook => {
         const state = useShamelaStore.getState();
         return {
             majorRelease: state.majorRelease,
@@ -48,34 +48,12 @@ export const Toolbar = () => {
         };
     }, []);
 
-    const handleSave = useCallback(async () => {
-        record('SaveShamela');
-        const data = getShamelaBookData();
-
-        try {
-            await saveToOPFS('shamela', data);
-            toast.success('Saved state');
-        } catch (err) {
-            console.error('Could not save shamela', err);
-            downloadFile(`shamela-${Date.now()}.json`, JSON.stringify(data, null, 2));
-        }
-    }, [getShamelaBookData]);
-
-    const handleDownload = useCallback(() => {
-        const name = prompt('Enter output file name');
-
-        if (name) {
-            record('DownloadShamela', name);
-            const data = getShamelaBookData();
-            downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
-        }
-    }, [getShamelaBookData]);
-
-    const handleReset = useCallback(() => {
-        record('ResetShamela');
-        reset();
-        clearStorage('shamela');
-    }, [reset]);
+    const { handleSave, handleDownload, handleReset } = useStorageActions({
+        analytics: { download: 'DownloadShamela', reset: 'ResetShamela', save: 'SaveShamela' },
+        getExportData,
+        reset,
+        storageKey: STORAGE_KEYS.shamela,
+    });
 
     const handleRemovePageMarkers = useCallback(() => {
         record('RemovePageMarkers');

@@ -3,14 +3,13 @@
 import { BotIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
-import { toast } from 'sonner';
+import { useCallback } from 'react';
 
 import { ConfirmButton } from '@/components/confirm-button';
+import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
-import { TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
-import { downloadFile } from '@/lib/domUtils';
-import { clearStorage, saveToOPFS } from '@/lib/io';
+import { STORAGE_KEYS, TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
 import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
@@ -36,6 +35,16 @@ export default function TranscriptToolbar() {
     const selectedToken = useTranscriptStore((state) => state.selectedToken);
     const reset = useTranscriptStore((state) => state.reset);
     const sortedSegments = selectedSegments.toSorted((a, b) => a.start - b.start);
+
+    // Storage actions hook
+    const getExportData = useCallback(() => mapTranscriptsToLatestContract(useTranscriptStore.getState()), []);
+
+    const { handleSave, handleDownload, handleReset } = useStorageActions({
+        analytics: { download: 'DownloadTranscript', reset: 'ResetTranscript', save: 'SaveManuscriptJuz' },
+        getExportData,
+        reset,
+        storageKey: STORAGE_KEYS.transcript,
+    });
 
     return (
         <div className="flex space-x-2">
@@ -152,47 +161,13 @@ export default function TranscriptToolbar() {
             >
                 ♺ Rebuild Segment from Tokens
             </Button>
-            <Button
-                className="bg-emerald-500"
-                onClick={() => {
-                    record('SaveManuscriptJuz');
-
-                    const transcript = mapTranscriptsToLatestContract(useTranscriptStore.getState());
-
-                    try {
-                        saveToOPFS('transcript', transcript);
-                        toast.success('Saved state');
-                    } catch (err) {
-                        console.error('Could not save transcript', err);
-                        downloadFile(`${Date.now()}.json`, JSON.stringify(transcript));
-                    }
-                }}
-            >
+            <Button className="bg-emerald-500" onClick={handleSave}>
                 <SaveIcon />
             </Button>
-            <Button
-                aria-label="Download transcript JSON"
-                onClick={() => {
-                    const name = prompt('Enter output file name');
-
-                    if (name) {
-                        record('DownloadTranscript', name);
-
-                        const juz = JSON.stringify(mapTranscriptsToLatestContract(useTranscriptStore.getState()));
-
-                        downloadFile(name.endsWith('.json') ? name : `${name}.json`, juz);
-                    }
-                }}
-            >
+            <Button aria-label="Download transcript JSON" onClick={handleDownload}>
                 <DownloadIcon />
             </Button>
-            <ConfirmButton
-                onClick={() => {
-                    record('ResetTranscript');
-                    reset();
-                    clearStorage('transcript');
-                }}
-            >
+            <ConfirmButton onClick={handleReset}>
                 <RefreshCwIcon />
             </ConfirmButton>
         </div>

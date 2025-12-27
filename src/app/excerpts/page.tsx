@@ -2,7 +2,7 @@
 
 import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -12,11 +12,13 @@ import '@/stores/dev';
 
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
+import { useSessionRestore } from '@/components/hooks/use-session-restore';
+import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { clearStorage, loadFromOPFS, saveToOPFS } from '@/lib/io';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -136,14 +138,36 @@ function ExcerptsPageContent() {
         }
     }, [canMerge, excerpts, selectedIds, mergeExcerpts]);
 
-    useEffect(() => {
-        loadFromOPFS('excerpts').then((data) => {
-            if (data) {
-                record('RestoreExcerptsFromSession');
-                init(data as Excerpts);
-            }
-        });
-    }, [init]);
+    // Session restore hook
+    useSessionRestore<Excerpts>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
+
+    // Storage actions hook
+    const getExportData = useCallback((): Excerpts => {
+        const state = useExcerptsStore.getState();
+        return {
+            collection: state.collection,
+            contractVersion: state.contractVersion,
+            createdAt: Math.floor(state.createdAt.getTime() / 1000),
+            excerpts: state.excerpts,
+            footnotes: state.footnotes,
+            headings: state.headings,
+            lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
+            options: state.options,
+            promptForTranslation: state.promptForTranslation,
+        };
+    }, []);
+
+    const handleResetWithTabClear = useCallback(() => {
+        reset();
+        setActiveTab('excerpts');
+    }, [reset, setActiveTab]);
+
+    const { handleSave, handleDownload, handleReset } = useStorageActions({
+        analytics: { download: 'DownloadExcerpts', reset: 'ResetExcerpts', save: 'SaveExcerpts' },
+        getExportData,
+        reset: handleResetWithTabClear,
+        storageKey: STORAGE_KEYS.excerpts,
+    });
 
     // Find the first "gap" - an excerpt without translation surrounded by excerpts with translations
     const handleFindGap = useCallback(() => {
@@ -161,52 +185,6 @@ function ExcerptsPageContent() {
         }
         toast.info('No gaps found');
     }, [allExcerpts]);
-
-    const handleSave = useCallback(() => {
-        record('SaveExcerpts');
-        const state = useExcerptsStore.getState();
-        const data: Excerpts = {
-            collection: state.collection,
-            contractVersion: state.contractVersion,
-            createdAt: Math.floor(state.createdAt.getTime() / 1000),
-            excerpts: state.excerpts,
-            footnotes: state.footnotes,
-            headings: state.headings,
-            lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
-            options: state.options,
-            promptForTranslation: state.promptForTranslation,
-        };
-
-        try {
-            saveToOPFS('excerpts', data);
-            toast.success('Saved state');
-        } catch (err) {
-            console.error('Could not save excerpts', err);
-            downloadFile(`excerpts-${Date.now()}.json`, JSON.stringify(data, null, 2));
-        }
-    }, []);
-
-    const handleDownload = useCallback(() => {
-        const name = prompt('Enter output file name');
-
-        if (name) {
-            record('DownloadExcerpts', name);
-            const state = useExcerptsStore.getState();
-            const data: Excerpts = {
-                collection: state.collection,
-                contractVersion: state.contractVersion,
-                createdAt: Math.floor(state.createdAt.getTime() / 1000),
-                excerpts: state.excerpts,
-                footnotes: state.footnotes,
-                headings: state.headings,
-                lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
-                options: state.options,
-                promptForTranslation: state.promptForTranslation,
-            };
-
-            downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
-        }
-    }, []);
 
     const handleExportToTxt = useCallback(() => {
         const name = prompt('Enter output file name', 'prompt.txt');
@@ -231,13 +209,6 @@ function ExcerptsPageContent() {
             }
         }
     }, []);
-
-    const handleReset = useCallback(() => {
-        record('ResetExcerpts');
-        clearStorage('excerpts');
-        reset();
-        setActiveTab('excerpts');
-    }, [reset, setActiveTab]);
 
     const handleApplyFormatting = useCallback(async () => {
         setIsFormattingLoading(true);

@@ -24,7 +24,7 @@
         "@tanstack/react-virtual": "3.13.12",
         "baburchi": "^1.7.2",
         "bitaboom": "^2.2.0",
-        "blumbaben": "^1.0.0",
+        "blumbaben": "^1.0.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "diff-match-patch-es": "^1.0.1",
@@ -428,7 +428,7 @@
 
     "bitaboom": ["bitaboom@2.2.0", "", {}, "sha512-ntBuTeG/6UmCFvjYE+qa2CcqNty87FVz8RCPxTpgOoE2rDg70faxlIZIeldZ0yC7vEIk3JaTa6D4IpfaKaPW8Q=="],
 
-    "blumbaben": ["blumbaben@1.0.0", "", { "peerDependencies": { "react": "^19.1.0", "react-dom": "^19.1.0" } }, "sha512-NrVctDOlEegG3Jqv8A5DxF00zACM0k54xTSTjrLG/ksvX4E/td/+vezkGHWw2IlPpY2xg9q8waUxKfHUb8iyQg=="],
+    "blumbaben": ["blumbaben@1.0.1", "", { "peerDependencies": { "react": "^19.2.3", "react-dom": "^19.2.3" } }, "sha512-/NNNvsZF2t/WCnLR+uqUMcx36lC1BYSJU5v3lJXwpr/OF+30wIJy0DQ3eV7ZyWx2jG69FfpzX36RK8OaEJ9ExQ=="],
 
     "bottleneck": ["bottleneck@2.19.5", "", {}, "sha512-VHiNCbI1lKdl44tGrhNfU3lup0Tj/ZBMJB5/2ZbNXRCPuRCO7ed2mgcK4r17y+KB2EfuYuRaVlwNbAeaWGSpbw=="],
 

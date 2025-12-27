@@ -1,8 +1,28 @@
 import { describe, expect, it } from 'bun:test';
 
-import { roundToDecimal, timeToSeconds } from './time';
+import { nowInSeconds, roundToDecimal, timeToSeconds } from './time';
 
 describe('time', () => {
+    describe('nowInSeconds', () => {
+        it('should return current Unix timestamp in seconds', () => {
+            const before = Math.floor(Date.now() / 1000);
+            const result = nowInSeconds();
+            const after = Math.floor(Date.now() / 1000);
+
+            expect(result).toBeGreaterThanOrEqual(before);
+            expect(result).toBeLessThanOrEqual(after);
+        });
+
+        it('should return a number without milliseconds', () => {
+            const result = nowInSeconds();
+
+            // Should be less than current time in milliseconds
+            expect(result).toBeLessThan(Date.now());
+            // Should be roughly 1000x smaller than Date.now()
+            expect(result).toBeCloseTo(Date.now() / 1000, -2);
+        });
+    });
+
     describe('timeToSeconds', () => {
         it('should convert HH:MM:SS format correctly', () => {
             expect(timeToSeconds('01:30:45')).toBe(5445); // 1h + 30m + 45s

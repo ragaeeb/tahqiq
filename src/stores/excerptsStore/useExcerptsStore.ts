@@ -22,14 +22,29 @@ export const useExcerptsStore = create<ExcerptsState>()(
             return result;
         },
 
+        applyExcerptNassFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyExcerptNassFormatting(state, formatFn);
+            }),
+
         applyFootnoteFormatting: (formatFn) =>
             set((state) => {
                 actions.applyFootnoteFormatting(state, formatFn);
             }),
 
+        applyFootnoteNassFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyFootnoteNassFormatting(state, formatFn);
+            }),
+
         applyHeadingFormatting: (formatFn) =>
             set((state) => {
                 actions.applyHeadingFormatting(state, formatFn);
+            }),
+
+        applyHeadingNassFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyHeadingNassFormatting(state, formatFn);
             }),
 
         applyTranslationFormatting: (formatFn) =>

@@ -464,3 +464,93 @@ for (const [id, text] of translationMap) {
 
 Parsing utilities for bulk data live in `@/lib/transform/excerpts.ts`.
 
+---
+
+## Session Persistence Hooks
+
+Common patterns for OPFS session storage are abstracted into reusable hooks in `@/components/hooks/`:
+
+### `useSessionRestore`
+
+Restores data from OPFS on component mount:
+
+```tsx
+import { useSessionRestore } from '@/components/hooks/use-session-restore';
+import { STORAGE_KEYS } from '@/lib/constants';
+
+// Basic usage
+useSessionRestore(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
+
+// With legacy data adapter
+useSessionRestore(STORAGE_KEYS.transcript, init, 'RestoreTranscriptFromSession', adaptLegacyTranscripts);
+```
+
+### `useStorageActions`
+
+Provides save/download/reset handlers with consistent behavior:
+
+```tsx
+import { useStorageActions } from '@/components/hooks/use-storage-actions';
+import { STORAGE_KEYS } from '@/lib/constants';
+
+const { handleSave, handleDownload, handleReset } = useStorageActions({
+    storageKey: STORAGE_KEYS.excerpts,
+    getExportData: () => mapStateToExport(useMyStore.getState()),
+    reset: () => useMyStore.getState().reset(),
+    analytics: { save: 'SaveExcerpts', download: 'DownloadExcerpts', reset: 'ResetExcerpts' },
+});
+```
+
+**Key behaviors:**
+- `handleSave`: Saves to OPFS, shows toast, falls back to download on error
+- `handleDownload`: Prompts for filename, auto-appends `.json`
+- `handleReset`: Clears OPFS storage AND resets store state
+
+**Storage keys** are centralized in `STORAGE_KEYS` constant in `@/lib/constants.ts` to avoid typos.
+
+---
+
+## Store Utilities
+
+Common store operations are abstracted in `@/lib/store-utils.ts`:
+
+```typescript
+import { updateItemById, deleteItemsByIds, applyBulkFieldFormatting, buildIdIndexMap } from '@/lib/store-utils';
+
+// Update a single item by ID (Immer-compatible)
+updateItemById(state.excerpts, 'excerpt-123', { text: 'Updated text' });
+
+// Delete multiple items by ID set
+deleteItemsByIds(state.excerpts, idsToDelete);
+
+// Apply transformation to a field across all items
+applyBulkFieldFormatting(state.excerpts, 'nass', formatArabicText, currentTimestamp);
+
+// Build O(1) lookup map for performance
+const indexMap = buildIdIndexMap(state.excerpts);
+```
+
+**Time utility** in `@/lib/time.ts`:
+```typescript
+import { nowInSeconds } from '@/lib/time';
+const timestamp = nowInSeconds(); // Unix timestamp in seconds (not ms)
+```
+
+---
+
+## Table Components
+
+Tables are domain-specific and NOT abstracted into a shared component (intentionally):
+
+| Page | Implementation | Notes |
+|------|---------------|-------|
+| Excerpts | `VirtualizedList` (generic) | Reusable, supports scroll-to-id |
+| Shamela | `VirtualizedList` | Same component as Excerpts |
+| Manuscript | Custom virtualized body | Has page-break handling, dynamic row heights |
+| Book/Transcript | Static `<table>` | Simple data, no virtualization needed |
+
+**VirtualizedList** (`src/app/excerpts/virtualized-list.tsx`) is the shared component for large lists. Table headers remain domain-specific due to different filters and actions.
+
+## Important
+
+- NEVER run "bun dev" and launch the app yourself in the browser. Always prompt the user to do it for testing.

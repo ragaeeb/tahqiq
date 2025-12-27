@@ -165,9 +165,12 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
     const excerpts = useExcerptsStore((state) => state.excerpts);
     const headings = useExcerptsStore((state) => state.headings);
     const footnotes = useExcerptsStore((state) => state.footnotes);
-    const updateExcerpt = useExcerptsStore((state) => state.updateExcerpt);
-    const updateHeading = useExcerptsStore((state) => state.updateHeading);
-    const updateFootnote = useExcerptsStore((state) => state.updateFootnote);
+    const applyTranslationFormatting = useExcerptsStore((state) => state.applyTranslationFormatting);
+    const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
+    const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
+    const applyExcerptNassFormatting = useExcerptsStore((state) => state.applyExcerptNassFormatting);
+    const applyHeadingNassFormatting = useExcerptsStore((state) => state.applyHeadingNassFormatting);
+    const applyFootnoteNassFormatting = useExcerptsStore((state) => state.applyFootnoteNassFormatting);
 
     const scope: TargetScope = activeTab as TargetScope;
 
@@ -196,23 +199,36 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
             return;
         }
 
-        let count = 0;
-        const updateFn = scope === 'headings' ? updateHeading : scope === 'footnotes' ? updateFootnote : updateExcerpt;
+        // Use bulk actions for single state update instead of individual updates
+        const count = matches.length;
 
-        for (const item of currentData) {
-            const fieldValue = targetField === 'nass' ? item.nass : item.text;
-            if (!fieldValue) {
-                continue;
-            }
-
-            regex.lastIndex = 0;
-            if (regex.test(fieldValue)) {
+        if (targetField === 'text') {
+            // Use existing bulk formatting actions for text field
+            const formatFn = (text: string) => {
                 regex.lastIndex = 0;
-                const replaced = fieldValue.replace(regex, replacePattern);
-                if (replaced !== fieldValue) {
-                    updateFn(item.id, { [targetField]: replaced });
-                    count++;
-                }
+                return text.replace(regex, replacePattern);
+            };
+
+            if (scope === 'headings') {
+                applyHeadingFormatting(formatFn);
+            } else if (scope === 'footnotes') {
+                applyFootnoteFormatting(formatFn);
+            } else {
+                applyTranslationFormatting(formatFn);
+            }
+        } else {
+            // For nass field, use bulk nass formatting actions
+            const formatFn = (nass: string) => {
+                regex.lastIndex = 0;
+                return nass.replace(regex, replacePattern);
+            };
+
+            if (scope === 'headings') {
+                applyHeadingNassFormatting(formatFn);
+            } else if (scope === 'footnotes') {
+                applyFootnoteNassFormatting(formatFn);
+            } else {
+                applyExcerptNassFormatting(formatFn);
             }
         }
 
@@ -223,12 +239,14 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
         searchPattern,
         replacePattern,
         targetField,
-        currentData,
         scope,
         matches.length,
-        updateExcerpt,
-        updateHeading,
-        updateFootnote,
+        applyTranslationFormatting,
+        applyHeadingFormatting,
+        applyFootnoteFormatting,
+        applyHeadingNassFormatting,
+        applyFootnoteNassFormatting,
+        applyExcerptNassFormatting,
     ]);
 
     const handleInsertToken = useCallback((token: string) => {

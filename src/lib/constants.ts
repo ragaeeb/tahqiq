@@ -30,6 +30,20 @@ export const LatestContractVersion = {
     Transcript: 'v1.1',
 } as const;
 
+/**
+ * OPFS storage keys for session persistence.
+ * Centralized to avoid typos and make key usage discoverable.
+ */
+export const STORAGE_KEYS = {
+    ajza: 'ajza',
+    excerpts: 'excerpts',
+    juz: 'juz',
+    shamela: 'shamela',
+    transcript: 'transcript',
+} as const;
+
+export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
+
 export const DEFAULT_FILLER_WORDS = ['آآ', 'اه', 'ايه', 'وآآ', 'فآآ', 'مم', 'ها'];
 
 export const DEFAULT_MAX_SECONDS_PER_SEGMENT = 240;
