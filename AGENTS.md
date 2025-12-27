@@ -464,3 +464,6 @@ for (const [id, text] of translationMap) {
 
 Parsing utilities for bulk data live in `@/lib/transform/excerpts.ts`.
 
+## Important
+
+- NEVER run "bun dev" and launch the app yourself in the browser. Always prompt the user to do it for testing.

@@ -371,6 +371,21 @@ export type ExcerptsActions = {
     applyFootnoteFormatting: (formatFn: (text: string) => string) => void;
 
     /**
+     * Applies a formatting function to all excerpt nass (Arabic) in bulk
+     */
+    applyExcerptNassFormatting: (formatFn: (nass: string) => string) => void;
+
+    /**
+     * Applies a formatting function to all heading nass (Arabic) in bulk
+     */
+    applyHeadingNassFormatting: (formatFn: (nass: string) => string) => void;
+
+    /**
+     * Applies a formatting function to all footnote nass (Arabic) in bulk
+     */
+    applyFootnoteNassFormatting: (formatFn: (nass: string) => string) => void;
+
+    /**
      * Filters excerpts by IDs (undefined clears filter)
      */
     filterExcerptsByIds: (ids?: string[]) => void;

@@ -203,6 +203,57 @@ export const applyFootnoteFormatting = (state: ExcerptsStateCore, formatFn: (tex
 };
 
 /**
+ * Applies a formatting function to all excerpt nass (Arabic) in bulk
+ */
+export const applyExcerptNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
+    const now = nowInSeconds();
+    state.excerpts = state.excerpts.map((excerpt) => {
+        if (excerpt.nass) {
+            const formatted = formatFn(excerpt.nass);
+            if (formatted !== excerpt.nass) {
+                return { ...excerpt, lastUpdatedAt: now, nass: formatted };
+            }
+        }
+        return excerpt;
+    });
+    state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Applies a formatting function to all heading nass (Arabic) in bulk
+ */
+export const applyHeadingNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
+    const now = nowInSeconds();
+    state.headings = state.headings.map((heading) => {
+        if (heading.nass) {
+            const formatted = formatFn(heading.nass);
+            if (formatted !== heading.nass) {
+                return { ...heading, lastUpdatedAt: now, nass: formatted };
+            }
+        }
+        return heading;
+    });
+    state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Applies a formatting function to all footnote nass (Arabic) in bulk
+ */
+export const applyFootnoteNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
+    const now = nowInSeconds();
+    state.footnotes = state.footnotes.map((footnote) => {
+        if (footnote.nass) {
+            const formatted = formatFn(footnote.nass);
+            if (formatted !== footnote.nass) {
+                return { ...footnote, lastUpdatedAt: now, nass: formatted };
+            }
+        }
+        return footnote;
+    });
+    state.lastUpdatedAt = new Date();
+};
+
+/**
  * Filters excerpts by IDs
  */
 export const filterExcerptsByIds = (state: ExcerptsStateCore, ids?: string[]): void => {
