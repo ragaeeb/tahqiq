@@ -40,7 +40,7 @@ export default function TranscriptToolbar() {
     const getExportData = useCallback(() => mapTranscriptsToLatestContract(useTranscriptStore.getState()), []);
 
     const { handleSave, handleDownload, handleReset } = useStorageActions({
-        analytics: { download: 'DownloadTranscript', reset: 'ResetTranscript', save: 'SaveManuscriptJuz' },
+        analytics: { download: 'DownloadTranscript', reset: 'ResetTranscript', save: 'SaveTranscript' },
         getExportData,
         reset,
         storageKey: STORAGE_KEYS.transcript,

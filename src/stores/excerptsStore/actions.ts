@@ -1,6 +1,6 @@
 import { LatestContractVersion, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { adaptExcerptsToLatest } from '@/lib/migration';
-import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds } from '@/lib/store-utils';
+import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds, updateItemById } from '@/lib/store-utils';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
@@ -55,9 +55,7 @@ export const resetStore = (): ExcerptsStateCore => ({ ...INITIAL_STATE, createdA
  * Updates a single excerpt
  */
 export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
-    const index = state.excerpts.findIndex((e) => e.id === id);
-    if (index !== -1) {
-        state.excerpts[index] = { ...state.excerpts[index], ...updates, lastUpdatedAt: nowInSeconds() };
+    if (updateItemById(state.excerpts, id, updates, 'lastUpdatedAt')) {
         state.lastUpdatedAt = new Date();
     }
 };
@@ -111,9 +109,7 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
  * Updates a single heading
  */
 export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Heading, 'id'>>): void => {
-    const index = state.headings.findIndex((h) => h.id === id);
-    if (index !== -1) {
-        state.headings[index] = { ...state.headings[index], ...updates, lastUpdatedAt: nowInSeconds() };
+    if (updateItemById(state.headings, id, updates, 'lastUpdatedAt')) {
         state.lastUpdatedAt = new Date();
     }
 };
@@ -122,9 +118,7 @@ export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Par
  * Updates a single footnote
  */
 export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
-    const index = state.footnotes.findIndex((f) => f.id === id);
-    if (index !== -1) {
-        state.footnotes[index] = { ...state.footnotes[index], ...updates, lastUpdatedAt: nowInSeconds() };
+    if (updateItemById(state.footnotes, id, updates, 'lastUpdatedAt')) {
         state.lastUpdatedAt = new Date();
     }
 };

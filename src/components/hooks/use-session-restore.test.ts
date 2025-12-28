@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 
 // Mock the io module before importing the hook
 const mockLoadFromOPFS = jest.fn();
@@ -25,10 +25,9 @@ describe('useSessionRestore', () => {
 
         renderHook(() => useSessionRestore(STORAGE_KEYS.excerpts, mockInit, 'RestoreExcerptsFromSession'));
 
-        // Wait for effect to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
-        expect(mockLoadFromOPFS).toHaveBeenCalledWith('excerpts');
+        await waitFor(() => {
+            expect(mockLoadFromOPFS).toHaveBeenCalledWith('excerpts');
+        });
     });
 
     it('should call init with data when loadFromOPFS returns data', async () => {
@@ -38,11 +37,10 @@ describe('useSessionRestore', () => {
 
         renderHook(() => useSessionRestore(STORAGE_KEYS.excerpts, mockInit, 'RestoreExcerptsFromSession'));
 
-        // Wait for effect to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
-        expect(mockInit).toHaveBeenCalledWith(testData);
-        expect(mockRecord).toHaveBeenCalledWith('RestoreExcerptsFromSession');
+        await waitFor(() => {
+            expect(mockInit).toHaveBeenCalledWith(testData);
+            expect(mockRecord).toHaveBeenCalledWith('RestoreExcerptsFromSession');
+        });
     });
 
     it('should not call init when loadFromOPFS returns null', async () => {
@@ -51,8 +49,9 @@ describe('useSessionRestore', () => {
 
         renderHook(() => useSessionRestore(STORAGE_KEYS.excerpts, mockInit, 'RestoreExcerptsFromSession'));
 
-        // Wait for effect to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await waitFor(() => {
+            expect(mockLoadFromOPFS).toHaveBeenCalled();
+        });
 
         expect(mockInit).not.toHaveBeenCalled();
         expect(mockRecord).not.toHaveBeenCalled();
@@ -69,11 +68,10 @@ describe('useSessionRestore', () => {
             useSessionRestore(STORAGE_KEYS.transcript, mockInit, 'RestoreTranscriptFromSession', mockAdapter),
         );
 
-        // Wait for effect to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
-        expect(mockAdapter).toHaveBeenCalledWith(rawData);
-        expect(mockInit).toHaveBeenCalledWith(adaptedData);
+        await waitFor(() => {
+            expect(mockAdapter).toHaveBeenCalledWith(rawData);
+            expect(mockInit).toHaveBeenCalledWith(adaptedData);
+        });
     });
 
     it('should work with different storage keys', async () => {
@@ -82,10 +80,9 @@ describe('useSessionRestore', () => {
 
         renderHook(() => useSessionRestore(STORAGE_KEYS.shamela, mockInit, 'RestoreShamelaFromSession'));
 
-        // Wait for effect to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
-        expect(mockLoadFromOPFS).toHaveBeenCalledWith('shamela');
+        await waitFor(() => {
+            expect(mockLoadFromOPFS).toHaveBeenCalledWith('shamela');
+        });
     });
 
     it('should only run effect once on mount', async () => {
@@ -96,14 +93,14 @@ describe('useSessionRestore', () => {
             useSessionRestore(STORAGE_KEYS.excerpts, mockInit, 'RestoreExcerptsFromSession'),
         );
 
-        // Wait for effect to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await waitFor(() => {
+            expect(mockLoadFromOPFS).toHaveBeenCalledTimes(1);
+        });
 
         // Rerender shouldn't trigger another load
         rerender();
 
-        await new Promise((resolve) => setTimeout(resolve, 10));
-
+        // Still should only be called once
         expect(mockLoadFromOPFS).toHaveBeenCalledTimes(1);
     });
 });

@@ -56,7 +56,11 @@ export function useStorageActions<T>(options: StorageActionsOptions<T>) {
     const handleReset = useCallback(async () => {
         record(analytics.reset);
         reset();
-        await clearStorage(storageKey);
+        try {
+            await clearStorage(storageKey);
+        } catch (err) {
+            console.error(`Failed to clear storage for ${storageKey}`, err);
+        }
     }, [analytics.reset, reset, storageKey]);
 
     // Return memoized object to ensure stable references
