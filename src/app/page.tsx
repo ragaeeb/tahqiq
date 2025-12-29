@@ -1,4 +1,12 @@
-import { BookOpenIcon, FileTextIcon, LayoutListIcon, LibraryIcon, SettingsIcon } from 'lucide-react';
+import {
+    BookMarkedIcon,
+    BookOpenIcon,
+    FileTextIcon,
+    LayoutListIcon,
+    LibraryIcon,
+    MicIcon,
+    SettingsIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import VersionFooter from '@/components/version-footer';
@@ -25,6 +33,18 @@ const navigationCards: NavigationCard[] = [
         title: 'Shamela Editor',
     },
     {
+        description: 'Edit and manage Ketab Online exported books with page and title editing',
+        href: '/ketab',
+        icon: <BookMarkedIcon className="h-8 w-8" />,
+        title: 'Ketab Editor',
+    },
+    {
+        description: 'Work with audio transcripts and manage segment editing',
+        href: '/transcript',
+        icon: <MicIcon className="h-8 w-8" />,
+        title: 'Transcript Editor',
+    },
+    {
         description: 'Work with manuscript pages and manage transcriptions',
         href: '/manuscript',
         icon: <FileTextIcon className="h-8 w-8" />,
@@ -47,9 +67,9 @@ export default function Home() {
             <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
                 {/* Animated background elements */}
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className="-left-1/4 -top-1/4 absolute h-96 w-96 animate-blob rounded-full bg-purple-300 opacity-20 mix-blend-multiply blur-3xl filter" />
-                    <div className="animation-delay-2000 -right-1/4 -top-1/4 absolute h-96 w-96 animate-blob rounded-full bg-blue-300 opacity-20 mix-blend-multiply blur-3xl filter" />
-                    <div className="animation-delay-4000 -bottom-1/4 absolute left-1/4 h-96 w-96 animate-blob rounded-full bg-indigo-300 opacity-20 mix-blend-multiply blur-3xl filter" />
+                    <div className="absolute -top-1/4 -left-1/4 h-96 w-96 animate-blob rounded-full bg-purple-300 opacity-20 mix-blend-multiply blur-3xl filter" />
+                    <div className="animation-delay-2000 absolute -top-1/4 -right-1/4 h-96 w-96 animate-blob rounded-full bg-blue-300 opacity-20 mix-blend-multiply blur-3xl filter" />
+                    <div className="animation-delay-4000 absolute -bottom-1/4 left-1/4 h-96 w-96 animate-blob rounded-full bg-indigo-300 opacity-20 mix-blend-multiply blur-3xl filter" />
                 </div>
 
                 {/* Main content */}
@@ -66,7 +86,7 @@ export default function Home() {
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
                         {navigationCards.map((card) => (
                             <Link
-                                className="group hover:-translate-y-1 relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg ring-1 ring-gray-900/5 transition-all duration-300 hover:shadow-2xl"
+                                className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg ring-1 ring-gray-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
                                 href={card.href}
                                 key={card.href}
                             >

@@ -38,6 +38,7 @@ export const STORAGE_KEYS = {
     ajza: 'ajza',
     excerpts: 'excerpts',
     juz: 'juz',
+    ketab: 'ketab',
     shamela: 'shamela',
     transcript: 'transcript',
 } as const;
