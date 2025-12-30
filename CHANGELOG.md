@@ -1,3 +1,10 @@
+# [1.39.0](https://github.com/ragaeeb/tahqiq/compare/v1.38.3...v1.39.0) (2025-12-30)
+
+
+### Features
+
+* **ketab:** Refactor and add ketabonline support ([#105](https://github.com/ragaeeb/tahqiq/issues/105)) ([a9fcb5b](https://github.com/ragaeeb/tahqiq/commit/a9fcb5b6f1cfd1dab51c38cff2f990ae6e762856))
+
 ## [1.38.3](https://github.com/ragaeeb/tahqiq/compare/v1.38.2...v1.38.3) (2025-12-26)
 
 
