@@ -12,6 +12,11 @@ import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { JsonTab, useJsonTextareaValue } from '@/app/shamela/segmentation/JsonTab';
+import { PatternsTab } from '@/app/shamela/segmentation/PatternsTab';
+import { PreviewTab } from '@/app/shamela/segmentation/PreviewTab';
+import { ReplacementsTab } from '@/app/shamela/segmentation/ReplacementsTab';
+import { RulesTab } from '@/app/shamela/segmentation/RulesTab';
 import { PanelContainer } from '@/components/PanelContainer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,11 +25,6 @@ import { segmentKetabPagesToExcerpts } from '@/lib/transform/ketab-excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
-import { JsonTab, useJsonTextareaValue } from '../../shamela/segmentation/JsonTab';
-import { PatternsTab } from '../../shamela/segmentation/PatternsTab';
-import { PreviewTab } from '../../shamela/segmentation/PreviewTab';
-import { ReplacementsTab } from '../../shamela/segmentation/ReplacementsTab';
-import { RulesTab } from '../../shamela/segmentation/RulesTab';
 
 type SegmentationPanelProps = { onClose: () => void };
 
