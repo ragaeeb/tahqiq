@@ -1,13 +1,17 @@
 'use client';
 
+import { getBookContents } from 'ketab-online-sdk';
+import { Loader2 } from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import '@/lib/analytics';
 import { toast } from 'sonner';
 import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loadFromOPFS } from '@/lib/io';
 import {
@@ -24,6 +28,27 @@ import KetabTableHeader from './table-header';
 import TitleRow from './title-row';
 import { Toolbar } from './toolbar';
 import { useKetabFilters } from './use-ketab-filters';
+
+/**
+ * Extracts book ID from a ketabonline.com URL.
+ * Supports formats like:
+ * - https://ketabonline.com/ar/books/2122
+ * - https://ketabonline.com/en/books/2122
+ * - ketabonline.com/ar/books/2122
+ */
+function extractBookIdFromUrl(url: string): number | null {
+    // Match /books/{id} pattern
+    const match = url.match(/\/books\/(\d+)/i);
+    if (match?.[1]) {
+        return parseInt(match[1], 10);
+    }
+    // Also try just a plain number
+    const plainNumber = url.trim().match(/^(\d+)$/);
+    if (plainNumber?.[1]) {
+        return parseInt(plainNumber[1], 10);
+    }
+    return null;
+}
 
 /**
  * Inner component that uses store state
@@ -46,6 +71,8 @@ function KetabPageContent() {
     const pathname = usePathname();
 
     const hasAutoLoaded = useRef(false);
+    const [urlInput, setUrlInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } =
         useKetabFilters();
@@ -78,10 +105,75 @@ function KetabPageContent() {
         [navigateToItem],
     );
 
+    /**
+     * Fetch book directly from ketabonline.com
+     */
+    const handleFetchBook = useCallback(async () => {
+        const bookId = extractBookIdFromUrl(urlInput);
+        if (!bookId) {
+            toast.error('Invalid URL. Please enter a valid ketabonline.com book URL or book ID.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            record('FetchKetabFromUrl', String(bookId));
+            toast.info(`Fetching book ${bookId}...`);
+
+            const data = await getBookContents(bookId);
+
+            if (data?.pages && data?.index) {
+                init(data as unknown as KetabBook, `ketabonline-${bookId}.json`);
+                toast.success(`Loaded "${data.title || 'Book'}" (${data.pages.length} pages)`);
+            } else {
+                toast.error('Invalid book data received.');
+            }
+        } catch (error) {
+            console.error('Failed to fetch book:', error);
+            toast.error(`Failed to fetch book: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [urlInput, init]);
+
     return (
         <DataGate
             dropZone={
                 <div className="flex flex-col gap-6">
+                    {/* URL Input */}
+                    <div className="mx-auto w-full max-w-xl">
+                        <label className="mb-2 block font-medium text-gray-700 text-sm">
+                            Or paste a ketabonline.com URL
+                        </label>
+                        <div className="flex gap-2">
+                            <Input
+                                className="flex-1"
+                                disabled={isLoading}
+                                onChange={(e) => setUrlInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && urlInput.trim()) {
+                                        handleFetchBook();
+                                    }
+                                }}
+                                placeholder="https://ketabonline.com/ar/books/2122 or just 2122"
+                                type="text"
+                                value={urlInput}
+                            />
+                            <Button disabled={isLoading || !urlInput.trim()} onClick={handleFetchBook}>
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    'Fetch'
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="text-center text-gray-400 text-sm">— or —</div>
+
                     <JsonDropZone
                         description="Drag and drop a Ketab Online book JSON file"
                         maxFiles={1}

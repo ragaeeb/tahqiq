@@ -12,9 +12,8 @@ import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { JsonTab, useJsonTextareaValue } from '@/app/shamela/segmentation/JsonTab';
+import { buildGeneratedOptions, JsonTab } from '@/app/shamela/segmentation/JsonTab';
 import { PatternsTab } from '@/app/shamela/segmentation/PatternsTab';
-import { PreviewTab } from '@/app/shamela/segmentation/PreviewTab';
 import { ReplacementsTab } from '@/app/shamela/segmentation/ReplacementsTab';
 import { RulesTab } from '@/app/shamela/segmentation/RulesTab';
 import { PanelContainer } from '@/components/PanelContainer';
@@ -25,6 +24,7 @@ import { segmentKetabPagesToExcerpts } from '@/lib/transform/ketab-excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
+import { KetabPreviewTab } from './KetabPreviewTab';
 
 type SegmentationPanelProps = { onClose: () => void };
 
@@ -40,8 +40,8 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const [activeTab, setActiveTab] = useState('patterns');
     const [detectedRules, setDetectedRules] = useState<AnalyzedRule[]>([]);
 
-    const { allLineStarts, replacements, ruleConfigs, setAllLineStarts } = useSegmentationStore();
-    const getJsonTextareaValue = useJsonTextareaValue();
+    const { allLineStarts, replacements, ruleConfigs, sliceAtPunctuation, tokenMappings, setAllLineStarts } =
+        useSegmentationStore();
 
     // Add rule from selected text
     const handleAddFromSelection = useCallback(() => {
@@ -83,16 +83,17 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         }
     }, [detectedRules]);
 
-    // Parse and get options from JSON textarea
+    // Get options from store state (not from DOM)
     const getOptions = useCallback((): SegmentationOptions | null => {
         try {
-            const jsonValue = getJsonTextareaValue();
+            // Build JSON from store state, so it works even if JSON tab hasn't been visited
+            const jsonValue = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements);
             return JSON.parse(jsonValue) as SegmentationOptions;
         } catch {
             toast.error('Invalid JSON in options');
             return null;
         }
-    }, [getJsonTextareaValue]);
+    }, [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements]);
 
     // Analyze pages for common line starts
     const handleAnalyze = useCallback(() => {
@@ -200,7 +201,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
 
                 {/* Preview Tab */}
                 <TabsContent className="flex flex-1 flex-col overflow-hidden" value="preview">
-                    <PreviewTab />
+                    <KetabPreviewTab />
                 </TabsContent>
 
                 {/* Footer */}
