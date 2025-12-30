@@ -1,6 +1,10 @@
-import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
+import type { CommonLineStartPattern, RepeatingSequencePattern, SegmentationOptions } from 'flappa-doormal';
 
 export type AnalysisMode = 'lineStarts' | 'repeatingSequences';
+
+export type SegmentationOptionsState = Omit<SegmentationOptions, 'replace'> & {
+    replace: NonNullable<SegmentationOptions['replace']>;
+};
 
 export type RuleConfig = {
     pattern: string; // Original from selection (immutable, used for sync)
@@ -72,6 +76,8 @@ export type SegmentationState = {
     // Pre-processing replacements
     replacements: Replacement[];
 
+    options: SegmentationOptionsState;
+
     // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
     setAllRepeatingSequences: (patterns: RepeatingSequencePattern[]) => void;
@@ -86,5 +92,7 @@ export type SegmentationState = {
     setSliceAtPunctuation: (value: boolean) => void;
     setTokenMappings: (mappings: TokenMapping[]) => void;
     setReplacements: (replacements: Replacement[]) => void;
+    setOptions: (options: SegmentationOptions) => void;
+    updateOptions: (patch: Partial<SegmentationOptions>) => void;
     reset: () => void;
 };

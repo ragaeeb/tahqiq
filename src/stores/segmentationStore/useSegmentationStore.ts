@@ -16,6 +16,7 @@ const INITIAL_STATE = {
     allLineStarts: [],
     allRepeatingSequences: [],
     analysisMode: 'lineStarts' as const,
+    options: { breakpoints: [{ pattern: '{{tarqim}}\\s*' }, ''], maxPages: 1, replace: [] },
     replacements: [] as Replacement[],
     ruleConfigs: [],
     selectedPatterns: new Set<string>(),
@@ -190,6 +191,17 @@ export const useSegmentationStore = create<SegmentationState>()(
         setTokenMappings: (mappings) =>
             set((state) => {
                 state.tokenMappings = mappings;
+            }),
+
+        setOptions: (options) =>
+            set((state) => {
+                state.options = { ...options, replace: options.replace ?? [] };
+            }),
+
+        updateOptions: (patch) =>
+            set((state) => {
+                state.options = { ...state.options, ...patch };
+                state.options.replace ??= [];
             }),
 
         sortRulesByLength: () =>

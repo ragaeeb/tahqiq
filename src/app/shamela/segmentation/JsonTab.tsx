@@ -44,6 +44,7 @@ export const buildGeneratedOptions = (
     tokenMappings: TokenMapping[] = [],
     replacements: Replacement[] = [],
 ): string => {
+    console.log('ruleConfigs', ruleConfigs);
     const options: Record<string, unknown> = {
         maxPages: 1,
         rules: ruleConfigs.map((r) => {
@@ -174,7 +175,8 @@ export const JsonTab = () => {
         }
 
         // Validate rules if present
-        if (parsed?.rules && Array.isArray(parsed.rules)) {
+        if (Array.isArray(parsed.rules)) {
+            console.log('parsed.rules', parsed.rules);
             const issues = validateRules(parsed.rules as SplitRule[]);
             // Filter out undefined/null results and empty issue objects
             const nonEmptyResults = issues.filter(

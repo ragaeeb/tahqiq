@@ -15,6 +15,7 @@ import { buildGeneratedOptions } from './JsonTab';
  */
 export const PreviewTab = () => {
     const { ruleConfigs, sliceAtPunctuation, tokenMappings } = useSegmentationStore();
+    console.log('PreviewTab::', ruleConfigs);
     const pages = useShamelaStore((state) => state.pages);
 
     // State for scrolling to a specific page
@@ -36,6 +37,7 @@ export const PreviewTab = () => {
                 id: p.id,
             }));
 
+            console.log('options', options);
             const result = segmentPages(segmentationPages, options);
             return { error: null, segments: result };
         } catch (err) {

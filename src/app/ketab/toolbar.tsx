@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
+import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
@@ -11,7 +12,6 @@ import type { KetabBook } from '@/stores/ketabStore/types';
 import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { usePatchStore } from '@/stores/patchStore';
 import { PatchesDialogContent } from './patches-dialog';
-import { SegmentationPanel } from './segmentation/SegmentationPanel';
 
 export const Toolbar = () => {
     const patchCount = usePatchStore((state) => state.patches.length);

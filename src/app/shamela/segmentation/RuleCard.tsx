@@ -200,7 +200,7 @@ export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSe
                 <div className="flex items-center gap-2">
                     <Label className="text-gray-500 text-xs">Type:</Label>
                     <Select
-                        onValueChange={(value: 'lineStartsWith' | 'lineStartsAfter') =>
+                        onValueChange={(value: 'lineStartsWith' | 'lineStartsAfter' | 'template') =>
                             updateRuleConfig(index, { patternType: value })
                         }
                         value={rule.patternType}
@@ -211,6 +211,7 @@ export const SortableRuleCard = ({ id, index, rule, exampleLines, selected, onSe
                         <SelectContent>
                             <SelectItem value="lineStartsAfter">lineStartsAfter</SelectItem>
                             <SelectItem value="lineStartsWith">lineStartsWith</SelectItem>
+                            <SelectItem value="template">template</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
