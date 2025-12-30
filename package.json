@@ -24,7 +24,7 @@
         "clsx": "^2.1.1",
         "diff-match-patch-es": "^1.0.1",
         "dyelight": "^1.0.3",
-        "flappa-doormal": "^2.7.0",
+        "flappa-doormal": "^2.8.0",
         "immer": "^11.1.3",
         "ketab-online-sdk": "^1.3.0",
         "kokokor": "^2.0.4",

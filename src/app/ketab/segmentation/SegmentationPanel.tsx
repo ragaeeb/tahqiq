@@ -2,10 +2,12 @@
 
 import {
     analyzeCommonLineStarts,
+    analyzeRepeatingSequences,
     analyzeTextForRule,
     expandCompositeTokensInTemplate,
     type SegmentationOptions,
 } from 'flappa-doormal';
+
 import { htmlToMarkdown } from 'ketab-online-sdk';
 import { Loader2, PlusIcon } from 'lucide-react';
 import { record } from 'nanolytics';
@@ -19,7 +21,11 @@ import { RulesTab } from '@/app/shamela/segmentation/RulesTab';
 import { PanelContainer } from '@/components/PanelContainer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SEGMENTATION_DEFAULT_PREFIX_CHARS, SEGMENTATION_FETCH_ALL_TOP_K } from '@/lib/constants';
+import {
+    SEGMENTATION_DEFAULT_MIN_COUNT,
+    SEGMENTATION_DEFAULT_PREFIX_CHARS,
+    SEGMENTATION_FETCH_ALL_TOP_K,
+} from '@/lib/constants';
 import { segmentKetabPagesToExcerpts } from '@/lib/transform/ketab-excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
@@ -40,8 +46,17 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const [activeTab, setActiveTab] = useState('patterns');
     const [detectedRules, setDetectedRules] = useState<AnalyzedRule[]>([]);
 
-    const { allLineStarts, replacements, ruleConfigs, sliceAtPunctuation, tokenMappings, setAllLineStarts } =
-        useSegmentationStore();
+    const {
+        allLineStarts,
+        allRepeatingSequences,
+        analysisMode,
+        replacements,
+        ruleConfigs,
+        sliceAtPunctuation,
+        tokenMappings,
+        setAllLineStarts,
+        setAllRepeatingSequences,
+    } = useSegmentationStore();
 
     // Add rule from selected text
     const handleAddFromSelection = useCallback(() => {
@@ -95,17 +110,44 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         }
     }, [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements]);
 
-    // Analyze pages for common line starts
+    // Analyze pages for repeating sequences (continuous text)
+    const handleAnalyzeRepeatingSequences = useCallback(() => {
+        try {
+            const ketabPages = useKetabStore.getState().pages;
+            const pages = ketabPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id }));
+
+            const results = analyzeRepeatingSequences(pages, {
+                maxExamples: 100,
+                minCount: SEGMENTATION_DEFAULT_MIN_COUNT,
+                topK: SEGMENTATION_FETCH_ALL_TOP_K,
+            });
+
+            setAllRepeatingSequences(results);
+            toast.success(`Found ${results.length} repeating patterns`);
+        } catch (err) {
+            console.error('Repeating sequence analysis failed:', err);
+            toast.error(`Analysis failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    }, [setAllRepeatingSequences]);
+
+    // Analyze pages based on current mode
     const handleAnalyze = useCallback(() => {
         setIsAnalyzing(true);
-        record('AnalyzeKetabLineStarts');
+        const mode = useSegmentationStore.getState().analysisMode;
+        record(mode === 'lineStarts' ? 'AnalyzeKetabLineStarts' : 'AnalyzeKetabRepeatingSequences');
 
         try {
+            if (mode === 'repeatingSequences') {
+                handleAnalyzeRepeatingSequences();
+                return;
+            }
+
             const ketabPages = useKetabStore.getState().pages;
             // Convert HTML to markdown for analysis
             const pages = ketabPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id }));
 
             const results = analyzeCommonLineStarts(pages, {
+                maxExamples: 100,
                 prefixChars: SEGMENTATION_DEFAULT_PREFIX_CHARS,
                 sortBy: 'count',
                 topK: SEGMENTATION_FETCH_ALL_TOP_K,
@@ -122,16 +164,18 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         } finally {
             setIsAnalyzing(false);
         }
-    }, [setAllLineStarts]);
+    }, [handleAnalyzeRepeatingSequences, setAllLineStarts]);
 
     // Auto-analyze on first open if no results exist
     const hasAutoAnalyzed = useRef(false);
     useEffect(() => {
-        if (!hasAutoAnalyzed.current && allLineStarts.length === 0) {
+        const hasResults = analysisMode === 'lineStarts' ? allLineStarts.length > 0 : allRepeatingSequences.length > 0;
+
+        if (!hasAutoAnalyzed.current && !hasResults) {
             hasAutoAnalyzed.current = true;
             handleAnalyze();
         }
-    }, [allLineStarts.length, handleAnalyze]);
+    }, [allLineStarts.length, allRepeatingSequences.length, analysisMode, handleAnalyze]);
 
     // Finalize and navigate to excerpts
     const handleFinalize = useCallback(() => {
@@ -165,7 +209,9 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         <PanelContainer onCloseClicked={onClose}>
             <Tabs className="flex flex-1 flex-col overflow-hidden" onValueChange={setActiveTab} value={activeTab}>
                 <TabsList className="mx-auto mt-2 w-fit">
-                    <TabsTrigger value="patterns">Patterns ({allLineStarts.length})</TabsTrigger>
+                    <TabsTrigger value="patterns">
+                        Patterns ({analysisMode === 'lineStarts' ? allLineStarts.length : allRepeatingSequences.length})
+                    </TabsTrigger>
                     <TabsTrigger value="rules">Rules ({ruleConfigs.length})</TabsTrigger>
                     <TabsTrigger value="replacements">Replacements ({replacements.length})</TabsTrigger>
                     <TabsTrigger disabled={ruleConfigs.length === 0} value="preview">

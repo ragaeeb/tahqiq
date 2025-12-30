@@ -14,6 +14,8 @@ enableMapSet();
 
 const INITIAL_STATE = {
     allLineStarts: [],
+    allRepeatingSequences: [],
+    analysisMode: 'lineStarts' as const,
     replacements: [] as Replacement[],
     ruleConfigs: [],
     selectedPatterns: new Set<string>(),
@@ -24,17 +26,19 @@ const INITIAL_STATE = {
 /**
  * Creates defaults for a new RuleConfig based on pattern content
  */
-const createRuleConfigDefaults = (pattern: string): RuleConfig => {
+const createRuleConfigDefaults = (pattern: string, analysisMode: 'lineStarts' | 'repeatingSequences'): RuleConfig => {
     const containsKitab = pattern.includes('{{kitab}}');
     const containsNaql = pattern.includes('{{naql}}');
     const containsBab = pattern.includes('{{bab}}') || pattern.includes('{{fasl}}');
+
+    const patternType = analysisMode === 'repeatingSequences' ? 'template' : 'lineStartsAfter';
 
     return {
         fuzzy: containsKitab || containsNaql,
         metaType: containsKitab ? 'book' : containsBab ? 'chapter' : 'none',
         pageStartGuard: false,
         pattern,
-        patternType: 'lineStartsAfter',
+        patternType,
         template: pattern,
     };
 };
@@ -156,6 +160,18 @@ export const useSegmentationStore = create<SegmentationState>()(
                 state.ruleConfigs = [];
             }),
 
+        setAllRepeatingSequences: (patterns) =>
+            set((state) => {
+                state.allRepeatingSequences = patterns;
+                state.selectedPatterns = new Set();
+                state.ruleConfigs = [];
+            }),
+
+        setAnalysisMode: (mode) =>
+            set((state) => {
+                state.analysisMode = mode;
+            }),
+
         setReplacements: (replacements) =>
             set((state) => {
                 state.replacements = replacements;
@@ -199,7 +215,7 @@ export const useSegmentationStore = create<SegmentationState>()(
                 } else {
                     newSet.add(pattern);
                     // Add to ruleConfigs with defaults
-                    state.ruleConfigs.push(createRuleConfigDefaults(pattern));
+                    state.ruleConfigs.push(createRuleConfigDefaults(pattern, state.analysisMode));
                 }
                 state.selectedPatterns = newSet;
             }),

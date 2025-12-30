@@ -1,6 +1,9 @@
 'use client';
 
-import type { CommonLineStartPattern } from 'flappa-doormal';
+import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
+
+type AnyPattern = CommonLineStartPattern | RepeatingSequencePattern;
+
 import { ArrowDownIcon, ArrowUpIcon, XIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PatternChip } from '@/components/PatternChip';
@@ -25,7 +28,18 @@ type PatternsTabProps = { detectedRules: AnalyzedRule[]; onRemoveDetectedRule: (
  * Patterns tab with sliders, pattern table, and selection management
  */
 export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTabProps) => {
-    const { allLineStarts, selectedPatterns, togglePattern, addCommonPattern } = useSegmentationStore();
+    const {
+        allLineStarts,
+        allRepeatingSequences,
+        analysisMode,
+        selectedPatterns,
+        togglePattern,
+        addCommonPattern,
+        setAnalysisMode,
+    } = useSegmentationStore();
+
+    // Determine which patterns to show based on mode
+    const sourcePatterns = analysisMode === 'lineStarts' ? allLineStarts : allRepeatingSequences;
 
     // Local filter state
     const [topK, setTopK] = useState(SEGMENTATION_DEFAULT_TOP_K);
@@ -45,7 +59,7 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
 
     // Filter and sort patterns
     const filteredLineStarts = useMemo(() => {
-        const filtered = allLineStarts.filter((p) => p.count >= minCount).slice(0, topK);
+        const filtered = sourcePatterns.filter((p) => p.count >= minCount).slice(0, topK);
         return [...filtered].sort((a, b) => {
             const dir = sortDir === 'asc' ? 1 : -1;
             if (sortBy === 'count') {
@@ -53,7 +67,7 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
             }
             return a.pattern.localeCompare(b.pattern) * dir;
         });
-    }, [allLineStarts, topK, minCount, sortBy, sortDir]);
+    }, [sourcePatterns, topK, minCount, sortBy, sortDir]);
 
     // Set of patterns that appear in the filtered table
     const filteredPatternSet = useMemo(() => {
@@ -62,13 +76,13 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
 
     // Find patterns similar to selected ones (potential typos)
     const similarPatterns = useMemo(() => {
-        return findSimilarPatterns(selectedPatterns, allLineStarts, SEGMENTATION_SIMILARITY_THRESHOLD);
-    }, [selectedPatterns, allLineStarts]);
+        return findSimilarPatterns(selectedPatterns, sourcePatterns, SEGMENTATION_SIMILARITY_THRESHOLD);
+    }, [selectedPatterns, sourcePatterns]);
 
     // Split similar patterns into visible (in table) and hidden (not in table)
     const { visibleSimilar, hiddenSimilar } = useMemo(() => {
-        const visible: CommonLineStartPattern[] = [];
-        const hidden: CommonLineStartPattern[] = [];
+        const visible: AnyPattern[] = [];
+        const hidden: AnyPattern[] = [];
         for (const p of similarPatterns) {
             if (filteredPatternSet.has(p.pattern)) {
                 visible.push(p);
@@ -82,7 +96,7 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
     // Get selected pattern objects (for display)
     // Include both patterns from analysis AND common patterns that were selected
     const selectedPatternObjects = useMemo(() => {
-        const fromAnalysis = allLineStarts.filter((p) => selectedPatterns.has(p.pattern));
+        const fromAnalysis = sourcePatterns.filter((p) => selectedPatterns.has(p.pattern));
         const analysisPatternSet = new Set(fromAnalysis.map((p) => p.pattern));
 
         // Add common patterns that are selected but not in allLineStarts
@@ -91,7 +105,7 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
         ).map((c) => ({ count: 0, examples: [], pattern: c.pattern }));
 
         return [...fromAnalysis, ...fromCommon];
-    }, [selectedPatterns, allLineStarts]);
+    }, [selectedPatterns, sourcePatterns]);
 
     // Filter common patterns to only show unselected ones
     // Also filter out ones whose trimmed version matches a selected pattern's trimmed version
@@ -128,6 +142,32 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                         value={[minCount]}
                     />
                 </div>
+            </div>
+
+            {/* Analysis Mode Toggle */}
+            <div className="mb-4 flex items-center justify-center rounded-lg border bg-muted p-1">
+                <button
+                    className={`flex-1 rounded-md px-3 py-1.5 font-medium text-sm transition-all ${
+                        analysisMode === 'lineStarts'
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:bg-background/50'
+                    }`}
+                    onClick={() => setAnalysisMode('lineStarts')}
+                    type="button"
+                >
+                    Line Starts
+                </button>
+                <button
+                    className={`flex-1 rounded-md px-3 py-1.5 font-medium text-sm transition-all ${
+                        analysisMode === 'repeatingSequences'
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:bg-background/50'
+                    }`}
+                    onClick={() => setAnalysisMode('repeatingSequences')}
+                    type="button"
+                >
+                    Repeating Sequences
+                </button>
             </div>
 
             {/* Detected Rules from Selection */}
@@ -309,10 +349,35 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                             {filteredLineStarts.map((result) => {
                                 const example = result.examples?.[0];
                                 const isSelected = selectedPatterns.has(result.pattern);
+                                // @ts-expect-error - Handling different example types
+                                const exampleText = example?.line || example?.text || '';
 
                                 const updateAddressWithPageId = () => {
-                                    if (example.pageId) {
-                                        window.location.hash = `#${example.pageId}`;
+                                    const examples = result.examples || [];
+                                    if (examples.length === 0) {
+                                        return;
+                                    }
+
+                                    // Get unique page IDs to avoid getting stuck on the same page
+                                    const pageIds = Array.from(
+                                        new Set(examples.map((ex) => (ex as any).pageId)),
+                                    ).filter(Boolean);
+                                    if (pageIds.length === 0) {
+                                        return;
+                                    }
+
+                                    const currentHash = window.location.hash.replace('#', '');
+                                    const currentIndex = pageIds.findIndex((id) => String(id) === currentHash);
+
+                                    let nextIndex = 0;
+                                    if (currentIndex !== -1) {
+                                        nextIndex = (currentIndex + 1) % pageIds.length;
+                                    }
+
+                                    const nextPageId = pageIds[nextIndex];
+
+                                    if (nextPageId) {
+                                        window.location.hash = `#${nextPageId}`;
                                     }
                                 };
 
@@ -341,10 +406,10 @@ export const PatternsTab = ({ detectedRules, onRemoveDetectedRule }: PatternsTab
                                             <button
                                                 className="w-full max-w-40 truncate text-right text-muted-foreground hover:underline"
                                                 onClick={updateAddressWithPageId}
-                                                title={example?.line}
+                                                title={exampleText}
                                                 type="button"
                                             >
-                                                {example?.line}
+                                                {exampleText}
                                             </button>
                                         </td>
                                     </tr>

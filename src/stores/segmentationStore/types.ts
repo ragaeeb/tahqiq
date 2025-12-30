@@ -1,9 +1,11 @@
-import type { CommonLineStartPattern } from 'flappa-doormal';
+import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
+
+export type AnalysisMode = 'lineStarts' | 'repeatingSequences';
 
 export type RuleConfig = {
     pattern: string; // Original from selection (immutable, used for sync)
     template: string | string[]; // Editable, can be array for merged rules
-    patternType: 'lineStartsWith' | 'lineStartsAfter';
+    patternType: 'lineStartsWith' | 'lineStartsAfter' | 'template';
     fuzzy: boolean;
     pageStartGuard: boolean;
     metaType: 'none' | 'book' | 'chapter';
@@ -56,6 +58,8 @@ export type Replacement = {
 export type SegmentationState = {
     // Pattern analysis
     allLineStarts: CommonLineStartPattern[];
+    allRepeatingSequences: RepeatingSequencePattern[];
+    analysisMode: AnalysisMode;
     selectedPatterns: Set<string>;
 
     // Rule configuration
@@ -70,6 +74,8 @@ export type SegmentationState = {
 
     // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
+    setAllRepeatingSequences: (patterns: RepeatingSequencePattern[]) => void;
+    setAnalysisMode: (mode: AnalysisMode) => void;
     togglePattern: (pattern: string) => void;
     addCommonPattern: (common: CommonPattern) => void;
     setRuleConfigs: (configs: RuleConfig[]) => void;

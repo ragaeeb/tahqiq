@@ -106,6 +106,7 @@ const TokenMappingsSection = () => {
 export const RulesTab = () => {
     const {
         allLineStarts,
+        allRepeatingSequences,
         mergeSelectedRules,
         moveRule,
         ruleConfigs,
@@ -218,6 +219,10 @@ export const RulesTab = () => {
                                 // Collect examples for each template in the rule
                                 const templates = Array.isArray(rule.template) ? rule.template : [rule.template];
                                 const exampleLines = templates.map((t) => {
+                                    if (rule.patternType === 'template') {
+                                        const patternData = allRepeatingSequences.find((p) => p.pattern === t);
+                                        return patternData?.examples?.[0]?.text;
+                                    }
                                     // Find example for this template - check if any pattern data matches
                                     const patternData = allLineStarts.find((p) => p.pattern === t);
                                     return patternData?.examples?.[0]?.line;

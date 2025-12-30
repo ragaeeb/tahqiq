@@ -29,7 +29,7 @@
         "clsx": "^2.1.1",
         "diff-match-patch-es": "^1.0.1",
         "dyelight": "^1.0.3",
-        "flappa-doormal": "^2.7.0",
+        "flappa-doormal": "^2.8.0",
         "immer": "^11.1.3",
         "ketab-online-sdk": "^1.3.0",
         "kokokor": "^2.0.4",
@@ -559,7 +559,7 @@
 
     "find-versions": ["find-versions@6.0.0", "", { "dependencies": { "semver-regex": "^4.0.5", "super-regex": "^1.0.0" } }, "sha512-2kCCtc+JvcZ86IGAz3Z2Y0A1baIz9fL31pH/0S1IqZr9Iwnjq8izfPtrCyQKO6TLMPELLsQMre7VDqeIKCsHkA=="],
 
-    "flappa-doormal": ["flappa-doormal@2.7.0", "", {}, "sha512-0xk5N2prj8IVC2FM6eIKOOex/ou8pv0ovu47RbEZy3+YSJ8HCOhGtTyMOnrH4iPF53M3kiTa1O4Nt8K6jgYUHA=="],
+    "flappa-doormal": ["flappa-doormal@2.8.0", "", {}, "sha512-b2OjjgwCXIErE9Y3ALk25sYQF225+KZfnSWIgJY4Fj4e+XnFD9iVmycgVqbtBu4J3Iyu7bdG9aI1YiSjLmw7EQ=="],
 
     "foreground-child": ["foreground-child@3.3.1", "", { "dependencies": { "cross-spawn": "^7.0.6", "signal-exit": "^4.0.1" } }, "sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw=="],
 
