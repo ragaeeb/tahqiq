@@ -1,12 +1,8 @@
 import { LatestContractVersion, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { adaptExcerptsToLatest } from '@/lib/migration';
+import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds, updateItemById } from '@/lib/store-utils';
+import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
-
-/**
- * Returns the current Unix timestamp in seconds.
- * Used for lastUpdatedAt fields which track time in seconds (not milliseconds).
- */
-const nowInSeconds = () => Math.floor(Date.now() / 1000);
 
 /**
  * Initial state for the excerpts store.
@@ -59,9 +55,7 @@ export const resetStore = (): ExcerptsStateCore => ({ ...INITIAL_STATE, createdA
  * Updates a single excerpt
  */
 export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
-    const index = state.excerpts.findIndex((e) => e.id === id);
-    if (index !== -1) {
-        state.excerpts[index] = { ...state.excerpts[index], ...updates, lastUpdatedAt: nowInSeconds() };
+    if (updateItemById(state.excerpts, id, updates, 'lastUpdatedAt')) {
         state.lastUpdatedAt = new Date();
     }
 };
@@ -115,9 +109,7 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
  * Updates a single heading
  */
 export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Heading, 'id'>>): void => {
-    const index = state.headings.findIndex((h) => h.id === id);
-    if (index !== -1) {
-        state.headings[index] = { ...state.headings[index], ...updates, lastUpdatedAt: nowInSeconds() };
+    if (updateItemById(state.headings, id, updates, 'lastUpdatedAt')) {
         state.lastUpdatedAt = new Date();
     }
 };
@@ -126,9 +118,7 @@ export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Par
  * Updates a single footnote
  */
 export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
-    const index = state.footnotes.findIndex((f) => f.id === id);
-    if (index !== -1) {
-        state.footnotes[index] = { ...state.footnotes[index], ...updates, lastUpdatedAt: nowInSeconds() };
+    if (updateItemById(state.footnotes, id, updates, 'lastUpdatedAt')) {
         state.lastUpdatedAt = new Date();
     }
 };
@@ -137,8 +127,7 @@ export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Pa
  * Deletes multiple excerpts by ID
  */
 export const deleteExcerpts = (state: ExcerptsStateCore, ids: string[]): void => {
-    const idSet = new Set(ids);
-    state.excerpts = state.excerpts.filter((e) => !idSet.has(e.id));
+    state.excerpts = deleteItemsByIds(state.excerpts, ids);
     state.lastUpdatedAt = new Date();
 };
 
@@ -146,8 +135,7 @@ export const deleteExcerpts = (state: ExcerptsStateCore, ids: string[]): void =>
  * Deletes multiple headings by ID
  */
 export const deleteHeadings = (state: ExcerptsStateCore, ids: string[]): void => {
-    const idSet = new Set(ids);
-    state.headings = state.headings.filter((h) => !idSet.has(h.id));
+    state.headings = deleteItemsByIds(state.headings, ids);
     state.lastUpdatedAt = new Date();
 };
 
@@ -155,8 +143,7 @@ export const deleteHeadings = (state: ExcerptsStateCore, ids: string[]): void =>
  * Deletes multiple footnotes by ID
  */
 export const deleteFootnotes = (state: ExcerptsStateCore, ids: string[]): void => {
-    const idSet = new Set(ids);
-    state.footnotes = state.footnotes.filter((f) => !idSet.has(f.id));
+    state.footnotes = deleteItemsByIds(state.footnotes, ids);
     state.lastUpdatedAt = new Date();
 };
 
@@ -164,13 +151,7 @@ export const deleteFootnotes = (state: ExcerptsStateCore, ids: string[]): void =
  * Applies a formatting function to all excerpt translations in bulk
  */
 export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
-    const now = nowInSeconds();
-    state.excerpts = state.excerpts.map((excerpt) => {
-        if (excerpt.text) {
-            return { ...excerpt, lastUpdatedAt: now, text: formatFn(excerpt.text) };
-        }
-        return excerpt;
-    });
+    state.excerpts = applyBulkFieldFormatting(state.excerpts, 'text', formatFn, 'lastUpdatedAt');
     state.lastUpdatedAt = new Date();
 };
 
@@ -178,13 +159,7 @@ export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (
  * Applies a formatting function to all heading translations in bulk
  */
 export const applyHeadingFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
-    const now = nowInSeconds();
-    state.headings = state.headings.map((heading) => {
-        if (heading.text) {
-            return { ...heading, lastUpdatedAt: now, text: formatFn(heading.text) };
-        }
-        return heading;
-    });
+    state.headings = applyBulkFieldFormatting(state.headings, 'text', formatFn, 'lastUpdatedAt');
     state.lastUpdatedAt = new Date();
 };
 
@@ -192,13 +167,31 @@ export const applyHeadingFormatting = (state: ExcerptsStateCore, formatFn: (text
  * Applies a formatting function to all footnote translations in bulk
  */
 export const applyFootnoteFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
-    const now = nowInSeconds();
-    state.footnotes = state.footnotes.map((footnote) => {
-        if (footnote.text) {
-            return { ...footnote, lastUpdatedAt: now, text: formatFn(footnote.text) };
-        }
-        return footnote;
-    });
+    state.footnotes = applyBulkFieldFormatting(state.footnotes, 'text', formatFn, 'lastUpdatedAt');
+    state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Applies a formatting function to all excerpt nass (Arabic) in bulk
+ */
+export const applyExcerptNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
+    state.excerpts = applyBulkFieldFormatting(state.excerpts, 'nass', formatFn, 'lastUpdatedAt');
+    state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Applies a formatting function to all heading nass (Arabic) in bulk
+ */
+export const applyHeadingNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
+    state.headings = applyBulkFieldFormatting(state.headings, 'nass', formatFn, 'lastUpdatedAt');
+    state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Applies a formatting function to all footnote nass (Arabic) in bulk
+ */
+export const applyFootnoteNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
+    state.footnotes = applyBulkFieldFormatting(state.footnotes, 'nass', formatFn, 'lastUpdatedAt');
     state.lastUpdatedAt = new Date();
 };
 
@@ -251,19 +244,9 @@ export const applyBulkTranslations = (
     let updated = 0;
 
     // Build index maps for O(1) lookup of array positions
-    const excerptIndexMap = new Map<string, number>();
-    const headingIndexMap = new Map<string, number>();
-    const footnoteIndexMap = new Map<string, number>();
-
-    for (let i = 0; i < state.excerpts.length; i++) {
-        excerptIndexMap.set(state.excerpts[i].id, i);
-    }
-    for (let i = 0; i < state.headings.length; i++) {
-        headingIndexMap.set(state.headings[i].id, i);
-    }
-    for (let i = 0; i < state.footnotes.length; i++) {
-        footnoteIndexMap.set(state.footnotes[i].id, i);
-    }
+    const excerptIndexMap = buildIdIndexMap(state.excerpts);
+    const headingIndexMap = buildIdIndexMap(state.headings);
+    const footnoteIndexMap = buildIdIndexMap(state.footnotes);
 
     // Apply translations using O(1) lookups
     for (const [id, text] of translationMap) {

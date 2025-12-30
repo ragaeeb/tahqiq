@@ -1,4 +1,10 @@
 /**
+ * Returns the current Unix timestamp in seconds (not milliseconds).
+ * Used for lastUpdatedAt fields which track time in seconds for data persistence.
+ */
+export const nowInSeconds = () => Math.floor(Date.now() / 1000);
+
+/**
  * Converts a time string to seconds
  * @param str - Time string in "HH:MM:SS", "MM:SS", or number format
  * @returns Total seconds as a number

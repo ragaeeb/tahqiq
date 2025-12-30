@@ -1,12 +1,9 @@
 import { removeFootnoteReferencesSimple, removeSingleDigitFootnoteReferences } from 'baburchi';
 import { cleanMultilines } from 'bitaboom';
 import { removeArabicNumericPageMarkers, splitPageBodyFromFooter } from 'shamela/content';
+import { deleteItemsByIds } from '@/lib/store-utils';
+import { nowInSeconds } from '@/lib/time';
 import type { ShamelaBook, ShamelaPage, ShamelaStateCore, ShamelaTitle } from './types';
-
-/**
- * Returns the current Unix timestamp in seconds.
- */
-const nowInSeconds = () => Math.floor(Date.now() / 1000);
 
 /**
  * Initial state for the Shamela store.
@@ -65,7 +62,7 @@ export const updateTitle = (state: ShamelaStateCore, id: number, updates: Partia
  * Deletes a page by ID
  */
 export const deletePage = (state: ShamelaStateCore, id: number): void => {
-    state.pages = state.pages.filter((p) => p.id !== id);
+    state.pages = deleteItemsByIds(state.pages, [id]);
     state.lastUpdatedAt = new Date();
 };
 
@@ -73,7 +70,7 @@ export const deletePage = (state: ShamelaStateCore, id: number): void => {
  * Deletes a title by ID
  */
 export const deleteTitle = (state: ShamelaStateCore, id: number): void => {
-    state.titles = state.titles.filter((t) => t.id !== id);
+    state.titles = deleteItemsByIds(state.titles, [id]);
     state.lastUpdatedAt = new Date();
 };
 

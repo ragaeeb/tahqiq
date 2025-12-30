@@ -63,12 +63,22 @@ mock.module('@/lib/segmentation', () => ({
 const mockTogglePattern = jest.fn();
 const mockAddCommonPattern = jest.fn();
 
-const mockStoreState = { allLineStarts: [] as any[], selectedPatterns: new Set<string>() };
+const mockStoreState = {
+    allLineStarts: [] as any[],
+    allRepeatingSequences: [] as any[],
+    analysisMode: 'lineStarts',
+    selectedPatterns: new Set<string>(),
+};
+
+const mockSetAnalysisMode = jest.fn();
 
 const useSegmentationStore = () => ({
     addCommonPattern: mockAddCommonPattern,
     allLineStarts: mockStoreState.allLineStarts,
+    allRepeatingSequences: mockStoreState.allRepeatingSequences,
+    analysisMode: mockStoreState.analysisMode,
     selectedPatterns: mockStoreState.selectedPatterns,
+    setAnalysisMode: mockSetAnalysisMode,
     togglePattern: mockTogglePattern,
 });
 
@@ -81,6 +91,8 @@ describe('PatternsTab', () => {
         mockTogglePattern.mockReset();
         mockAddCommonPattern.mockReset();
         mockStoreState.allLineStarts = [];
+        mockStoreState.allRepeatingSequences = [];
+        mockStoreState.analysisMode = 'lineStarts';
         mockStoreState.selectedPatterns = new Set<string>();
     });
 

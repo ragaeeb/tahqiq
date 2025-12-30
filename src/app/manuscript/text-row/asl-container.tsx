@@ -2,6 +2,7 @@ import { withFormattingToolbar } from 'blumbaben';
 import clsx from 'clsx';
 import { BookmarkIcon, LetterTextIcon, SignatureIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
+import type { FocusEvent } from 'react';
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import type { SheetLine } from '@/stores/manuscriptStore/types';
@@ -66,7 +67,7 @@ function AslContainer({ data }: AslContainerProps) {
                 defaultValue={data.text}
                 dir="rtl"
                 key={`${data.id}/${data.lastUpdate}`}
-                onBlur={(e) => {
+                onBlur={(e: FocusEvent<HTMLInputElement>) => {
                     if (data.text !== e.target.value) {
                         record('UpdateObservationText');
                         updateTextLines([data.id], { text: e.target.value }, false);

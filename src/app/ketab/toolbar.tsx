@@ -1,12 +1,4 @@
-import {
-    DownloadIcon,
-    EraserIcon,
-    FileTextIcon,
-    FootprintsIcon,
-    RefreshCwIcon,
-    SaveIcon,
-    SplitIcon,
-} from 'lucide-react';
+import { DownloadIcon, FileTextIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -15,63 +7,52 @@ import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
+import type { KetabBook } from '@/stores/ketabStore/types';
+import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { usePatchStore } from '@/stores/patchStore';
-import type { ShamelaBook } from '@/stores/shamelaStore/types';
-import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import { PatchesDialogContent } from './patches-dialog';
 import { SegmentationPanel } from './segmentation/SegmentationPanel';
 
 export const Toolbar = () => {
     const patchCount = usePatchStore((state) => state.patches.length);
-    const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
-    const removeFootnoteReferences = useShamelaStore((state) => state.removeFootnoteReferences);
-    const reset = useShamelaStore((state) => state.reset);
+    const removeFootnoteReferences = useKetabStore((state) => state.removeFootnoteReferences);
+    const reset = useKetabStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
 
     /**
-     * Creates a ShamelaBook object from the current store state.
+     * Creates a KetabBook object from the current store state.
      * Shared between save and download handlers to avoid duplication.
      */
-    const getExportData = useCallback((): ShamelaBook => {
-        const state = useShamelaStore.getState();
+    const getExportData = useCallback((): Partial<KetabBook> => {
+        const state = useKetabStore.getState();
         return {
-            majorRelease: state.majorRelease,
+            id: state.bookId,
+            index: state.titles
+                .filter((t) => t.depth === 0)
+                .map((t) => ({ ...t, children: state.titles.filter((c) => c.parent === t.id && c.depth === 1) })),
             pages: state.pages.map((p) => ({
-                content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
-                id: p.id,
-                number: p.number,
-                page: p.page,
-                part: p.part,
+                ...p,
+                content: p.footnote ? `${p.body}<div class="g-page-footer">${p.footnote}</div>` : p.body,
             })),
-            shamelaId: state.shamelaId,
-            titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
-        };
+            title: state.bookTitle,
+        } as Partial<KetabBook>;
     }, []);
 
     const { handleSave, handleDownload, handleReset } = useStorageActions({
-        analytics: { download: 'DownloadShamela', reset: 'ResetShamela', save: 'SaveShamela' },
+        analytics: { download: 'DownloadKetab', reset: 'ResetKetab', save: 'SaveKetab' },
         getExportData,
         reset,
-        storageKey: STORAGE_KEYS.shamela,
+        storageKey: STORAGE_KEYS.ketab,
     });
 
-    const handleRemovePageMarkers = useCallback(() => {
-        record('RemovePageMarkers');
-        removePageMarkers();
-        toast.success('Removed Arabic page markers from all pages');
-    }, [removePageMarkers]);
-
     const handleRemoveFootnoteReferences = useCallback(() => {
-        record('RemoveFootnoteReferences');
+        record('RemoveKetabFootnoteReferences');
         removeFootnoteReferences();
         toast.success('Removed footnote references and cleared footnotes from all pages');
     }, [removeFootnoteReferences]);
 
     return (
         <div className="space-x-2">
-            <Button onClick={handleRemovePageMarkers} title="Remove page markers" variant="outline">
-                <EraserIcon />
-            </Button>
             <Button
                 onClick={handleRemoveFootnoteReferences}
                 title="Remove footnote references and clear footnotes"
@@ -81,7 +62,7 @@ export const Toolbar = () => {
             </Button>
             <Button
                 onClick={() => {
-                    record('OpenSegmentationPanel');
+                    record('OpenKetabSegmentationPanel');
                     setIsSegmentationPanelOpen(true);
                 }}
                 title="Segment pages"
@@ -92,7 +73,7 @@ export const Toolbar = () => {
             {isSegmentationPanelOpen && <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} />}
             {patchCount > 0 && (
                 <DialogTriggerButton
-                    onClick={() => record('OpenPatchesDialog')}
+                    onClick={() => record('OpenKetabPatchesDialog')}
                     renderContent={() => <PatchesDialogContent />}
                     title="View tracked patches"
                     variant="outline"

@@ -2,13 +2,15 @@
 
 import { PaperclipIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { DataGate } from '@/components/data-gate';
+import { useSessionRestore } from '@/components/hooks/use-session-restore';
 import { JsonBrowseButton } from '@/components/json-browse-button';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Checkbox } from '@/components/ui/checkbox';
-import { loadFiles, loadFromOPFS } from '@/lib/io';
+import { STORAGE_KEYS } from '@/lib/constants';
+import { loadFiles } from '@/lib/io';
 import { adaptLegacyTranscripts } from '@/lib/legacy';
 import { selectCurrentSegments } from '@/stores/transcriptStore/selectors';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
@@ -37,14 +39,8 @@ export default function Transcript() {
         ));
     }, [segments]);
 
-    useEffect(() => {
-        loadFromOPFS('transcript').then((transcript) => {
-            if (transcript) {
-                record('RestoreTranscriptFromSession');
-                initTranscripts(adaptLegacyTranscripts(transcript));
-            }
-        });
-    }, [initTranscripts]);
+    // Session restore hook with adapter for legacy data
+    useSessionRestore(STORAGE_KEYS.transcript, initTranscripts, 'RestoreTranscriptFromSession', adaptLegacyTranscripts);
 
     return (
         <DataGate

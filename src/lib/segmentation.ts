@@ -1,6 +1,8 @@
 import { areSimilarAfterNormalization } from 'baburchi';
-import type { CommonLineStartPattern } from 'flappa-doormal';
+import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
 import type { Replacement, RuleConfig } from '@/stores/segmentationStore/types';
+
+type AnyPattern = CommonLineStartPattern | RepeatingSequencePattern;
 
 /**
  * Finds patterns that are similar to the selected patterns (likely typos)
@@ -13,15 +15,15 @@ import type { Replacement, RuleConfig } from '@/stores/segmentationStore/types';
  */
 export const findSimilarPatterns = (
     selectedPatterns: Set<string>,
-    allPatterns: CommonLineStartPattern[],
+    allPatterns: AnyPattern[],
     threshold: number,
-): CommonLineStartPattern[] => {
+): AnyPattern[] => {
     if (selectedPatterns.size === 0) {
         return [];
     }
 
     const selectedArray = Array.from(selectedPatterns);
-    const similar: CommonLineStartPattern[] = [];
+    const similar: AnyPattern[] = [];
 
     for (const pattern of allPatterns) {
         // Skip if already selected
@@ -48,12 +50,15 @@ export const findSimilarPatterns = (
  * @param pattern - Pattern object with count and examples
  * @returns Formatted tooltip string
  */
-export const buildPatternTooltip = (pattern: CommonLineStartPattern): string => {
+export const buildPatternTooltip = (pattern: AnyPattern): string => {
     const lines = [`Count: ${pattern.count}`];
     const examples = pattern.examples?.slice(0, 3) ?? [];
 
     for (const ex of examples) {
-        lines.push(`• ${ex.line.slice(0, 50)}${ex.line.length > 50 ? '...' : ''}`);
+        // Handle both LineStartPatternExample (line) and RepeatingSequenceExample (text/content)
+        // If exact property is unknown for RepeatingSequence, we look for line or fallback
+        const text = (ex as any).line || (ex as any).text || (ex as any).content || JSON.stringify(ex);
+        lines.push(`• ${text.slice(0, 50)}${text.length > 50 ? '...' : ''}`);
     }
 
     return lines.join('\n');

@@ -12,11 +12,13 @@ mock.module('next/navigation', () => ({ useRouter: () => ({ push: routerPushMock
 
 // Mock flappa-doormal
 const mockAnalyzeCommonLineStarts = jest.fn();
+const mockAnalyzeRepeatingSequences = jest.fn();
 const mockAnalyzeTextForRule = jest.fn();
 const mockExpandCompositeTokensInTemplate = jest.fn((p) => p);
 
 mock.module('flappa-doormal', () => ({
     analyzeCommonLineStarts: mockAnalyzeCommonLineStarts,
+    analyzeRepeatingSequences: mockAnalyzeRepeatingSequences,
     analyzeTextForRule: mockAnalyzeTextForRule,
     expandCompositeTokensInTemplate: mockExpandCompositeTokensInTemplate,
 }));
@@ -95,17 +97,23 @@ mock.module('@/lib/transform/excerpts', () => ({
 // Mock stores
 const mockSegmentationState = {
     allLineStarts: [] as any[],
+    allRepeatingSequences: [] as any[],
+    analysisMode: 'lineStarts',
     replacements: [],
     ruleConfigs: [] as any[],
     setAllLineStarts: jest.fn(),
+    setAllRepeatingSequences: jest.fn(),
 };
 
 const mockShamelaState = { pages: [{ body: 'Test page', id: 1 }], titles: [] };
 
 const mockExcerptsInit = jest.fn();
 
+const mockUseSegmentationStore = () => mockSegmentationState;
+mockUseSegmentationStore.getState = () => mockSegmentationState;
+
 mock.module('@/stores/segmentationStore/useSegmentationStore', () => ({
-    useSegmentationStore: () => mockSegmentationState,
+    useSegmentationStore: mockUseSegmentationStore,
 }));
 
 mock.module('@/stores/shamelaStore/useShamelaStore', () => ({ useShamelaStore: { getState: () => mockShamelaState } }));
@@ -125,8 +133,11 @@ describe('SegmentationPanel', () => {
         toastMock.info.mockReset();
         routerPushMock.mockReset();
         mockSegmentationState.allLineStarts = [];
+        mockSegmentationState.allRepeatingSequences = [];
+        mockSegmentationState.analysisMode = 'lineStarts';
         mockSegmentationState.ruleConfigs = [];
         mockAnalyzeCommonLineStarts.mockReturnValue([]);
+        mockAnalyzeRepeatingSequences.mockReturnValue([]);
     });
 
     it('should render panel container with tabs', () => {

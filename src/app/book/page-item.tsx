@@ -3,6 +3,7 @@
 import { withFormattingToolbar } from 'blumbaben';
 import { DyeLight } from 'dyelight';
 import { record } from 'nanolytics';
+import type { FocusEvent } from 'react';
 import React, { useMemo } from 'react';
 import SubmittableInput from '@/components/submittable-input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -102,7 +103,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                     defaultValue={page.text}
                     dir="rtl"
                     key={`${page.id}/${page.lastUpdate}/text`}
-                    onBlur={(e) => {
+                    onBlur={(e: FocusEvent<HTMLTextAreaElement>) => {
                         if (e.target.value !== page.text.toString()) {
                             record('UpdatePageText');
                             updatePages([page.id], { text: e.target.value }, false);
@@ -118,7 +119,7 @@ const PageItem = ({ isSelected, onSelectionChange, page }: PageItemProps) => {
                             dir="rtl"
                             key={`${page.id}/${page.lastUpdate}/footnotes`}
                             {...(footnoteCharacterHighlights && { highlights: footnoteCharacterHighlights })}
-                            onBlur={(e) => {
+                            onBlur={(e: FocusEvent<HTMLTextAreaElement>) => {
                                 if (e.target.value !== page.footnotes?.toString()) {
                                     record('UpdatePageFootnote');
                                     updatePages([page.id], { footnotes: e.target.value }, false);

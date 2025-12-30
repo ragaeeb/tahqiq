@@ -1,16 +1,18 @@
 'use client';
 
-import type { CommonLineStartPattern } from 'flappa-doormal';
+import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
 import { PlusIcon, XIcon } from 'lucide-react';
 import { buildPatternTooltip } from '@/lib/segmentation';
+
+type AnyPattern = CommonLineStartPattern | RepeatingSequencePattern;
 
 export type PatternChipProps = {
     colorScheme: 'blue' | 'red' | 'amber';
     mode?: 'add' | 'remove';
     onAction: () => void;
-    pattern: CommonLineStartPattern;
+    pattern: AnyPattern;
     showCount?: boolean;
-    tooltipBuilder?: (pattern: CommonLineStartPattern) => string;
+    tooltipBuilder?: (pattern: AnyPattern) => string;
 };
 
 /**
@@ -22,7 +24,7 @@ export const PatternChip = ({
     onAction,
     pattern,
     showCount = true,
-    tooltipBuilder = buildPatternTooltip,
+    tooltipBuilder = buildPatternTooltip as (pattern: AnyPattern) => string,
 }: PatternChipProps) => {
     const colors = {
         amber: 'bg-amber-100 text-amber-800 hover:bg-amber-200',

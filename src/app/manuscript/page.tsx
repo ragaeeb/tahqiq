@@ -3,17 +3,17 @@
 import { BoxIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { useCallback, useState } from 'react';
 import RowToolbar from '@/app/manuscript/row-toolbar';
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
+import { useSessionRestore } from '@/components/hooks/use-session-restore';
+import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
+import { STORAGE_KEYS } from '@/lib/constants';
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
 import '@/lib/analytics';
-import { downloadFile } from '@/lib/domUtils';
-import { clearStorage, loadFromOPFS, saveToOPFS } from '@/lib/io';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import '@/stores/dev';
@@ -76,14 +76,18 @@ export default function Manuscript() {
         [setSelectedRows, rows],
     );
 
-    useEffect(() => {
-        loadFromOPFS('juz').then((juz) => {
-            if (juz) {
-                record('RestoreJuzFromSession');
-                initJuz(juz as Juz);
-            }
-        });
-    }, [initJuz]);
+    // Session restore hook
+    useSessionRestore<Juz>(STORAGE_KEYS.juz, initJuz, 'RestoreJuzFromSession');
+
+    // Storage actions hook
+    const getExportData = useCallback(() => mapManuscriptToJuz(useManuscriptStore.getState()), []);
+
+    const { handleSave, handleDownload, handleReset } = useStorageActions({
+        analytics: { download: 'DownloadManuscriptJuz', reset: 'ResetManuscript', save: 'SaveManuscriptJuz' },
+        getExportData,
+        reset,
+        storageKey: STORAGE_KEYS.juz,
+    });
 
     const handleSelectAll = useCallback(
         (selected: boolean) => {
@@ -120,50 +124,13 @@ export default function Manuscript() {
                     <div className="sticky top-0 z-20 flex items-center justify-between border-gray-200 border-b bg-white px-4 py-2 shadow-sm">
                         <ManuscriptToolbar selection={selection} />
                         <div className="space-x-2">
-                            <Button
-                                className="bg-emerald-500"
-                                onClick={() => {
-                                    record('SaveManuscriptJuz');
-
-                                    const juz = mapManuscriptToJuz(useManuscriptStore.getState());
-
-                                    try {
-                                        saveToOPFS('juz', juz);
-                                        toast.success('Saved state');
-                                    } catch (err) {
-                                        console.error('Could not save juz', err);
-                                        downloadFile(`${Date.now()}.json`, JSON.stringify(juz));
-                                    }
-                                }}
-                            >
+                            <Button className="bg-emerald-500" onClick={handleSave}>
                                 <SaveIcon />
                             </Button>
-                            <Button
-                                onClick={() => {
-                                    const name = prompt('Enter output file name');
-
-                                    if (name) {
-                                        record('DownloadManuscriptJuz', name);
-
-                                        const juz = JSON.stringify(
-                                            mapManuscriptToJuz(useManuscriptStore.getState()),
-                                            null,
-                                            2,
-                                        );
-
-                                        downloadFile(name.endsWith('.json') ? name : `${name}.json`, juz);
-                                    }
-                                }}
-                            >
+                            <Button onClick={handleDownload}>
                                 <DownloadIcon />
                             </Button>
-                            <ConfirmButton
-                                onClick={() => {
-                                    record('ResetManuscript');
-                                    reset();
-                                    clearStorage('juz');
-                                }}
-                            >
+                            <ConfirmButton onClick={handleReset}>
                                 <RefreshCwIcon />
                             </ConfirmButton>
                             <Link href="/book">

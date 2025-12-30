@@ -8,12 +8,16 @@ import {
     type SegmentationOptions,
 } from 'flappa-doormal';
 
+import { htmlToMarkdown } from 'ketab-online-sdk';
 import { Loader2, PlusIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { convertContentToMarkdown } from 'shamela';
 import { toast } from 'sonner';
+import { buildGeneratedOptions, JsonTab } from '@/app/shamela/segmentation/JsonTab';
+import { PatternsTab } from '@/app/shamela/segmentation/PatternsTab';
+import { ReplacementsTab } from '@/app/shamela/segmentation/ReplacementsTab';
+import { RulesTab } from '@/app/shamela/segmentation/RulesTab';
 import { PanelContainer } from '@/components/PanelContainer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,15 +26,11 @@ import {
     SEGMENTATION_DEFAULT_PREFIX_CHARS,
     SEGMENTATION_FETCH_ALL_TOP_K,
 } from '@/lib/constants';
-import { segmentShamelaPagesToExcerpts } from '@/lib/transform/excerpts';
+import { segmentKetabPagesToExcerpts } from '@/lib/transform/ketab-excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
+import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
-import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-import { JsonTab, useJsonTextareaValue } from './JsonTab';
-import { PatternsTab } from './PatternsTab';
-import { PreviewTab } from './PreviewTab';
-import { ReplacementsTab } from './ReplacementsTab';
-import { RulesTab } from './RulesTab';
+import { KetabPreviewTab } from './KetabPreviewTab';
 
 type SegmentationPanelProps = { onClose: () => void };
 
@@ -38,6 +38,7 @@ type AnalyzedRule = { template: string; patternType: string; fuzzy: boolean; met
 
 /**
  * Left-side slide-in panel for page segmentation with pattern analysis and JSON configuration
+ * This is the Ketab-specific version that uses ketabStore
  */
 export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const router = useRouter();
@@ -51,16 +52,17 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         analysisMode,
         replacements,
         ruleConfigs,
+        sliceAtPunctuation,
+        tokenMappings,
         setAllLineStarts,
         setAllRepeatingSequences,
     } = useSegmentationStore();
-    const getJsonTextareaValue = useJsonTextareaValue();
 
     // Add rule from selected text
     const handleAddFromSelection = useCallback(() => {
         const selectedText = window.getSelection()?.toString().trim();
         if (!selectedText) {
-            toast.error('Please select text from the Shamela page first');
+            toast.error('Please select text from the Ketab page first');
             return;
         }
 
@@ -96,22 +98,23 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
         }
     }, [detectedRules]);
 
-    // Parse and get options from JSON textarea
+    // Get options from store state (not from DOM)
     const getOptions = useCallback((): SegmentationOptions | null => {
         try {
-            const jsonValue = getJsonTextareaValue();
+            // Build JSON from store state, so it works even if JSON tab hasn't been visited
+            const jsonValue = buildGeneratedOptions(ruleConfigs, sliceAtPunctuation, tokenMappings, replacements);
             return JSON.parse(jsonValue) as SegmentationOptions;
         } catch {
             toast.error('Invalid JSON in options');
             return null;
         }
-    }, [getJsonTextareaValue]);
+    }, [ruleConfigs, sliceAtPunctuation, tokenMappings, replacements]);
 
     // Analyze pages for repeating sequences (continuous text)
     const handleAnalyzeRepeatingSequences = useCallback(() => {
         try {
-            const shamelaPages = useShamelaStore.getState().pages;
-            const pages = shamelaPages.map((p) => ({ content: convertContentToMarkdown(p.body), id: p.id }));
+            const ketabPages = useKetabStore.getState().pages;
+            const pages = ketabPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id }));
 
             const results = analyzeRepeatingSequences(pages, {
                 maxExamples: 100,
@@ -131,7 +134,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
     const handleAnalyze = useCallback(() => {
         setIsAnalyzing(true);
         const mode = useSegmentationStore.getState().analysisMode;
-        record(mode === 'lineStarts' ? 'AnalyzeLineStarts' : 'AnalyzeRepeatingSequences');
+        record(mode === 'lineStarts' ? 'AnalyzeKetabLineStarts' : 'AnalyzeKetabRepeatingSequences');
 
         try {
             if (mode === 'repeatingSequences') {
@@ -139,8 +142,9 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
                 return;
             }
 
-            const shamelaPages = useShamelaStore.getState().pages;
-            const pages = shamelaPages.map((p) => ({ content: convertContentToMarkdown(p.body), id: p.id }));
+            const ketabPages = useKetabStore.getState().pages;
+            // Convert HTML to markdown for analysis
+            const pages = ketabPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id }));
 
             const results = analyzeCommonLineStarts(pages, {
                 maxExamples: 100,
@@ -180,14 +184,14 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
             return;
         }
 
-        record('FinalizeJsonSegmentation');
+        record('FinalizeKetabJsonSegmentation');
 
         try {
             toast.info('Segmenting pages...');
 
-            const excerpts = segmentShamelaPagesToExcerpts(
-                useShamelaStore.getState().pages,
-                useShamelaStore.getState().titles,
+            const excerpts = segmentKetabPagesToExcerpts(
+                useKetabStore.getState().pages,
+                useKetabStore.getState().titles,
                 options,
             );
 
@@ -243,7 +247,7 @@ export function SegmentationPanel({ onClose }: SegmentationPanelProps) {
 
                 {/* Preview Tab */}
                 <TabsContent className="flex flex-1 flex-col overflow-hidden" value="preview">
-                    <PreviewTab />
+                    <KetabPreviewTab />
                 </TabsContent>
 
                 {/* Footer */}
