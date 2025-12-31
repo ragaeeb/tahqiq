@@ -1,13 +1,7 @@
 import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import {
-    DEFAULT_TOKEN_MAPPINGS,
-    type Replacement,
-    type RuleConfig,
-    type SegmentationState,
-    type TokenMapping,
-} from './types';
+import { DEFAULT_TOKEN_MAPPINGS, type RuleConfig, type SegmentationState } from './types';
 
 // Enable Immer's MapSet plugin for Set/Map support
 enableMapSet();
@@ -16,11 +10,12 @@ const INITIAL_STATE = {
     allLineStarts: [],
     allRepeatingSequences: [],
     analysisMode: 'lineStarts' as const,
-    replacements: [] as Replacement[],
+    options: { breakpoints: [{ pattern: '{{tarqim}}\\s*' }, ''], maxPages: 1, replace: [], rules: [] },
+    replacements: [],
     ruleConfigs: [],
     selectedPatterns: new Set<string>(),
     sliceAtPunctuation: true,
-    tokenMappings: DEFAULT_TOKEN_MAPPINGS as TokenMapping[],
+    tokenMappings: DEFAULT_TOKEN_MAPPINGS,
 };
 
 /**
@@ -172,6 +167,11 @@ export const useSegmentationStore = create<SegmentationState>()(
                 state.analysisMode = mode;
             }),
 
+        setOptions: (options) =>
+            set((state) => {
+                state.options = { ...options, replace: options.replace ?? [], rules: options.rules ?? [] };
+            }),
+
         setReplacements: (replacements) =>
             set((state) => {
                 state.replacements = replacements;
@@ -218,6 +218,13 @@ export const useSegmentationStore = create<SegmentationState>()(
                     state.ruleConfigs.push(createRuleConfigDefaults(pattern, state.analysisMode));
                 }
                 state.selectedPatterns = newSet;
+            }),
+
+        updateOptions: (patch) =>
+            set((state) => {
+                state.options = { ...state.options, ...patch };
+                state.options.replace ??= [];
+                state.options.rules ??= [];
             }),
 
         updateRuleConfig: (index, updates) =>

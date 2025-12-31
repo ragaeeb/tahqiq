@@ -116,9 +116,19 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Prevent Radix Select scroll-lock from removing the scrollbar while the Segmentation side-panel is open. */
+body[data-segpanel-open][data-scroll-locked] {
+  overflow-y: scroll !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
 }
 
 @layer utilities {

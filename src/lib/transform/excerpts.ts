@@ -99,6 +99,52 @@ export const segmentShamelaPagesToExcerpts = (
     };
 };
 
+/**
+ * Generic segmentation to Excerpts payload from already-prepared flappa `Page[]`.
+ * Used by the shared segmentation panel (Ketab/Shamela/etc.) when we only have `{id, content}` pages.
+ */
+export const segmentFlappaPagesToExcerpts = (pages: Page[], options: SegmentationOptions): Excerpts => {
+    const segments = segmentPages(pages, options);
+    let texts = segments.map((s) => s.content);
+    texts = preformatArabicText(texts);
+    const sanitized = sanitizeArabic(texts, 'aggressive');
+
+    const excerpts: IndexedExcerpt[] = [];
+    const idToPageCount = new Map<string, number>();
+
+    for (let i = 0; i < sanitized.length; i++) {
+        if (sanitized[i].length <= 2) {
+            continue;
+        }
+        const s = segments[i];
+        const segmentKey = `${s.from}${s.meta?.type || ''}`;
+        const totalExcerptsInPage = idToPageCount.get(segmentKey) || 0;
+
+        excerpts.push({
+            from: s.from,
+            id: getSegmentId(s, totalExcerptsInPage),
+            ...(s.meta && { meta: s.meta }),
+            nass: texts[i],
+            ...(s.to && { to: s.to }),
+            vol: 0,
+            vp: 0,
+        });
+
+        idToPageCount.set(segmentKey, totalExcerptsInPage + 1);
+    }
+
+    return {
+        contractVersion: LatestContractVersion.Excerpts,
+        createdAt: Date.now() / 1000,
+        excerpts: excerpts as Excerpt[],
+        footnotes: [],
+        headings: [] as Heading[],
+        lastUpdatedAt: Date.now() / 1000,
+        options,
+        promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
+    };
+};
+
 // ============================================================================
 // Translation Parsing Utilities
 // ============================================================================

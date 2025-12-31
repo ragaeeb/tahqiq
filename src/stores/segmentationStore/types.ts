@@ -1,11 +1,23 @@
-import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
+import type {
+    CommonLineStartPattern,
+    PatternTypeKey,
+    RepeatingSequencePattern,
+    ReplaceRule,
+    SegmentationOptions,
+    TokenMapping,
+} from 'flappa-doormal';
 
 export type AnalysisMode = 'lineStarts' | 'repeatingSequences';
+
+export type SegmentationOptionsState = Omit<SegmentationOptions, 'replace' | 'rules'> & {
+    replace: NonNullable<SegmentationOptions['replace']>;
+    rules: NonNullable<SegmentationOptions['rules']>;
+};
 
 export type RuleConfig = {
     pattern: string; // Original from selection (immutable, used for sync)
     template: string | string[]; // Editable, can be array for merged rules
-    patternType: 'lineStartsWith' | 'lineStartsAfter' | 'template';
+    patternType: Extract<PatternTypeKey, 'lineStartsWith' | 'lineStartsAfter' | 'template'>;
     fuzzy: boolean;
     pageStartGuard: boolean;
     metaType: 'none' | 'book' | 'chapter';
@@ -33,27 +45,10 @@ export const COMMON_PATTERNS: CommonPattern[] = [
     { fuzzy: false, label: 'Heading (##)', metaType: 'chapter', pattern: '## ', patternType: 'lineStartsAfter' },
 ];
 
-/**
- * Token mapping for auto-applying named groups to templates
- */
-export type TokenMapping = {
-    token: string; // e.g., "raqms"
-    name: string; // e.g., "num" -> transforms {{raqms}} to {{raqms:num}}
-};
-
 export const DEFAULT_TOKEN_MAPPINGS: TokenMapping[] = [
     { name: 'num', token: 'raqms' },
     { name: 'rumuz', token: 'rumuz' },
 ];
-
-/**
- * Replacement pair for pre-processing page content before segmentation.
- * Matches the flappa-doormal Replacement type (without optional fields).
- */
-export type Replacement = {
-    regex: string; // Raw regex source string
-    replacement: string; // Replacement string
-};
 
 export type SegmentationState = {
     // Pattern analysis
@@ -70,7 +65,9 @@ export type SegmentationState = {
     tokenMappings: TokenMapping[];
 
     // Pre-processing replacements
-    replacements: Replacement[];
+    replacements: ReplaceRule[];
+
+    options: SegmentationOptionsState;
 
     // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
@@ -85,6 +82,8 @@ export type SegmentationState = {
     mergeSelectedRules: (selectedPatterns: string[]) => void;
     setSliceAtPunctuation: (value: boolean) => void;
     setTokenMappings: (mappings: TokenMapping[]) => void;
-    setReplacements: (replacements: Replacement[]) => void;
+    setReplacements: (replacements: ReplaceRule[]) => void;
+    setOptions: (options: SegmentationOptions) => void;
+    updateOptions: (patch: Partial<SegmentationOptions>) => void;
     reset: () => void;
 };

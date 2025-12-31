@@ -32,8 +32,6 @@ export type RuleFormState = {
     min?: number;
     /** Maximum page ID for this rule to apply */
     max?: number;
-    /** Maximum page ID difference for sliding window algorithm */
-    maxSpan?: number;
     /** Segment type metadata */
     metaType?: MetaType;
 };
@@ -120,10 +118,8 @@ export const PRESETS: SegmentationPreset[] = [
                 {
                     fuzzy: false,
                     id: 'r0',
-                    maxSpan: 1,
                     occurrence: 'last',
                     // Template pattern for splitting at tarqim (punctuation)
-                    // maxSpan: 1 means look only 1 page ahead
                     // occurrence: 'last' means prefer longer segments
                     patterns: ['{{tarqim}}\\s*'],
                     patternType: 'template',
