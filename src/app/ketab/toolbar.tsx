@@ -1,3 +1,4 @@
+import type { Page } from 'flappa-doormal';
 import { DownloadIcon, FileTextIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useState } from 'react';
@@ -8,12 +9,13 @@ import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
+import { ketabSegmentsToExcerpts } from '@/lib/transform/ketab-excerpts';
 import type { KetabBook } from '@/stores/ketabStore/types';
 import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { usePatchStore } from '@/stores/patchStore';
 import { PatchesDialogContent } from './patches-dialog';
 
-export const Toolbar = () => {
+export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) => {
     const patchCount = usePatchStore((state) => state.patches.length);
     const removeFootnoteReferences = useKetabStore((state) => state.removeFootnoteReferences);
     const reset = useKetabStore((state) => state.reset);
@@ -70,7 +72,16 @@ export const Toolbar = () => {
             >
                 <SplitIcon />
             </Button>
-            {isSegmentationPanelOpen && <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} />}
+            {isSegmentationPanelOpen && (
+                <SegmentationPanel
+                    onClose={() => setIsSegmentationPanelOpen(false)}
+                    onCreateExcerpts={(segments, options) => {
+                        const state = useKetabStore.getState();
+                        return ketabSegmentsToExcerpts(state.pages, state.titles, segments, options);
+                    }}
+                    pages={segmentationPages}
+                />
+            )}
             {patchCount > 0 && (
                 <DialogTriggerButton
                     onClick={() => record('OpenKetabPatchesDialog')}

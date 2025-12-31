@@ -51,17 +51,17 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 #### Segmentation Dialog
 Powerful pattern-based page segmentation powered by [flappa-doormal](https://github.com/ragaeeb/flappa-doormal):
 
-- **Patterns Tab**: Auto-analyze pages to detect common line start patterns with occurrence counts
+- **Analysis Tab**: Auto-analyze pages to detect common line start patterns with occurrence counts
   - Sort patterns by count or length
   - Common presets: Fasl, Basmalah, Naql, Kitab, Bab, Markdown headings
   - Add patterns from text selection
 - **Rules Tab**: Configure segmentation rules with fine-grained control
-  - Pattern types: `lineStartsWith` or `lineStartsAfter`
+  - Pattern types: `lineStartsWith`, `lineStartsAfter`, or `template`
   - Fuzzy matching for diacritic-insensitive matching
   - Page start guard to avoid false positives at page boundaries
   - Meta types: `book`, `chapter`, or `none` for segment classification
   - Merge multiple patterns into a single rule
-  - Drag & drop reordering and sort by template length
+  - Drag & drop reordering and sort by specificity
   - Live example preview showing rule matches
 - **Replacements Tab**: Pre-processing regex replacements before segmentation
   - Define regex patterns and replacement strings
@@ -69,7 +69,7 @@ Powerful pattern-based page segmentation powered by [flappa-doormal](https://git
   - Invalid regex detection with error highlighting
 - **Token Mappings**: Auto-apply named capture groups (e.g., `{{raqms}}` → `{{raqms:num}}`)
 - **Preview Tab**: Live virtualized preview of segmentation results
-- **JSON Tab**: View and edit raw segmentation options JSON
+- **Json Tab**: View and edit raw segmentation options JSON with validation reporting
 
 ### Settings (`/settings`)
 - **Gemini API Keys**: Configure multiple API keys for AI translation
@@ -195,9 +195,9 @@ RULES_ENDPOINT=your_rules_endpoint_url
 
 1. **Open Segmentation Dialog**: Click the segmentation button in the toolbar
 2. **Analyze Patterns**: Auto-detection runs on first open; click "Analyze Pages" to refresh
-3. **Select Patterns**: Click patterns in the Patterns tab to add them as rules
+3. **Select Patterns**: Click patterns in the Analysis tab to add them as rules
 4. **Configure Rules**: In the Rules tab, adjust:
-   - Pattern type (`lineStartsWith` / `lineStartsAfter`)
+   - Pattern type (`lineStartsWith` / `lineStartsAfter` / `template`)
    - Enable fuzzy matching for diacritic tolerance
    - Enable page start guard to skip page-boundary matches
    - Set meta type for segment classification
@@ -285,11 +285,13 @@ tahqiq/
 │   │   ├── book/           # Book viewing and translation
 │   │   ├── browse/         # Static browsable content
 │   │   ├── excerpts/       # Excerpts management with virtualized lists
+│   │   ├── ketab/          # Ketab-online book editor
 │   │   ├── manuscript/     # Manuscript editing
 │   │   ├── settings/       # Configuration UI
-│   │   ├── shamela/        # Shamela book editor with segmentation
+│   │   ├── shamela/        # Shamela book editor
 │   │   └── transcript/     # Audio transcript editing
 │   ├── components/         # Shared React components
+│   │   ├── segmentation/   # Shared segmentation panel components
 │   │   ├── hooks/          # Custom React hooks
 │   │   └── ui/             # UI primitives (shadcn/ui style)
 │   ├── lib/                # Utility functions

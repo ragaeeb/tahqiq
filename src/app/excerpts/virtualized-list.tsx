@@ -15,6 +15,8 @@ type VirtualizedListProps<T> = {
     scrollToId?: string | number | null;
     /** Callback when scroll-to is complete */
     onScrollToComplete?: () => void;
+    /** Optional override for the scroll container height (defaults to full-page layout). */
+    height?: string;
 };
 
 // Height of the sticky table header in pixels
@@ -43,23 +45,49 @@ function VirtualizerContent<T>({
 }: VirtualizerContentProps<T>) {
     const [headerHeight, setHeaderHeight] = useState(HEADER_HEIGHT);
     const hasScrolledToIdRef = useRef<string | number | null>(null);
+    const dataRef = useRef(data);
+    const estimateSizeRef = useRef(estimateSize);
+    const findScrollIndexRef = useRef(findScrollIndex);
+    const getKeyRef = useRef(getKey);
+
+    useEffect(() => {
+        dataRef.current = data;
+        estimateSizeRef.current = estimateSize;
+        findScrollIndexRef.current = findScrollIndex;
+        getKeyRef.current = getKey;
+    }, [data, estimateSize, findScrollIndex, getKey]);
 
     // Increased default estimate to accommodate larger content
     const defaultEstimateSize = useCallback(() => 150, []);
 
-    const virtualizer = useVirtualizer({
-        count: data.length,
-        estimateSize: estimateSize ?? defaultEstimateSize,
-        getItemKey: (index) => getKey(data[index], index),
-        getScrollElement: () => parentRef.current,
-        // Initialize with the saved scroll offset to prevent flash
-        initialOffset: initialScrollTop,
-        measureElement:
-            typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-                ? (element) => element.getBoundingClientRect().height
-                : undefined,
-        overscan: 5,
-    });
+    const estimateSizeFn = useCallback(
+        (index: number) => estimateSizeRef.current?.(index) ?? defaultEstimateSize(),
+        [defaultEstimateSize],
+    );
+    const getItemKey = useCallback((index: number) => getKeyRef.current(dataRef.current[index], index), []);
+    const getScrollElement = useCallback(() => parentRef.current, [parentRef]);
+    const measureElement = useMemo(() => {
+        if (typeof window === 'undefined' || navigator.userAgent.indexOf('Firefox') !== -1) {
+            return undefined;
+        }
+        return (element: Element) => element.getBoundingClientRect().height;
+    }, []);
+
+    const virtualizer = useVirtualizer(
+        useMemo(
+            () => ({
+                count: data.length,
+                estimateSize: estimateSizeFn,
+                getItemKey,
+                getScrollElement,
+                // Initialize with the saved scroll offset to prevent flash
+                initialOffset: initialScrollTop,
+                measureElement,
+                overscan: 5,
+            }),
+            [data.length, estimateSizeFn, getItemKey, getScrollElement, initialScrollTop, measureElement],
+        ),
+    );
 
     // Restore scroll position synchronously before paint
     useLayoutEffect(() => {
@@ -72,9 +100,9 @@ function VirtualizerContent<T>({
     useEffect(() => {
         if (scrollToId != null && scrollToId !== hasScrolledToIdRef.current) {
             // Find the index - use custom finder if provided, otherwise match by key
-            const index = findScrollIndex
-                ? findScrollIndex(data, scrollToId)
-                : data.findIndex((item, i) => getKey(item, i) === scrollToId);
+            const index = findScrollIndexRef.current
+                ? findScrollIndexRef.current(data, scrollToId)
+                : data.findIndex((item, i) => getKeyRef.current(item, i) === scrollToId);
             if (index !== -1) {
                 hasScrolledToIdRef.current = scrollToId;
 
@@ -82,7 +110,7 @@ function VirtualizerContent<T>({
                 setTimeout(() => {
                     // For dynamic sizes, use 'auto' behavior as 'smooth' doesn't work reliably
                     // Also calculate the estimated offset as a fallback
-                    const estimatedOffset = index * (estimateSize?.(index) ?? 150);
+                    const estimatedOffset = index * (estimateSizeRef.current?.(index) ?? 150);
 
                     // Try scrollToIndex first with 'auto' behavior
                     virtualizer.scrollToIndex(index, { align: 'start', behavior: 'auto' });
@@ -104,11 +132,12 @@ function VirtualizerContent<T>({
                 }, 100);
             }
         }
-    }, [scrollToId, data, getKey, findScrollIndex, virtualizer, onScrollToComplete, estimateSize, parentRef]);
+    }, [scrollToId, data, virtualizer, onScrollToComplete, parentRef]);
 
     const headerRef = useCallback((node: HTMLDivElement | null) => {
         if (node) {
-            setHeaderHeight(node.getBoundingClientRect().height);
+            const nextHeight = node.getBoundingClientRect().height;
+            setHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
         }
     }, []);
 
@@ -160,18 +189,26 @@ function VirtualizedList<T>({
     onScrollToComplete,
     renderRow,
     scrollToId,
+    height,
 }: VirtualizedListProps<T>) {
     const parentRef = useRef<HTMLDivElement>(null);
     const scrollTopRef = useRef(0);
     const prevDataVersionRef = useRef<string>('');
+    const getKeyRef = useRef(getKey);
+
+    useEffect(() => {
+        getKeyRef.current = getKey;
+    }, [getKey]);
+
+    const getKeyStable = useCallback((item: T, index: number) => getKeyRef.current(item, index), []);
 
     // Create a stable key based on structural changes (add/remove) - not all keys
     // This avoids unnecessary remounts for content-only updates
     const dataVersion = useMemo(() => {
-        const first = data[0] ? getKey(data[0], 0) : '';
-        const last = data.at(-1) ? getKey(data.at(-1)!, data.length - 1) : '';
+        const first = data[0] ? getKeyStable(data[0], 0) : '';
+        const last = data.at(-1) ? getKeyStable(data.at(-1)!, data.length - 1) : '';
         return `${data.length}-${first}-${last}`;
-    }, [data, getKey]);
+    }, [data, getKeyStable]);
 
     // Capture scroll position before component remounts due to data change
     // This runs during render (before commit phase)
@@ -192,14 +229,14 @@ function VirtualizedList<T>({
             className="w-full overflow-auto"
             onScroll={handleScroll}
             ref={parentRef}
-            style={{ height: 'calc(100vh - 105px)' }}
+            style={{ height: height ?? 'calc(100vh - 105px)' }}
         >
             <VirtualizerContent
                 key={dataVersion}
                 data={data}
                 estimateSize={estimateSize}
                 findScrollIndex={findScrollIndex}
-                getKey={getKey}
+                getKey={getKeyStable}
                 header={header}
                 initialScrollTop={scrollTopRef.current}
                 onScrollToComplete={onScrollToComplete}

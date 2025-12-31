@@ -8,25 +8,33 @@ import {
     SplitIcon,
 } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
+import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { usePatchStore } from '@/stores/patchStore';
+import { selectAllPages } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import { PatchesDialogContent } from './patches-dialog';
-import { SegmentationPanel } from './segmentation/SegmentationPanel';
 
 export const Toolbar = () => {
     const patchCount = usePatchStore((state) => state.patches.length);
+    const pages = useShamelaStore(selectAllPages);
     const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
     const removeFootnoteReferences = useShamelaStore((state) => state.removeFootnoteReferences);
     const reset = useShamelaStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
+
+    // Transform shamela pages to flappa-doormal Page format
+    const formattedPages = useMemo(
+        () => pages.map((p) => ({ content: p.footnote ? `${p.body}_________${p.footnote}` : p.body, id: p.id })),
+        [pages],
+    );
 
     /**
      * Creates a ShamelaBook object from the current store state.
@@ -89,7 +97,9 @@ export const Toolbar = () => {
             >
                 <SplitIcon />
             </Button>
-            {isSegmentationPanelOpen && <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} />}
+            {isSegmentationPanelOpen && (
+                <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} pages={formattedPages} />
+            )}
             {patchCount > 0 && (
                 <DialogTriggerButton
                     onClick={() => record('OpenPatchesDialog')}

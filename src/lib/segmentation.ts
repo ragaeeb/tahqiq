@@ -1,6 +1,6 @@
 import { areSimilarAfterNormalization } from 'baburchi';
-import type { CommonLineStartPattern, RepeatingSequencePattern } from 'flappa-doormal';
-import type { Replacement, RuleConfig } from '@/stores/segmentationStore/types';
+import type { CommonLineStartPattern, RepeatingSequencePattern, ReplaceRule } from 'flappa-doormal';
+import type { RuleConfig } from '@/stores/segmentationStore/types';
 
 type AnyPattern = CommonLineStartPattern | RepeatingSequencePattern;
 
@@ -67,7 +67,7 @@ export const buildPatternTooltip = (pattern: AnyPattern): string => {
 /**
  * Result type for parseJsonOptions
  */
-export type ParsedJsonOptions = { ruleConfigs: RuleConfig[]; sliceAtPunctuation: boolean; replacements: Replacement[] };
+export type ParsedJsonOptions = { ruleConfigs: RuleConfig[]; sliceAtPunctuation: boolean; replacements: ReplaceRule[] };
 
 /**
  * Parse a JSON options object back into store state.
@@ -112,7 +112,7 @@ export const parseJsonOptions = (json: string): ParsedJsonOptions | null => {
         const sliceAtPunctuation = Array.isArray(parsed.breakpoints) && parsed.breakpoints.length > 0;
 
         // Parse replacements
-        const replacements: Replacement[] = [];
+        const replacements: ReplaceRule[] = [];
         if (Array.isArray(parsed.replace)) {
             for (const r of parsed.replace) {
                 if (r.regex !== undefined && r.replacement !== undefined) {

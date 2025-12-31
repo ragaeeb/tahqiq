@@ -3,10 +3,11 @@
 import { getBookContents } from 'ketab-online-sdk';
 import { Loader2 } from 'lucide-react';
 import { record } from 'nanolytics';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import '@/lib/analytics';
+import type { Page } from 'flappa-doormal';
+import { htmlToMarkdown } from 'ketab-online-sdk';
 import { toast } from 'sonner';
 import { DataGate } from '@/components/data-gate';
 import JsonDropZone from '@/components/json-drop-zone';
@@ -66,17 +67,17 @@ function KetabPageContent() {
     const updatePage = useKetabStore((state) => state.updatePage);
     const updateTitle = useKetabStore((state) => state.updateTitle);
 
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const pathname = usePathname();
-
-    const hasAutoLoaded = useRef(false);
     const [urlInput, setUrlInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } =
         useKetabFilters();
     const hasData = pagesCount > 0 || titlesCount > 0;
+
+    const segmentationPages = useMemo<Page[]>(
+        () => allPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id })),
+        [allPages],
+    );
 
     useEffect(() => {
         loadFromOPFS('ketab').then((data) => {
@@ -204,7 +205,7 @@ function KetabPageContent() {
                                 {bookId && ` • Book ID: ${bookId}`}
                             </span>
                         </div>
-                        <Toolbar />
+                        <Toolbar segmentationPages={segmentationPages} />
                     </div>
 
                     <div className="w-full">

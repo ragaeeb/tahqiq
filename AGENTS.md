@@ -36,12 +36,13 @@ src/
 │   ├── book/               # Book viewing and translation dialogs
 │   ├── browse/             # Static browsable content pages
 │   ├── excerpts/           # Excerpts, headings, footnotes management
+│   ├── ketab/              # Ketab-online book editor
 │   ├── manuscript/         # Manuscript editing interface
 │   ├── settings/           # API key and configuration management
 │   ├── shamela/            # Shamela book editor
-│   │   └── segmentation/   # Segmentation panel components
 │   └── transcript/         # Audio transcript editing
 ├── components/             # Shared React components
+│   ├── segmentation/       # Shared segmentation panel components
 │   ├── hooks/              # Custom React hooks
 │   └── ui/                 # UI primitives (shadcn/ui style)
 ├── lib/                    # Utility functions and helpers
@@ -98,9 +99,9 @@ export const useMyStore = create<MyState>()(
 
 The settings store (`src/stores/settingsStore/`) manages persisted configuration:
 
-- **Hydration pattern**: Initialize with empty defaults, call `hydrate()` in `useEffect` to avoid SSR mismatch
-- **Encryption**: API keys are base64-encoded before storing in localStorage
-- **Settings**: Gemini API keys, Shamela API key/endpoint, quick substitutions
+-   **Hydration pattern**: Initialize with empty defaults, call `hydrate()` in `useEffect` to avoid SSR mismatch
+-   **Encryption**: API keys are base64-encoded before storing in localStorage
+-   **Settings**: Gemini API keys, Shamela API key/endpoint, quick substitutions
 
 ---
 
@@ -138,10 +139,10 @@ import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 ```
 
 This pattern:
-1. Captures data (like selected text) when dialog opens via `renderContent`
-2. Lazily renders content only when opened
-3. Passes data as props to the content component
-4. Supports `onClose` callback for programmatic closing
+1.  Captures data (like selected text) when dialog opens via `renderContent`
+2.  Lazily renders content only when opened
+3.  Passes data as props to the content component
+4.  Supports `onClose` callback for programmatic closing
 
 **Dialog Sizing:**
 
@@ -191,9 +192,9 @@ For long lists, use `@tanstack/react-virtual`:
 ## Testing
 
 ### Test Framework
-- **Bun test runner** with `happy-dom` environment
-- **@testing-library/react** for component testing
-- Tests live alongside source files: `component.tsx` → `component.test.tsx`
+-   **Bun test runner** with `happy-dom` environment
+-   **@testing-library/react** for component testing
+-   Tests live alongside source files: `component.tsx` → `component.test.tsx`
 
 ### Mocking Patterns
 
@@ -308,18 +309,18 @@ type FilterState = {
 
 ## Accessibility
 
-- Provide meaningful `aria-label` attributes for buttons
-- Use semantic HTML elements
-- Ensure keyboard navigation works
-- Test with screen readers when possible
+-   Provide meaningful `aria-label` attributes for buttons
+-   Use semantic HTML elements
+-   Ensure keyboard navigation works
+-   Test with screen readers when possible
 
 ---
 
 ## Code Style
 
-- **Linting**: Biome (configured in `biome.json`)
-- **Formatting**: Biome with 4-space indentation
-- **Import order**: Sorted automatically
+-   **Linting**: Biome (configured in `biome.json`)
+-   **Formatting**: Biome with 4-space indentation
+-   **Import order**: Sorted automatically
 
 Run checks:
 ```bash
@@ -333,24 +334,24 @@ bun run build                  # TypeScript + production build
 
 ### Adding a New Store Action
 
-1. Add type to `types.ts`
-2. Implement pure function in `actions.ts`
-3. Wire into store in `useXxxStore.ts`
-4. Add tests in `actions.test.ts` and `useXxxStore.test.ts`
+1.  Add type to `types.ts`
+2.  Implement pure function in `actions.ts`
+3.  Wire into store in `useXxxStore.ts`
+4.  Add tests in `actions.test.ts` and `useXxxStore.test.ts`
 
 ### Adding a New Component
 
-1. Create `component-name.tsx` with props interface
-2. Export with `React.memo` if expensive
-3. Add `component-name.test.tsx` with mock setup
-4. Import from parent and wire handlers
+1.  Create `component-name.tsx` with props interface
+2.  Export with `React.memo` if expensive
+3.  Add `component-name.test.tsx` with mock setup
+4.  Import from parent and wire handlers
 
 ### Adding URL-Based State
 
 See `src/app/excerpts/use-excerpt-filters.ts` for pattern:
-- Read from `useSearchParams()`
-- Update with `router.replace()`
-- Apply side effects in `useEffect`
+-   Read from `useSearchParams()`
+-   Update with `router.replace()`
+-   Apply side effects in `useEffect`
 
 ### URL Hash Scrolling Pattern
 
@@ -383,37 +384,34 @@ useEffect(() => {
 
 ### Adding Segmentation Rules
 
-The segmentation panel (`src/app/shamela/segmentation/`) uses [flappa-doormal](https://github.com/ragaeeb/flappa-doormal) for pattern-based page segmentation.
+The segmentation panel (`src/components/segmentation/`) uses [flappa-doormal](https://github.com/ragaeeb/flappa-doormal) for pattern-based page segmentation.
 
 **Store structure** (`src/stores/segmentationStore/types.ts`):
 ```typescript
 type RuleConfig = {
     pattern: string;              // Original pattern (immutable)
     template: string | string[];  // Editable, can be array for merged rules
-    patternType: 'lineStartsWith' | 'lineStartsAfter';
+    patternType: 'lineStartsWith' | 'lineStartsAfter' | 'template';
     fuzzy: boolean;               // Diacritic-insensitive matching
     pageStartGuard: boolean;      // Skip matches at page boundaries
     metaType: 'none' | 'book' | 'chapter';
     min?: number;                 // Minimum page number
 };
 
-type Replacement = {
+// Uses ReplaceRule from flappa-doormal for replacements
+type ReplaceRule = {
     regex: string;       // Raw regex pattern
     replacement: string; // Replacement text
-};
-
-type TokenMapping = {
-    token: string;  // e.g., "raqms"
-    name: string;   // e.g., "num" → transforms {{raqms}} to {{raqms:num}}
+    flags?: string;
 };
 ```
 
 **Panel tabs**:
-- `PatternsTab`: Line-start pattern analysis with auto-detection
-- `RulesTab`: Rule configuration with drag & drop, merge, and examples
+- `AnalysisTab`: Line-start pattern analysis with auto-detection
+- `RulesTab`: Rule configuration with drag & drop, merge, and specificy sorting
 - `ReplacementsTab`: Pre-processing regex replacements with live match counts
 - `PreviewTab`: Live virtualized preview of segmentation results
-- `JsonTab`: Raw JSON options editor
+- `JsonTab`: Raw JSON options editor with validation reporting
 
 **Key patterns**:
 - Uncontrolled inputs with `defaultValue` + `onBlur` to avoid re-renders
