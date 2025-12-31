@@ -27,8 +27,8 @@ export const JsonTab = () => {
 
                     const issues = validateRules(parsed.rules ?? []).filter(Boolean);
                     if (issues.length > 0) {
-                        toast.error('Invalid rules');
-                        toast.error(issues.map((issue) => JSON.stringify(issue)).join('\n'));
+                        toast.error(`Invalid rules:\n${issues.map((issue) => JSON.stringify(issue)).join('\n')}`);
+
                         return;
                     }
 
@@ -57,5 +57,3 @@ export const JsonTab = () => {
         </form>
     );
 };
-
-

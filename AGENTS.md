@@ -408,7 +408,7 @@ type ReplaceRule = {
 
 **Panel tabs**:
 - `AnalysisTab`: Line-start pattern analysis with auto-detection
-- `RulesTab`: Rule configuration with drag & drop, merge, and specificy sorting
+- `RulesTab`: Rule configuration with drag & drop, merge, and specificity sorting
 - `ReplacementsTab`: Pre-processing regex replacements with live match counts
 - `PreviewTab`: Live virtualized preview of segmentation results
 - `JsonTab`: Raw JSON options editor with validation reporting

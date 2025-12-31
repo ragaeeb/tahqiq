@@ -45,10 +45,10 @@ export const COMMON_PATTERNS: CommonPattern[] = [
     { fuzzy: false, label: 'Heading (##)', metaType: 'chapter', pattern: '## ', patternType: 'lineStartsAfter' },
 ];
 
-export const DEFAULT_TOKEN_MAPPINGS: TokenMapping[] = [
+export const DEFAULT_TOKEN_MAPPINGS = [
     { name: 'num', token: 'raqms' },
     { name: 'rumuz', token: 'rumuz' },
-] as const;
+] as const satisfies readonly TokenMapping[];
 
 export type SegmentationState = {
     // Pattern analysis
