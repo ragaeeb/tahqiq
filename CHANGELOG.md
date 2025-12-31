@@ -1,3 +1,10 @@
+## [1.39.1](https://github.com/ragaeeb/tahqiq/compare/v1.39.0...v1.39.1) (2025-12-31)
+
+
+### Bug Fixes
+
+* **ketab:** Enhance segmentation panel and fix bugs ([#106](https://github.com/ragaeeb/tahqiq/issues/106)) ([823ec07](https://github.com/ragaeeb/tahqiq/commit/823ec07956a61c075896b5a2f1548f43e6605189))
+
 # [1.39.0](https://github.com/ragaeeb/tahqiq/compare/v1.38.3...v1.39.0) (2025-12-30)
 
 
