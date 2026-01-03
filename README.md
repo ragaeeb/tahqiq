@@ -48,6 +48,16 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Patches System**: Track and export page edits as diffs for version control
 - **Export**: Download edited books as JSON
 
+### Web Editor (`/web`)
+- **JSON Import**: Drag and drop scraped web content JSON files
+- **External Links**: Click page IDs to open original source URLs (via `urlPattern` substitution)
+- **Page Editing**: Edit page body content with line break preservation
+- **Title Management**: View and edit titles derived from page data
+- **Footnote Support**: Edit and remove footnotes
+- **Segmentation**: Segment pages into excerpts for the Excerpts editor
+- **Session Persistence**: Auto-save/restore from OPFS
+- **Export**: Download edited content as JSON
+
 #### Segmentation Dialog
 Powerful pattern-based page segmentation powered by [flappa-doormal](https://github.com/ragaeeb/flappa-doormal):
 
@@ -207,6 +217,17 @@ RULES_ENDPOINT=your_rules_endpoint_url
 8. **Review JSON**: Check the JSON tab for the final options object
 9. **Finalize**: Click "Segment Pages" to generate excerpts and navigate to the Excerpts editor
 
+### Web Editor (`/web`)
+
+1. **Import Content**: Drag and drop a scraped web content JSON file
+2. **Navigate Tabs**: Switch between Pages and Titles tabs
+3. **View External Source**: Click page IDs to open the original URL (uses `urlPattern` substitution)
+4. **Edit Content**: Click on body text to edit (line breaks are preserved)
+5. **Edit Titles**: Switch to Titles tab to edit title content
+6. **Remove Footnotes**: Click the footprints button to remove all footnotes
+7. **Segment Pages**: Open segmentation panel to create excerpts
+8. **Save/Download**: Save to session storage or download as JSON
+
 ### Settings (`/settings`)
 
 1. **Gemini API Keys**: Click to reveal and edit API keys (one per line)
@@ -214,6 +235,25 @@ RULES_ENDPOINT=your_rules_endpoint_url
 3. **Quick Subs**: Add common text substitutions for the manuscript editor
 
 ## JSON Formats
+
+### Web Content Format
+
+```json
+{
+    "pages": [
+        {
+            "page": 1,
+            "body": "السؤال: ...\nالإجابة: ...",
+            "title": "Optional page title",
+            "footnote": "Optional footnote",
+            "url": "https://example.com/page/1"
+        }
+    ],
+    "urlPattern": "https://example.com/page/{{page}}",
+    "timestamp": "2025-02-25T03:48:03.030Z",
+    "scrapingEngine": { "name": "jami-scrapi", "version": "2.1.0" }
+}
+```
 
 ### Transcript Format
 
@@ -289,22 +329,25 @@ tahqiq/
 │   │   ├── manuscript/     # Manuscript editing
 │   │   ├── settings/       # Configuration UI
 │   │   ├── shamela/        # Shamela book editor
-│   │   └── transcript/     # Audio transcript editing
+│   │   ├── transcript/     # Audio transcript editing
+│   │   └── web/            # Web content editor (scraped scholar content)
 │   ├── components/         # Shared React components
 │   │   ├── segmentation/   # Shared segmentation panel components
 │   │   ├── hooks/          # Custom React hooks
 │   │   └── ui/             # UI primitives (shadcn/ui style)
 │   ├── lib/                # Utility functions
-│   │   └── transform/      # Data transformation utils (excerpts, translations)
+│   │   └── transform/      # Data transformation utils (excerpts, ketab, web)
 │   ├── stores/             # Zustand state management
 │   │   ├── bookStore/      # Book compilation state
 │   │   ├── excerptsStore/  # Excerpts state
+│   │   ├── ketabStore/     # Ketab Online book state
 │   │   ├── manuscriptStore/# Manuscript state
 │   │   ├── patchStore/     # Page edit patches state
 │   │   ├── segmentationStore/ # Segmentation panel state
 │   │   ├── settingsStore/  # Settings and API keys
 │   │   ├── shamelaStore/   # Shamela book state
-│   │   └── transcriptStore/# Transcript state
+│   │   ├── transcriptStore/# Transcript state
+│   │   └── webStore/       # Web content state
 │   └── test-utils/         # Testing utilities
 ├── AGENTS.md               # AI agent contribution guidelines
 └── ...

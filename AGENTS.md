@@ -40,21 +40,25 @@ src/
 │   ├── manuscript/         # Manuscript editing interface
 │   ├── settings/           # API key and configuration management
 │   ├── shamela/            # Shamela book editor
-│   └── transcript/         # Audio transcript editing
+│   ├── transcript/         # Audio transcript editing
+│   └── web/                # Web content editor (scraped scholar content)
 ├── components/             # Shared React components
 │   ├── segmentation/       # Shared segmentation panel components
 │   ├── hooks/              # Custom React hooks
 │   └── ui/                 # UI primitives (shadcn/ui style)
 ├── lib/                    # Utility functions and helpers
+│   └── transform/          # Data transformations (excerpts, ketab, web)
 ├── stores/                 # Zustand state management stores
 │   ├── bookStore/          # Book compilation state (Kitab format)
 │   ├── excerptsStore/      # Excerpts, headings, footnotes state
+│   ├── ketabStore/         # Ketab Online book state
 │   ├── manuscriptStore/    # Manuscript editing state
 │   ├── patchStore/         # Page edit diffs for version control
 │   ├── segmentationStore/  # Segmentation panel state (rules, patterns, replacements)
 │   ├── settingsStore/      # App settings and API keys
 │   ├── shamelaStore/       # Shamela book editing state
-│   └── transcriptStore/    # Transcript editing state
+│   ├── transcriptStore/    # Transcript editing state
+│   └── webStore/           # Web content editing state
 ├── test-utils/             # Testing utilities and helpers
 └── types/                  # TypeScript type definitions
 ```
@@ -552,3 +556,75 @@ Tables are domain-specific and NOT abstracted into a shared component (intention
 ## Important
 
 - NEVER run "bun dev" and launch the app yourself in the browser. Always prompt the user to do it for testing.
+- NEVER use "npm" as a package manager, always use "bun".
+- Unit-tests should always use the `it('should...'` convention.
+- Respond in a concise manner, do not respond with more information than necessary unless asked.
+
+---
+
+## Creating a New Route (like /web)
+
+When creating a new route similar to existing ones (shamela, ketab, web), follow this pattern:
+
+### 1. Store Layer (TDD)
+
+Create in `src/stores/newStore/`:
+
+```text
+├── types.ts           # State and action types
+├── actions.ts         # Pure action functions
+├── actions.test.ts    # TDD tests (write first!)
+├── selectors.ts       # Memoized selectors
+└── useNewStore.ts     # Zustand store with Immer
+```
+
+**Key patterns:**
+- Map input JSON fields to internal types (e.g., `page` → `id`, `body` → `content`)
+- Use optional chaining for optional fields: `...(p.title && { title: p.title })`
+- Add storage key to `STORAGE_KEYS` in `@/lib/constants.ts`
+
+### 2. Transform Layer
+
+Create in `src/lib/transform/`:
+
+```text
+├── new-excerpts.ts      # Convert segments to Excerpts format
+└── new-excerpts.test.ts # Tests with realistic Arabic content
+```
+
+**Note:** The `sanitizeArabic` function filters aggressively - use Arabic text in tests!
+
+### 3. Filter Hook
+
+Create `src/app/new/use-new-filters.ts` following the shamela/ketab pattern:
+- Read filters from `useSearchParams()`
+- Update URL with `router.replace()`
+- Hash-based scroll-to-id
+
+### 4. UI Components
+
+```text
+src/app/new/
+├── page.tsx           # Main page with DataGate, tabs, VirtualizedList
+├── page-row.tsx       # Row component for pages
+├── title-row.tsx      # Row component for titles
+├── table-header.tsx   # Filter inputs
+├── toolbar.tsx        # Action buttons (save, download, reset, segmentation)
+└── use-new-filters.ts # URL-based filtering
+```
+
+### 5. Lessons Learned
+
+| Issue | Solution |
+|-------|----------|
+| Line breaks not showing | Add `whitespace-pre-wrap` class to content containers |
+| EditableHTML not preserving newlines | Use CSS `whitespace-pre-wrap` |
+| Duplicate columns (ID/Page) | Consolidate into single clickable column |
+| Non-Arabic tests failing sanitization | Use realistic Arabic content in tests |
+| `IndexedExcerpt` requires vol/vp | Set `vol: 0, vp: 0` for non-book content |
+
+### 6. Update Documentation
+
+- Add route to landing page in `src/app/page.tsx`
+- Update README.md with feature description
+- Update AGENTS.md with new store/patterns

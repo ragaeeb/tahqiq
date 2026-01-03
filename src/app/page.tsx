@@ -2,6 +2,7 @@ import {
     BookMarkedIcon,
     BookOpenIcon,
     FileTextIcon,
+    GlobeIcon,
     LayoutListIcon,
     LibraryIcon,
     MicIcon,
@@ -37,6 +38,12 @@ const navigationCards: NavigationCard[] = [
         href: '/ketab',
         icon: <BookMarkedIcon className="h-8 w-8" />,
         title: 'Ketab Editor',
+    },
+    {
+        description: 'Manage Islamic content scraped from scholar websites with link generation',
+        href: '/web',
+        icon: <GlobeIcon className="h-8 w-8" />,
+        title: 'Web Editor',
     },
     {
         description: 'Work with audio transcripts and manage segment editing',
