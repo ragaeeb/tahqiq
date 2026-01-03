@@ -1,3 +1,10 @@
+# [1.40.0](https://github.com/ragaeeb/tahqiq/compare/v1.39.1...v1.40.0) (2026-01-03)
+
+
+### Features
+
+* **web:** Add web scraped route and conversion to excerpts ([04b7457](https://github.com/ragaeeb/tahqiq/commit/04b7457ca29dbfdae7ec7404bbc827cd3e959aaa))
+
 ## [1.39.1](https://github.com/ragaeeb/tahqiq/compare/v1.39.0...v1.39.1) (2025-12-31)
 
 
