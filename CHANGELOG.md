@@ -1,3 +1,10 @@
+# [1.41.0](https://github.com/ragaeeb/tahqiq/compare/v1.40.0...v1.41.0) (2026-01-05)
+
+
+### Features
+
+* **merge:** Add support for excerpt merging ([2b27c9b](https://github.com/ragaeeb/tahqiq/commit/2b27c9b28182f25eb64c2b9c91591e7d543d3939))
+
 # [1.40.0](https://github.com/ragaeeb/tahqiq/compare/v1.39.1...v1.40.0) (2026-01-03)
 
 
