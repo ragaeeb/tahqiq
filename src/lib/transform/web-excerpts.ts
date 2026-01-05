@@ -5,20 +5,28 @@ import { LatestContractVersion, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constant
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
 import type { WebPage, WebTitle } from '@/stores/webStore/types';
 
+const MAX_LETTERS = 26;
+
 const getSegmentId = (s: Segment, totalExcerptsInPage: number) => {
     const type = s.meta?.type as ExcerptType;
+    let prefix = totalExcerptsInPage > MAX_LETTERS ? 'N' : 'P';
+
+    if (totalExcerptsInPage > MAX_LETTERS) {
+        totalExcerptsInPage -= MAX_LETTERS;
+    }
+
     const letter = String.fromCharCode(96 + totalExcerptsInPage);
     const id = `${s.from}${totalExcerptsInPage ? letter : ''}`;
 
     if (type === 'book') {
-        return `B${id}`;
+        prefix = 'B';
     }
 
     if (type === 'chapter') {
-        return `C${id}`;
+        prefix = 'C';
     }
 
-    return `P${id}`;
+    return `${prefix}${id}`;
 };
 
 /**

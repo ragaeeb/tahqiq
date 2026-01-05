@@ -1,16 +1,17 @@
 'use client';
 
-import { PlusIcon, ReplaceIcon } from 'lucide-react';
+import { ArrowDownWideNarrowIcon, PlusIcon, ReplaceIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useState } from 'react';
 
 import SubmittableInput from '@/components/submittable-input';
+import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 
 import { AddTranslationDialogContent } from './add-translation-dialog';
 import { SearchReplaceDialogContent } from './search-replace-dialog';
-import type { FilterField } from './use-excerpt-filters';
+import type { FilterField, SortMode } from './use-excerpt-filters';
 
 type ExcerptsTableHeaderProps = {
     activeTab: string;
@@ -21,6 +22,10 @@ type ExcerptsTableHeaderProps = {
     /** Hide the translation column (only for excerpts tab) */
     hideTranslation?: boolean;
     onFilterChange: (field: FilterField, value: string) => void;
+    /** Current sort mode */
+    sortMode?: SortMode;
+    /** Callback to change sort mode */
+    onSortChange?: (mode: SortMode) => void;
 };
 
 /**
@@ -83,7 +88,17 @@ export default function ExcerptsTableHeader({
     headings,
     hideTranslation,
     onFilterChange,
+    onSortChange,
+    sortMode = 'default',
 }: ExcerptsTableHeaderProps) {
+    const handleSortToggle = () => {
+        if (onSortChange) {
+            const newMode = sortMode === 'length' ? 'default' : 'length';
+            record('SortExcerpts', newMode);
+            onSortChange(newMode);
+        }
+    };
+
     if (activeTab === 'excerpts') {
         return (
             <tr>
@@ -100,17 +115,29 @@ export default function ExcerptsTableHeader({
                     />
                 </th>
                 <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm" dir="rtl">
-                    <SubmittableInput
-                        className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-gray-800 text-xl leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
-                        defaultValue={filters.nass}
-                        dir="auto"
-                        name="nass"
-                        onSubmit={(query) => {
-                            record('FilterExcerptsByArabic', query);
-                            onFilterChange('nass', query);
-                        }}
-                        placeholder={`Arabic (${excerpts.length})`}
-                    />
+                    <div className="flex items-center gap-2">
+                        <Button
+                            className={sortMode === 'length' ? 'bg-blue-500' : ''}
+                            onClick={handleSortToggle}
+                            size="sm"
+                            title={sortMode === 'length' ? 'Reset sort order' : 'Sort by length (longest first)'}
+                            variant="ghost"
+                        >
+                            <ArrowDownWideNarrowIcon className="h-4 w-4" />
+                        </Button>
+                        <SubmittableInput
+                            trim={false}
+                            className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-gray-800 text-xl leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                            defaultValue={filters.nass}
+                            dir="auto"
+                            name="nass"
+                            onSubmit={(query) => {
+                                record('FilterExcerptsByArabic', query);
+                                onFilterChange('nass', query);
+                            }}
+                            placeholder={`Arabic (${excerpts.length})`}
+                        />
+                    </div>
                 </th>
                 {!hideTranslation && (
                     <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">

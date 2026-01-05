@@ -100,11 +100,10 @@ export const segmentShamelaPagesToExcerpts = (
 };
 
 /**
- * Generic segmentation to Excerpts payload from already-prepared flappa `Page[]`.
- * Used by the shared segmentation panel (Ketab/Shamela/etc.) when we only have `{id, content}` pages.
+ * Converts pre-segmented data to Excerpts payload.
+ * Used when segments have been post-processed (e.g., merged short segments).
  */
-export const segmentFlappaPagesToExcerpts = (pages: Page[], options: SegmentationOptions): Excerpts => {
-    const segments = segmentPages(pages, options);
+export const segmentsToExcerpts = (segments: Segment[], options: SegmentationOptions): Excerpts => {
     let texts = segments.map((s) => s.content);
     texts = preformatArabicText(texts);
     const sanitized = sanitizeArabic(texts, 'aggressive');
@@ -143,6 +142,15 @@ export const segmentFlappaPagesToExcerpts = (pages: Page[], options: Segmentatio
         options,
         promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
     };
+};
+
+/**
+ * Generic segmentation to Excerpts payload from already-prepared flappa `Page[]`.
+ * Used by the shared segmentation panel (Ketab/Shamela/etc.) when we only have `{id, content}` pages.
+ */
+export const segmentFlappaPagesToExcerpts = (pages: Page[], options: SegmentationOptions): Excerpts => {
+    const segments = segmentPages(pages, options);
+    return segmentsToExcerpts(segments, options);
 };
 
 // ============================================================================

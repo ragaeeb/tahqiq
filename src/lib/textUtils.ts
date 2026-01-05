@@ -38,6 +38,16 @@ export const fixUnbalanced = (text: string) => {
     return result;
 };
 
+/**
+ * Removes Tatweel (kashida) character from Arabic text safely.
+ * Tatweel (U+0640, ـ) is a typographic elongation used in Arabic script.
+ * @param text - Input Arabic text
+ * @returns Text without Tatweel characters
+ */
+export const stripTatweelSafe = (text: string) => {
+    return text.replace(/\u0640/g, '');
+};
+
 const autoCorrectPipeline = [standardizeHijriSymbol, standardizeIntahaSymbol];
 
 const pastePipeline = [

@@ -36,6 +36,7 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Extract to New Excerpt**: Select Arabic text and extract as a new excerpt
 - **Inline Editing**: Edit Arabic (nass) and translation (text) fields directly
 - **Headings ID Column**: Headings tab displays the ID field for easy reference
+- **Short Segment Merging**: Proactively detects and suggests merging adjacent short segments (<30 words) on load
 
 ### Shamela Editor (`/shamela`)
 - **Direct Download**: Download books from shamela.ws by pasting URL
@@ -56,6 +57,7 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Footnote Support**: Edit and remove footnotes
 - **Segmentation**: Segment pages into excerpts for the Excerpts editor
 - **Session Persistence**: Auto-save/restore from OPFS
+- **Text Cleanup**: Batch remove Tatweel (kashida) characters from all page bodies
 - **Export**: Download edited content as JSON
 
 #### Segmentation Dialog
@@ -114,6 +116,9 @@ Powerful pattern-based page segmentation powered by [flappa-doormal](https://git
 - [Google Generative AI](https://ai.google.dev/) for translation capabilities
 - [Shamela](https://www.npmjs.com/package/shamela) for Shamela library integration
 - [Paragrafs](https://www.npmjs.com/package/paragrafs) for transcript segment handling
+- [Baburchi](https://www.npmjs.com/package/baburchi) for Arabic text processing
+- [Bitaboom](https://www.npmjs.com/package/bitaboom) for text cleanup and formatting
+- [Flappa Doormal](https://github.com/ragaeeb/flappa-doormal) for pattern-based segmentation
 - [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) + [happy-dom](https://github.com/capricorn86/happy-dom) for component tests
 
 ## Getting Started

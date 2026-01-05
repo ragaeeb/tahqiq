@@ -9,6 +9,7 @@ import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 export type FilterField = 'nass' | 'text' | 'page';
 export type FilterScope = 'excerpts' | 'headings' | 'footnotes';
+export type SortMode = 'default' | 'length';
 
 type Filters = { nass: string; page: string; text: string };
 
@@ -58,6 +59,7 @@ export function useExcerptFilters() {
 
     // Read current tab and filter values from URL
     const activeTab = (searchParams.get('tab') as FilterScope) || 'excerpts';
+    const sortMode = (searchParams.get('sort') as SortMode) || 'default';
     const filters = useMemo(
         () => ({
             nass: searchParams.get('nass') || '',
@@ -133,6 +135,22 @@ export function useExcerptFilters() {
                 params.set(field, value);
             } else {
                 params.delete(field);
+            }
+
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        },
+        [searchParams, router, pathname],
+    );
+
+    // Update URL with sort mode
+    const setSort = useCallback(
+        (mode: SortMode) => {
+            const params = new URLSearchParams(searchParams.toString());
+
+            if (mode === 'default') {
+                params.delete('sort');
+            } else {
+                params.set('sort', mode);
             }
 
             router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -217,5 +235,5 @@ export function useExcerptFilters() {
         filterFootnotesByIds,
     ]);
 
-    return { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter };
+    return { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode };
 }

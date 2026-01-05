@@ -207,3 +207,9 @@ export const SEGMENTATION_DEFAULT_PREFIX_CHARS = 120;
 export const SEGMENTATION_DEFAULT_MIN_COUNT = 2;
 export const SEGMENTATION_SIMILARITY_THRESHOLD = 0.7;
 export const SEGMENTATION_FETCH_ALL_TOP_K = 10000;
+
+/**
+ * Minimum word count threshold for detecting short segments that can be merged.
+ * Segments with fewer words than this are candidates for merging with adjacent segments.
+ */
+export const SHORT_SEGMENT_WORD_THRESHOLD = 30;

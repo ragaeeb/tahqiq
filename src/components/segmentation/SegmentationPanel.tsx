@@ -14,7 +14,7 @@ import { ReplacementsTab } from '@/components/segmentation/ReplacementsTab';
 import { RulesTab } from '@/components/segmentation/RulesTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { segmentFlappaPagesToExcerpts } from '@/lib/transform/excerpts';
+import { segmentsToExcerpts } from '@/lib/transform/excerpts';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
@@ -64,34 +64,37 @@ export function SegmentationPanel({ onClose, onCreateExcerpts, pages }: Segmenta
                     <ReplacementsTab />
                 </TabsContent>
 
-                <div className="flex flex-shrink-0 justify-end gap-2 border-t bg-gray-50 p-4">
-                    <Button onClick={onClose} type="button" variant="ghost">
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            record('SegmentFromSharedPanel');
-                            try {
-                                toast.info('Segmenting pages...');
-                                const segments = segmentPages(pages, options);
-                                const excerpts = onCreateExcerpts
-                                    ? (onCreateExcerpts(segments, options) as any)
-                                    : segmentFlappaPagesToExcerpts(pages, options);
+                <div className="flex flex-shrink-0 items-center justify-end gap-4 border-t bg-gray-50 p-4">
+                    <div className="flex gap-2">
+                        <Button onClick={onClose} type="button" variant="ghost">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                record('SegmentFromSharedPanel');
+                                try {
+                                    toast.info('Segmenting pages...');
+                                    const segments = segmentPages(pages, { ...options, logger: console });
 
-                                useExcerptsStore.getState().init(excerpts);
-                                router.push('/excerpts');
-                                toast.success(`Created ${excerpts.excerpts.length} segments`);
-                            } catch (err) {
-                                console.error(err);
-                                toast.error(
-                                    `Segmentation failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
-                                );
-                            }
-                        }}
-                        type="button"
-                    >
-                        Segment
-                    </Button>
+                                    const excerpts = onCreateExcerpts
+                                        ? (onCreateExcerpts(segments, options) as any)
+                                        : segmentsToExcerpts(segments, options);
+
+                                    useExcerptsStore.getState().init(excerpts);
+                                    router.push('/excerpts');
+                                    toast.success(`Created ${excerpts.excerpts.length} segments`);
+                                } catch (err) {
+                                    console.error(err);
+                                    toast.error(
+                                        `Segmentation failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+                                    );
+                                }
+                            }}
+                            type="button"
+                        >
+                            Segment
+                        </Button>
+                    </div>
                 </div>
             </Tabs>
         </PanelContainer>

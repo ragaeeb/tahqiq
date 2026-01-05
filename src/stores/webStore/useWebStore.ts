@@ -12,6 +12,11 @@ export const useWebStore = create<WebState>()(
         // Spread initial state values
         ...actions.INITIAL_STATE,
 
+        applyBodyFormatting: (formatFn) =>
+            set((state) => {
+                actions.applyBodyFormatting(state, formatFn);
+            }),
+
         deletePage: (id) =>
             set((state) => {
                 actions.deletePage(state, id);

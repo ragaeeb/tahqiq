@@ -11,14 +11,16 @@ export const INITIAL_STATE: WebStateCore = { pages: [], titles: [] };
  * Initializes the store from Web book data
  */
 export const initStore = (data: WebBook, fileName?: string): WebStateCore => {
-    const pages: WebPage[] = data.pages.map((p) => ({
-        ...(p.accessed && { accessed: p.accessed }),
-        body: p.body,
-        ...(p.footnote && { footnote: p.footnote }),
-        id: p.page,
-        ...(p.title && { pageTitle: p.title }),
-        ...(p.url && { url: p.url }),
-    }));
+    const pages: WebPage[] = data.pages
+        .filter((p) => p.body)
+        .map((p) => ({
+            ...(p.accessed && { accessed: p.accessed }),
+            body: p.body,
+            ...(p.footnote && { footnote: p.footnote }),
+            id: p.page,
+            ...(p.title && { pageTitle: p.title }),
+            ...(p.url && { url: p.url }),
+        }));
 
     // Extract titles from pages that have a title property
     const titles: WebTitle[] = data.pages
@@ -107,4 +109,25 @@ export const removeFootnotes = (state: WebStateCore): void => {
     }
 
     state.lastUpdatedAt = new Date();
+};
+
+/**
+ * Applies a formatting function to all page bodies in bulk
+ */
+export const applyBodyFormatting = (state: WebStateCore, formatFn: (text: string) => string): void => {
+    const now = nowInSeconds();
+    let updated = 0;
+
+    for (const page of state.pages) {
+        const formatted = formatFn(page.body);
+        if (formatted !== page.body) {
+            page.body = formatted;
+            page.lastUpdatedAt = now;
+            updated++;
+        }
+    }
+
+    if (updated > 0) {
+        state.lastUpdatedAt = new Date();
+    }
 };

@@ -299,6 +299,9 @@ type FilterState = {
 | `sonner` | Toast notifications |
 | `nanolytics` | Event analytics |
 | `memoize-one` | Selector memoization |
+| `baburchi` | Arabic text processing (normalization, sanitization) |
+| `bitaboom` | Text cleanup pipeline (punctuation, spacing) |
+| `flappa-doormal` | Pattern-based segmentation logic |
 
 ### API Routes
 
@@ -622,6 +625,7 @@ src/app/new/
 | Duplicate columns (ID/Page) | Consolidate into single clickable column |
 | Non-Arabic tests failing sanitization | Use realistic Arabic content in tests |
 | `IndexedExcerpt` requires vol/vp | Set `vol: 0, vp: 0` for non-book content |
+| Tatweel Removal | Use simple regex `/\u0640/g` to preserve line breaks instead of aggressive libraries |
 
 ### 6. Update Documentation
 

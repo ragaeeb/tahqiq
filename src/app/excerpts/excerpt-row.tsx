@@ -120,6 +120,7 @@ function ExcerptRow({
                 {onToggleSelect && (
                     <td className="w-10 px-2 py-3 text-center align-top">
                         <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(data.id)} />
+                        {data.nass.length}
                     </td>
                 )}
                 <td className="w-32 px-2 py-3 text-center align-top text-gray-600 text-xs">

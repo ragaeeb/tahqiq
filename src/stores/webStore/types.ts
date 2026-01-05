@@ -134,6 +134,11 @@ export type WebActions = {
      * Updates a single title
      */
     updateTitle: (id: number, updates: Partial<Omit<WebTitle, 'id'>>) => void;
+
+    /**
+     * Applies a formatting function to all page bodies in bulk
+     */
+    applyBodyFormatting: (formatFn: (text: string) => string) => void;
 };
 
 /**

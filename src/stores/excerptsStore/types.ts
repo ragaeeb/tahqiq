@@ -416,6 +416,13 @@ export type ExcerptsActions = {
      * @returns true if merge was successful
      */
     mergeExcerpts: (ids: string[]) => boolean;
+
+    /**
+     * Merges adjacent short excerpts that have the same `from` and `to` values.
+     * Uses SHORT_SEGMENT_WORD_THRESHOLD (30 words) as the minimum word count.
+     * @returns Number of excerpts merged (removed)
+     */
+    mergeShortExcerpts: () => number;
 };
 
 /**

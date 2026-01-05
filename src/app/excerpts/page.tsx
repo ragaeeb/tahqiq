@@ -1,8 +1,8 @@
 'use client';
 
-import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, Shrink, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -17,8 +17,9 @@ import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { STORAGE_KEYS } from '@/lib/constants';
+import { SHORT_SEGMENT_WORD_THRESHOLD, STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
+import { detectMergeableShortExcerpts } from '@/lib/segmentation';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -63,8 +64,9 @@ function ExcerptsPageContent() {
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
+    const mergeShortExcerpts = useExcerptsStore((state) => state.mergeShortExcerpts);
 
-    const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter } =
+    const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode } =
         useExcerptFilters();
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
@@ -73,6 +75,41 @@ function ExcerptsPageContent() {
 
     // Check if any excerpts have translations - if not, hide the column for more Arabic space
     const hasAnyTranslations = allExcerpts.some((e) => e.text);
+
+    // Track if we've shown the merge toast to avoid duplicates
+    const mergeToastShown = useRef(false);
+
+    // Detect short segments that can be merged and show toast on first load
+    useEffect(() => {
+        if (!hasData || mergeToastShown.current) {
+            return;
+        }
+
+        const mergeableCount = detectMergeableShortExcerpts(allExcerpts, SHORT_SEGMENT_WORD_THRESHOLD);
+        if (mergeableCount > 0) {
+            mergeToastShown.current = true;
+            toast.info(`${mergeableCount} short segment pairs can be merged`, {
+                action: {
+                    label: 'Merge',
+                    onClick: () => {
+                        const merged = mergeShortExcerpts();
+                        if (merged > 0) {
+                            toast.success(`Merged ${merged} short excerpts`);
+                        }
+                    },
+                },
+                duration: 10000,
+            });
+        }
+    }, [hasData, allExcerpts, mergeShortExcerpts]);
+
+    // Sort excerpts by length if sortMode is 'length'
+    const sortedExcerpts = useMemo(() => {
+        if (sortMode !== 'length') {
+            return excerpts;
+        }
+        return [...excerpts].sort((a, b) => (b.nass?.length || 0) - (a.nass?.length || 0));
+    }, [excerpts, sortMode]);
 
     // Toggle selection for an excerpt
     const toggleSelection = useCallback((id: string) => {
@@ -320,6 +357,21 @@ function ExcerptsPageContent() {
                             >
                                 <TypeIcon />
                             </Button>
+                            <Button
+                                className="bg-purple-500"
+                                onClick={() => {
+                                    record('MergeShortExcerpts');
+                                    const merged = mergeShortExcerpts();
+                                    if (merged > 0) {
+                                        toast.success(`Merged ${merged} short excerpts`);
+                                    } else {
+                                        toast.info('No short excerpts to merge');
+                                    }
+                                }}
+                                title="Merge short adjacent excerpts"
+                            >
+                                <Shrink />
+                            </Button>
                             <ConfirmButton onClick={handleReset}>
                                 <RefreshCwIcon />
                             </ConfirmButton>
@@ -396,7 +448,7 @@ function ExcerptsPageContent() {
                                     </div>
                                 )}
                                 <VirtualizedList
-                                    data={excerpts}
+                                    data={sortedExcerpts}
                                     findScrollIndex={(data, scrollValue) => {
                                         // If it's a number, search by from field
                                         if (typeof scrollValue === 'number') {
@@ -415,6 +467,8 @@ function ExcerptsPageContent() {
                                             headings={allHeadings}
                                             hideTranslation={!hasAnyTranslations}
                                             onFilterChange={setFilter}
+                                            onSortChange={setSort}
+                                            sortMode={sortMode}
                                         />
                                     }
                                     onScrollToComplete={clearScrollTo}

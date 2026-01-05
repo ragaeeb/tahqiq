@@ -26,7 +26,7 @@ jobs:
             id-token: write
 
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
               with:
                   fetch-depth: 0
                   # Use a Personal Access Token instead of GITHUB_TOKEN for better permissions
@@ -74,7 +74,7 @@ jobs:
         runs-on: ubuntu-latest
         if: github.event_name == 'pull_request'
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
               with:
                   fetch-depth: 1
 

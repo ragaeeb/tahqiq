@@ -126,3 +126,102 @@ export const parseJsonOptions = (json: string): ParsedJsonOptions | null => {
         return null;
     }
 };
+
+/**
+ * Counts words in text by splitting on whitespace.
+ * Works for both Arabic and English text.
+ *
+ * @param text - The text to count words in
+ * @returns Number of words in the text
+ */
+export const countWords = (text: string): number => {
+    if (!text) {
+        return 0;
+    }
+    return text.trim().split(/\s+/).filter(Boolean).length;
+};
+
+type SegmentLike = { from: number; to?: number; content: string; meta?: Record<string, unknown> };
+
+/**
+ * Merges adjacent short segments that have the same `from` and `to` values.
+ * A segment is considered "short" if it has fewer words than minWordCount.
+ *
+ * @param segments - Array of segments to process
+ * @param minWordCount - Minimum word count threshold for short segments
+ * @returns Array of merged segments
+ */
+export const mergeShortAdjacentSegments = <T extends SegmentLike>(segments: T[], minWordCount: number): T[] => {
+    if (segments.length === 0) {
+        return segments;
+    }
+
+    const result: T[] = [];
+    let current = { ...segments[0] };
+
+    for (let i = 1; i < segments.length; i++) {
+        const next = segments[i];
+        const currentWordCount = countWords(current.content);
+        const nextWordCount = countWords(next.content);
+
+        // Check if both segments are short and have same from/to
+        const currentIsShort = currentWordCount < minWordCount;
+        const nextIsShort = nextWordCount < minWordCount;
+        const sameFrom = current.from === next.from;
+        const sameTo = current.to === next.to;
+
+        if ((currentIsShort || nextIsShort) && sameFrom && sameTo) {
+            // Merge: combine content with newline separator
+            current = {
+                ...current,
+                content: `${current.content}\n\n${next.content}`,
+                // Preserve meta from first segment
+            };
+        } else {
+            // Push current and move to next
+            result.push(current as T);
+            current = { ...next };
+        }
+    }
+    // Don't forget the last segment
+    result.push(current as T);
+
+    return result;
+};
+
+type ExcerptLike = { id: string; from: number; to?: number; nass?: string };
+
+/**
+ * Detects how many pairs of adjacent short excerpts could be merged.
+ * Used to show a toast notification prompting the user to merge.
+ *
+ * @param excerpts - Array of excerpts to check
+ * @param minWordCount - Minimum word count threshold for short excerpts
+ * @returns Number of mergeable pairs
+ */
+export const detectMergeableShortExcerpts = (excerpts: ExcerptLike[], minWordCount: number): number => {
+    if (excerpts.length < 2) {
+        return 0;
+    }
+
+    let mergeablePairs = 0;
+
+    for (let i = 0; i < excerpts.length - 1; i++) {
+        const current = excerpts[i];
+        const next = excerpts[i + 1];
+
+        const currentWordCount = countWords(current.nass || '');
+        const nextWordCount = countWords(next.nass || '');
+
+        const currentIsShort = currentWordCount < minWordCount;
+        const nextIsShort = nextWordCount < minWordCount;
+        const sameFrom = current.from === next.from;
+        const sameTo = current.to === next.to;
+
+        if ((currentIsShort || nextIsShort) && sameFrom && sameTo) {
+            mergeablePairs++;
+        }
+    }
+
+    return mergeablePairs;
+};

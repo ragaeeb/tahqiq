@@ -1,5 +1,5 @@
 import type { Page } from 'flappa-doormal';
-import { DownloadIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
+import { DownloadIcon, EraserIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -8,12 +8,14 @@ import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { STORAGE_KEYS } from '@/lib/constants';
+import { stripTatweelSafe } from '@/lib/textUtils';
 import { webSegmentsToExcerpts } from '@/lib/transform/web-excerpts';
 import type { WebBook } from '@/stores/webStore/types';
 import { useWebStore } from '@/stores/webStore/useWebStore';
 
 export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) => {
     const removeFootnotes = useWebStore((state) => state.removeFootnotes);
+    const applyBodyFormatting = useWebStore((state) => state.applyBodyFormatting);
     const reset = useWebStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
 
@@ -55,6 +57,17 @@ export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) =>
         <div className="space-x-2">
             <Button onClick={handleRemoveFootnotes} title="Remove footnotes from all pages" variant="outline">
                 <FootprintsIcon />
+            </Button>
+            <Button
+                onClick={() => {
+                    record('StripWebTatweel');
+                    applyBodyFormatting(stripTatweelSafe);
+                    toast.success('Removed Tatweel from all pages');
+                }}
+                title="Remove Tatweel (kashida) from all page bodies"
+                variant="outline"
+            >
+                <EraserIcon />
             </Button>
             <Button
                 onClick={() => {
