@@ -37,6 +37,10 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Inline Editing**: Edit Arabic (nass) and translation (text) fields directly
 - **Headings ID Column**: Headings tab displays the ID field for easy reference
 - **Short Segment Merging**: Proactively detects and suggests merging adjacent short segments (<30 words) on load
+- **Translation Picker**: Select untranslated excerpts in bulk for LLM processing
+  - **Arabic-Aware Token Estimation**: Accurate token counting accounting for tashkeel, tatweel, and Arabic numerals
+  - **Quick Selection**: Range-based selection of untranslated IDs
+  - **Flow Management**: Mark excerpts as "sent" to track translation progress across sessions
 
 ### Shamela Editor (`/shamela`)
 - **Direct Download**: Download books from shamela.ws by pasting URL
@@ -185,7 +189,12 @@ RULES_ENDPOINT=your_rules_endpoint_url
    - Select the AI model used via the color-coded toggle group
    - Review duplicate ID warnings and overwrite confirmations before saving
 8. **Extract Text**: Select Arabic text and click "Extract as New Excerpt" to create a new entry
-9. **URL Navigation**: Use `#P123` to scroll to ID, or `#123` to scroll to page number
+9. **Translation Picker**: Click the translation picker button (pills icon) to select untranslated segments
+   - See estimated token count for the current selection
+   - Click "Copy" to copy prompt + excerpts for the LLM
+   - Click "Remove" to mark segments as sent (hides them from current picker session)
+   - Use "Reset" to clear the "sent" status and show all untranslated segments
+10. **URL Navigation**: Use `#P123` to scroll to ID, or `#123` to scroll to page number
 
 ### Manuscript Editor (`/manuscript`)
 

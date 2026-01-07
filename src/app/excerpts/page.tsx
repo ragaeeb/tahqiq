@@ -1,6 +1,16 @@
 'use client';
 
-import { DownloadIcon, FileTextIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, Shrink, TypeIcon } from 'lucide-react';
+import {
+    DownloadIcon,
+    FileTextIcon,
+    LanguagesIcon,
+    Merge,
+    RefreshCwIcon,
+    SaveIcon,
+    SearchIcon,
+    Shrink,
+    TypeIcon,
+} from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,6 +26,7 @@ import { useSessionRestore } from '@/components/hooks/use-session-restore';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SHORT_SEGMENT_WORD_THRESHOLD, STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
@@ -34,9 +45,32 @@ import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
 import ExcerptsTableHeader from './table-header';
+import { TranslationPickerDialogContent } from './translation-picker-dialog';
 import type { FilterScope } from './use-excerpt-filters';
 import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
+
+/**
+ * Translation picker button with DialogTriggerButton pattern
+ */
+function TranslationPickerButton() {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <DialogTriggerButton
+            onClick={() => {
+                record('OpenTranslationPicker');
+            }}
+            onOpenChange={setIsOpen}
+            open={isOpen}
+            renderContent={() => <TranslationPickerDialogContent onClose={() => setIsOpen(false)} />}
+            title="Select excerpts for LLM translation"
+            className="bg-indigo-500 hover:bg-indigo-600"
+        >
+            <LanguagesIcon />
+        </DialogTriggerButton>
+    );
+}
 
 /**
  * Inner component that uses useSearchParams (requires Suspense boundary)
@@ -346,6 +380,7 @@ function ExcerptsPageContent() {
                             <Button onClick={handleExportToTxt}>
                                 <FileTextIcon />
                             </Button>
+                            <TranslationPickerButton />
                             <Button className="bg-amber-500" onClick={handleFindGap} title="Find first translation gap">
                                 <SearchIcon />
                             </Button>

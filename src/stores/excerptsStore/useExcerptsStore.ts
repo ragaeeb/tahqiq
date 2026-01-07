@@ -93,6 +93,11 @@ export const useExcerptsStore = create<ExcerptsState>()(
                 Object.assign(state, newState);
             }),
 
+        markAsSentToLlm: (ids) =>
+            set((state) => {
+                actions.markAsSentToLlm(state, ids);
+            }),
+
         mergeExcerpts: (ids) => {
             let result = false;
             set((state) => {
@@ -113,6 +118,11 @@ export const useExcerptsStore = create<ExcerptsState>()(
             set((state) => {
                 const newState = actions.resetStore();
                 Object.assign(state, newState);
+            }),
+
+        resetSentToLlm: () =>
+            set((state) => {
+                actions.resetSentToLlm(state);
             }),
 
         updateExcerpt: (id, updates) =>

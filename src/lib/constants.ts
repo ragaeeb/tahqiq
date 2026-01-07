@@ -17,9 +17,7 @@ export const DEFAULT_HINTS = [
 export const TRANSLATION_MODELS = [
     { color: 'emerald', label: 'OpenAI GPT 5', value: '879' },
     { color: 'blue', label: 'Gemini 3.0 Pro', value: '890' },
-    { color: 'orange', label: 'Claude 4.5 Sonnet', value: '891' },
-    { color: 'purple', label: 'Grok 4.1 Thinking Beta', value: '892' },
-    { color: 'green', label: 'OpenAI GPT 5.2 Thinking', value: '893' },
+    { color: 'purple', label: 'OpenAI GPT 5.2 Thinking', value: '893' },
 ].sort((a, b) => Number(a.value) - Number(b.value)) as readonly { label: string; value: string; color: string }[];
 
 export const LatestContractVersion = {

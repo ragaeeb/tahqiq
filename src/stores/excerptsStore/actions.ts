@@ -24,6 +24,7 @@ export const INITIAL_STATE: ExcerptsStateCore = {
     options: {},
     postProcessingApps: [],
     promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
+    sentToLlmIds: new Set(),
 };
 
 /**
@@ -415,4 +416,20 @@ export const mergeShortExcerpts = (state: ExcerptsStateCore): number => {
     }
 
     return mergedCount;
+};
+
+/**
+ * Mark excerpts as sent to LLM for translation
+ */
+export const markAsSentToLlm = (state: ExcerptsStateCore, ids: string[]): void => {
+    for (const id of ids) {
+        state.sentToLlmIds.add(id);
+    }
+};
+
+/**
+ * Reset sent-to-LLM tracking to sync with current untranslated state
+ */
+export const resetSentToLlm = (state: ExcerptsStateCore): void => {
+    state.sentToLlmIds = new Set();
 };

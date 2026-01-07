@@ -71,9 +71,10 @@ We use **Zustand** with **Immer middleware** for immutable state updates:
 // Store pattern (see src/stores/excerptsStore/)
 ├── types.ts           # State and action type definitions
 ├── actions.ts         # Pure action functions (operate on state via Immer)
+├── actions.test.ts    # Unit tests for pure state logic
 ├── selectors.ts       # Memoized selectors for derived state
 ├── useExcerptsStore.ts # Zustand store with Immer middleware
-└── *.test.ts          # Unit tests
+└── useExcerptsStore.test.ts # Integration tests
 ```
 
 **Key patterns:**
@@ -258,6 +259,11 @@ type Excerpt = {
     vp?: number;         // Volume page
     lastUpdatedAt?: number;
     translator?: number; // Translator ID
+};
+
+type ExcerptsStateCore = {
+    // ... other core fields
+    sentToLlmIds: Set<string>; // IDs of excerpts sent to LLM for translation
 };
 
 type Heading = Excerpt & {
@@ -471,6 +477,36 @@ Parsing utilities for bulk data live in `@/lib/transform/excerpts.ts`.
 
 ---
 
+## Token Estimation
+
+For LLM-based translation workflows, we use a custom Arabic-aware token estimation heuristic in `src/lib/transform/excerpts.ts`.
+
+### Logic
+Standard whitespace-based or character-based counting is inaccurate for Arabic due to diacritics (tashkeel) and tatweel. Our `estimateTokenCount` function uses the following character-to-token ratios:
+
+- **Arabic Diacritics (Tashkeel)**: ~1 token per character (high entropy/cost)
+- **Tatweel (Elongation)**: ~1 token per character
+- **Arabic-Indic Numerals**: ~4 characters per token
+- **Base Arabic Characters**: ~2.5 characters per token
+- **Latin/Other (Punctuation, Western Numerals)**: ~4 characters per token
+
+This provides a conservative upper bound for models like Gemini, which can be highly sensitive to diacritics in their output generation and token limits.
+
+---
+
+## Tooling Patterns
+
+### Translation Picker Dialog
+
+Specifically designed for selecting untranslated segments for LLM translation. 
+
+- **State Sync**: Uses `sentToLlmIds` from the store to hide segments already "sent" in the current session.
+- **Selection Logic**: Clicking a segment pill selects a range from the first visible segment to the clicked one.
+- **Copy & Remove**: "Copy" formats the prompt + selected segments. "Remove" marks them as sent to hide them from the picker's view.
+- **Token Tracking**: Live estimation of the selected range (segments + prompt markers) is displayed in the dialog title.
+
+---
+
 ## Session Persistence Hooks
 
 Common patterns for OPFS session storage are abstracted into reusable hooks in `@/components/hooks/`:
@@ -558,10 +594,10 @@ Tables are domain-specific and NOT abstracted into a shared component (intention
 
 ## Important
 
-- NEVER run "bun dev" and launch the app yourself in the browser. Always prompt the user to do it for testing.
-- NEVER use "npm" as a package manager, always use "bun".
-- Unit-tests should always use the `it('should...'` convention.
-- Respond in a concise manner, do not respond with more information than necessary unless asked.
+- **Unit Testing**: Always use the `it('should...')` convention for test descriptions to ensure clear, behavioral expectations.
+- **Package Manager**: NEVER use `npm`; always use `bun` for installing and running commands.
+- **Dev Server**: NEVER run `bun dev` yourself and launch the browser; always prompt the user to do so for testing.
+- **Conciseness**: Respond in a concise manner; do not provide more information than necessary unless explicitly asked.
 
 ---
 

@@ -304,6 +304,8 @@ export type ExcerptsStateCore = {
     filteredHeadingIds?: string[];
     /** Filtered footnote IDs (undefined = show all) */
     filteredFootnoteIds?: string[];
+    /** IDs of excerpts that have been sent to LLM for translation */
+    sentToLlmIds: Set<string>;
 };
 
 /**
@@ -423,6 +425,16 @@ export type ExcerptsActions = {
      * @returns Number of excerpts merged (removed)
      */
     mergeShortExcerpts: () => number;
+
+    /**
+     * Mark excerpts as sent to LLM for translation
+     */
+    markAsSentToLlm: (ids: string[]) => void;
+
+    /**
+     * Reset sent-to-LLM tracking to sync with current untranslated state
+     */
+    resetSentToLlm: () => void;
 };
 
 /**
