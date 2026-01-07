@@ -1,3 +1,10 @@
+# [1.42.0](https://github.com/ragaeeb/tahqiq/compare/v1.41.0...v1.42.0) (2026-01-07)
+
+
+### Features
+
+* **llm:** Add new excerpt translation dialog ([3acd73c](https://github.com/ragaeeb/tahqiq/commit/3acd73ceacd2816fbd616b640fb6cf28d8ed97a7))
+
 # [1.41.0](https://github.com/ragaeeb/tahqiq/compare/v1.40.0...v1.41.0) (2026-01-05)
 
 
