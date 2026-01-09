@@ -1,3 +1,10 @@
+# [1.43.0](https://github.com/ragaeeb/tahqiq/compare/v1.42.1...v1.43.0) (2026-01-09)
+
+
+### Features
+
+* **preview:** Allow filtering rows in Preview tab ([1ee8b16](https://github.com/ragaeeb/tahqiq/commit/1ee8b1635e8431ba7f282976bdab8b869518cb65))
+
 ## [1.42.1](https://github.com/ragaeeb/tahqiq/compare/v1.42.0...v1.42.1) (2026-01-09)
 
 
