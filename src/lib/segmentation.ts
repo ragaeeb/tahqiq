@@ -130,3 +130,57 @@ export const formatExcerptsForPrompt = (excerpts: Excerpt[], prompt: string) => 
 export const getUntranslatedIds = (excerpts: Excerpt[], sentIds: Set<string>) => {
     return excerpts.filter((e) => !e.text && !sentIds.has(e.id)).map((e) => e.id);
 };
+
+export type DebugMeta = {
+    rule?: { index: number; patternType: string };
+    breakpoint?: { index: number; pattern: string; kind: string };
+    contentLengthSplit?: {
+        maxContentLength: number;
+        splitReason: 'whitespace' | 'unicode_boundary' | 'grapheme_cluster';
+    };
+};
+
+export const getMetaKey = (debug: unknown): string => {
+    if (debug && typeof debug === 'object' && typeof (debug as any).metaKey === 'string') {
+        return (debug as any).metaKey;
+    }
+    return '_flappa';
+};
+
+export const summarizeRulePattern = (rule: any) => {
+    if (!rule || typeof rule !== 'object') {
+        return '';
+    }
+    if (Array.isArray(rule.lineStartsWith)) {
+        return rule.lineStartsWith.length > 1
+            ? `${rule.lineStartsWith[0]} (+${rule.lineStartsWith.length - 1})`
+            : (rule.lineStartsWith[0] ?? '');
+    }
+    if (Array.isArray(rule.lineStartsAfter)) {
+        return rule.lineStartsAfter.length > 1
+            ? `${rule.lineStartsAfter[0]} (+${rule.lineStartsAfter.length - 1})`
+            : (rule.lineStartsAfter[0] ?? '');
+    }
+    if (Array.isArray(rule.lineEndsWith)) {
+        return rule.lineEndsWith.length > 1
+            ? `${rule.lineEndsWith[0]} (+${rule.lineEndsWith.length - 1})`
+            : (rule.lineEndsWith[0] ?? '');
+    }
+    if (typeof rule.template === 'string') {
+        return rule.template;
+    }
+    if (typeof rule.regex === 'string') {
+        return rule.regex;
+    }
+    return '';
+};
+
+export const getSegmentFilterKey = (dbg: DebugMeta | undefined): string => {
+    if (dbg?.contentLengthSplit) {
+        return `contentLengthSplit:${dbg.contentLengthSplit.splitReason}`;
+    }
+    if (dbg?.breakpoint) {
+        return `breakpoint:${dbg.breakpoint.pattern}`;
+    }
+    return 'rule-only';
+};

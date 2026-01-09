@@ -4,7 +4,6 @@ import { useSegmentationStore } from './useSegmentationStore';
 const resetStore = () => {
     useSegmentationStore.setState({
         allLineStarts: [],
-        replacements: [],
         ruleConfigs: [],
         tokenMappings: [
             { name: 'num', token: 'raqms' },
@@ -59,7 +58,6 @@ describe('useSegmentationStore', () => {
         it('should reset store to initial state', () => {
             useSegmentationStore.setState({
                 allLineStarts: [{ count: 1, pattern: 'test' }],
-                replacements: [{ regex: 'a', replacement: 'b' }],
                 ruleConfigs: [
                     {
                         fuzzy: true,
@@ -77,7 +75,6 @@ describe('useSegmentationStore', () => {
             const state = useSegmentationStore.getState();
             expect(state.allLineStarts).toHaveLength(0);
             expect(state.ruleConfigs).toHaveLength(0);
-            expect(state.replacements).toHaveLength(0);
         });
     });
 });

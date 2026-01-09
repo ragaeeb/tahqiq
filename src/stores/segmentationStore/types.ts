@@ -1,10 +1,4 @@
-import type {
-    CommonLineStartPattern,
-    PatternTypeKey,
-    ReplaceRule,
-    SegmentationOptions,
-    TokenMapping,
-} from 'flappa-doormal';
+import type { CommonLineStartPattern, PatternTypeKey, SegmentationOptions, TokenMapping } from 'flappa-doormal';
 
 export type SegmentationOptionsState = Omit<SegmentationOptions, 'replace' | 'rules'> & {
     replace: NonNullable<SegmentationOptions['replace']>;
@@ -36,9 +30,6 @@ export type SegmentationState = {
 
     // Token mappings (apply to all rules)
     tokenMappings: TokenMapping[];
-
-    // Pre-processing replacements
-    replacements: ReplaceRule[];
 
     options: SegmentationOptionsState;
 

@@ -6,7 +6,6 @@ import { DEFAULT_TOKEN_MAPPINGS, type SegmentationState } from './types';
 const INITIAL_STATE = {
     allLineStarts: [],
     options: { breakpoints: [{ pattern: `${Token.TARQIM}\\s*` }, ''], maxPages: 1, replace: [], rules: [] },
-    replacements: [],
     ruleConfigs: [],
     tokenMappings: DEFAULT_TOKEN_MAPPINGS,
 };

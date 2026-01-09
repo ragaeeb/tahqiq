@@ -561,7 +561,7 @@
 
     "find-versions": ["find-versions@6.0.0", "", { "dependencies": { "semver-regex": "^4.0.5", "super-regex": "^1.0.0" } }, "sha512-2kCCtc+JvcZ86IGAz3Z2Y0A1baIz9fL31pH/0S1IqZr9Iwnjq8izfPtrCyQKO6TLMPELLsQMre7VDqeIKCsHkA=="],
 
-    "flappa-doormal": ["flappa-doormal@2.13.1", "", {}, "sha512-Ja+brsgP+pVplFuBFXsYImlXVAKcCB9nSOOh/6gJMGNr9Ytx17RwKxQulrLu2mScxKz2eeWv+UZ5+I5rxilSag=="],
+    "flappa-doormal": ["flappa-doormal@2.13.3", "", {}, "sha512-X79Nodyy4MnILfSGAp3Pj4uVKv6cRguhVqBsr/m9SWOPli67Bl6HDSBDwy6W2PZcgh1fXlGJTUV5cm2H8n6niA=="],
 
     "foreground-child": ["foreground-child@3.3.1", "", { "dependencies": { "cross-spawn": "^7.0.6", "signal-exit": "^4.0.1" } }, "sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw=="],
 

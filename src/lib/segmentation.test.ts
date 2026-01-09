@@ -133,3 +133,88 @@ describe('getUntranslatedIds', () => {
         expect(result).toEqual([]);
     });
 });
+
+import { type DebugMeta, getMetaKey, getSegmentFilterKey, summarizeRulePattern } from './segmentation';
+
+describe('Debug Metadata Utilities', () => {
+    describe('getMetaKey', () => {
+        it('should return _flappa when debug is true', () => {
+            expect(getMetaKey(true)).toBe('_flappa');
+        });
+
+        it('should return _flappa when debug is undefined/false/null', () => {
+            expect(getMetaKey(undefined)).toBe('_flappa');
+            expect(getMetaKey(false)).toBe('_flappa');
+            expect(getMetaKey(null)).toBe('_flappa');
+        });
+
+        it('should return custom metaKey when provided in debug object', () => {
+            expect(getMetaKey({ metaKey: 'custom_key' })).toBe('custom_key');
+        });
+
+        it('should fallback to _flappa if debug object lacks metaKey string', () => {
+            expect(getMetaKey({})).toBe('_flappa');
+            expect(getMetaKey({ metaKey: 123 })).toBe('_flappa');
+        });
+    });
+
+    describe('summarizeRulePattern', () => {
+        it('should return empty string for null/invalid rule', () => {
+            expect(summarizeRulePattern(null)).toBe('');
+            expect(summarizeRulePattern(undefined)).toBe('');
+            expect(summarizeRulePattern('not-obj')).toBe('');
+        });
+
+        it('should summarize lineStartsWith array', () => {
+            expect(summarizeRulePattern({ lineStartsWith: ['### '] })).toBe('### ');
+            expect(summarizeRulePattern({ lineStartsWith: ['-', '*'] })).toBe('- (+1)');
+        });
+
+        it('should summarize lineStartsAfter array', () => {
+            expect(summarizeRulePattern({ lineStartsAfter: ['.'] })).toBe('.');
+            expect(summarizeRulePattern({ lineStartsAfter: ['.', '?', '!'] })).toBe('. (+2)');
+        });
+
+        it('should summarize lineEndsWith array', () => {
+            expect(summarizeRulePattern({ lineEndsWith: [':'] })).toBe(':');
+            expect(summarizeRulePattern({ lineEndsWith: [':', ';'] })).toBe(': (+1)');
+        });
+
+        it('should return template string', () => {
+            expect(summarizeRulePattern({ template: '{{char}}' })).toBe('{{char}}');
+        });
+
+        it('should return regex string', () => {
+            expect(summarizeRulePattern({ regex: '\\d+' })).toBe('\\d+');
+        });
+    });
+
+    describe('getSegmentFilterKey', () => {
+        it('should return contentLengthSplit reason', () => {
+            const meta: DebugMeta = { contentLengthSplit: { maxContentLength: 5000, splitReason: 'whitespace' } };
+            expect(getSegmentFilterKey(meta)).toBe('contentLengthSplit:whitespace');
+        });
+
+        it('should return breakpoint pattern', () => {
+            const meta: DebugMeta = { breakpoint: { index: 0, kind: 'pattern', pattern: '{{tarqim}}' } };
+            expect(getSegmentFilterKey(meta)).toBe('breakpoint:{{tarqim}}');
+        });
+
+        it('should return rule-only when no special split', () => {
+            const meta: DebugMeta = { rule: { index: 0, patternType: 'lineStartsWith' } };
+            expect(getSegmentFilterKey(meta)).toBe('rule-only');
+        });
+
+        it('should return rule-only when meta is undefined', () => {
+            expect(getSegmentFilterKey(undefined)).toBe('rule-only');
+        });
+
+        it('should prioritize contentLengthSplit over breakpoint if both exist (rare)', () => {
+            const meta: DebugMeta = {
+                breakpoint: { index: 0, kind: 'pattern', pattern: 'foo' },
+                contentLengthSplit: { maxContentLength: 100, splitReason: 'unicode_boundary' },
+            };
+            expect(getSegmentFilterKey(meta)).toBe('contentLengthSplit:unicode_boundary');
+        });
+    });
+});

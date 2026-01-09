@@ -125,26 +125,6 @@ export type IndexedHeading = Pick<IndexedExcerpt, 'nass' | 'from' | 'id'> & {
 
 export type Heading = IndexedHeading & AITranslation;
 
-/**
- * Pattern matching options (excluding deprecated fields)
- */
-export type PatternOptions = {
-    /** Maximum page number to consider */
-    maxPage?: number;
-    /** Minimum page number to consider */
-    minPage?: number;
-    /** Type of entry to create */
-    type?: ExcerptType;
-};
-
-/**
- * Heading processing options
- */
-export type HeadingOptions = {
-    /** Preprocessing replacements before sending to prompt */
-    preprompt?: Record<string, string>;
-};
-
 type PostProcessingApp = { id: string; timestamp?: number; version: string };
 
 /**
