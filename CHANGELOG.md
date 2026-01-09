@@ -1,3 +1,10 @@
+## [1.42.1](https://github.com/ragaeeb/tahqiq/compare/v1.42.0...v1.42.1) (2026-01-09)
+
+
+### Bug Fixes
+
+* **clean:** Clean up technical debt ([13993b0](https://github.com/ragaeeb/tahqiq/commit/13993b0cf172f9f4c9345f6e99c95729a0599101))
+
 # [1.42.0](https://github.com/ragaeeb/tahqiq/compare/v1.41.0...v1.42.0) (2026-01-07)
 
 
