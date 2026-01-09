@@ -6,14 +6,12 @@ import {
     updateSegmentWithGroundTruth,
 } from 'paragrafs';
 import { useState } from 'react';
-
-import type { Segment } from '@/stores/transcriptStore/types';
-
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { preformatArabicText } from '@/lib/textUtils';
+import type { Segment } from '@/stores/transcriptStore/types';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 
 export function GroundingDialog({ segment }: Readonly<{ segment: Segment }>) {
@@ -22,7 +20,7 @@ export function GroundingDialog({ segment }: Readonly<{ segment: Segment }>) {
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
 
     return (
-        <DialogContent className="w-[80vw] sm:max-w-none max-h-[80vh] flex flex-col">
+        <DialogContent className="flex max-h-[80vh] w-[80vw] flex-col sm:max-w-none">
             <DialogHeader>
                 <DialogTitle>
                     <div className="flex items-center space-x-2">
@@ -50,7 +48,7 @@ export function GroundingDialog({ segment }: Readonly<{ segment: Segment }>) {
                     <table className="w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-2 py-1 w-8 text-left font-normal">Time</th>
+                                <th className="w-8 px-2 py-1 text-left font-normal">Time</th>
                                 <th aria-label="Text" className="px-4 py-1 text-right font-normal">
                                     Word
                                 </th>
@@ -58,8 +56,8 @@ export function GroundingDialog({ segment }: Readonly<{ segment: Segment }>) {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {groundedSegment.tokens.map((s) => (
-                                <tr className="px-2 py-1 space-y-1 text-xs align-top" key={`${s.start}_${s.end}`}>
-                                    <td aria-label="Volume" className="px-2 py-1 w-36 text-left font-normal">
+                                <tr className="space-y-1 px-2 py-1 align-top text-xs" key={`${s.start}_${s.end}`}>
+                                    <td aria-label="Volume" className="w-36 px-2 py-1 text-left font-normal">
                                         {formatSecondsToTimestamp(s.start)}
                                     </td>
                                     <td

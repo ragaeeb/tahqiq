@@ -1,23 +1,28 @@
 import type { Page } from 'flappa-doormal';
-import { DownloadIcon, EraserIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
+import { DownloadIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { stripTatweelSafe } from '@/lib/textUtils';
-import { webSegmentsToExcerpts } from '@/lib/transform/web-excerpts';
 import type { WebBook } from '@/stores/webStore/types';
 import { useWebStore } from '@/stores/webStore/useWebStore';
 
-export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) => {
+export const Toolbar = () => {
     const removeFootnotes = useWebStore((state) => state.removeFootnotes);
-    const applyBodyFormatting = useWebStore((state) => state.applyBodyFormatting);
     const reset = useWebStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
+    const allPages = useWebStore((state) => state.pages);
+
+    // Transform web pages to flappa-doormal Page format for segmentation
+    const pages = useMemo<Page[]>(() => allPages.map((p) => ({ content: p.body, id: p.id })), [allPages]);
+    const headings = useMemo<Page[]>(
+        () => allPages.filter((p) => p.pageTitle).map((p) => ({ content: p.body, id: p.id })),
+        [allPages],
+    );
 
     /**
      * Creates a WebBook object from the current store state.
@@ -60,17 +65,6 @@ export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) =>
             </Button>
             <Button
                 onClick={() => {
-                    record('StripWebTatweel');
-                    applyBodyFormatting(stripTatweelSafe);
-                    toast.success('Removed Tatweel from all pages');
-                }}
-                title="Remove Tatweel (kashida) from all page bodies"
-                variant="outline"
-            >
-                <EraserIcon />
-            </Button>
-            <Button
-                onClick={() => {
                     record('OpenWebSegmentationPanel');
                     setIsSegmentationPanelOpen(true);
                 }}
@@ -82,11 +76,8 @@ export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) =>
             {isSegmentationPanelOpen && (
                 <SegmentationPanel
                     onClose={() => setIsSegmentationPanelOpen(false)}
-                    onCreateExcerpts={(segments, options) => {
-                        const state = useWebStore.getState();
-                        return webSegmentsToExcerpts(state.pages, state.titles, segments, options);
-                    }}
-                    pages={segmentationPages}
+                    pages={pages}
+                    headings={headings}
                 />
             )}
             <Button className="bg-emerald-500" onClick={handleSave}>

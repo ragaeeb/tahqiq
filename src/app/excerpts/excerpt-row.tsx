@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Textarea } from '@/components/ui/textarea';
+import { createUpdate } from '@/lib/common';
+import { Markers } from '@/lib/constants';
 import { autoResizeTextarea } from '@/lib/domUtils';
 import type { Excerpt } from '@/stores/excerptsStore/types';
 import { EditExcerptDialogContent } from './edit-excerpt-dialog';
@@ -110,9 +112,9 @@ function ExcerptRow({
                 className={`border-gray-100 border-b transition-colors duration-150 ease-in-out ${
                     isSelected
                         ? 'bg-blue-100 hover:bg-blue-200'
-                        : data.meta?.type === 'chapter'
+                        : data.meta?.type === Markers.Chapter
                           ? 'bg-green-50 hover:bg-green-100'
-                          : data.meta?.type === 'book'
+                          : data.meta?.type === Markers.Book
                             ? 'bg-blue-50 hover:bg-blue-100'
                             : 'hover:bg-gray-50'
                 }`}
@@ -128,33 +130,12 @@ function ExcerptRow({
                             className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
                             defaultValue={[data.from, data.to].filter(Boolean).join('-')}
                             onBlur={(e) => {
-                                const value = e.target.value.trim();
-                                const parts = value.split('-').map((p) => Number.parseInt(p.trim(), 10));
-                                const newFrom = parts[0];
-                                const newTo = parts.length > 1 ? parts[1] : undefined;
+                                const updates = createUpdate(e.target.value.trim(), data);
 
-                                // Check if values actually changed
-                                const fromChanged = !Number.isNaN(newFrom) && newFrom !== data.from;
-                                const toChanged =
-                                    newTo !== undefined
-                                        ? !Number.isNaN(newTo) && newTo !== data.to
-                                        : data.to !== undefined;
-
-                                if (fromChanged || toChanged) {
-                                    const updates: { from?: number; to?: number } = {};
-                                    if (!Number.isNaN(newFrom)) {
-                                        updates.from = newFrom;
-                                    }
-                                    if (newTo !== undefined && !Number.isNaN(newTo)) {
-                                        updates.to = newTo;
-                                    } else if (newTo === undefined && data.to !== undefined) {
-                                        // User removed the 'to' value (e.g., changed "100-200" to "100")
-                                        updates.to = undefined;
-                                    }
-                                    if (Object.keys(updates).length > 0) {
-                                        onUpdate(data.id, updates);
-                                    }
+                                if (updates) {
+                                    onUpdate(data.id, updates);
                                 }
+
                                 setIsEditingPages(false);
                             }}
                             onKeyDown={(e) => {

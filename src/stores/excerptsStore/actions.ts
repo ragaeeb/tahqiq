@@ -1,7 +1,6 @@
 import { LatestContractVersion, SHORT_SEGMENT_WORD_THRESHOLD, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
-import { adaptExcerptsToLatest } from '@/lib/migration';
-import { countWords } from '@/lib/segmentation';
 import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds, updateItemById } from '@/lib/store-utils';
+import { countWords } from '@/lib/textUtils';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
@@ -12,7 +11,7 @@ import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 export const INITIAL_STATE: ExcerptsStateCore = {
     collection: undefined,
     contractVersion: LatestContractVersion.Excerpts,
-    createdAt: new Date(),
+    createdAt: nowInSeconds(),
     excerpts: [],
     filteredExcerptIds: undefined,
     filteredFootnoteIds: undefined,
@@ -20,7 +19,7 @@ export const INITIAL_STATE: ExcerptsStateCore = {
     footnotes: [],
     headings: [],
     inputFileName: undefined,
-    lastUpdatedAt: new Date(),
+    lastUpdatedAt: nowInSeconds(),
     options: {},
     postProcessingApps: [],
     promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
@@ -30,20 +29,19 @@ export const INITIAL_STATE: ExcerptsStateCore = {
 /**
  * Initializes the store from Excerpts data, migrating if necessary
  */
-export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore => {
-    const migrated = adaptExcerptsToLatest(data);
-
+export const initStore = (migrated: Excerpts, fileName?: string): ExcerptsStateCore => {
     return {
         ...INITIAL_STATE,
         collection: migrated.collection,
         contractVersion: migrated.contractVersion,
-        createdAt: new Date(migrated.createdAt * 1000),
+        createdAt: migrated.createdAt,
         excerpts: [...migrated.excerpts],
         footnotes: [...migrated.footnotes],
         headings: [...migrated.headings],
         inputFileName: fileName,
-        lastUpdatedAt: new Date(migrated.lastUpdatedAt * 1000),
+        lastUpdatedAt: migrated.lastUpdatedAt,
         options: migrated.options,
+        postProcessingApps: migrated.postProcessingApps,
         promptForTranslation: migrated.promptForTranslation || TRANSLATE_EXCERPTS_PROMPT.join('\n'),
     };
 };
@@ -51,14 +49,13 @@ export const initStore = (data: Excerpts, fileName?: string): ExcerptsStateCore 
 /**
  * Resets the store to initial state
  */
-export const resetStore = (): ExcerptsStateCore => ({ ...INITIAL_STATE, createdAt: new Date() });
+export const resetStore = (): ExcerptsStateCore => ({ ...INITIAL_STATE, createdAt: nowInSeconds() });
 
 /**
  * Updates a single excerpt
  */
 export const updateExcerpt = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
     if (updateItemById(state.excerpts, id, updates, 'lastUpdatedAt')) {
-        state.lastUpdatedAt = new Date();
     }
 };
 
@@ -103,26 +100,20 @@ export const createExcerptFromExisting = (state: ExcerptsStateCore, sourceId: st
             state.filteredExcerptIds.push(newExcerpt.id);
         }
     }
-
-    state.lastUpdatedAt = new Date();
 };
 
 /**
  * Updates a single heading
  */
 export const updateHeading = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Heading, 'id'>>): void => {
-    if (updateItemById(state.headings, id, updates, 'lastUpdatedAt')) {
-        state.lastUpdatedAt = new Date();
-    }
+    updateItemById(state.headings, id, updates, 'lastUpdatedAt');
 };
 
 /**
  * Updates a single footnote
  */
 export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Partial<Omit<Excerpt, 'id'>>): void => {
-    if (updateItemById(state.footnotes, id, updates, 'lastUpdatedAt')) {
-        state.lastUpdatedAt = new Date();
-    }
+    updateItemById(state.footnotes, id, updates, 'lastUpdatedAt');
 };
 
 /**
@@ -130,7 +121,6 @@ export const updateFootnote = (state: ExcerptsStateCore, id: string, updates: Pa
  */
 export const deleteExcerpts = (state: ExcerptsStateCore, ids: string[]): void => {
     state.excerpts = deleteItemsByIds(state.excerpts, ids);
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -138,7 +128,6 @@ export const deleteExcerpts = (state: ExcerptsStateCore, ids: string[]): void =>
  */
 export const deleteHeadings = (state: ExcerptsStateCore, ids: string[]): void => {
     state.headings = deleteItemsByIds(state.headings, ids);
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -146,7 +135,6 @@ export const deleteHeadings = (state: ExcerptsStateCore, ids: string[]): void =>
  */
 export const deleteFootnotes = (state: ExcerptsStateCore, ids: string[]): void => {
     state.footnotes = deleteItemsByIds(state.footnotes, ids);
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -154,7 +142,6 @@ export const deleteFootnotes = (state: ExcerptsStateCore, ids: string[]): void =
  */
 export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
     state.excerpts = applyBulkFieldFormatting(state.excerpts, 'text', formatFn, 'lastUpdatedAt');
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -162,7 +149,6 @@ export const applyTranslationFormatting = (state: ExcerptsStateCore, formatFn: (
  */
 export const applyHeadingFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
     state.headings = applyBulkFieldFormatting(state.headings, 'text', formatFn, 'lastUpdatedAt');
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -170,7 +156,6 @@ export const applyHeadingFormatting = (state: ExcerptsStateCore, formatFn: (text
  */
 export const applyFootnoteFormatting = (state: ExcerptsStateCore, formatFn: (text: string) => string): void => {
     state.footnotes = applyBulkFieldFormatting(state.footnotes, 'text', formatFn, 'lastUpdatedAt');
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -178,7 +163,6 @@ export const applyFootnoteFormatting = (state: ExcerptsStateCore, formatFn: (tex
  */
 export const applyExcerptNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
     state.excerpts = applyBulkFieldFormatting(state.excerpts, 'nass', formatFn, 'lastUpdatedAt');
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -186,7 +170,6 @@ export const applyExcerptNassFormatting = (state: ExcerptsStateCore, formatFn: (
  */
 export const applyHeadingNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
     state.headings = applyBulkFieldFormatting(state.headings, 'nass', formatFn, 'lastUpdatedAt');
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -194,7 +177,6 @@ export const applyHeadingNassFormatting = (state: ExcerptsStateCore, formatFn: (
  */
 export const applyFootnoteNassFormatting = (state: ExcerptsStateCore, formatFn: (nass: string) => string): void => {
     state.footnotes = applyBulkFieldFormatting(state.footnotes, 'nass', formatFn, 'lastUpdatedAt');
-    state.lastUpdatedAt = new Date();
 };
 
 /**
@@ -278,10 +260,6 @@ export const applyBulkTranslations = (
         }
     }
 
-    if (updated > 0) {
-        state.lastUpdatedAt = new Date();
-    }
-
     return { total: translationMap.size, updated };
 };
 
@@ -353,7 +331,6 @@ export const mergeExcerpts = (state: ExcerptsStateCore, ids: string[]): boolean 
         state.filteredExcerptIds = state.filteredExcerptIds.filter((id) => !idsToRemove.has(id));
     }
 
-    state.lastUpdatedAt = new Date();
     return true;
 };
 
@@ -407,7 +384,6 @@ export const mergeShortExcerpts = (state: ExcerptsStateCore): number => {
 
     if (mergedCount > 0) {
         state.excerpts = result;
-        state.lastUpdatedAt = new Date();
 
         // Clear any filters as IDs may have changed
         if (state.filteredExcerptIds) {

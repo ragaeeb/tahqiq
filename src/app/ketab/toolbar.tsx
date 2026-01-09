@@ -1,7 +1,8 @@
 import type { Page } from 'flappa-doormal';
+import { htmlToMarkdown } from 'ketab-online-sdk';
 import { DownloadIcon, FileTextIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
@@ -9,17 +10,25 @@ import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { ketabSegmentsToExcerpts } from '@/lib/transform/ketab-excerpts';
 import type { KetabBook } from '@/stores/ketabStore/types';
 import { useKetabStore } from '@/stores/ketabStore/useKetabStore';
 import { usePatchStore } from '@/stores/patchStore';
 import { PatchesDialogContent } from './patches-dialog';
 
-export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) => {
+export const Toolbar = () => {
     const patchCount = usePatchStore((state) => state.patches.length);
     const removeFootnoteReferences = useKetabStore((state) => state.removeFootnoteReferences);
     const reset = useKetabStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
+    const titles = useKetabStore((state) => state.titles);
+    const allPages = useKetabStore((state) => state.pages);
+    const pages = useMemo<Page[]>(
+        () => allPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id })),
+        [allPages],
+    );
+    const headings = useMemo(() => {
+        return titles.map((t) => ({ content: t.title, id: t.id }));
+    }, [titles]);
 
     /**
      * Creates a KetabBook object from the current store state.
@@ -75,11 +84,8 @@ export const Toolbar = ({ segmentationPages }: { segmentationPages: Page[] }) =>
             {isSegmentationPanelOpen && (
                 <SegmentationPanel
                     onClose={() => setIsSegmentationPanelOpen(false)}
-                    onCreateExcerpts={(segments, options) => {
-                        const state = useKetabStore.getState();
-                        return ketabSegmentsToExcerpts(state.pages, state.titles, segments, options);
-                    }}
-                    pages={segmentationPages}
+                    headings={headings}
+                    pages={pages}
                 />
             )}
             {patchCount > 0 && (

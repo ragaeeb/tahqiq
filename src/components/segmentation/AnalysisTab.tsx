@@ -18,6 +18,7 @@ import {
     SEGMENTATION_DEFAULT_PREFIX_CHARS,
     SEGMENTATION_FETCH_ALL_TOP_K,
 } from '@/lib/constants';
+import { doesRuleAlreadyExist } from '@/lib/rules';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
 type AnalysisTabProps = { pages: Page[] };
@@ -82,25 +83,7 @@ export const AnalysisTab = ({ pages }: AnalysisTabProps) => {
     const [includeFirstWordFallback, setIncludeFirstWordFallback] = useState(true);
 
     const addRuleFromPattern = (pattern: string) => {
-        const alreadyExists = rules.some((r) => {
-            if ('lineStartsWith' in r) {
-                return r.lineStartsWith.includes(pattern);
-            }
-            if ('lineStartsAfter' in r) {
-                return r.lineStartsAfter.includes(pattern);
-            }
-            if ('lineEndsWith' in r) {
-                return r.lineEndsWith.includes(pattern);
-            }
-            if ('template' in r) {
-                return r.template === pattern;
-            }
-            if ('regex' in r) {
-                return r.regex === pattern;
-            }
-            return false;
-        });
-        if (alreadyExists) {
+        if (doesRuleAlreadyExist(rules, pattern)) {
             toast.info('Rule already exists');
             return;
         }

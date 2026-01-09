@@ -16,6 +16,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
+import packageJson from '@/../package.json';
 
 import '@/lib/analytics';
 import '@/stores/dev';
@@ -31,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SHORT_SEGMENT_WORD_THRESHOLD, STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { detectMergeableShortExcerpts } from '@/lib/segmentation';
+import { nowInSeconds } from '@/lib/time';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -218,12 +220,17 @@ function ExcerptsPageContent() {
         return {
             collection: state.collection,
             contractVersion: state.contractVersion,
-            createdAt: Math.floor(state.createdAt.getTime() / 1000),
+            createdAt: state.createdAt,
             excerpts: state.excerpts,
             footnotes: state.footnotes,
             headings: state.headings,
-            lastUpdatedAt: Math.floor(state.lastUpdatedAt.getTime() / 1000),
+            lastUpdatedAt: nowInSeconds(),
             options: state.options,
+            postProcessingApps: state.postProcessingApps.concat({
+                id: packageJson.name,
+                timestamp: nowInSeconds(),
+                version: packageJson.version,
+            }),
             promptForTranslation: state.promptForTranslation,
         };
     }, []);

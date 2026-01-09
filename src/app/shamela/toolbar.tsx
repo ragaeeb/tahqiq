@@ -17,24 +17,22 @@ import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { usePatchStore } from '@/stores/patchStore';
-import { selectAllPages } from '@/stores/shamelaStore/selectors';
+import { selectAllPages, selectAllTitles } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
 import { PatchesDialogContent } from './patches-dialog';
 
 export const Toolbar = () => {
     const patchCount = usePatchStore((state) => state.patches.length);
-    const pages = useShamelaStore(selectAllPages);
+    const allPages = useShamelaStore(selectAllPages);
+    const titles = useShamelaStore(selectAllTitles);
     const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
     const removeFootnoteReferences = useShamelaStore((state) => state.removeFootnoteReferences);
     const reset = useShamelaStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
 
     // Transform shamela pages to flappa-doormal Page format
-    const formattedPages = useMemo(
-        () => pages.map((p) => ({ content: p.footnote ? `${p.body}_________${p.footnote}` : p.body, id: p.id })),
-        [pages],
-    );
+    const pages = useMemo(() => allPages.map((p) => ({ content: p.body, id: p.id })), [allPages]);
 
     /**
      * Creates a ShamelaBook object from the current store state.
@@ -98,7 +96,7 @@ export const Toolbar = () => {
                 <SplitIcon />
             </Button>
             {isSegmentationPanelOpen && (
-                <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} pages={formattedPages} />
+                <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} pages={pages} headings={titles} />
             )}
             {patchCount > 0 && (
                 <DialogTriggerButton

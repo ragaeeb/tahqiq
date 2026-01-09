@@ -66,3 +66,28 @@ export function createObjectDiff<T extends Record<string, unknown>>(
 
     return diff as Partial<T>;
 }
+
+export const createUpdate = <T extends { from: number; to?: number }>(value: string, data: T) => {
+    const parts = value.split('-').map((p) => Number.parseInt(p.trim(), 10));
+    const newFrom = parts[0];
+    const newTo = parts.length > 1 ? parts[1] : undefined;
+
+    // Check if values actually changed
+    const fromChanged = !Number.isNaN(newFrom) && newFrom !== data.from;
+    const toChanged = newTo !== undefined ? !Number.isNaN(newTo) && newTo !== data.to : data.to !== undefined;
+
+    if (fromChanged || toChanged) {
+        const updates: { from?: number; to?: number } = {};
+        if (!Number.isNaN(newFrom)) {
+            updates.from = newFrom;
+        }
+        if (newTo !== undefined && !Number.isNaN(newTo)) {
+            updates.to = newTo;
+        } else if (newTo === undefined && data.to !== undefined) {
+            // User removed the 'to' value (e.g., changed "100-200" to "100")
+            updates.to = undefined;
+        }
+
+        return Object.keys(updates).length > 0 ? updates : undefined;
+    }
+};

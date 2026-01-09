@@ -1,11 +1,9 @@
 'use client';
 
-import type { Page, Segment, SegmentationOptions } from 'flappa-doormal';
-import { segmentPages } from 'flappa-doormal';
+import type { Page } from 'flappa-doormal';
 import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-
 import { PanelContainer } from '@/components/PanelContainer';
 import { AnalysisTab } from '@/components/segmentation/AnalysisTab';
 import { JsonTab } from '@/components/segmentation/JsonTab';
@@ -14,17 +12,13 @@ import { ReplacementsTab } from '@/components/segmentation/ReplacementsTab';
 import { RulesTab } from '@/components/segmentation/RulesTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { segmentsToExcerpts } from '@/lib/transform/excerpts';
+import { mapPagesToExcerpts } from '@/lib/segmentation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
-type SegmentationPanelProps = {
-    onClose: () => void;
-    pages: Page[];
-    onCreateExcerpts?: (segments: Segment[], options: SegmentationOptions) => unknown;
-};
+type SegmentationPanelProps = { onClose: () => void; pages: Page[]; headings: Page[] };
 
-export function SegmentationPanel({ onClose, onCreateExcerpts, pages }: SegmentationPanelProps) {
+export function SegmentationPanel({ onClose, pages, headings }: SegmentationPanelProps) {
     const options = useSegmentationStore((s) => s.options);
     const analysisCount = useSegmentationStore((s) => s.allLineStarts.length);
     const replacementCount = options.replace.length;
@@ -73,15 +67,14 @@ export function SegmentationPanel({ onClose, onCreateExcerpts, pages }: Segmenta
                             onClick={() => {
                                 record('SegmentFromSharedPanel');
                                 try {
-                                    toast.info('Segmenting pages...');
-                                    const segments = segmentPages(pages, { ...options, logger: console });
+                                    const id = toast.info('Segmenting pages...');
 
-                                    const excerpts = onCreateExcerpts
-                                        ? (onCreateExcerpts(segments, options) as any)
-                                        : segmentsToExcerpts(segments, options);
-
+                                    const excerpts = mapPagesToExcerpts(pages, headings, options);
                                     useExcerptsStore.getState().init(excerpts);
+
                                     router.push('/excerpts');
+
+                                    toast.dismiss(id);
                                     toast.success(`Created ${excerpts.excerpts.length} segments`);
                                 } catch (err) {
                                     console.error(err);

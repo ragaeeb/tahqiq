@@ -58,7 +58,6 @@ describe('excerptsStore actions', () => {
 
             expect(state.excerpts[0]?.text).toBe('new');
             expect(state.excerpts[0]?.lastUpdatedAt).toBeDefined();
-            expect(state.lastUpdatedAt).toBeInstanceOf(Date);
         });
 
         it('should not modify state if ID not found', () => {
@@ -121,7 +120,6 @@ describe('excerptsStore actions', () => {
             actions.updateHeading(state, 'H1', { text: 'new' });
 
             expect(state.headings[0]?.text).toBe('new');
-            expect(state.lastUpdatedAt).toBeInstanceOf(Date);
         });
     });
 
@@ -133,7 +131,6 @@ describe('excerptsStore actions', () => {
             actions.updateFootnote(state, 'F1', { text: 'new' });
 
             expect(state.footnotes[0]?.text).toBe('new');
-            expect(state.lastUpdatedAt).toBeInstanceOf(Date);
         });
     });
 

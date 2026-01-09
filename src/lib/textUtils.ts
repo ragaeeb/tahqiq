@@ -1,32 +1,12 @@
 import { sanitizeArabic, standardizeHijriSymbol, standardizeIntahaSymbol } from 'baburchi';
 import {
-    addSpaceBeforeAndAfterPunctuation,
-    addSpaceBetweenArabicTextAndNumbers,
-    cleanLiteralNewLines,
-    cleanMultilines,
-    cleanSpacesBeforePeriod,
-    condenseAsterisks,
-    condenseColons,
-    condenseDashes,
-    condenseEllipsis,
-    condensePeriods,
-    condenseUnderscores,
-    ensureSpaceBeforeBrackets,
-    ensureSpaceBeforeQuotes,
     fixBracketTypos,
     fixCurlyBraces,
     fixMismatchedQuotationMarks,
-    fixTrailingWow,
-    normalizeSlashInReferences,
-    normalizeSpaces,
-    reduceMultilineBreaksToSingle,
-    removeRedundantPunctuation,
-    removeSpaceInsideBrackets,
-    replaceDoubleBracketsWithArrows,
-    replaceEnglishPunctuationWithArabic,
-    trimSpaceInsideQuotes,
+    preformatArabicText as preformatBitaboom,
 } from 'bitaboom';
 import { isEndingWithPunctuation, type Token } from 'paragrafs';
+import { MARKER_ID_PATTERN, TRANSLATION_MARKER_PARTS } from './constants';
 
 export const fixUnbalanced = (text: string) => {
     let result = text;
@@ -38,44 +18,11 @@ export const fixUnbalanced = (text: string) => {
     return result;
 };
 
-/**
- * Removes Tatweel (kashida) character from Arabic text safely.
- * Tatweel (U+0640, ـ) is a typographic elongation used in Arabic script.
- * @param text - Input Arabic text
- * @returns Text without Tatweel characters
- */
-export const stripTatweelSafe = (text: string) => {
-    return text.replace(/\u0640/g, '');
-};
-
 const autoCorrectPipeline = [standardizeHijriSymbol, standardizeIntahaSymbol];
 
 const pastePipeline = [
     (text: string) => sanitizeArabic(text, { base: 'none', stripTatweel: true, stripZeroWidth: true }),
-    cleanSpacesBeforePeriod,
-    normalizeSlashInReferences,
-    removeSpaceInsideBrackets,
-    trimSpaceInsideQuotes,
-    replaceEnglishPunctuationWithArabic,
-    addSpaceBetweenArabicTextAndNumbers,
-    ensureSpaceBeforeBrackets,
-    ensureSpaceBeforeQuotes,
-    fixTrailingWow,
-    condenseColons,
-    cleanLiteralNewLines,
-    condenseUnderscores,
-    condenseDashes,
-    condenseAsterisks,
-    replaceDoubleBracketsWithArrows,
-    condensePeriods,
-    condenseEllipsis,
-    removeRedundantPunctuation,
-    reduceMultilineBreaksToSingle,
-    cleanMultilines,
-    cleanSpacesBeforePeriod,
-    normalizeSlashInReferences,
-    addSpaceBeforeAndAfterPunctuation,
-    normalizeSpaces,
+    preformatBitaboom,
 ];
 
 /**
@@ -137,5 +84,136 @@ export const findFirstTokenForText = (tokens: Token[], selectedText: string) => 
     }
 
     // Return null if no matching starting word is found
+    return null;
+}; /**
+ * Counts words in text by splitting on whitespace.
+ * Works for both Arabic and English text.
+ *
+ * @param text - The text to count words in
+ * @returns Number of words in the text
+ */
+
+export const countWords = (text: string) => {
+    if (!text) {
+        return 0;
+    }
+    return text.trim().split(/\s+/).filter(Boolean).length;
+};
+
+/**
+ * Arabic-aware token estimation
+ * Categories:
+ * - Arabic diacritics (tashkeel U+064B-U+0652, U+0670): ~1 diacritic/token
+ * - Tatweel (U+0640): ~1 per token (elongation character)
+ * - Arabic-Indic numerals (U+0660-U+0669, U+06F0-U+06F9): ~4 chars/token
+ * - Arabic base characters: ~2.5 chars/token
+ * - Latin/punctuation/whitespace: ~4 chars/token
+ */
+
+export const estimateTokenCount = (text: string) => {
+    if (!text) {
+        return 0;
+    }
+
+    // Arabic diacritics (tashkeel)
+    const diacriticCount = (text.match(/[\u064B-\u0652\u0670]/g) || []).length;
+
+    // Tatweel (kashida elongation)
+    const tatweelCount = (text.match(/\u0640/g) || []).length;
+
+    // Arabic-Indic numerals (both forms)
+    const arabicNumeralCount = (text.match(/[\u0660-\u0669\u06F0-\u06F9]/g) || []).length;
+
+    // Arabic base characters (excluding diacritics, tatweel, numerals)
+    const arabicBaseCount = (text.match(/[\u0600-\u063F\u0641-\u064A\u0653-\u065F\u0671-\u06EF]/g) || []).length;
+
+    // Everything else (Latin, punctuation, Western numerals, whitespace)
+    const otherCount = text.length - diacriticCount - tatweelCount - arabicNumeralCount - arabicBaseCount;
+
+    // Estimate tokens
+    return Math.ceil(
+        diacriticCount + // ~1 token each
+            tatweelCount + // ~1 token each
+            arabicNumeralCount / 4 + // ~4 chars/token
+            arabicBaseCount / 2.5 + // ~2.5 chars/token
+            otherCount / 4,
+    );
+}; /**
+ * Parses bulk translation text into a Map for efficient O(1) lookup.
+ * Handles multi-line translations where subsequent lines without markers belong to the previous entry.
+ *
+ * @param rawText - Raw text containing translations in format "ID - Translation text"
+ * @returns ParseTranslationsResult with a Map for O(1) lookup and count
+ */
+
+export const parseTranslations = (rawText: string) => {
+    const translationMap = new Map<string, string>();
+    const lines = rawText.split('\n');
+    let currentId: string | null = null;
+
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        // Skip empty lines
+        if (!trimmedLine) {
+            continue;
+        }
+
+        // Try to parse as a new translation entry
+        const parsed = parseTranslationLine(trimmedLine);
+
+        if (parsed) {
+            // New translation entry
+            currentId = parsed.id;
+            translationMap.set(currentId, parsed.text);
+        } else if (currentId) {
+            // Continuation of previous translation - append with newline
+            const existing = translationMap.get(currentId)!;
+            translationMap.set(currentId, `${existing}\n${trimmedLine}`);
+        }
+        // Lines before first valid translation are ignored
+    }
+
+    return { count: translationMap.size, translationMap };
+};
+
+/**
+ * Parses a single translation line and extracts the ID and text
+ * @param line - String line to process
+ * @returns Parsed translation with ID and text, or null if not a valid translation line
+ */
+export const parseTranslationLine = (line: string) => {
+    const { dashes, optionalSpace } = TRANSLATION_MARKER_PARTS;
+    const pattern = new RegExp(`^(${MARKER_ID_PATTERN})${optionalSpace}${dashes}(.*)$`);
+    const match = line.match(pattern);
+
+    const [, id, text] = match || [];
+    return text ? { id, text: text.trim() } : null;
+};
+
+export const splitLines = (value: string) => value.split('\n').map((s) => s.trimEnd());
+
+/**
+ * Extracts book ID from a ketabonline.com URL.
+ * Supports formats like:
+ * - https://ketabonline.com/ar/books/2122
+ * - https://ketabonline.com/en/books/2122
+ * - ketabonline.com/ar/books/2122
+ */
+export const extractKetabBookIdFromUrl = (url: string) => {
+    // Match /books/{id} pattern
+    const [, id] = url.match(/\/books\/(\d+)/i) || [];
+
+    if (id) {
+        return parseInt(id, 10);
+    }
+
+    // Also try just a plain number
+    const [, plainNumber] = url.trim().match(/^(\d+)$/) || [];
+
+    if (plainNumber) {
+        return parseInt(plainNumber, 10);
+    }
+
     return null;
 };

@@ -1,8 +1,7 @@
 'use client';
 
-import type { Page } from 'flappa-doormal';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect, useMemo } from 'react';
+import { Suspense, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
@@ -55,12 +54,6 @@ function WebPageContent() {
 
     const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } = useWebFilters();
     const hasData = pagesCount > 0 || titlesCount > 0;
-
-    // Transform web pages to flappa-doormal Page format for segmentation
-    const segmentationPages = useMemo<Page[]>(
-        () => allPages.map((p) => ({ content: p.footnote ? `${p.body}_________${p.footnote}` : p.body, id: p.id })),
-        [allPages],
-    );
 
     useEffect(() => {
         loadFromOPFS('web').then((data) => {
@@ -123,7 +116,7 @@ function WebPageContent() {
                                 {scrapingEngine && ` • ${scrapingEngine.name} v${scrapingEngine.version}`}
                             </span>
                         </div>
-                        <Toolbar segmentationPages={segmentationPages} />
+                        <Toolbar />
                     </div>
 
                     <div className="w-full">

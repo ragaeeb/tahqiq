@@ -106,14 +106,6 @@ export function EditExcerptDialogContent({ excerpt, onClose, onUpdate }: EditExc
                         <Label htmlFor="to">To Page</Label>
                         <Input defaultValue={excerpt.to ?? ''} id="to" name="to" placeholder="Optional" type="number" />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="vol">Volume</Label>
-                        <Input defaultValue={excerpt.vol} id="vol" name="vol" placeholder="Vol" type="number" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="vp">Volume Page</Label>
-                        <Input defaultValue={excerpt.vp} id="vp" name="vp" placeholder="VP" type="number" />
-                    </div>
                 </div>
 
                 {/* Translator selector - uncontrolled with name for form submission */}

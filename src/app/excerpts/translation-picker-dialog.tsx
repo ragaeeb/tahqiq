@@ -7,7 +7,8 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { estimateTokenCount, formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/transform/excerpts';
+import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
+import { estimateTokenCount } from '@/lib/textUtils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 type TranslationPickerDialogContentProps = { onClose: () => void };

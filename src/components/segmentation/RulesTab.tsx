@@ -1,7 +1,7 @@
 'use client';
 
-import type { SplitRule, TokenMapping } from 'flappa-doormal';
-import { escapeRegex, optimizeRules } from 'flappa-doormal';
+import type { PatternTypeKey, SplitRule, TokenMapping } from 'flappa-doormal';
+import { optimizeRules, PATTERN_TYPE_KEYS, Token } from 'flappa-doormal';
 import { Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -11,76 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { applyTokenMappingsToRule, getPatternKey, getPatternValueString, SUGGESTED_RULES } from '@/lib/rules';
+import { splitLines } from '@/lib/textUtils';
 import { DEFAULT_TOKEN_MAPPINGS } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
-
-type PatternKey = 'lineStartsWith' | 'lineStartsAfter' | 'lineEndsWith' | 'template' | 'regex';
-
-const PATTERN_KEYS: PatternKey[] = ['lineStartsWith', 'lineStartsAfter', 'lineEndsWith', 'template', 'regex'];
-
-const getPatternKey = (rule: SplitRule): PatternKey => {
-    if ('lineStartsWith' in rule) {
-        return 'lineStartsWith';
-    }
-    if ('lineStartsAfter' in rule) {
-        return 'lineStartsAfter';
-    }
-    if ('lineEndsWith' in rule) {
-        return 'lineEndsWith';
-    }
-    if ('template' in rule) {
-        return 'template';
-    }
-    return 'regex';
-};
-
-const splitLines = (value: string) => value.split('\n').map((s) => s.trimEnd());
-
-const getPatternValueString = (rule: SplitRule, key: PatternKey): string => {
-    if (key === 'template') {
-        return String((rule as any).template ?? '');
-    }
-    if (key === 'regex') {
-        return String((rule as any).regex ?? '');
-    }
-    return (((rule as any)[key] as string[]) ?? []).join('\n');
-};
-
-const SUGGESTED_RULES: Array<{ label: string; rule: SplitRule }> = [
-    { label: 'Fasl', rule: { fuzzy: true, lineStartsWith: ['{{fasl}}'], split: 'at' } },
-    { label: 'Basmalah', rule: { fuzzy: true, lineStartsWith: ['{{basmalah}}'], split: 'at' } },
-    { label: 'Naql', rule: { fuzzy: true, lineStartsWith: ['{{naql}}'], pageStartGuard: '{{tarqim}}', split: 'at' } },
-    { label: 'Kitab', rule: { fuzzy: true, lineStartsWith: ['{{kitab}} '], meta: { type: 'book' }, split: 'at' } },
-    { label: 'Bab', rule: { fuzzy: true, lineStartsWith: ['{{bab}} '], meta: { type: 'chapter' }, split: 'at' } },
-    { label: 'Heading (##)', rule: { lineStartsAfter: ['## '], meta: { type: 'chapter' }, split: 'at' } },
-    { label: 'List Item', rule: { lineStartsAfter: ['{{raqms:num}} {{dash}} '], split: 'at' } },
-];
-
-const applyTokenMappings = (template: string, mappings: TokenMapping[]): string => {
-    let out = template;
-    for (const m of mappings) {
-        const token = m.token.trim();
-        const name = m.name.trim();
-        if (!token || !name) {
-            continue;
-        }
-        out = out.replace(new RegExp(`\\{\\{${escapeRegex(token)}\\}\\}`, 'gu'), `{{${token}:${name}}}`);
-    }
-    return out;
-};
-
-const applyTokenMappingsToRule = (rule: SplitRule, mappings: TokenMapping[]): SplitRule => {
-    const key = getPatternKey(rule);
-    if (key === 'regex') {
-        return rule;
-    }
-    if (key === 'template') {
-        const template = applyTokenMappings((rule as any).template ?? '', mappings);
-        return { ...(rule as any), template } as SplitRule;
-    }
-    const patterns = ((rule as any)[key] as string[]) ?? [];
-    return { ...(rule as any), [key]: patterns.map((p) => applyTokenMappings(p, mappings)) } as SplitRule;
-};
 
 const TokenMappingsSection = () => {
     const tokenMappings = useSegmentationStore((s) => s.tokenMappings);
@@ -156,8 +90,8 @@ type RuleRowProps = {
     index: number;
     rule: SplitRule;
     onDelete: (index: number) => void;
-    onSetPatternKey: (index: number, key: PatternKey) => void;
-    onSetPatternValue: (index: number, key: PatternKey, value: string) => void;
+    onSetPatternKey: (index: number, key: PatternTypeKey) => void;
+    onSetPatternValue: (index: number, key: PatternTypeKey, value: string) => void;
     onPatch: (index: number, patch: Partial<SplitRule>) => void;
 };
 
@@ -173,12 +107,12 @@ const RuleRow = ({ index, rule, onDelete, onSetPatternKey, onSetPatternValue, on
             <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <Label className="text-muted-foreground text-xs">Rule {index + 1}</Label>
-                    <Select onValueChange={(v) => onSetPatternKey(index, v as PatternKey)} value={patternKey}>
+                    <Select onValueChange={(v) => onSetPatternKey(index, v as PatternTypeKey)} value={patternKey}>
                         <SelectTrigger size="sm">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            {PATTERN_KEYS.map((k) => (
+                            {PATTERN_TYPE_KEYS.map((k) => (
                                 <SelectItem key={k} value={k}>
                                     {k}
                                 </SelectItem>
@@ -222,7 +156,7 @@ const RuleRow = ({ index, rule, onDelete, onSetPatternKey, onSetPatternValue, on
                 <div className="flex items-center gap-2">
                     <Checkbox
                         checked={Boolean(pageStartGuard)}
-                        onCheckedChange={(c) => onPatch(index, { pageStartGuard: c ? '{{tarqim}}' : undefined })}
+                        onCheckedChange={(c) => onPatch(index, { pageStartGuard: c ? Token.TARQIM : undefined })}
                     />
                     <Label className="text-xs">pageStartGuard</Label>
                 </div>
@@ -312,7 +246,7 @@ export const RulesTab = () => {
         setRules(next);
     };
 
-    const setPatternKey = (index: number, key: PatternKey) => {
+    const setPatternKey = (index: number, key: PatternTypeKey) => {
         const rule = rules[index];
         const currentKey = getPatternKey(rule);
         const currentValue = getPatternValueString(rule, currentKey);
@@ -324,7 +258,7 @@ export const RulesTab = () => {
         setRules(nextRules);
     };
 
-    const setPatternValue = (index: number, key: PatternKey, value: string) => {
+    const setPatternValue = (index: number, key: PatternTypeKey, value: string) => {
         const rule = rules[index];
         const { lineStartsWith, lineStartsAfter, lineEndsWith, template, regex, ...rest } = rule as any;
         const next =

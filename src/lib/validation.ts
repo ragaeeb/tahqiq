@@ -1,4 +1,4 @@
-import { MARKER_ID_PATTERN, TRANSLATION_MARKER_PARTS } from './transform/excerpts';
+import { MARKER_ID_PATTERN, TRANSLATION_MARKER_PARTS } from './constants';
 
 /**
  * Result of translation validation

@@ -1,5 +1,6 @@
-import type { SegmentationOptions } from 'flappa-doormal';
-import type { PostProcessingApp } from '../commonTypes';
+import type { Segment, SegmentationOptions } from 'flappa-doormal';
+import type { Markers } from '@/lib/constants';
+import type { Prettify } from '@/types/utils';
 
 /**
  * Represents a foreign ID with associated volume information
@@ -76,7 +77,7 @@ export type Entry = {
 /**
  * Set if this is a title/heading of a book or chapter
  */
-export type ExcerptType = 'book' | 'chapter';
+export type ExcerptType = Markers.Book | Markers.Chapter;
 
 type ExcerptMetadata = {
     /** Set if this is a title/heading of a book or chapter */
@@ -85,36 +86,20 @@ type ExcerptMetadata = {
     num?: string;
 };
 
-type RawExcerpt = {
+export type IndexedExcerpt = Pick<Segment, 'from' | 'to'> & {
     /** The Arabic text of the excerpt */
     nass: string;
 
-    /** The page number in the book that this text was extracted from. */
-    from: number;
-
     meta?: ExcerptMetadata;
 
-    /** The page number in the book that this text spans until (if different from the starting page) */
-    to?: number;
-};
-
-export type IndexedExcerpt = RawExcerpt & {
     /** Unique ID of this excerpt */
     id: string;
-
-    /** Volume number for this page */
-    vol: number;
-
-    /** The page in the volume (ie: this value would be 55 if the excerpt is from page 55 in the 7th volume). This is useful for citations. */
-    vp: number;
 };
 
 enum AITranslator {
-    ClaudeSonnet45 = 891,
     Gemini3 = 890,
     OpenAIGpt51Thinking = 889,
     OpenAIGpt5 = 879,
-    Grok41ThinkingBeta = 892,
 }
 
 type AITranslation = {
@@ -128,15 +113,12 @@ type AITranslation = {
     lastUpdatedAt: number;
 };
 
-export type Excerpt = IndexedExcerpt & AITranslation;
+export type Excerpt = Prettify<IndexedExcerpt & AITranslation>;
 
 /**
  * Represents a heading/section marker
  */
-export type IndexedHeading = Pick<RawExcerpt, 'nass' | 'from'> & {
-    /** Unique identifier */
-    id: string;
-
+export type IndexedHeading = Pick<IndexedExcerpt, 'nass' | 'from' | 'id'> & {
     /** Parent heading ID */
     parent?: string;
 };
@@ -163,89 +145,7 @@ export type HeadingOptions = {
     preprompt?: Record<string, string>;
 };
 
-type TemplatePattern = { lineStartsWith?: string[] } | { template: string };
-
-type RegexPattern = { regex: string };
-
-type Match = TemplatePattern | RegexPattern;
-
-type SlicingOption = Match & { meta?: any; min?: number; max?: number };
-
-type OmitPageByPattern = { regex: string };
-
-/**
- * Omit pages starting from the "from" page number until the "to". If "to" is omitted, then we will omit all pages starting from the "from" until the end of the book.
- */
-type OmitPageByRange = { from: number; to?: number };
-
-type OmitPageNumbers = { pages: number[] };
-
-type OmitPagesOption = OmitPageByPattern | OmitPageByRange | OmitPageNumbers;
-
-type Replacements = { from: Match; to: string; page?: number };
-
-/**
- * Legacy/deprecated options for parsing matn text (v2.x and earlier)
- * These fields are automatically migrated to their v3.0 equivalents
- */
-export type LegacyMatnParseOptions = {
-    /** Surgical patches for typos in the book.
-     * @deprecated since v3.0, use replace
-     */
-    aslPatches?: Array<{ match: string; page: number; replacement: string }>;
-    /** Filters out page ranges
-     *
-     * @deprecated since v3.0, use omit
-     */
-    excludePages?: string[];
-    /** Removes pages matching any of these patterns
-     *
-     * @deprecated since v3.0, use omit
-     */
-    excludePagesWithPatterns?: string[];
-    /** Pattern to options mapping.
-     * @deprecated since v3.0, use slices
-     */
-    patternToOptions?: Record<string, PatternOptions>;
-    /** Preprocessing replacements
-     *
-     * @deprecated since v3.0, use replace
-     */
-    replacements?: Record<string, string>;
-};
-
-/**
- * Options for parsing matn text (v3.0+)
- */
-export type MatnParseOptions = {
-    /** Should capture footnotes */
-    footnotes?: boolean;
-    /** Options for processing headings */
-    headings?: HeadingOptions;
-    /** Line separator (default: \\n) */
-    lineSeparator?: string;
-    /** Controls text overflow at page breaks */
-    overflow?: 'next' | 'punctuation';
-    /** Preprocessing replacements */
-    preprompt?: Record<string, string>;
-    /** Marker pattern if previous entry matches */
-    prevEntryMarkerPattern?: string;
-
-    /**
-     * @since v3.0
-     */
-    replace?: Replacements[];
-
-    /**
-     * @since v3.0
-     */
-    omit?: OmitPagesOption[];
-
-    /**
-     * @since v3.0
-     */
-    slices?: SlicingOption[];
-};
+type PostProcessingApp = { id: string; timestamp?: number; version: string };
 
 /**
  * Complete excerpts data structure
@@ -268,6 +168,8 @@ export type Excerpts = {
     /** Parsing options used */
     options: SegmentationOptions;
 
+    postProcessingApps: PostProcessingApp[];
+
     /** The prompt used to translate the excerpts. */
     promptForTranslation: string;
 };
@@ -275,29 +177,9 @@ export type Excerpts = {
 /**
  * Core state for excerpts management
  */
-export type ExcerptsStateCore = {
-    /** Optional collection metadata */
-    collection?: Collection;
-    /** Contract version */
-    contractVersion: string;
-    /** Creation timestamp */
-    createdAt: Date;
-    /** All excerpt entries */
-    excerpts: Excerpt[];
-    /** All footnotes */
-    footnotes: Excerpt[];
-    /** All headings */
-    headings: Heading[];
+export type ExcerptsStateCore = Excerpts & {
     /** Input filename */
     inputFileName?: string;
-    /** Last update timestamp */
-    lastUpdatedAt: Date;
-    /** Parsing options */
-    options: SegmentationOptions;
-    /** Apps used for post-processing */
-    postProcessingApps: PostProcessingApp[];
-    /** The prompt used to translate the excerpts */
-    promptForTranslation: string;
     /** Filtered excerpt IDs (undefined = show all) */
     filteredExcerptIds?: string[];
     /** Filtered heading IDs (undefined = show all) */

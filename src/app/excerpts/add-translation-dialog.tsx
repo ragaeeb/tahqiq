@@ -17,7 +17,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATION_MODELS } from '@/lib/constants';
-import { parseTranslations } from '@/lib/transform/excerpts';
+import { parseTranslations } from '@/lib/textUtils';
 import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { getTranslatorValue, TranslatorSelect } from './translator-select';

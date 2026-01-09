@@ -407,7 +407,7 @@ type RuleConfig = {
     patternType: 'lineStartsWith' | 'lineStartsAfter' | 'template';
     fuzzy: boolean;               // Diacritic-insensitive matching
     pageStartGuard: boolean;      // Skip matches at page boundaries
-    metaType: 'none' | 'book' | 'chapter';
+    metaType: 'B' | 'C';
     min?: number;                 // Minimum page number
 };
 
