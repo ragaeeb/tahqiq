@@ -1,3 +1,10 @@
+# [1.44.0](https://github.com/ragaeeb/tahqiq/compare/v1.43.0...v1.44.0) (2026-01-11)
+
+
+### Features
+
+* **merge:** Automatically merge short segments ([18a2d63](https://github.com/ragaeeb/tahqiq/commit/18a2d63a75c84a4db7516616c22dd1041c9e9e58))
+
 # [1.43.0](https://github.com/ragaeeb/tahqiq/compare/v1.42.1...v1.43.0) (2026-01-09)
 
 
