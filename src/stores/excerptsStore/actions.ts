@@ -1,6 +1,6 @@
+import { Token } from 'flappa-doormal';
 import { LatestContractVersion, SHORT_SEGMENT_WORD_THRESHOLD, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
 import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds, updateItemById } from '@/lib/store-utils';
-import { countWords } from '@/lib/textUtils';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
 
@@ -20,7 +20,13 @@ export const INITIAL_STATE: ExcerptsStateCore = {
     headings: [],
     inputFileName: undefined,
     lastUpdatedAt: nowInSeconds(),
-    options: {},
+    options: {
+        breakpoints: [{ pattern: Token.TARQIM }, ''],
+        maxPages: 1,
+        minWordsPerSegment: SHORT_SEGMENT_WORD_THRESHOLD,
+        replace: [],
+        rules: [],
+    },
     postProcessingApps: [],
     promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
     sentToLlmIds: new Set(),
@@ -30,6 +36,9 @@ export const INITIAL_STATE: ExcerptsStateCore = {
  * Initializes the store from Excerpts data, migrating if necessary
  */
 export const initStore = (migrated: Excerpts, fileName?: string): ExcerptsStateCore => {
+    // Migration: move top-level replace to options.replace
+    const options = migrated.options || {};
+
     return {
         ...INITIAL_STATE,
         collection: migrated.collection,
@@ -40,7 +49,7 @@ export const initStore = (migrated: Excerpts, fileName?: string): ExcerptsStateC
         headings: [...migrated.headings],
         inputFileName: fileName,
         lastUpdatedAt: migrated.lastUpdatedAt,
-        options: migrated.options,
+        options,
         postProcessingApps: migrated.postProcessingApps,
         promptForTranslation: migrated.promptForTranslation || TRANSLATE_EXCERPTS_PROMPT.join('\n'),
     };
@@ -332,66 +341,6 @@ export const mergeExcerpts = (state: ExcerptsStateCore, ids: string[]): boolean 
     }
 
     return true;
-};
-
-/**
- * Merges adjacent short excerpts that have the same `from` and `to` values.
- * Uses SHORT_SEGMENT_WORD_THRESHOLD as the minimum word count.
- *
- * @param state - The current state
- * @returns Number of excerpts merged (removed)
- */
-export const mergeShortExcerpts = (state: ExcerptsStateCore): number => {
-    if (state.excerpts.length < 2) {
-        return 0;
-    }
-
-    const minWordCount = SHORT_SEGMENT_WORD_THRESHOLD;
-    const result: Excerpt[] = [];
-    let current = { ...state.excerpts[0] };
-    let mergedCount = 0;
-    const now = nowInSeconds();
-
-    for (let i = 1; i < state.excerpts.length; i++) {
-        const next = state.excerpts[i];
-        const currentWordCount = countWords(current.nass || '');
-        const nextWordCount = countWords(next.nass || '');
-
-        // Check if either segment is short and have same from/to
-        const currentIsShort = currentWordCount < minWordCount;
-        const nextIsShort = nextWordCount < minWordCount;
-        const sameFrom = current.from === next.from;
-        const sameTo = current.to === next.to;
-
-        if ((currentIsShort || nextIsShort) && sameFrom && sameTo) {
-            // Merge: combine nass with newline separator
-            current = {
-                ...current,
-                lastUpdatedAt: now,
-                nass: `${current.nass || ''}\n${next.nass || ''}`,
-                // Keep first excerpt's text/translator, extend to if next has larger
-                to: next.to && next.to > (current.to || current.from) ? next.to : current.to,
-            };
-            mergedCount++;
-        } else {
-            // Push current and move to next
-            result.push(current);
-            current = { ...next };
-        }
-    }
-    // Don't forget the last segment
-    result.push(current);
-
-    if (mergedCount > 0) {
-        state.excerpts = result;
-
-        // Clear any filters as IDs may have changed
-        if (state.filteredExcerptIds) {
-            state.filteredExcerptIds = undefined;
-        }
-    }
-
-    return mergedCount;
 };
 
 /**

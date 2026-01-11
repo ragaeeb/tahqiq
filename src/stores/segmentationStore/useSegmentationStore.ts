@@ -1,11 +1,19 @@
 import { Token } from 'flappa-doormal';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { SHORT_SEGMENT_WORD_THRESHOLD } from '@/lib/constants';
 import { DEFAULT_TOKEN_MAPPINGS, type SegmentationState } from './types';
 
 const INITIAL_STATE = {
     allLineStarts: [],
-    options: { breakpoints: [{ pattern: `${Token.TARQIM}\\s*` }, ''], maxPages: 1, replace: [], rules: [] },
+    // Unified options now include replace
+    options: {
+        breakpoints: [{ pattern: Token.TARQIM }, ''],
+        maxPages: 1,
+        minWordsPerSegment: SHORT_SEGMENT_WORD_THRESHOLD,
+        replace: [],
+        rules: [],
+    },
     ruleConfigs: [],
     tokenMappings: DEFAULT_TOKEN_MAPPINGS,
 };
@@ -17,7 +25,6 @@ const INITIAL_STATE = {
 export const useSegmentationStore = create<SegmentationState>()(
     immer((set) => ({
         ...INITIAL_STATE,
-
         reset: () =>
             set((state) => {
                 Object.assign(state, INITIAL_STATE);
@@ -31,7 +38,7 @@ export const useSegmentationStore = create<SegmentationState>()(
 
         setOptions: (options) =>
             set((state) => {
-                state.options = { ...options, replace: options.replace ?? [], rules: options.rules ?? [] };
+                state.options = { ...options, rules: options.rules ?? [] };
             }),
 
         setRuleConfigs: (configs) =>
@@ -47,8 +54,6 @@ export const useSegmentationStore = create<SegmentationState>()(
         updateOptions: (patch) =>
             set((state) => {
                 state.options = { ...state.options, ...patch };
-                state.options.replace ??= [];
-                state.options.rules ??= [];
             }),
     })),
 );

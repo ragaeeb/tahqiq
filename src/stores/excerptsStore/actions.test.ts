@@ -11,7 +11,7 @@ const createBaseState = (): ExcerptsStateCore => ({
     headings: [],
     inputFileName: undefined,
     lastUpdatedAt: undefined,
-    options: undefined,
+    options: { breakpoints: [], maxPages: 0, replace: [], rules: [] },
     postProcessingApps: [],
     prompt: undefined,
 });

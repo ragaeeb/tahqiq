@@ -8,11 +8,10 @@ import {
     RefreshCwIcon,
     SaveIcon,
     SearchIcon,
-    Shrink,
     TypeIcon,
 } from 'lucide-react';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -29,9 +28,8 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SHORT_SEGMENT_WORD_THRESHOLD, STORAGE_KEYS } from '@/lib/constants';
+import { STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { detectMergeableShortExcerpts } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
 import {
     selectAllExcerpts,
@@ -100,7 +98,6 @@ function ExcerptsPageContent() {
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
-    const mergeShortExcerpts = useExcerptsStore((state) => state.mergeShortExcerpts);
 
     const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode } =
         useExcerptFilters();
@@ -111,33 +108,6 @@ function ExcerptsPageContent() {
 
     // Check if any excerpts have translations - if not, hide the column for more Arabic space
     const hasAnyTranslations = allExcerpts.some((e) => e.text);
-
-    // Track if we've shown the merge toast to avoid duplicates
-    const mergeToastShown = useRef(false);
-
-    // Detect short segments that can be merged and show toast on first load
-    useEffect(() => {
-        if (!hasData || mergeToastShown.current) {
-            return;
-        }
-
-        const mergeableCount = detectMergeableShortExcerpts(allExcerpts, SHORT_SEGMENT_WORD_THRESHOLD);
-        if (mergeableCount > 0) {
-            mergeToastShown.current = true;
-            toast.info(`${mergeableCount} short segment pairs can be merged`, {
-                action: {
-                    label: 'Merge',
-                    onClick: () => {
-                        const merged = mergeShortExcerpts();
-                        if (merged > 0) {
-                            toast.success(`Merged ${merged} short excerpts`);
-                        }
-                    },
-                },
-                duration: 10000,
-            });
-        }
-    }, [hasData, allExcerpts, mergeShortExcerpts]);
 
     // Sort excerpts by length if sortMode is 'length'
     const sortedExcerpts = useMemo(() => {
@@ -398,21 +368,6 @@ function ExcerptsPageContent() {
                                 title="Apply ALA-LC transliteration formatting"
                             >
                                 <TypeIcon />
-                            </Button>
-                            <Button
-                                className="bg-purple-500"
-                                onClick={() => {
-                                    record('MergeShortExcerpts');
-                                    const merged = mergeShortExcerpts();
-                                    if (merged > 0) {
-                                        toast.success(`Merged ${merged} short excerpts`);
-                                    } else {
-                                        toast.info('No short excerpts to merge');
-                                    }
-                                }}
-                                title="Merge short adjacent excerpts"
-                            >
-                                <Shrink />
                             </Button>
                             <ConfirmButton onClick={handleReset}>
                                 <RefreshCwIcon />

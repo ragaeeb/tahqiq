@@ -1,11 +1,12 @@
 'use client';
 
-import { type SegmentationOptions, validateRules } from 'flappa-doormal';
+import { validateRules } from 'flappa-doormal';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { BookSegmentationOptions } from '@/stores/segmentationStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
 export const JsonTab = () => {
@@ -23,7 +24,7 @@ export const JsonTab = () => {
                 const value = formData.get('options') as string;
 
                 try {
-                    const parsed = JSON.parse(value) as SegmentationOptions;
+                    const parsed = JSON.parse(value) as BookSegmentationOptions;
 
                     const issues = validateRules(parsed.rules ?? []).filter(Boolean);
                     if (issues.length > 0) {

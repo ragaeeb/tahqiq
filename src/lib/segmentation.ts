@@ -1,45 +1,17 @@
 import { sanitizeArabic } from 'baburchi';
-import { fixTrailingWow, preformatArabicText } from 'bitaboom';
-import { type Page, type Segment, type SegmentationOptions, segmentPages } from 'flappa-doormal';
-import { LatestContractVersion, Markers, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
+import { preformatArabicText } from 'bitaboom';
+import { type Page, type Segment, segmentPages } from 'flappa-doormal';
+import {
+    LatestContractVersion,
+    Markers,
+    SHORT_SEGMENT_WORD_THRESHOLD,
+    TRANSLATE_EXCERPTS_PROMPT,
+} from '@/lib/constants';
+import { applyReplacements } from '@/lib/replace';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
+import type { BookSegmentationOptions } from '@/stores/segmentationStore/types';
 import { countWords } from './textUtils';
-
-/**
- * Detects how many pairs of adjacent short excerpts could be merged.
- * Used to show a toast notification prompting the user to merge.
- *
- * @param excerpts - Array of excerpts to check
- * @param minWordCount - Minimum word count threshold for short excerpts
- * @returns Number of mergeable pairs
- */
-export const detectMergeableShortExcerpts = (excerpts: IndexedExcerpt[], minWordCount: number) => {
-    if (excerpts.length < 2) {
-        return 0;
-    }
-
-    let mergeablePairs = 0;
-
-    for (let i = 0; i < excerpts.length - 1; i++) {
-        const current = excerpts[i];
-        const next = excerpts[i + 1];
-
-        const currentWordCount = countWords(current.nass || '');
-        const nextWordCount = countWords(next.nass || '');
-
-        const currentIsShort = currentWordCount < minWordCount;
-        const nextIsShort = nextWordCount < minWordCount;
-        const sameFrom = current.from === next.from;
-        const sameTo = current.to === next.to;
-
-        if ((currentIsShort || nextIsShort) && sameFrom && sameTo) {
-            mergeablePairs++;
-        }
-    }
-
-    return mergeablePairs;
-};
 
 const MAX_LETTERS = 26;
 
@@ -74,9 +46,61 @@ class IdGenerator {
     }
 }
 
-export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: SegmentationOptions): Excerpts => {
-    pages = pages.map((p) => ({ content: fixTrailingWow(p.content), id: p.id }));
-    const segments = segmentPages(pages, options);
+/**
+ * Merges adjacent short excerpts that have the same `from` and `to` values.
+ * Uses SHORT_SEGMENT_WORD_THRESHOLD as the minimum word count.
+ *
+ * @param state - The current state
+ * @returns Number of excerpts merged (removed)
+ */
+export const mergeShortSegments = (segments: Segment[], minWordCount: number) => {
+    if (segments.length < 2) {
+        return segments;
+    }
+
+    const result: Segment[] = [];
+    let current = { ...segments[0] };
+
+    for (let i = 1; i < segments.length; i++) {
+        const next = segments[i];
+        const currentWordCount = countWords(current.content || '');
+        const nextWordCount = countWords(next.content || '');
+
+        // Check if either segment is short and have same from/to
+        const currentIsShort = currentWordCount < minWordCount;
+        const nextIsShort = nextWordCount < minWordCount;
+        const sameFrom = current.from === next.from;
+        const sameTo = current.to === next.to;
+
+        if ((currentIsShort || nextIsShort) && sameFrom && sameTo) {
+            // Merge: combine nass with newline separator
+            current = {
+                ...current,
+                content: `${current.content || ''}\n${next.content || ''}`,
+                // Keep first excerpt's text/translator, extend to if next has larger
+                to: next.to && next.to > (current.to || current.from) ? next.to : current.to,
+            };
+        } else {
+            // Push current and move to next
+            result.push(current);
+            current = { ...next };
+        }
+    }
+    // Don't forget the last segment
+    result.push(current);
+
+    return result;
+};
+
+export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: BookSegmentationOptions): Excerpts => {
+    const {
+        replace: replaceRules,
+        minWordsPerSegment = SHORT_SEGMENT_WORD_THRESHOLD,
+        ...segmentationOptions
+    } = options;
+    pages = applyReplacements(pages, replaceRules);
+    let segments = segmentPages(pages, segmentationOptions);
+    segments = mergeShortSegments(segments, minWordsPerSegment);
     const texts = preformatArabicText(segments.map((s) => s.content)); // format the segments not the pages because the pages might have segmentation rules based on the original format
     const sanitized = sanitizeArabic(texts, 'aggressive'); // this is used to filter out false positives
 
@@ -183,4 +207,58 @@ export const getSegmentFilterKey = (dbg: DebugMeta | undefined): string => {
         return `breakpoint:${dbg.breakpoint.pattern}`;
     }
     return 'rule-only';
+};
+
+type FilterOption = {
+    type: 'all' | 'rule-only' | 'breakpoint' | 'contentLengthSplit';
+    value?: string; // For breakpoint patterns or splitReason
+    label: string;
+    count: number;
+};
+
+export const buildSegmentFilterOptions = (segments: Excerpt[], metaKey: string, filterKey: string) => {
+    const counts = new Map<string, number>();
+    counts.set('all', segments.length);
+    counts.set('rule-only', 0);
+
+    // First pass: count occurrences of each filter key
+    for (const seg of segments) {
+        const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
+        const key = getSegmentFilterKey(dbg);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    // Build filter options
+    const opts: FilterOption[] = [{ count: counts.get('all') ?? 0, label: 'All segments', type: 'all' }];
+
+    const ruleOnlyCount = counts.get('rule-only') ?? 0;
+    if (ruleOnlyCount > 0) {
+        opts.push({ count: ruleOnlyCount, label: 'Rule matches only', type: 'rule-only' });
+    }
+
+    // Add breakpoint patterns
+    for (const [key, count] of counts) {
+        if (key.startsWith('breakpoint:')) {
+            const pattern = key.slice('breakpoint:'.length);
+            const displayPattern = pattern === '' ? '<page-boundary>' : pattern;
+            opts.push({ count, label: `Breakpoint: ${displayPattern}`, type: 'breakpoint', value: pattern });
+        }
+    }
+
+    // Add contentLengthSplit reasons
+    for (const [key, count] of counts) {
+        if (key.startsWith('contentLengthSplit:')) {
+            const reason = key.slice('contentLengthSplit:'.length);
+            opts.push({ count, label: `Max length (${reason})`, type: 'contentLengthSplit', value: reason });
+        }
+    }
+
+    // Filter segments based on selected filter
+    const filtered = segments.filter((seg) => {
+        // debug filter check
+        const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
+        return filterKey === 'all' || getSegmentFilterKey(dbg) === filterKey;
+    });
+
+    return { filteredSegments: filtered, filterOptions: opts };
 };

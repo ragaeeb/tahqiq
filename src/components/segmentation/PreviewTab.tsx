@@ -1,16 +1,17 @@
 'use client';
 
 import type { Page } from 'flappa-doormal';
-import { Scissors } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, Scissors, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import VirtualizedList from '@/app/excerpts/virtualized-list';
+import SubmittableInput from '@/components/submittable-input';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+    buildSegmentFilterOptions,
     type DebugMeta,
     getMetaKey,
-    getSegmentFilterKey,
     mapPagesToExcerpts,
     summarizeRulePattern,
 } from '@/lib/segmentation';
@@ -19,13 +20,6 @@ import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentation
 
 type PreviewTabProps = { pages: Page[] };
 
-type FilterOption = {
-    type: 'all' | 'rule-only' | 'breakpoint' | 'contentLengthSplit';
-    value?: string; // For breakpoint patterns or splitReason
-    label: string;
-    count: number;
-};
-
 const pagesLabel = (seg: IndexedExcerpt) => (seg.to ? `${seg.from}-${seg.to}` : String(seg.from));
 
 export const PreviewTab = ({ pages }: PreviewTabProps) => {
@@ -33,6 +27,20 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
     const debug = (options as any).debug && typeof (options as any).debug === 'object' ? (options as any).debug : true;
     const metaKey = getMetaKey(debug);
     const [filterKey, setFilterKey] = useState<string>('all');
+    const [jumpToPage, setJumpToPage] = useState<string | null>(null);
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+    const toggleExpand = (id: string) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
 
     const segments = useMemo(() => {
         const result = mapPagesToExcerpts(pages, [], { ...(options as any), debug });
@@ -40,61 +48,13 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
     }, [pages, options, debug]);
 
     const { filteredSegments, filterOptions } = useMemo(() => {
-        const counts = new Map<string, number>();
-        counts.set('all', segments.length);
-        counts.set('rule-only', 0);
-
-        // First pass: count occurrences of each filter key
-        for (const seg of segments) {
-            const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
-            const key = getSegmentFilterKey(dbg);
-            counts.set(key, (counts.get(key) ?? 0) + 1);
-        }
-
-        // Build filter options
-        const opts: FilterOption[] = [{ count: counts.get('all') ?? 0, label: 'All segments', type: 'all' }];
-
-        const ruleOnlyCount = counts.get('rule-only') ?? 0;
-        if (ruleOnlyCount > 0) {
-            opts.push({ count: ruleOnlyCount, label: 'Rule matches only', type: 'rule-only' });
-        }
-
-        // Add breakpoint patterns
-        for (const [key, count] of counts) {
-            if (key.startsWith('breakpoint:')) {
-                const pattern = key.slice('breakpoint:'.length);
-                const displayPattern = pattern === '' ? '<page-boundary>' : pattern;
-                opts.push({ count, label: `Breakpoint: ${displayPattern}`, type: 'breakpoint', value: pattern });
-            }
-        }
-
-        // Add contentLengthSplit reasons
-        for (const [key, count] of counts) {
-            if (key.startsWith('contentLengthSplit:')) {
-                const reason = key.slice('contentLengthSplit:'.length);
-                opts.push({ count, label: `Max length (${reason})`, type: 'contentLengthSplit', value: reason });
-            }
-        }
-
-        // Filter segments based on selected filter
-        let filtered: IndexedExcerpt[];
-        if (filterKey === 'all') {
-            filtered = segments;
-        } else {
-            filtered = segments.filter((seg) => {
-                const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
-                return getSegmentFilterKey(dbg) === filterKey;
-            });
-        }
-
-        return { filteredSegments: filtered, filterOptions: opts };
+        return buildSegmentFilterOptions(segments, metaKey, filterKey);
     }, [segments, metaKey, filterKey]);
 
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-4 py-3">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Label>Preview</Label>
                     {filterOptions.length > 1 && (
                         <Select value={filterKey} onValueChange={setFilterKey}>
                             <SelectTrigger className="h-7 w-auto min-w-[180px] text-xs">
@@ -119,7 +79,7 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                     )}
                 </div>
                 <span className="text-muted-foreground text-xs">
-                    {filterKey !== 'all'
+                    {filteredSegments.length !== segments.length
                         ? `${filteredSegments.length.toLocaleString()} of ${segments.length.toLocaleString()}`
                         : `${segments.length.toLocaleString()} segments`}
                 </span>
@@ -130,9 +90,37 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                     data={filteredSegments}
                     estimateSize={() => 120}
                     getKey={(seg, i) => `${seg.from}-${seg.to ?? seg.from}-${i}`}
+                    scrollToId={jumpToPage ? Number.parseInt(jumpToPage, 10) : null}
+                    onScrollToComplete={() => setJumpToPage(null)}
+                    findScrollIndex={(data, pageNum) => {
+                        const target = typeof pageNum === 'string' ? Number.parseInt(pageNum, 10) : pageNum;
+                        if (typeof target !== 'number' || Number.isNaN(target)) {
+                            return -1;
+                        }
+                        return data.findIndex((seg) => {
+                            const start = seg.from;
+                            const end = seg.to ?? seg.from;
+                            return target >= start && target <= end;
+                        });
+                    }}
                     header={
                         <tr>
-                            <th className="w-20 px-2 py-2 text-left font-medium">Pages</th>
+                            <th className="w-24 px-2 py-2 text-left font-medium">
+                                <div className="relative">
+                                    <SubmittableInput
+                                        name="page-filter"
+                                        placeholder="Pages"
+                                        className="h-7 w-20 px-2 text-xs"
+                                        onSubmit={(val) => setJumpToPage(val || null)}
+                                        type="number"
+                                        min={1}
+                                        dir="ltr"
+                                    />
+                                    {!jumpToPage && (
+                                        <Search className="pointer-events-none absolute top-1.5 right-2 h-3 w-3 text-muted-foreground opacity-50" />
+                                    )}
+                                </div>
+                            </th>
                             <th className="w-64 px-2 py-2 text-left font-medium">Rule</th>
                             <th className="w-56 px-2 py-2 text-left font-medium">Breakpoint</th>
                             <th className="px-2 py-2 text-right font-medium" dir="rtl">
@@ -143,7 +131,7 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                     height="100%"
                     renderRow={(seg, i) => {
                         const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
-                        const referencedRule = dbg?.rule ? options.rules[dbg.rule.index] : undefined;
+                        const referencedRule = dbg?.rule ? options.rules?.[dbg.rule.index] : undefined;
                         const ruleText =
                             dbg?.rule && referencedRule
                                 ? `${dbg.rule.patternType}: ${summarizeRulePattern(referencedRule)}`
@@ -159,8 +147,24 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
 
                         return (
                             <tr className="border-b" key={`${seg.from}-${seg.to ?? seg.from}-${i}`}>
-                                <td className="w-20 px-2 py-2 text-muted-foreground text-xs tabular-nums">
-                                    {pagesLabel(seg)}
+                                <td className="group w-24 px-2 py-2 text-muted-foreground text-xs tabular-nums">
+                                    <div className="flex items-center justify-between">
+                                        <span>{pagesLabel(seg)}</span>
+                                        {filterKey !== 'all' && (
+                                            <Button
+                                                className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                                                onClick={() => {
+                                                    setFilterKey('all');
+                                                    setJumpToPage(String(seg.from));
+                                                }}
+                                                size="icon"
+                                                title="Show in context"
+                                                variant="ghost"
+                                            >
+                                                <Eye className="h-3 w-3" />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="w-64 px-2 py-2 align-top">
                                     {ruleText ? (
@@ -204,9 +208,25 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-2 py-2 text-right" dir="rtl">
-                                    <div className="line-clamp-3 whitespace-pre-wrap break-words font-arabic text-xs leading-relaxed">
-                                        {seg.nass}
+                                <td className="relative px-2 py-2 text-right" dir="rtl">
+                                    <div className="flex gap-2">
+                                        <div
+                                            className={`${expandedIds.has(seg.id) ? '' : 'line-clamp-3'} flex-1 whitespace-pre-wrap break-words font-arabic text-xs leading-relaxed`}
+                                        >
+                                            {seg.nass}
+                                        </div>
+                                        <Button
+                                            className="h-6 w-6 shrink-0 rounded-full"
+                                            onClick={() => toggleExpand(seg.id)}
+                                            size="icon"
+                                            variant="ghost"
+                                        >
+                                            {expandedIds.has(seg.id) ? (
+                                                <ChevronUp className="h-3 w-3" />
+                                            ) : (
+                                                <ChevronDown className="h-3 w-3" />
+                                            )}
+                                        </Button>
                                     </div>
                                 </td>
                             </tr>

@@ -228,7 +228,7 @@ const RuleRow = ({ index, rule, onDelete, onSetPatternKey, onSetPatternValue, on
 };
 
 export const RulesTab = () => {
-    const rules = useSegmentationStore((s) => s.options.rules);
+    const rules = useSegmentationStore((s) => s.options.rules) ?? [];
     const updateOptions = useSegmentationStore((s) => s.updateOptions);
     const tokenMappings = useSegmentationStore((s) => s.tokenMappings);
 

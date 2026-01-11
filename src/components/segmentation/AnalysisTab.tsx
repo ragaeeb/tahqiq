@@ -65,7 +65,7 @@ const ExamplesDialogContent = ({ pattern }: { pattern: CommonLineStartPattern })
 };
 
 export const AnalysisTab = ({ pages }: AnalysisTabProps) => {
-    const rules = useSegmentationStore((s) => s.options.rules);
+    const rules = useSegmentationStore((s) => s.options.rules) ?? [];
     const updateOptions = useSegmentationStore((s) => s.updateOptions);
 
     const results = useSegmentationStore((s) => s.allLineStarts);

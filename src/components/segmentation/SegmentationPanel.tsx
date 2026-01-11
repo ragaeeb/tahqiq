@@ -3,6 +3,7 @@
 import type { Page } from 'flappa-doormal';
 import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { PanelContainer } from '@/components/PanelContainer';
 import { AnalysisTab } from '@/components/segmentation/AnalysisTab';
@@ -12,6 +13,7 @@ import { ReplacementsTab } from '@/components/segmentation/ReplacementsTab';
 import { RulesTab } from '@/components/segmentation/RulesTab';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { applyReplacements } from '@/lib/replace';
 import { mapPagesToExcerpts } from '@/lib/segmentation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
@@ -21,9 +23,12 @@ type SegmentationPanelProps = { onClose: () => void; pages: Page[]; headings: Pa
 export function SegmentationPanel({ onClose, pages, headings }: SegmentationPanelProps) {
     const options = useSegmentationStore((s) => s.options);
     const analysisCount = useSegmentationStore((s) => s.allLineStarts.length);
-    const replacementCount = options.replace.length;
-    const rulesCount = options.rules.length;
+    const replaceRules = options.replace;
+    const replacementCount = replaceRules?.length ?? 0;
+    const rulesCount = options.rules?.length ?? 0;
     const router = useRouter();
+
+    const processedPages = useMemo(() => applyReplacements(pages, replaceRules), [pages, replaceRules]);
 
     return (
         <PanelContainer onCloseClicked={onClose} title="Segmentation">
@@ -43,7 +48,7 @@ export function SegmentationPanel({ onClose, pages, headings }: SegmentationPane
                 </TabsContent>
 
                 <TabsContent className="flex min-h-0 flex-1 flex-col overflow-hidden" value="analysis">
-                    <AnalysisTab pages={pages} />
+                    <AnalysisTab pages={processedPages} />
                 </TabsContent>
 
                 <TabsContent className="flex min-h-0 flex-1 flex-col overflow-hidden" value="preview">

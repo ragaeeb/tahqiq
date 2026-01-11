@@ -1,9 +1,7 @@
 import type { CommonLineStartPattern, PatternTypeKey, SegmentationOptions, TokenMapping } from 'flappa-doormal';
+import type { Replacement } from '@/lib/replace';
 
-export type SegmentationOptionsState = Omit<SegmentationOptions, 'replace' | 'rules'> & {
-    replace: NonNullable<SegmentationOptions['replace']>;
-    rules: NonNullable<SegmentationOptions['rules']>;
-};
+export type BookSegmentationOptions = SegmentationOptions & { replace: Replacement[]; minWordsPerSegment: number };
 
 export type RuleConfig = {
     pattern: string; // Original from selection (immutable, used for sync)
@@ -31,13 +29,12 @@ export type SegmentationState = {
     // Token mappings (apply to all rules)
     tokenMappings: TokenMapping[];
 
-    options: SegmentationOptionsState;
+    options: BookSegmentationOptions;
 
-    // Actions
     setAllLineStarts: (patterns: CommonLineStartPattern[]) => void;
     setRuleConfigs: (configs: RuleConfig[]) => void;
     setTokenMappings: (mappings: TokenMapping[]) => void;
-    setOptions: (options: SegmentationOptions) => void;
-    updateOptions: (patch: Partial<SegmentationOptions>) => void;
+    setOptions: (options: BookSegmentationOptions) => void;
+    updateOptions: (patch: Partial<BookSegmentationOptions>) => void;
     reset: () => void;
 };

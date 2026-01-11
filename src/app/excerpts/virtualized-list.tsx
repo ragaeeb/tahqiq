@@ -131,6 +131,8 @@ function VirtualizerContent<T>({
                     }, 50);
                 }, 100);
             }
+        } else if (scrollToId == null) {
+            hasScrolledToIdRef.current = null;
         }
     }, [scrollToId, data, virtualizer, onScrollToComplete, parentRef]);
 
