@@ -91,7 +91,7 @@ describe('useStorageActions', () => {
                 result.current.handleDownload();
             });
 
-            expect(globalThis.prompt).toHaveBeenCalledWith('Enter output file name');
+            expect(globalThis.prompt).toHaveBeenCalledWith('Enter output file name', undefined);
             expect(mockRecord).toHaveBeenCalledWith('DownloadExcerpts', 'my-export');
             expect(options.getExportData).toHaveBeenCalled();
             expect(mockDownloadFile).toHaveBeenCalledWith('my-export.json', JSON.stringify({ test: 'data' }, null, 2));

@@ -17,8 +17,8 @@ type HeadingRowProps = {
 function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
     return (
         <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
-            <td className="w-20 px-2 py-3 text-center align-middle font-mono text-gray-500 text-xs">{data.id}</td>
-            <td className="w-24 px-2 py-3 text-center align-middle text-gray-700 text-sm">
+            <td className="w-20 px-1 py-1 text-center align-middle font-mono text-gray-500 text-xs">{data.id}</td>
+            <td className="w-24 px-1 py-1 text-center align-middle text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"
                     defaultValue={data.from.toString()}
@@ -33,7 +33,7 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     type="number"
                 />
             </td>
-            <td className="w-24 px-2 py-3 text-center align-middle text-gray-700 text-sm">
+            <td className="w-24 px-1 py-1 text-center align-middle text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"
                     defaultValue={data.parent ?? ''}
@@ -47,7 +47,7 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     placeholder="Parent ID"
                 />
             </td>
-            <td className="px-4 py-3 align-top" dir="rtl">
+            <td className="px-2 py-1 align-top" dir="rtl">
                 <Textarea
                     className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"
                     defaultValue={data.nass}
@@ -62,7 +62,7 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     ref={autoResizeTextarea}
                 />
             </td>
-            <td className="px-4 py-3 align-top">
+            <td className="px-2 py-1 align-top">
                 <Textarea
                     className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-gray-700 text-sm leading-relaxed shadow-none focus:outline-none focus:ring-0"
                     defaultValue={data.text ?? ''}
@@ -77,7 +77,7 @@ function HeadingRow({ data, onDelete, onUpdate }: HeadingRowProps) {
                     ref={autoResizeTextarea}
                 />
             </td>
-            <td className="w-16 px-2 py-3 text-center align-top">
+            <td className="w-16 px-1 py-1 text-center align-top">
                 <Button
                     aria-label={`Delete heading ${data.id}`}
                     onClick={() => onDelete(data.id)}

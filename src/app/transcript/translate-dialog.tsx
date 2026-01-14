@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import type { TranslateRequestBody } from '@/types/api';
 
@@ -27,7 +26,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
         const data = new FormData(e.currentTarget);
 
         record('Translate', (data.get('text') as string).length.toString(), {
-            promptChanged: data.get('prompt') !== TRANSLATE_BOOK_PROMPT,
+            promptChanged: data.get('prompt') !== defaultPrompt,
         });
 
         setIsLoading(true);

@@ -268,3 +268,90 @@ export const findUnmatchedTranslationIds = (translationIds: string[], expectedId
     const expectedSet = new Set(expectedIds);
     return translationIds.filter((id) => !expectedSet.has(id));
 };
+
+/**
+ * Minimum Arabic text length (in characters) to consider for truncation detection.
+ * Short texts are exempt to avoid false positives on single-word or brief phrases.
+ */
+const MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK = 50;
+
+/**
+ * Minimum expected translation ratio (translation length / Arabic length).
+ * English translations typically expand from Arabic, but this is a floor
+ * to catch extreme truncation. A ratio below this threshold is suspicious.
+ *
+ * Example: Arabic 100 chars, English should be at least 20 chars (0.2 ratio).
+ * This is deliberately low to only catch obvious truncations.
+ */
+const MIN_TRANSLATION_RATIO = 0.15;
+
+/**
+ * Detects when a translation appears truncated compared to its Arabic source.
+ * This catches LLM errors where only a portion of the text was translated.
+ *
+ * @param arabicText - The original Arabic text (nass)
+ * @param translationText - The English translation (text)
+ * @returns Error message if truncation detected, undefined if valid
+ */
+export const detectTruncatedTranslation = (
+    arabicText: string | null | undefined,
+    translationText: string | null | undefined,
+): string | undefined => {
+    const arabic = (arabicText ?? '').trim();
+    const translation = (translationText ?? '').trim();
+
+    // Skip check if Arabic is empty or too short
+    if (arabic.length < MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK) {
+        return;
+    }
+
+    // Check for empty/whitespace-only translation with substantial Arabic
+    if (translation.length === 0) {
+        return `Translation appears empty but Arabic text has ${arabic.length} characters`;
+    }
+
+    // Calculate the ratio of translation to Arabic length
+    const ratio = translation.length / arabic.length;
+
+    // If ratio is below threshold, the translation is likely truncated
+    if (ratio < MIN_TRANSLATION_RATIO) {
+        const expectedMinLength = Math.round(arabic.length * MIN_TRANSLATION_RATIO);
+        return `Translation appears truncated: ${translation.length} chars for ${arabic.length} char Arabic text (expected at least ~${expectedMinLength} chars)`;
+    }
+};
+
+/**
+ * Represents an item with text fields for gap/issue detection.
+ */
+export type TextItem = { id: string; nass?: string | null; text?: string | null };
+
+/**
+ * Finds all excerpts with issues: gaps (missing translations surrounded by translations)
+ * and truncated translations (suspiciously short compared to Arabic source).
+ *
+ * @param items - Array of excerpts/items to check
+ * @returns Array of IDs that have issues
+ */
+export const findExcerptIssues = (items: TextItem[]): string[] => {
+    const issueIds = new Set<string>();
+
+    // Find gaps: items without translation surrounded by items with translations
+    for (let i = 1; i < items.length - 1; i++) {
+        const prev = items[i - 1];
+        const curr = items[i];
+        const next = items[i + 1];
+
+        if (prev.text?.trim() && !curr.text?.trim() && next.text?.trim()) {
+            issueIds.add(curr.id);
+        }
+    }
+
+    // Find truncated translations
+    for (const item of items) {
+        if (detectTruncatedTranslation(item.nass, item.text)) {
+            issueIds.add(item.id);
+        }
+    }
+
+    return Array.from(issueIds);
+};

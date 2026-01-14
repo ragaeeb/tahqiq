@@ -2,11 +2,11 @@
 
 import { ClipboardCopyIcon, RefreshCwIcon, SendIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { getPrompts } from 'wobble-bibble';
+import { Pill } from '@/components/pill';
 import { Button } from '@/components/ui/button';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MASTER_PROMPT_ID } from '@/lib/constants';
@@ -14,30 +14,15 @@ import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation'
 import { estimateTokenCount } from '@/lib/textUtils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
-// Memoized pill component to prevent re-renders
-const Pill = memo(function Pill({ id, isSelected, onClick }: { id: string; isSelected: boolean; onClick: () => void }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-        >
-            {id}
-        </button>
-    );
-});
-
 // Maximum pills to render for performance
 const MAX_VISIBLE_PILLS = 500;
 
 /**
- * Dialog content for selecting untranslated excerpts to send to LLM.
+ * Tab content for selecting untranslated excerpts to send to LLM.
  * Shows pills with excerpt IDs, supports range selection, and provides
  * copy/remove/reset functionality.
  */
-export function TranslationPickerDialogContent() {
+export function PickerTab() {
     const excerpts = useExcerptsStore((state) => state.excerpts);
     const collection = useExcerptsStore((state) => state.collection);
     const sentToLlmIds = useExcerptsStore((state) => state.sentToLlmIds);
@@ -128,6 +113,7 @@ export function TranslationPickerDialogContent() {
         try {
             await navigator.clipboard.writeText(formattedContent);
             record('CopyTranslationPrompt', `${selectedIds.length} excerpts, ${tokenCount} tokens`);
+
             toast.success(`Copied ${selectedIds.length} excerpts (~${tokenCount.toLocaleString()} tokens)`);
         } catch (err) {
             console.error('Failed to copy:', err);
@@ -135,18 +121,16 @@ export function TranslationPickerDialogContent() {
         }
     }, [formattedContent, selectedIds.length, tokenCount]);
 
-    const handleRemove = useCallback(() => {
-        if (selectedIds.length === 0) {
-            toast.error('No excerpts selected');
-            return;
-        }
-
+    const handleRemove = useCallback(async () => {
         record('MarkAsSentToLlm', `${selectedIds.length} excerpts`);
+
+        await navigator.clipboard.writeText(formattedContent);
+
         markAsSentToLlm(selectedIds);
-        toast.success(`Marked ${selectedIds.length} excerpts as sent`);
+        toast.success(`Copied and Marked ${selectedIds.length} excerpts as sent`);
 
         setSelectedEndIndex(null);
-    }, [selectedIds, markAsSentToLlm]);
+    }, [selectedIds, markAsSentToLlm, formattedContent]);
 
     const handleReset = useCallback(() => {
         record('ResetSentToLlm');
@@ -156,32 +140,14 @@ export function TranslationPickerDialogContent() {
     }, [resetSentToLlm]);
 
     return (
-        <DialogContent className="!max-w-[80vw] flex h-[70vh] w-[80vw] flex-col">
-            <DialogHeader>
-                <DialogTitle className="flex items-center justify-between">
-                    <span>Select Excerpts for Translation</span>
-                    <div className="flex flex-col items-end gap-1">
-                        {selectedIds.length > 0 && (
-                            <span className="font-mono text-blue-600 text-sm">
-                                {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
-                            </span>
-                        )}
-                        <div className="flex gap-3 font-medium text-[10px] text-gray-400">
-                            <span>Grok 4: 256k / 4.1: 2M</span>
-                            <span>GPT-5.2: 400k / 5o: 128k</span>
-                            <span>Gemini 3 Pro: 1M</span>
-                        </div>
-                    </div>
-                </DialogTitle>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-4 pb-4">
+        <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex items-center justify-between pb-4">
                 <div className="flex items-center gap-4">
                     <Label htmlFor="prompt-select" className="whitespace-nowrap font-semibold">
                         Translation Prompt:
                     </Label>
                     <Select value={promptId} onValueChange={handlePromptChange}>
-                        <SelectTrigger id="prompt-select" className="flex-1">
+                        <SelectTrigger id="prompt-select" className="w-64">
                             <SelectValue placeholder="Select a prompt template" />
                         </SelectTrigger>
                         <SelectContent>
@@ -192,6 +158,18 @@ export function TranslationPickerDialogContent() {
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                    {selectedIds.length > 0 && (
+                        <span className="font-mono text-blue-600 text-sm">
+                            {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
+                        </span>
+                    )}
+                    <div className="flex gap-3 font-medium text-[8px] text-gray-400">
+                        <span>Grok 4: 256k / 4.1: 2M</span>
+                        <span>GPT-5.2: 400k / 5o: 128k</span>
+                        <span>Gemini 3 Pro: 1M</span>
+                    </div>
                 </div>
             </div>
 
@@ -239,15 +217,15 @@ export function TranslationPickerDialogContent() {
                                 onClick={handleRemove}
                                 disabled={selectedIds.length === 0}
                                 className="bg-blue-500 hover:bg-blue-600"
-                                title="Mark as sent and close"
+                                title="Copy prompt + excerpts and mark as sent"
                             >
                                 <SendIcon className="mr-2 h-4 w-4" />
-                                Use
+                                Copy + Use
                             </Button>
                         </div>
                     </div>
                 </>
             )}
-        </DialogContent>
+        </div>
     );
 }

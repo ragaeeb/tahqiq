@@ -1,15 +1,6 @@
 'use client';
 
-import {
-    DownloadIcon,
-    FileTextIcon,
-    LanguagesIcon,
-    Merge,
-    RefreshCwIcon,
-    SaveIcon,
-    SearchIcon,
-    TypeIcon,
-} from 'lucide-react';
+import { DownloadIcon, LanguagesIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,9 +19,9 @@ import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { downloadFile } from '@/lib/domUtils';
 import { canMergeSegments } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
+import { findExcerptIssues } from '@/lib/validation';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -39,13 +30,13 @@ import {
     selectFootnoteCount,
     selectHeadingCount,
 } from '@/stores/excerptsStore/selectors';
-import type { Excerpts } from '@/stores/excerptsStore/types';
+import type { Excerpt, Excerpts } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
 import ExcerptsTableHeader from './table-header';
-import { TranslationPickerDialogContent } from './translation-picker-dialog';
+import { TranslationDialogContent } from './translation-dialog';
 import type { FilterScope } from './use-excerpt-filters';
 import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
@@ -76,12 +67,15 @@ function ExcerptsPageContent() {
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
+    const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
 
     const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode } =
         useExcerptFilters();
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    // Track an ID to scroll to after operations like merge
+    const [scrollToAfterChange, setScrollToAfterChange] = useState<string | null>(null);
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
 
     // Check if any excerpts have translations - if not, hide the column for more Arabic space
@@ -94,6 +88,24 @@ function ExcerptsPageContent() {
         }
         return [...excerpts].sort((a, b) => (b.nass?.length || 0) - (a.nass?.length || 0));
     }, [excerpts, sortMode]);
+
+    const handleCopyDown = useCallback(
+        (source: Excerpt) => {
+            const index = sortedExcerpts.findIndex((e) => e.id === source.id);
+            if (index !== -1 && index < sortedExcerpts.length - 1) {
+                const nextExcerpt = sortedExcerpts[index + 1];
+                updateExcerpt(nextExcerpt.id, {
+                    lastUpdatedAt: source.lastUpdatedAt,
+                    text: source.text,
+                    translator: source.translator,
+                });
+                toast.success(`Copied translation to ${nextExcerpt.id}`);
+            } else {
+                toast.warning('No row below to copy to');
+            }
+        },
+        [sortedExcerpts, updateExcerpt],
+    );
 
     // Toggle selection for an excerpt
     const toggleSelection = useCallback((id: string) => {
@@ -122,10 +134,15 @@ function ExcerptsPageContent() {
             }
         }
 
+        const survivingId = idsInOrder[0]; // First ID survives the merge
         const success = mergeExcerpts(idsInOrder);
+
         if (success) {
             toast.success(`Merged ${idsInOrder.length} excerpts`);
             setSelectedIds(new Set());
+
+            // Set scroll target to the surviving excerpt
+            setScrollToAfterChange(survivingId);
 
             // Clear hash if it points to a deleted excerpt
             const hash = window.location.hash.slice(1);
@@ -137,6 +154,11 @@ function ExcerptsPageContent() {
             toast.error('Failed to merge excerpts');
         }
     }, [excerpts, selectedIds, mergeExcerpts, clearScrollTo]);
+
+    // Clear the scroll-after-change state once complete
+    const handleScrollAfterChangeComplete = useCallback(() => {
+        setScrollToAfterChange(null);
+    }, []);
 
     // Session restore hook
     useSessionRestore<Excerpts>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
@@ -169,51 +191,25 @@ function ExcerptsPageContent() {
 
     const { handleSave, handleDownload, handleReset } = useStorageActions({
         analytics: { download: 'DownloadExcerpts', reset: 'ResetExcerpts', save: 'SaveExcerpts' },
+        defaultOutputName: 'excerpts.json',
         getExportData,
         reset: handleResetWithTabClear,
         storageKey: STORAGE_KEYS.excerpts,
     });
 
-    // Find the first "gap" - an excerpt without translation surrounded by excerpts with translations
+    // Find all issues: gaps (missing translations) and truncated translations
     const handleFindGap = useCallback(() => {
-        for (let i = 1; i < allExcerpts.length - 1; i++) {
-            const prev = allExcerpts[i - 1];
-            const curr = allExcerpts[i];
-            const next = allExcerpts[i + 1];
+        const issueIds = findExcerptIssues(allExcerpts);
 
-            // Gap: previous has translation, current doesn't, next has translation
-            if (prev.text?.trim() && !curr.text?.trim() && next.text?.trim()) {
-                window.location.hash = curr.id;
-                toast.info(`Found gap at ${curr.id}`);
-                return;
-            }
+        if (issueIds.length > 0) {
+            filterExcerptsByIds(issueIds);
+            toast.info(
+                `Found ${issueIds.length} issue${issueIds.length > 1 ? 's' : ''} (gaps + truncated translations)`,
+            );
+        } else {
+            toast.info('No issues found');
         }
-        toast.info('No gaps found');
-    }, [allExcerpts]);
-
-    const handleExportToTxt = useCallback(() => {
-        const name = prompt('Enter output file name', 'prompt.txt');
-
-        if (name) {
-            record('DownloadExcerpts', name);
-
-            try {
-                const state = useExcerptsStore.getState();
-                const excerpts = state.excerpts
-                    .filter((e) => !e.text)
-                    .map((e) => `${e.id} - ${e.nass}`)
-                    .concat(['\n']);
-                const headings = state.headings.filter((e) => !e.text).map((e) => `${e.id} - ${e.nass}`);
-
-                const content = [state.promptForTranslation, excerpts.join('\n\n'), headings.join('\n')].join('\n\n\n');
-
-                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, content);
-            } catch (err) {
-                console.error('Export failed:', err);
-                toast.error('Failed to export to TXT');
-            }
-        }
-    }, []);
+    }, [allExcerpts, filterExcerptsByIds]);
 
     const handleApplyFormatting = useCallback(async () => {
         setIsFormattingLoading(true);
@@ -311,14 +307,11 @@ function ExcerptsPageContent() {
                             <Button onClick={handleDownload}>
                                 <DownloadIcon />
                             </Button>
-                            <Button onClick={handleExportToTxt}>
-                                <FileTextIcon />
-                            </Button>
                             <DialogTriggerButton
                                 onClick={() => {
                                     record('OpenTranslationPicker');
                                 }}
-                                renderContent={() => <TranslationPickerDialogContent />}
+                                renderContent={() => <TranslationDialogContent />}
                                 title="Select excerpts for LLM translation"
                                 className="bg-indigo-500 hover:bg-indigo-600"
                             >
@@ -356,12 +349,14 @@ function ExcerptsPageContent() {
                                         {headingsCount}
                                     </span>
                                 </TabsTrigger>
-                                <TabsTrigger value="footnotes">
-                                    Footnotes
-                                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700 text-xs">
-                                        {footnotesCount}
-                                    </span>
-                                </TabsTrigger>
+                                {footnotesCount ? (
+                                    <TabsTrigger value="footnotes">
+                                        Footnotes
+                                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700 text-xs">
+                                            {footnotesCount}
+                                        </span>
+                                    </TabsTrigger>
+                                ) : null}
 
                                 {/* Translation Progress */}
                                 {(() => {
@@ -434,7 +429,9 @@ function ExcerptsPageContent() {
                                             sortMode={sortMode}
                                         />
                                     }
-                                    onScrollToComplete={clearScrollTo}
+                                    onScrollToComplete={
+                                        scrollToAfterChange ? handleScrollAfterChangeComplete : clearScrollTo
+                                    }
                                     renderRow={(item) => (
                                         <ExcerptRow
                                             data={item}
@@ -444,9 +441,10 @@ function ExcerptsPageContent() {
                                             onDelete={(id) => deleteExcerpts([id])}
                                             onToggleSelect={toggleSelection}
                                             onUpdate={updateExcerpt}
+                                            onCopyDown={handleCopyDown}
                                         />
                                     )}
-                                    scrollToId={scrollToId ?? scrollToFrom}
+                                    scrollToId={scrollToAfterChange ?? scrollToId ?? scrollToFrom}
                                 />
                             </TabsContent>
 

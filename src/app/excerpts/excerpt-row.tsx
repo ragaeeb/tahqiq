@@ -1,6 +1,6 @@
 'use client';
 
-import { PencilIcon, Trash2Icon } from 'lucide-react';
+import { ArrowDownIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -25,6 +25,7 @@ type ExcerptRowProps = {
     /** Toggle selection for this row */
     onToggleSelect?: (id: string) => void;
     onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
+    onCopyDown: (data: Excerpt) => void;
 };
 
 function ExcerptRow({
@@ -35,6 +36,7 @@ function ExcerptRow({
     onDelete,
     onToggleSelect,
     onUpdate,
+    onCopyDown,
 }: ExcerptRowProps) {
     const [selectedText, setSelectedText] = useState('');
     const [showExtractButton, setShowExtractButton] = useState(false);
@@ -120,11 +122,11 @@ function ExcerptRow({
                 }`}
             >
                 {onToggleSelect && (
-                    <td className="w-10 px-2 py-3 text-center align-top">
+                    <td className="w-8 px-1 py-1 text-center align-top">
                         <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(data.id)} />
                     </td>
                 )}
-                <td className="w-32 px-2 py-3 text-center align-top text-gray-600 text-xs">
+                <td className="w-24 px-1 py-1 text-center align-top text-gray-600 text-xs">
                     {isEditingPages ? (
                         <input
                             className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
@@ -159,7 +161,7 @@ function ExcerptRow({
                         </button>
                     )}
                 </td>
-                <td className="relative px-4 py-3 align-top" dir="rtl">
+                <td className="relative px-2 py-1 align-top" dir="rtl">
                     <Textarea
                         className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"
                         defaultValue={data.nass ?? ''}
@@ -179,7 +181,7 @@ function ExcerptRow({
                     />
                 </td>
                 {!hideTranslation && (
-                    <td className="px-4 py-3 align-top">
+                    <td className="px-2 py-1 align-top">
                         <Textarea
                             className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-gray-700 text-sm leading-relaxed shadow-none focus:outline-none focus:ring-0"
                             defaultValue={data.text ?? ''}
@@ -195,24 +197,36 @@ function ExcerptRow({
                         />
                     </td>
                 )}
-                <td className="w-24 px-2 py-3 text-center align-top">
-                    <div className="flex items-center justify-center gap-1">
+                <td className="w-28 px-1 py-1 text-center align-top">
+                    <div className="flex items-center justify-center gap-0">
                         <DialogTriggerButton
                             aria-label={`Edit excerpt ${data.id}`}
+                            className="h-7 w-7 p-0"
                             onClick={() => record('EditExcerptOpen', data.id)}
                             renderContent={() => <EditExcerptDialogContent excerpt={data} onUpdate={onUpdate} />}
-                            size="sm"
                             variant="ghost"
                         >
                             <PencilIcon className="h-4 w-4 text-blue-500" />
                         </DialogTriggerButton>
                         <Button
                             aria-label={`Delete excerpt ${data.id}`}
+                            className="h-7 w-7 p-0"
                             onClick={() => onDelete(data.id)}
-                            size="sm"
                             variant="ghost"
                         >
                             <Trash2Icon className="h-4 w-4 text-red-500" />
+                        </Button>
+                        <Button
+                            aria-label={`Copy translation down from ${data.id}`}
+                            className="h-7 w-7 p-0"
+                            onClick={() => {
+                                record('CopyTranslationDown');
+                                onCopyDown(data);
+                            }}
+                            title="Copy translation to row below"
+                            variant="ghost"
+                        >
+                            <ArrowDownIcon className="h-4 w-4 text-emerald-500" />
                         </Button>
                     </div>
                 </td>

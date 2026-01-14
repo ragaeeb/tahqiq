@@ -197,6 +197,9 @@ function VirtualizedList<T>({
     const scrollTopRef = useRef(0);
     const prevDataVersionRef = useRef<string>('');
     const getKeyRef = useRef(getKey);
+    // Track the first visible item's key for scroll restoration after data changes
+    const firstVisibleKeyRef = useRef<string | number | null>(null);
+    const [restoreScrollToKey, setRestoreScrollToKey] = useState<string | number | null>(null);
 
     useEffect(() => {
         getKeyRef.current = getKey;
@@ -212,19 +215,50 @@ function VirtualizedList<T>({
         return `${data.length}-${first}-${last}`;
     }, [data, getKeyStable]);
 
-    // Capture scroll position before component remounts due to data change
-    // This runs during render (before commit phase)
-    if (prevDataVersionRef.current !== dataVersion && parentRef.current) {
-        scrollTopRef.current = parentRef.current.scrollTop;
-    }
-    prevDataVersionRef.current = dataVersion;
+    // Handle scroll restoration when data version changes
+    useEffect(() => {
+        if (prevDataVersionRef.current !== '' && prevDataVersionRef.current !== dataVersion) {
+            if (firstVisibleKeyRef.current != null) {
+                const keyExists = data.some((item, i) => getKeyStable(item, i) === firstVisibleKeyRef.current);
+                if (keyExists) {
+                    setRestoreScrollToKey(firstVisibleKeyRef.current);
+                }
+            }
+        }
+        prevDataVersionRef.current = dataVersion;
+    }, [dataVersion, data, getKeyStable]);
 
-    // Save scroll position continuously
+    // Save scroll position and first visible item continuously
     const handleScroll = useCallback(() => {
         if (parentRef.current) {
             scrollTopRef.current = parentRef.current.scrollTop;
+
+            // Find the first visible item by checking which item is at the current scroll position
+            // The items are positioned absolutely, so we look for an item that starts near scrollTop
+            const scrollTop = parentRef.current.scrollTop;
+
+            // Find the first item that's visible (its top is at or before scrollTop + headerHeight)
+            for (let i = 0; i < data.length; i++) {
+                const estimatedOffset = i * (estimateSize?.(i) ?? 150);
+                if (estimatedOffset + (estimateSize?.(i) ?? 150) > scrollTop - HEADER_HEIGHT) {
+                    const key = getKeyStable(data[i], i);
+                    if (firstVisibleKeyRef.current !== key) {
+                        firstVisibleKeyRef.current = key;
+                    }
+                    break;
+                }
+            }
         }
-    }, []);
+    }, [data, estimateSize, getKeyStable]);
+
+    // Clear restoration state after it's been used
+    const handleRestoreComplete = useCallback(() => {
+        setRestoreScrollToKey(null);
+        onScrollToComplete?.();
+    }, [onScrollToComplete]);
+
+    // Determine which scrollToId to use - user-provided takes precedence, then restoration
+    const effectiveScrollToId = scrollToId ?? restoreScrollToKey;
 
     return (
         <div
@@ -241,10 +275,10 @@ function VirtualizedList<T>({
                 getKey={getKeyStable}
                 header={header}
                 initialScrollTop={scrollTopRef.current}
-                onScrollToComplete={onScrollToComplete}
+                onScrollToComplete={handleRestoreComplete}
                 parentRef={parentRef}
                 renderRow={renderRow}
-                scrollToId={scrollToId}
+                scrollToId={effectiveScrollToId}
             />
         </div>
     );

@@ -25,12 +25,16 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Three-Tab Interface**: Manage excerpts, headings, and footnotes separately
 - **Translation Progress Bar**: Visual indicator showing translated vs remaining items per tab
 - **Search & Replace**: Powerful regex-based search and replace with token support (Arabic numerals, diacritics)
-- **Bulk Translation**: Paste thousands of translations at once with automatic ID matching
-  - **Model Selection**: Color-coded toggle group for selecting AI model (persisted per session)
-  - **Duplicate Detection**: Warns when pasting translations with duplicate IDs
-  - **Overwrite Confirmation**: Shows which existing translations will be overwritten before saving
-- **Prompt Management**: Centralized management of translation templates via `wobble-bibble`
-  - **Placeholder Replacement**: Automatic `{{book}}` replacement with collection titles
+- **Unified Translation Workflow**: Consolidated excerpt selection and translation application into a single tabbed dialog
+  - **Translation Picker**: Select untranslated excerpts in bulk for LLM processing
+    - **High-Performance Rendering**: Efficiently handles 40k+ excerpt IDs using virtualization and memoization
+    - **Arabic-Aware Token Estimation**: Accurate token counting accounting for tashkeel, tatweel, and Arabic numerals
+    - **Context-Aware Limits**: Quick reference display for Grok 4, GPT-5.2, and Gemini 3 Pro token limits
+    - **Flow Management**: Mark excerpts as "sent" to track translation progress across sessions
+  - **Bulk Translation**: Paste translations in batch with automatic ID matching
+    - **Model Selection**: Color-coded translator select (persisted per session)
+    - **Validation**: Smart detection of duplicate IDs and overwrite warnings before saving
+- **Dynamic Tabs**: Footnotes tab only shows if the collection contains footnotes
 - **URL-Based Filtering**: Shareable filter state via URL parameters
 - **Hash-Based Scroll**: Navigate to specific rows via URL hash
   - `#2333` scrolls to excerpt with `from=2333` (page number)
@@ -39,11 +43,6 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Inline Editing**: Edit Arabic (nass) and translation (text) fields directly
 - **Headings ID Column**: Headings tab displays the ID field for easy reference
 - **Short Segment Merging**: Proactively detects and suggests merging adjacent short segments (<30 words) on load
-- **Translation Picker**: Select untranslated excerpts in bulk for LLM processing
-  - **High-Performance Rendering**: Efficiently handles 40k+ excerpt IDs using virtualization and memoization
-  - **Arabic-Aware Token Estimation**: Accurate token counting accounting for tashkeel, tatweel, and Arabic numerals
-  - **Context-Aware Limits**: Quick reference display for Grok 4, GPT-5.2, and Gemini 3 Pro token limits
-  - **Flow Management**: Mark excerpts as "sent" to track translation progress across sessions
 
 ### Shamela Editor (`/shamela`)
 - **Direct Download**: Download books from shamela.ws by pasting URL
@@ -188,16 +187,14 @@ RULES_ENDPOINT=your_rules_endpoint_url
 4. **Filter Content**: Use the table header inputs to filter by page, Arabic text, or translation
 5. **Edit Inline**: Click on any field to edit directly
 6. **Search & Replace**: Use the search/replace dialog for bulk edits with regex support
-7. **Bulk Translation**: Click the + button to paste translations in bulk (format: `ID - Translation text`)
-   - Select the AI model used via the color-coded toggle group
-   - Review duplicate ID warnings and overwrite confirmations before saving
+7. **Unified Translation Workflow**: 
+   - Click the languages button (🌐) in the toolbar to open the picker
+   - Select pills (click range) → **Copy** prompt + excerpts for LLM
+   - Click the plus button (+) in any row or the Add button in the header to jump to the **Add Translations** tab
+   - Paste translations (format: `ID - Translation text`) → Review warnings → **Save**
+   - Switch back to **Pick Excerpts** tab to continue the next batch
 8. **Extract Text**: Select Arabic text and click "Extract as New Excerpt" to create a new entry
-9. **Translation Picker**: Click the translation picker button (pills icon) to select untranslated segments
-   - See estimated token count for the current selection
-   - Click "Copy" to copy prompt + excerpts for the LLM
-   - Click "Remove" to mark segments as sent (hides them from current picker session)
-   - Use "Reset" to clear the "sent" status and show all untranslated segments
-10. **URL Navigation**: Use `#P123` to scroll to ID, or `#123` to scroll to page number
+9. **URL Navigation**: Use `#P123` to scroll to ID, or `#123` to scroll to page number
 
 ### Manuscript Editor (`/manuscript`)
 
