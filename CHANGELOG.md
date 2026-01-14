@@ -1,3 +1,10 @@
+## [1.45.1](https://github.com/ragaeeb/tahqiq/compare/v1.45.0...v1.45.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* **carriage:** Fix carriage return bug when pasting from grok ([f9dbb85](https://github.com/ragaeeb/tahqiq/commit/f9dbb85cb6b625d82b7abe3590f20559104ae935))
+
 # [1.45.0](https://github.com/ragaeeb/tahqiq/compare/v1.44.0...v1.45.0) (2026-01-14)
 
 
