@@ -13,11 +13,10 @@ import { STORAGE_KEYS, TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants
 import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
-
-import { TranslateDialog } from '../book/translate-dialog';
 import { FormatDialog } from './format-dialog';
 import { GroundingDialog } from './grounding-dialog';
 import { SearchDialog } from './search-dialog';
+import { TranslateDialog } from './translate-dialog';
 
 /**
  * Renders a toolbar for managing transcript segments with actions such as merging, splitting, grouping, marking as completed, deleting, previewing, formatting, and downloading.
