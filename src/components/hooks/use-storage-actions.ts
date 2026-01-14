@@ -18,6 +18,9 @@ export interface StorageActionsOptions<T> {
     reset: () => void;
     /** Analytics event names */
     analytics: { save: string; download: string; reset: string };
+
+    /** Default file name to show on the prompt */
+    defaultOutputName?: string;
 }
 
 /**
@@ -27,9 +30,13 @@ export interface StorageActionsOptions<T> {
  * @param options - Configuration options
  * @returns Object with handleSave, handleDownload, and handleReset functions
  */
-export function useStorageActions<T>(options: StorageActionsOptions<T>) {
-    const { storageKey, getExportData, reset, analytics } = options;
-
+export function useStorageActions<T>({
+    storageKey,
+    getExportData,
+    reset,
+    analytics,
+    defaultOutputName,
+}: StorageActionsOptions<T>) {
     const handleSave = useCallback(async () => {
         record(analytics.save);
         const data = getExportData();
@@ -44,14 +51,14 @@ export function useStorageActions<T>(options: StorageActionsOptions<T>) {
     }, [analytics.save, getExportData, storageKey]);
 
     const handleDownload = useCallback(() => {
-        const name = prompt('Enter output file name');
+        const name = prompt('Enter output file name', defaultOutputName);
 
         if (name) {
             record(analytics.download, name);
             const data = getExportData();
             downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
         }
-    }, [analytics.download, getExportData]);
+    }, [analytics.download, getExportData, defaultOutputName]);
 
     const handleReset = useCallback(async () => {
         record(analytics.reset);

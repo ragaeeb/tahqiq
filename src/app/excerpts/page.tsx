@@ -39,7 +39,7 @@ import {
     selectFootnoteCount,
     selectHeadingCount,
 } from '@/stores/excerptsStore/selectors';
-import type { Excerpts } from '@/stores/excerptsStore/types';
+import type { Excerpt, Excerpts } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
@@ -94,6 +94,24 @@ function ExcerptsPageContent() {
         }
         return [...excerpts].sort((a, b) => (b.nass?.length || 0) - (a.nass?.length || 0));
     }, [excerpts, sortMode]);
+
+    const handleCopyDown = useCallback(
+        (source: Excerpt) => {
+            const index = sortedExcerpts.findIndex((e) => e.id === source.id);
+            if (index !== -1 && index < sortedExcerpts.length - 1) {
+                const nextExcerpt = sortedExcerpts[index + 1];
+                updateExcerpt(nextExcerpt.id, {
+                    lastUpdatedAt: source.lastUpdatedAt,
+                    text: source.text,
+                    translator: source.translator,
+                });
+                toast.success(`Copied translation to ${nextExcerpt.id}`);
+            } else {
+                toast.warning('No row below to copy to');
+            }
+        },
+        [sortedExcerpts, updateExcerpt],
+    );
 
     // Toggle selection for an excerpt
     const toggleSelection = useCallback((id: string) => {
@@ -169,6 +187,7 @@ function ExcerptsPageContent() {
 
     const { handleSave, handleDownload, handleReset } = useStorageActions({
         analytics: { download: 'DownloadExcerpts', reset: 'ResetExcerpts', save: 'SaveExcerpts' },
+        defaultOutputName: 'excerpts.json',
         getExportData,
         reset: handleResetWithTabClear,
         storageKey: STORAGE_KEYS.excerpts,
@@ -444,6 +463,7 @@ function ExcerptsPageContent() {
                                             onDelete={(id) => deleteExcerpts([id])}
                                             onToggleSelect={toggleSelection}
                                             onUpdate={updateExcerpt}
+                                            onCopyDown={handleCopyDown}
                                         />
                                     )}
                                     scrollToId={scrollToId ?? scrollToFrom}

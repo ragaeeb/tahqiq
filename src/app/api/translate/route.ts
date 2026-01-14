@@ -1,5 +1,5 @@
 import { createUserContent, GoogleGenAI } from '@google/genai';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import type { TranslateRequestBody } from '@/types/api';
 

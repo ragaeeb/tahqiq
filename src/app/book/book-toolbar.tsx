@@ -1,7 +1,6 @@
 'use client';
 
 import {
-    BotIcon,
     DownloadIcon,
     HighlighterIcon,
     MergeIcon,
@@ -17,17 +16,12 @@ import React from 'react';
 import { ConfirmButton } from '@/components/confirm-button';
 import { JsonBrowseButton } from '@/components/json-browse-button';
 import { Button } from '@/components/ui/button';
-import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
-import { generateTranslationText } from '@/lib/ai';
 import { mapBookStateToKitab, mapKitabToLegacyFormat } from '@/lib/bookFormats';
-import { TRANSLATE_BOOK_PROMPT } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { loadFiles } from '@/lib/io';
-import { selectCurrentPages } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 import TocMenu from './toc-menu';
-import { TranslateDialog } from './translate-dialog';
 import VolumeSelector from './volume-selector';
 
 type BookToolbarProps = {
@@ -129,22 +123,6 @@ function BookToolbar({
             >
                 <HighlighterIcon />
             </Button>
-            <DialogTriggerButton
-                aria-label="Translate Book"
-                onClick={() => {
-                    record('TranslateBook');
-                }}
-                renderContent={() => {
-                    const defaultText = generateTranslationText(
-                        selectCurrentPages(useBookStore.getState()).filter((p) => p.text),
-                    ).join('\n\n');
-
-                    return <TranslateDialog defaultPrompt={TRANSLATE_BOOK_PROMPT} defaultText={defaultText} />;
-                }}
-                variant="outline"
-            >
-                <BotIcon /> AI Translate
-            </DialogTriggerButton>
             <JsonBrowseButton
                 isMulti
                 onFilesSelected={async (files) => {

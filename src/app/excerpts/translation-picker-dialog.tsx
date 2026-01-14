@@ -2,9 +2,10 @@
 
 import { ClipboardCopyIcon, RefreshCwIcon, SendIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { getPrompts } from 'wobble-bibble';
+import { Pill } from '@/components/pill';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -13,21 +14,6 @@ import { MASTER_PROMPT_ID } from '@/lib/constants';
 import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
 import { estimateTokenCount } from '@/lib/textUtils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
-
-// Memoized pill component to prevent re-renders
-const Pill = memo(function Pill({ id, isSelected, onClick }: { id: string; isSelected: boolean; onClick: () => void }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-        >
-            {id}
-        </button>
-    );
-});
 
 // Maximum pills to render for performance
 const MAX_VISIBLE_PILLS = 500;
@@ -128,6 +114,7 @@ export function TranslationPickerDialogContent() {
         try {
             await navigator.clipboard.writeText(formattedContent);
             record('CopyTranslationPrompt', `${selectedIds.length} excerpts, ${tokenCount} tokens`);
+
             toast.success(`Copied ${selectedIds.length} excerpts (~${tokenCount.toLocaleString()} tokens)`);
         } catch (err) {
             console.error('Failed to copy:', err);
@@ -135,18 +122,16 @@ export function TranslationPickerDialogContent() {
         }
     }, [formattedContent, selectedIds.length, tokenCount]);
 
-    const handleRemove = useCallback(() => {
-        if (selectedIds.length === 0) {
-            toast.error('No excerpts selected');
-            return;
-        }
-
+    const handleRemove = useCallback(async () => {
         record('MarkAsSentToLlm', `${selectedIds.length} excerpts`);
+
+        await navigator.clipboard.writeText(formattedContent);
+
         markAsSentToLlm(selectedIds);
-        toast.success(`Marked ${selectedIds.length} excerpts as sent`);
+        toast.success(`Copied and Marked ${selectedIds.length} excerpts as sent`);
 
         setSelectedEndIndex(null);
-    }, [selectedIds, markAsSentToLlm]);
+    }, [selectedIds, markAsSentToLlm, formattedContent]);
 
     const handleReset = useCallback(() => {
         record('ResetSentToLlm');
@@ -166,7 +151,7 @@ export function TranslationPickerDialogContent() {
                                 {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
                             </span>
                         )}
-                        <div className="flex gap-3 font-medium text-[10px] text-gray-400">
+                        <div className="flex gap-3 font-medium text-[8px] text-gray-400">
                             <span>Grok 4: 256k / 4.1: 2M</span>
                             <span>GPT-5.2: 400k / 5o: 128k</span>
                             <span>Gemini 3 Pro: 1M</span>
@@ -239,10 +224,10 @@ export function TranslationPickerDialogContent() {
                                 onClick={handleRemove}
                                 disabled={selectedIds.length === 0}
                                 className="bg-blue-500 hover:bg-blue-600"
-                                title="Mark as sent and close"
+                                title="Copy prompt + excerpts and mark as sent"
                             >
                                 <SendIcon className="mr-2 h-4 w-4" />
-                                Use
+                                Copy + Use
                             </Button>
                         </div>
                     </div>

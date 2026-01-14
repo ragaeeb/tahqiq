@@ -102,7 +102,8 @@ export default function ExcerptsTableHeader({
     if (activeTab === 'excerpts') {
         return (
             <tr>
-                <th className="w-32 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+                <th className="w-8 px-1 py-1" />
+                <th className="w-24 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-1 py-1 text-center text-gray-800 text-xs leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                         defaultValue={filters.page}
@@ -114,7 +115,7 @@ export default function ExcerptsTableHeader({
                         placeholder="Page"
                     />
                 </th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm" dir="rtl">
+                <th className="px-2 py-1 text-right font-semibold text-gray-700 text-sm" dir="rtl">
                     <div className="flex items-center gap-2">
                         <Button
                             className={sortMode === 'length' ? 'bg-blue-500' : ''}
@@ -127,7 +128,7 @@ export default function ExcerptsTableHeader({
                         </Button>
                         <SubmittableInput
                             trim={false}
-                            className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-gray-800 text-xl leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                            className="w-full border-none bg-transparent px-0 py-1 text-right font-arabic text-gray-800 text-lg leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                             defaultValue={filters.nass}
                             dir="auto"
                             name="nass"
@@ -140,9 +141,9 @@ export default function ExcerptsTableHeader({
                     </div>
                 </th>
                 {!hideTranslation && (
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
+                    <th className="px-2 py-1 text-left font-semibold text-gray-700 text-sm">
                         <SubmittableInput
-                            className="w-full border-none bg-transparent px-1 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                            className="w-full border-none bg-transparent px-0 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                             defaultValue={filters.text}
                             name="text"
                             onSubmit={(query) => {
@@ -153,7 +154,7 @@ export default function ExcerptsTableHeader({
                         />
                     </th>
                 )}
-                <th className="w-32 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+                <th className="w-28 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                     <div className="flex items-center justify-center gap-1">
                         <AddTranslationButton />
                         <SearchReplaceButton activeTab={activeTab} />
@@ -166,8 +167,8 @@ export default function ExcerptsTableHeader({
     if (activeTab === 'headings') {
         return (
             <tr>
-                <th className="w-20 px-2 py-3 text-center font-semibold text-gray-700 text-sm">ID</th>
-                <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+                <th className="w-20 px-1 py-1 text-center font-semibold text-gray-700 text-sm">ID</th>
+                <th className="w-24 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-1 py-1 text-center text-gray-800 text-xs leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                         defaultValue={filters.page}
@@ -179,10 +180,10 @@ export default function ExcerptsTableHeader({
                         placeholder="From"
                     />
                 </th>
-                <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">Parent</th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm" dir="rtl">
+                <th className="w-24 px-1 py-1 text-center font-semibold text-gray-700 text-sm">Parent</th>
+                <th className="px-2 py-1 text-right font-semibold text-gray-700 text-sm" dir="rtl">
                     <SubmittableInput
-                        className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-gray-800 text-xl leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                        className="w-full border-none bg-transparent px-0 py-1 text-right font-arabic text-gray-800 text-lg leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                         defaultValue={filters.nass}
                         name="nass"
                         onSubmit={(query) => {
@@ -192,9 +193,9 @@ export default function ExcerptsTableHeader({
                         placeholder={`Arabic (${headings.length})`}
                     />
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
+                <th className="px-2 py-1 text-left font-semibold text-gray-700 text-sm">
                     <SubmittableInput
-                        className="w-full border-none bg-transparent px-1 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                        className="w-full border-none bg-transparent px-0 py-1 text-left text-gray-700 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                         defaultValue={filters.text}
                         name="text"
                         onSubmit={(query) => {
@@ -204,7 +205,7 @@ export default function ExcerptsTableHeader({
                         placeholder="Translation"
                     />
                 </th>
-                <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+                <th className="w-16 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                     <div className="flex items-center justify-center gap-1">
                         <AddTranslationButton />
                         <SearchReplaceButton activeTab={activeTab} />
@@ -217,7 +218,7 @@ export default function ExcerptsTableHeader({
     // Footnotes tab
     return (
         <tr>
-            <th className="w-24 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+            <th className="w-24 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                 <SubmittableInput
                     className="w-full border-none bg-transparent px-1 py-1 text-center text-gray-800 text-xs leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                     defaultValue={filters.page}
@@ -229,9 +230,9 @@ export default function ExcerptsTableHeader({
                     placeholder="From"
                 />
             </th>
-            <th className="px-4 py-3 text-right font-semibold text-gray-700 text-sm" dir="rtl">
+            <th className="px-2 py-1 text-right font-semibold text-gray-700 text-sm" dir="rtl">
                 <SubmittableInput
-                    className="w-full border-none bg-transparent px-1 py-1 text-right font-arabic text-base text-gray-700 leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                    className="w-full border-none bg-transparent px-0 py-1 text-right font-arabic text-base text-gray-700 leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                     defaultValue={filters.nass}
                     name="nass"
                     onSubmit={(query) => {
@@ -241,9 +242,9 @@ export default function ExcerptsTableHeader({
                     placeholder={`Arabic (${footnotes.length})`}
                 />
             </th>
-            <th className="px-4 py-3 text-left font-semibold text-gray-700 text-sm">
+            <th className="px-2 py-1 text-left font-semibold text-gray-700 text-sm">
                 <SubmittableInput
-                    className="w-full border-none bg-transparent px-1 py-1 text-left text-gray-600 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
+                    className="w-full border-none bg-transparent px-0 py-1 text-left text-gray-600 text-sm leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"
                     defaultValue={filters.text}
                     name="text"
                     onSubmit={(query) => {
@@ -253,7 +254,7 @@ export default function ExcerptsTableHeader({
                     placeholder="Translation"
                 />
             </th>
-            <th className="w-32 px-2 py-3 text-center font-semibold text-gray-700 text-sm">
+            <th className="w-16 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                 <div className="flex items-center justify-center gap-1">
                     <AddTranslationButton />
                     <SearchReplaceButton activeTab={activeTab} />
