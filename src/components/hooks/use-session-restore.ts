@@ -1,5 +1,5 @@
 import { record } from 'nanolytics';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { StorageKey } from '@/lib/constants';
 import { loadFromOPFS } from '@/lib/io';
@@ -18,14 +18,39 @@ export function useSessionRestore<T>(
     init: (data: T) => void,
     analyticsEvent: string,
     adapter?: (data: unknown) => T,
-): void {
+): { isLoading: boolean } {
+    const [isLoading, setIsLoading] = useState(true);
+    const initRef = useRef(init);
+    const adapterRef = useRef(adapter);
+
+    // Keep refs updated
+    initRef.current = init;
+    adapterRef.current = adapter;
+
     useEffect(() => {
-        loadFromOPFS(storageKey).then((data) => {
-            if (data) {
-                record(analyticsEvent);
-                init(adapter ? adapter(data) : (data as T));
-            }
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- storageKey and analyticsEvent are stable strings
-    }, [init]);
+        let cancelled = false;
+        setIsLoading(true);
+
+        loadFromOPFS(storageKey)
+            .then((data) => {
+                if (cancelled) {
+                    return;
+                }
+                if (data) {
+                    record(analyticsEvent);
+                    initRef.current(adapterRef.current ? adapterRef.current(data) : (data as T));
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [storageKey, analyticsEvent]);
+
+    return { isLoading };
 }

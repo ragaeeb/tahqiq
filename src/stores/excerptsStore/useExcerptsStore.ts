@@ -1,5 +1,9 @@
+import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+
+enableMapSet();
+
 import * as actions from './actions';
 import type { ExcerptsState } from './types';
 
@@ -115,6 +119,10 @@ export const useExcerptsStore = create<ExcerptsState>()(
         resetSentToLlm: () =>
             set((state) => {
                 actions.resetSentToLlm(state);
+            }),
+        setPrompt: (promptId, content) =>
+            set((state) => {
+                actions.setPrompt(state, promptId, content);
             }),
 
         updateExcerpt: (id, updates) =>

@@ -153,6 +153,9 @@ export type Excerpts = {
 
     /** The prompt used to translate the excerpts. */
     promptForTranslation: string;
+
+    /** The ID of the prompt template used. */
+    promptId?: string;
 };
 
 /**
@@ -291,6 +294,11 @@ export type ExcerptsActions = {
      * Reset sent-to-LLM tracking to sync with current untranslated state
      */
     resetSentToLlm: () => void;
+
+    /**
+     * Updates the translation prompt and its ID
+     */
+    setPrompt: (promptId: string, content: string) => void;
 };
 
 /**

@@ -167,9 +167,12 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
                 toast.success(`Successfully updated ${updated} translations`);
             }
 
-            onClose?.();
+            if (textareaRef.current) {
+                textareaRef.current.value = '';
+                textareaRef.current.focus();
+            }
         },
-        [applyBulkTranslations, onClose],
+        [applyBulkTranslations],
     );
 
     const handleSubmit = useCallback(

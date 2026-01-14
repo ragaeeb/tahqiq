@@ -2,34 +2,85 @@
 
 import { ClipboardCopyIcon, RefreshCwIcon, SendIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-
+import { getPrompts } from 'wobble-bibble';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MASTER_PROMPT_ID } from '@/lib/constants';
 import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
 import { estimateTokenCount } from '@/lib/textUtils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
-type TranslationPickerDialogContentProps = { onClose: () => void };
+// Memoized pill component to prevent re-renders
+const Pill = memo(function Pill({ id, isSelected, onClick }: { id: string; isSelected: boolean; onClick: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+        >
+            {id}
+        </button>
+    );
+});
+
+// Maximum pills to render for performance
+const MAX_VISIBLE_PILLS = 500;
 
 /**
  * Dialog content for selecting untranslated excerpts to send to LLM.
  * Shows pills with excerpt IDs, supports range selection, and provides
  * copy/remove/reset functionality.
  */
-export function TranslationPickerDialogContent({ onClose }: TranslationPickerDialogContentProps) {
+export function TranslationPickerDialogContent() {
     const excerpts = useExcerptsStore((state) => state.excerpts);
+    const collection = useExcerptsStore((state) => state.collection);
     const sentToLlmIds = useExcerptsStore((state) => state.sentToLlmIds);
     const promptForTranslation = useExcerptsStore((state) => state.promptForTranslation);
+    const promptId = useExcerptsStore((state) => state.promptId);
+    const setPrompt = useExcerptsStore((state) => state.setPrompt);
     const markAsSentToLlm = useExcerptsStore((state) => state.markAsSentToLlm);
     const resetSentToLlm = useExcerptsStore((state) => state.resetSentToLlm);
 
-    // Get untranslated IDs not already sent
+    const prompts = getPrompts();
+    const visiblePrompts = useMemo(() => prompts.filter((p) => p.id !== MASTER_PROMPT_ID), [prompts]);
+
+    // Handle prompt selection
+    const handlePromptChange = useCallback(
+        (val: string) => {
+            const selected = prompts.find((p) => p.id === val);
+            if (selected) {
+                setPrompt(val, selected.content);
+                record('SelectTranslationPrompt', val);
+            }
+        },
+        [prompts, setPrompt],
+    );
+
+    // Auto-select first prompt if none selected and prompts available (only on mount)
+    const hasAutoSelected = useRef(false);
+    useEffect(() => {
+        if (!hasAutoSelected.current && !promptId && visiblePrompts.length > 0) {
+            hasAutoSelected.current = true;
+            const first = visiblePrompts[0];
+            setPrompt(first.id, first.content);
+        }
+    }, [promptId, visiblePrompts, setPrompt]);
+
+    // Get untranslated IDs not already sent - computed once
     const availableIds = useMemo(() => getUntranslatedIds(excerpts, sentToLlmIds), [excerpts, sentToLlmIds]);
 
     // Selected index (from 0 to this index inclusive)
     const [selectedEndIndex, setSelectedEndIndex] = useState<number | null>(null);
+
+    // Limit displayed pills for performance
+    const displayedIds = useMemo(() => availableIds.slice(0, MAX_VISIBLE_PILLS), [availableIds]);
+    const hasMore = availableIds.length > MAX_VISIBLE_PILLS;
 
     // Get selected IDs (from first to selectedEndIndex)
     const selectedIds = useMemo(() => {
@@ -39,28 +90,36 @@ export function TranslationPickerDialogContent({ onClose }: TranslationPickerDia
         return availableIds.slice(0, selectedEndIndex + 1);
     }, [availableIds, selectedEndIndex]);
 
-    // Get selected excerpts for formatting
+    // Build excerpt lookup map once for O(1) access
+    const excerptMap = useMemo(() => {
+        const map = new Map<string, (typeof excerpts)[0]>();
+        for (const e of excerpts) {
+            map.set(e.id, e);
+        }
+        return map;
+    }, [excerpts]);
+
+    // Get selected excerpts for formatting using map lookup
     const selectedExcerpts = useMemo(() => {
-        const idSet = new Set(selectedIds);
-        return excerpts.filter((e) => idSet.has(e.id));
-    }, [excerpts, selectedIds]);
+        return selectedIds.map((id) => excerptMap.get(id)).filter(Boolean) as typeof excerpts;
+    }, [excerptMap, selectedIds]);
 
     // Format content for clipboard
     const formattedContent = useMemo(() => {
-        if (selectedExcerpts.length === 0) {
+        if (selectedExcerpts.length === 0 || !promptForTranslation) {
             return '';
         }
-        return formatExcerptsForPrompt(selectedExcerpts, promptForTranslation);
-    }, [selectedExcerpts, promptForTranslation]);
+        return formatExcerptsForPrompt(selectedExcerpts, promptForTranslation, collection?.title);
+    }, [selectedExcerpts, promptForTranslation, collection?.title]);
 
     // Estimate token count
     const tokenCount = useMemo(() => estimateTokenCount(formattedContent), [formattedContent]);
 
-    const handlePillClick = (index: number) => {
+    const handlePillClick = useCallback((index: number) => {
         setSelectedEndIndex(index);
-    };
+    }, []);
 
-    const handleCopy = async () => {
+    const handleCopy = useCallback(async () => {
         if (!formattedContent) {
             toast.error('No excerpts selected');
             return;
@@ -74,9 +133,9 @@ export function TranslationPickerDialogContent({ onClose }: TranslationPickerDia
             console.error('Failed to copy:', err);
             toast.error('Failed to copy to clipboard');
         }
-    };
+    }, [formattedContent, selectedIds.length, tokenCount]);
 
-    const handleRemove = () => {
+    const handleRemove = useCallback(() => {
         if (selectedIds.length === 0) {
             toast.error('No excerpts selected');
             return;
@@ -85,28 +144,56 @@ export function TranslationPickerDialogContent({ onClose }: TranslationPickerDia
         record('MarkAsSentToLlm', `${selectedIds.length} excerpts`);
         markAsSentToLlm(selectedIds);
         toast.success(`Marked ${selectedIds.length} excerpts as sent`);
-        onClose();
-    };
 
-    const handleReset = () => {
+        setSelectedEndIndex(null);
+    }, [selectedIds, markAsSentToLlm]);
+
+    const handleReset = useCallback(() => {
         record('ResetSentToLlm');
         resetSentToLlm();
         setSelectedEndIndex(null);
         toast.info('Reset sent tracking');
-    };
+    }, [resetSentToLlm]);
 
     return (
         <DialogContent className="!max-w-[80vw] flex h-[70vh] w-[80vw] flex-col">
             <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
                     <span>Select Excerpts for Translation</span>
-                    {selectedIds.length > 0 && (
-                        <span className="font-mono text-blue-600 text-sm">
-                            {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
-                        </span>
-                    )}
+                    <div className="flex flex-col items-end gap-1">
+                        {selectedIds.length > 0 && (
+                            <span className="font-mono text-blue-600 text-sm">
+                                {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
+                            </span>
+                        )}
+                        <div className="flex gap-3 font-medium text-[10px] text-gray-400">
+                            <span>Grok 4: 256k / 4.1: 2M</span>
+                            <span>GPT-5.2: 400k / 5o: 128k</span>
+                            <span>Gemini 3 Pro: 1M</span>
+                        </div>
+                    </div>
                 </DialogTitle>
             </DialogHeader>
+
+            <div className="flex flex-col gap-4 pb-4">
+                <div className="flex items-center gap-4">
+                    <Label htmlFor="prompt-select" className="whitespace-nowrap font-semibold">
+                        Translation Prompt:
+                    </Label>
+                    <Select value={promptId} onValueChange={handlePromptChange}>
+                        <SelectTrigger id="prompt-select" className="flex-1">
+                            <SelectValue placeholder="Select a prompt template" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {visiblePrompts.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                    {p.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
 
             {availableIds.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center text-gray-500">
@@ -116,24 +203,21 @@ export function TranslationPickerDialogContent({ onClose }: TranslationPickerDia
                 <>
                     <div className="flex-1 overflow-auto rounded border p-4">
                         <div className="flex flex-wrap gap-2">
-                            {availableIds.map((id, index) => {
-                                const isSelected = selectedEndIndex !== null && index <= selectedEndIndex;
-                                return (
-                                    <button
-                                        key={id}
-                                        type="button"
-                                        onClick={() => handlePillClick(index)}
-                                        className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                                            isSelected
-                                                ? 'bg-blue-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
-                                    >
-                                        {id}
-                                    </button>
-                                );
-                            })}
+                            {displayedIds.map((id, index) => (
+                                <Pill
+                                    key={id}
+                                    id={id}
+                                    isSelected={selectedEndIndex !== null && index <= selectedEndIndex}
+                                    onClick={() => handlePillClick(index)}
+                                />
+                            ))}
                         </div>
+                        {hasMore && (
+                            <div className="mt-4 text-center text-gray-500 text-sm">
+                                Showing first {MAX_VISIBLE_PILLS.toLocaleString()} of{' '}
+                                {availableIds.length.toLocaleString()} available.
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-between gap-2 pt-4">
@@ -158,7 +242,7 @@ export function TranslationPickerDialogContent({ onClose }: TranslationPickerDia
                                 title="Mark as sent and close"
                             >
                                 <SendIcon className="mr-2 h-4 w-4" />
-                                Remove & Close
+                                Use
                             </Button>
                         </div>
                     </div>

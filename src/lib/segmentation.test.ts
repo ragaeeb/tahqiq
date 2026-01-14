@@ -20,13 +20,13 @@ describe('formatExcerptsForPrompt', () => {
 
     it('should handle empty excerpts array', async () => {
         const result = formatExcerptsForPrompt([], 'Prompt');
-        expect(result).toBe('Prompt\n\n\n');
+        expect(result).toBe('Prompt\n\n');
     });
 
     it('should use triple newline between prompt and excerpts', async () => {
         const excerpts = [{ from: 1, id: 'P1', nass: 'Test' }];
         const result = formatExcerptsForPrompt(excerpts as any, 'Prompt');
-        expect(result).toContain('Prompt\n\n\nP1 - Test');
+        expect(result).toContain('Prompt\n\nP1 - Test');
     });
 });
 

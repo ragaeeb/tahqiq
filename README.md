@@ -29,6 +29,8 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
   - **Model Selection**: Color-coded toggle group for selecting AI model (persisted per session)
   - **Duplicate Detection**: Warns when pasting translations with duplicate IDs
   - **Overwrite Confirmation**: Shows which existing translations will be overwritten before saving
+- **Prompt Management**: Centralized management of translation templates via `wobble-bibble`
+  - **Placeholder Replacement**: Automatic `{{book}}` replacement with collection titles
 - **URL-Based Filtering**: Shareable filter state via URL parameters
 - **Hash-Based Scroll**: Navigate to specific rows via URL hash
   - `#2333` scrolls to excerpt with `from=2333` (page number)
@@ -38,8 +40,9 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Headings ID Column**: Headings tab displays the ID field for easy reference
 - **Short Segment Merging**: Proactively detects and suggests merging adjacent short segments (<30 words) on load
 - **Translation Picker**: Select untranslated excerpts in bulk for LLM processing
+  - **High-Performance Rendering**: Efficiently handles 40k+ excerpt IDs using virtualization and memoization
   - **Arabic-Aware Token Estimation**: Accurate token counting accounting for tashkeel, tatweel, and Arabic numerals
-  - **Quick Selection**: Range-based selection of untranslated IDs
+  - **Context-Aware Limits**: Quick reference display for Grok 4, GPT-5.2, and Gemini 3 Pro token limits
   - **Flow Management**: Mark excerpts as "sent" to track translation progress across sessions
 
 ### Shamela Editor (`/shamela`)

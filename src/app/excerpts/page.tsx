@@ -19,7 +19,6 @@ import packageJson from '@/../package.json';
 
 import '@/lib/analytics';
 import '@/stores/dev';
-
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import { useSessionRestore } from '@/components/hooks/use-session-restore';
@@ -30,6 +29,7 @@ import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
+import { canMergeSegments } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
 import {
     selectAllExcerpts,
@@ -49,28 +49,6 @@ import { TranslationPickerDialogContent } from './translation-picker-dialog';
 import type { FilterScope } from './use-excerpt-filters';
 import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
-
-/**
- * Translation picker button with DialogTriggerButton pattern
- */
-function TranslationPickerButton() {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <DialogTriggerButton
-            onClick={() => {
-                record('OpenTranslationPicker');
-            }}
-            onOpenChange={setIsOpen}
-            open={isOpen}
-            renderContent={() => <TranslationPickerDialogContent onClose={() => setIsOpen(false)} />}
-            title="Select excerpts for LLM translation"
-            className="bg-indigo-500 hover:bg-indigo-600"
-        >
-            <LanguagesIcon />
-        </DialogTriggerButton>
-    );
-}
 
 /**
  * Inner component that uses useSearchParams (requires Suspense boundary)
@@ -130,40 +108,12 @@ function ExcerptsPageContent() {
         });
     }, []);
 
-    // Check if selected IDs are adjacent (2+ and consecutive in excerpts array)
     const canMerge = useMemo(() => {
-        if (selectedIds.size < 2) {
-            return false;
-        }
-
-        // Get indices of selected excerpts
-        const indices: number[] = [];
-        for (let i = 0; i < excerpts.length; i++) {
-            if (selectedIds.has(excerpts[i].id)) {
-                indices.push(i);
-            }
-        }
-
-        if (indices.length < 2) {
-            return false;
-        }
-
-        // Check if consecutive
-        indices.sort((a, b) => a - b);
-        for (let i = 1; i < indices.length; i++) {
-            if (indices[i] !== indices[i - 1] + 1) {
-                return false;
-            }
-        }
-        return true;
+        return canMergeSegments(selectedIds, excerpts);
     }, [selectedIds, excerpts]);
 
     // Handle merge of selected excerpts
     const handleMerge = useCallback(() => {
-        if (!canMerge) {
-            return;
-        }
-
         // Get IDs in order
         const idsInOrder: string[] = [];
         for (const excerpt of excerpts) {
@@ -176,10 +126,17 @@ function ExcerptsPageContent() {
         if (success) {
             toast.success(`Merged ${idsInOrder.length} excerpts`);
             setSelectedIds(new Set());
+
+            // Clear hash if it points to a deleted excerpt
+            const hash = window.location.hash.slice(1);
+            if (hash && idsInOrder.slice(1).some((id) => id === hash || id.includes(hash))) {
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                clearScrollTo();
+            }
         } else {
             toast.error('Failed to merge excerpts');
         }
-    }, [canMerge, excerpts, selectedIds, mergeExcerpts]);
+    }, [excerpts, selectedIds, mergeExcerpts, clearScrollTo]);
 
     // Session restore hook
     useSessionRestore<Excerpts>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
@@ -357,7 +314,16 @@ function ExcerptsPageContent() {
                             <Button onClick={handleExportToTxt}>
                                 <FileTextIcon />
                             </Button>
-                            <TranslationPickerButton />
+                            <DialogTriggerButton
+                                onClick={() => {
+                                    record('OpenTranslationPicker');
+                                }}
+                                renderContent={() => <TranslationPickerDialogContent />}
+                                title="Select excerpts for LLM translation"
+                                className="bg-indigo-500 hover:bg-indigo-600"
+                            >
+                                <LanguagesIcon />
+                            </DialogTriggerButton>
                             <Button className="bg-amber-500" onClick={handleFindGap} title="Find first translation gap">
                                 <SearchIcon />
                             </Button>

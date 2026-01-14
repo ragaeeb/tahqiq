@@ -23,9 +23,9 @@ interface DialogTriggerButtonProps extends React.ComponentProps<typeof Button> {
 
     /**
      * Function that returns the dialog content. Only called when dialog is opened.
-     * This ensures lazy loading of the dialog content.
+     * Receives a close function to programmatically close the dialog.
      */
-    renderContent: () => React.ReactNode;
+    renderContent: (close: () => void) => React.ReactNode;
 }
 
 interface DialogTriggerProps {
@@ -46,9 +46,9 @@ interface DialogTriggerProps {
 
     /**
      * Function that returns the dialog content. Only called when dialog is opened.
-     * This ensures lazy loading of the dialog content.
+     * Receives a close function to programmatically close the dialog.
      */
-    renderContent: () => React.ReactNode;
+    renderContent: (close: () => void) => React.ReactNode;
 
     /**
      * The trigger element that will open the dialog when clicked
@@ -75,10 +75,12 @@ export function DialogTrigger({ defaultOpen, onOpenChange, open, renderContent, 
         [open, onOpenChange],
     );
 
+    const closeHandler = React.useCallback(() => setDialogOpen(false), [setDialogOpen]);
+
     return (
         <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
             <RadixDialogTrigger asChild>{trigger}</RadixDialogTrigger>
-            {dialogOpen && renderContent()}
+            {dialogOpen && renderContent(closeHandler)}
         </Dialog>
     );
 }
@@ -113,6 +115,8 @@ export function DialogTriggerButton({
         [open, onOpenChange],
     );
 
+    const closeHandler = React.useCallback(() => setDialogOpen(false), [setDialogOpen]);
+
     return (
         <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
             <RadixDialogTrigger asChild>
@@ -123,7 +127,7 @@ export function DialogTriggerButton({
                     }}
                 />
             </RadixDialogTrigger>
-            {dialogOpen && renderContent()}
+            {dialogOpen && renderContent(closeHandler)}
         </Dialog>
     );
 }

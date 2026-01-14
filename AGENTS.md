@@ -79,6 +79,11 @@ We use **Zustand** with **Immer middleware** for immutable state updates:
 
 **Key patterns:**
 - Use `zustand/middleware/immer` for immutable updates (NOT `mutative`)
+- **Immer + Map/Set**: If using `Map` or `Set` in state (e.g., `sentToLlmIds`), you MUST call `enableMapSet()` in the store file initialization:
+  ```typescript
+  import { enableMapSet } from 'immer';
+  enableMapSet();
+  ```
 - Actions are pure functions that mutate draft state (Immer handles immutability)
 - Store wraps actions with `set((state) => actions.fn(state, ...args))`
 - Selectors use `memoize-one` for performance
@@ -176,6 +181,30 @@ The `!` prefix applies `!important` to override ShadCN's default `sm:max-w-lg` c
 | Checkboxes | `<Checkbox>` from `@/components/ui/checkbox` |
 | Radio buttons | `<RadioGroup>` from `@/components/ui/radio-group` |
 | Labels | `<Label>` from `@/components/ui/label` |
+
+### Currently Available Components
+
+The following components are already installed in `src/components/ui`:
+
+- `Badge` (`badge.tsx`)
+- `Button` (`button.tsx`)
+- `Card` (`card.tsx`)
+- `Checkbox` (`checkbox.tsx`)
+- `Dialog` (`dialog.tsx`)
+- `DialogTriggerButton` (`dialog-trigger.tsx`) - Custom helper
+- `DropdownMenu` (`dropdown-menu.tsx`)
+- `Input` (`input.tsx`)
+- `Label` (`label.tsx`)
+- `RadioGroup` (`radio-group.tsx`)
+- `ScrollArea` (`scroll-area.tsx`)
+- `Select` (`select.tsx`)
+- `Slider` (`slider.tsx`)
+- `Sonner` (`sonner.tsx`) - Toast notifications
+- `Tabs` (`tabs.tsx`)
+- `TagInput` (`tag-input.tsx`)
+- `Textarea` (`textarea.tsx`)
+- `Toggle` (`toggle.tsx`)
+- `ToggleGroup` (`toggle-group.tsx`)
 
 **Constants:**
 
@@ -451,26 +480,20 @@ Following these practices keeps the codebase maintainable and test-friendly for 
 
 For operations that may process thousands of items:
 
-1. **Use Maps for O(1) lookup** instead of array `.find()` calls
-2. **Single state update** - batch all changes into one `set()` call to minimize re-renders
-3. **Build index maps upfront** before iterating
+4. **Memoize list items** in virtualized loops to prevent re-rendering identical rows during filter/selection changes.
 
-See `src/stores/excerptsStore/actions.ts` `applyBulkTranslations` for the pattern:
+See `src/stores/excerptsStore/actions.ts` `applyBulkTranslations` or `TranslationPickerDialogContent` for lookup patterns:
 
 ```typescript
-// Build index maps for O(1) lookup
-const excerptIndexMap = new Map<string, number>();
-for (let i = 0; i < state.excerpts.length; i++) {
-    excerptIndexMap.set(state.excerpts[i].id, i);
-}
+// Build index map for O(1) lookup
+const excerptMap = useMemo(() => {
+    const map = new Map<string, Excerpt>();
+    for (const e of excerpts) map.set(e.id, e);
+    return map;
+}, [excerpts]);
 
-// Apply updates using O(1) lookups
-for (const [id, text] of translationMap) {
-    const index = excerptIndexMap.get(id);
-    if (index !== undefined) {
-        state.excerpts[index] = { ...state.excerpts[index], text };
-    }
-}
+// Access via ID instead of .find()
+const selectedData = selectedIds.map(id => excerptMap.get(id));
 ```
 
 Parsing utilities for bulk data live in `@/lib/transform/excerpts.ts`.
@@ -548,6 +571,22 @@ const { handleSave, handleDownload, handleReset } = useStorageActions({
 - `handleReset`: Clears OPFS storage AND resets store state
 
 **Storage keys** are centralized in `STORAGE_KEYS` constant in `@/lib/constants.ts` to avoid typos.
+
+### Hook Performance Lessons: Infinite Loops
+When creating custom hooks that accept callbacks (like `init` in `useSessionRestore`), **NEVER** put the raw callback in the `useEffect` dependency array if the user is likely to pass an inline function (e.g., `(data) => setPrompts(data)`). This causes infinite loops as a new function reference is created on every render.
+
+**Pattern: The Ref-Callback**
+```typescript
+export function useMyHook(callback: (data: any) => void) {
+    const callbackRef = useRef(callback);
+    callbackRef.current = callback; // Keep ref updated
+
+    useEffect(() => {
+        // ... async logic ...
+        callbackRef.current(data); // Call via ref
+    }, [/* only stable dependencies here */]);
+}
+```
 
 ---
 
@@ -652,7 +691,7 @@ src/app/new/
 └── use-new-filters.ts # URL-based filtering
 ```
 
-### 5. Lessons Learned
+### 5. Creating a New Route (Continued)
 
 | Issue | Solution |
 |-------|----------|
@@ -663,8 +702,33 @@ src/app/new/
 | `IndexedExcerpt` requires vol/vp | Set `vol: 0, vp: 0` for non-book content |
 | Tatweel Removal | Use simple regex `/\u0640/g` to preserve line breaks instead of aggressive libraries |
 
-### 6. Update Documentation
+### 6. Prompt Management System
 
-- Add route to landing page in `src/app/page.tsx`
-- Update README.md with feature description
-- Update AGENTS.md with new store/patterns
+Prompts are managed externally via the `wobble-bibble` library.
+
+- **Stacking Logic**: The application uses a strategy where prompts are combined to provide context. The foundation ID is typically `master_prompt`.
+- **Placeholder Replacement**: Prompts support a `{{book}}` tag. Use `formatExcerptsForPrompt(excerpts, prompt, bookTitle)` which handles the replacement logic (replacing with `bookTitle` or fallback "this book").
+- **Filtering**: When displaying prompt selectors, always filter out the `master_prompt` as it is typically used as a global foundation for other prompts rather than a standalone selection.
+
+### 7. DOM Performance Patterns (e.g., 40k+ Items)
+
+When dealing with very large datasets (like 40,000 excerpt IDs in the Translation Picker):
+
+1. **Limit Active DOM nodes**: Do not render thousands of buttons/interactive elements at once. Use a rendering cap (e.g., `MAX_VISIBLE_PILLS = 500`) even inside scrollable areas.
+2. **React.memo is mandatory**: Any repeated item component (Pill, Row) MUST be wrapped in `React.memo`.
+3. **Memoize Event Handlers**: Wrap all handlers passed to list items in `useCallback`.
+4. **Avoid Render-Heavy state**: Don't calculate 40k strings in a render loop. Use `useMemo` for derived formatting and only compute for active selection.
+
+### 8. Lessons Learned
+
+| Issue | Solution |
+|-------|----------|
+| Line breaks not showing | Add `whitespace-pre-wrap` class to content containers |
+| EditableHTML not preserving newlines | Use CSS `whitespace-pre-wrap` |
+| Duplicate columns (ID/Page) | Consolidate into single clickable column |
+| Non-Arabic tests failing sanitization | Use realistic Arabic content in tests |
+| `IndexedExcerpt` requires vol/vp | Set `vol: 0, vp: 0` for non-book content |
+| Tatweel Removal | Use simple regex `/\u0640/g` to preserve line breaks instead of aggressive libraries |
+| Infinite Loop in Restore | Use `useRef` to store functional callbacks in custom hooks |
+| Immer crashes on Set/Map | Call `enableMapSet()` at the top of the store file |
+| Picker sluggish with 40k items | Cap DOM rendering nodes and use O(1) Map lookups for formatting |

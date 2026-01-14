@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 
 const record = jest.fn();
 const toast = { success: jest.fn() };
@@ -43,8 +43,13 @@ describe('Manuscript page', () => {
         toast.success.mockReset();
     });
 
-    it('asks users to upload data before initialization', () => {
-        render(<ManuscriptPage />);
-        expect(screen.getByTestId('drop-zone')).toBeTruthy();
+    it('asks users to upload data before initialization', async () => {
+        await act(async () => {
+            render(<ManuscriptPage />);
+        });
+
+        await waitFor(() => {
+            expect(screen.getByTestId('drop-zone')).toBeTruthy();
+        });
     });
 });

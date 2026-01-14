@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest, mock } from 'bun:test';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
@@ -46,12 +46,16 @@ describe('Transcript page', () => {
         record.mockReset();
     });
 
-    it('prompts for transcript upload when not initialized', () => {
-        render(<TranscriptPage />);
-        expect(screen.getByTestId('drop-zone')).toBeTruthy();
+    it('prompts for transcript upload when not initialized', async () => {
+        await act(async () => {
+            render(<TranscriptPage />);
+        });
+        await waitFor(() => {
+            expect(screen.getByTestId('drop-zone')).toBeTruthy();
+        });
     });
 
-    it('renders transcript table once initialized', () => {
+    it('renders transcript table once initialized', async () => {
         act(() => {
             useTranscriptStore.setState({
                 selectedPart: 1,
@@ -65,10 +69,14 @@ describe('Transcript page', () => {
             .spyOn(useTranscriptStore.getState(), 'selectAllSegments')
             .mockImplementation(() => {});
 
-        render(<TranscriptPage />);
+        await act(async () => {
+            render(<TranscriptPage />);
+        });
 
-        expect(screen.getByText('part-selector')).toBeTruthy();
-        expect(screen.getByTestId('segment-row')?.textContent).toContain('Segment text');
+        await waitFor(() => {
+            expect(screen.getByText('part-selector')).toBeTruthy();
+            expect(screen.getByTestId('segment-row')?.textContent).toContain('Segment text');
+        });
 
         const selectAll = screen.getByLabelText('Select all segments');
         fireEvent.click(selectAll);

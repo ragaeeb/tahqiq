@@ -1,12 +1,7 @@
 import { sanitizeArabic } from 'baburchi';
 import { preformatArabicText } from 'bitaboom';
 import { type Page, type Segment, segmentPages } from 'flappa-doormal';
-import {
-    LatestContractVersion,
-    Markers,
-    SHORT_SEGMENT_WORD_THRESHOLD,
-    TRANSLATE_EXCERPTS_PROMPT,
-} from '@/lib/constants';
+import { LatestContractVersion, Markers, SHORT_SEGMENT_WORD_THRESHOLD } from '@/lib/constants';
 import { applyReplacements } from '@/lib/replace';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
@@ -136,16 +131,19 @@ export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: Boo
         lastUpdatedAt: nowInSeconds(),
         options,
         postProcessingApps: [],
-        promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
+        promptForTranslation: '',
     };
 };
 
 /**
  * Format excerpts for LLM prompt (matches handleExportToTxt format)
  */
-export const formatExcerptsForPrompt = (excerpts: Excerpt[], prompt: string) => {
+export const formatExcerptsForPrompt = (excerpts: Excerpt[], prompt: string, bookTitle?: string) => {
+    // Replace placeholders
+    const finalPrompt = bookTitle ? prompt.replace(/{{book}}/g, bookTitle) : prompt.replace(/{{book}}/g, 'this book');
+
     const formatted = excerpts.map((e) => `${e.id} - ${e.nass}`).join('\n\n');
-    return [prompt, formatted].join('\n\n\n');
+    return [finalPrompt, formatted].join('\n\n');
 };
 
 /**
@@ -162,6 +160,33 @@ export type DebugMeta = {
         maxContentLength: number;
         splitReason: 'whitespace' | 'unicode_boundary' | 'grapheme_cluster';
     };
+};
+
+export const canMergeSegments = <T extends { id: string }>(selectedIds: Set<string>, excerpts: T[]) => {
+    if (selectedIds.size < 2) {
+        return false;
+    }
+
+    // Get indices of selected excerpts
+    const indices: number[] = [];
+    for (let i = 0; i < excerpts.length; i++) {
+        if (selectedIds.has(excerpts[i].id)) {
+            indices.push(i);
+        }
+    }
+
+    if (indices.length < 2) {
+        return false;
+    }
+
+    // Check if consecutive
+    indices.sort((a, b) => a - b);
+    for (let i = 1; i < indices.length; i++) {
+        if (indices[i] !== indices[i - 1] + 1) {
+            return false;
+        }
+    }
+    return true;
 };
 
 export const getMetaKey = (debug: unknown): string => {

@@ -1,5 +1,5 @@
 import { Token } from 'flappa-doormal';
-import { LatestContractVersion, SHORT_SEGMENT_WORD_THRESHOLD, TRANSLATE_EXCERPTS_PROMPT } from '@/lib/constants';
+import { LatestContractVersion, SHORT_SEGMENT_WORD_THRESHOLD } from '@/lib/constants';
 import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds, updateItemById } from '@/lib/store-utils';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
@@ -28,7 +28,8 @@ export const INITIAL_STATE: ExcerptsStateCore = {
         rules: [],
     },
     postProcessingApps: [],
-    promptForTranslation: TRANSLATE_EXCERPTS_PROMPT.join('\n'),
+    promptForTranslation: '',
+    promptId: undefined,
     sentToLlmIds: new Set(),
 };
 
@@ -51,7 +52,8 @@ export const initStore = (migrated: Excerpts, fileName?: string): ExcerptsStateC
         lastUpdatedAt: migrated.lastUpdatedAt,
         options,
         postProcessingApps: migrated.postProcessingApps,
-        promptForTranslation: migrated.promptForTranslation || TRANSLATE_EXCERPTS_PROMPT.join('\n'),
+        promptForTranslation: migrated.promptForTranslation || '',
+        promptId: migrated.promptId,
     };
 };
 
@@ -59,6 +61,15 @@ export const initStore = (migrated: Excerpts, fileName?: string): ExcerptsStateC
  * Resets the store to initial state
  */
 export const resetStore = (): ExcerptsStateCore => ({ ...INITIAL_STATE, createdAt: nowInSeconds() });
+
+/**
+ * Sets the active translation prompt
+ */
+export const setPrompt = (state: ExcerptsStateCore, promptId: string, content: string): void => {
+    state.promptId = promptId;
+    state.promptForTranslation = content;
+    state.lastUpdatedAt = nowInSeconds();
+};
 
 /**
  * Updates a single excerpt
