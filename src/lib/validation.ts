@@ -74,12 +74,26 @@ export const validateTranslationMarkers = (text: string): string | undefined => 
  * @returns Normalized text with each marker on its own line
  */
 export const normalizeTranslationText = (content: string): string => {
-    const mergedMarkerPattern = new RegExp(
+    // First normalize line endings: CRLF -> LF, CR -> LF
+    const normalizedLineEndings = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    // Match markers that appear after a space
+    const mergedMarkerWithSpacePattern = new RegExp(
         ` (${MARKER_ID_PATTERN}${TRANSLATION_MARKER_PARTS.optionalSpace}${TRANSLATION_MARKER_PARTS.dashes})`,
         'gm',
     );
 
-    return content.replace(mergedMarkerPattern, '\n$1').replace(/\\\[/gm, '[');
+    // Match markers that appear directly after non-whitespace (e.g., ".P6822 -" or "?P6823 -")
+    // Capture the preceding character to preserve it, then add newline before the marker
+    const mergedMarkerNoSpacePattern = new RegExp(
+        `([^\\s\\n])(${MARKER_ID_PATTERN}${TRANSLATION_MARKER_PARTS.optionalSpace}${TRANSLATION_MARKER_PARTS.dashes})`,
+        'gm',
+    );
+
+    return normalizedLineEndings
+        .replace(mergedMarkerWithSpacePattern, '\n$1')
+        .replace(mergedMarkerNoSpacePattern, '$1\n$2')
+        .replace(/\\\[/gm, '[');
 };
 
 /**

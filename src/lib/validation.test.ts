@@ -90,6 +90,51 @@ P456 - Second`;
             const result = normalizeTranslationText(input);
             expect(result.split('\n').length).toBe(2);
         });
+
+        test('splits markers with no space before them (period directly before marker)', () => {
+            const input = 'P6821 - Questioner: This is the answer.P6822 - Next question';
+            const result = normalizeTranslationText(input);
+            expect(result).toContain('\nP6822 -');
+            expect(result.split('\n').length).toBe(2);
+        });
+
+        test('handles complex mid-sentence markers', () => {
+            const input = `P6821 - Questioner: This is the answer to that question.P6822 - Questioner: What is the ruling of the sharīʿah (Islamic law) on religious anāshīd (chants) and beating the dufūf (plural of daff, frame drums) and is the daff (frame drum) specific to women without men?
+The Shaykh: Attach, attach the answer to the Islamic banks.P6823 - Questioner: The father, meaning we advised him`;
+            const result = normalizeTranslationText(input);
+            // Each marker should start on its own line now
+            expect(result).toMatch(/^P6821 -/m);
+            expect(result).toMatch(/^P6822 -/m);
+            expect(result).toMatch(/^P6823 -/m);
+            // Verify we can extract all 3 IDs
+            const ids = extractTranslationIds(result);
+            expect(ids).toEqual(['P6821', 'P6822', 'P6823']);
+        });
+
+        test('normalizes Windows-style CRLF line endings to LF', () => {
+            const input = 'P1 - First\r\nP2 - Second\r\nP3 - Third';
+            const result = normalizeTranslationText(input);
+            expect(result).not.toContain('\r');
+            expect(result).toContain('\n');
+            const ids = extractTranslationIds(result);
+            expect(ids).toEqual(['P1', 'P2', 'P3']);
+        });
+
+        test('normalizes old Mac-style CR line endings to LF', () => {
+            const input = 'P1 - First\rP2 - Second\rP3 - Third';
+            const result = normalizeTranslationText(input);
+            expect(result).not.toContain('\r');
+            const ids = extractTranslationIds(result);
+            expect(ids).toEqual(['P1', 'P2', 'P3']);
+        });
+
+        test('handles mixed line endings (CRLF and markers without spacing)', () => {
+            const input = 'P6821 - Answer to question.P6822 - Next question\r\nThe Shaykh: response.P6823 - Another';
+            const result = normalizeTranslationText(input);
+            expect(result).not.toContain('\r');
+            const ids = extractTranslationIds(result);
+            expect(ids).toEqual(['P6821', 'P6822', 'P6823']);
+        });
     });
 
     describe('extractTranslationIds', () => {
