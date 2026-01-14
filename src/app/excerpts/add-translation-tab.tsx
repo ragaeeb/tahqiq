@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATION_MODELS } from '@/lib/constants';
 import { parseTranslations } from '@/lib/textUtils';
+import { cn } from '@/lib/utils';
 import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { getTranslatorValue, TranslatorSelect } from './translator-select';
@@ -247,7 +248,7 @@ export function AddTranslationTab() {
             <div className="flex min-h-0 flex-1 flex-col gap-2">
                 <Label htmlFor="translations">Translations:</Label>
                 <Textarea
-                    className={`min-h-0 flex-1 resize-none text-base ${validationError ? 'border-red-500' : ''}`}
+                    className={cn('min-h-0 flex-1 resize-none text-base', validationError && 'border-red-500')}
                     id="translations"
                     onChange={handleChange}
                     onPaste={handlePaste}

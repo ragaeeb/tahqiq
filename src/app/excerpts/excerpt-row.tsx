@@ -219,7 +219,10 @@ function ExcerptRow({
                         <Button
                             aria-label={`Copy translation down from ${data.id}`}
                             className="h-7 w-7 p-0"
-                            onClick={() => onCopyDown(data)}
+                            onClick={() => {
+                                record('CopyTranslationDown');
+                                onCopyDown(data);
+                            }}
                             title="Copy translation to row below"
                             variant="ghost"
                         >

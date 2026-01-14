@@ -126,8 +126,6 @@ function ExcerptsPageContent() {
 
     // Handle merge of selected excerpts
     const handleMerge = useCallback(() => {
-        console.log('[handleMerge] Starting merge, selectedIds:', Array.from(selectedIds));
-
         // Get IDs in order
         const idsInOrder: string[] = [];
         for (const excerpt of excerpts) {
@@ -136,17 +134,14 @@ function ExcerptsPageContent() {
             }
         }
 
-        console.log('[handleMerge] IDs to merge in order:', idsInOrder);
         const survivingId = idsInOrder[0]; // First ID survives the merge
         const success = mergeExcerpts(idsInOrder);
-        console.log('[handleMerge] Merge result:', success);
 
         if (success) {
             toast.success(`Merged ${idsInOrder.length} excerpts`);
             setSelectedIds(new Set());
 
             // Set scroll target to the surviving excerpt
-            console.log('[handleMerge] Setting scrollToAfterChange to:', survivingId);
             setScrollToAfterChange(survivingId);
 
             // Clear hash if it points to a deleted excerpt
@@ -162,7 +157,6 @@ function ExcerptsPageContent() {
 
     // Clear the scroll-after-change state once complete
     const handleScrollAfterChangeComplete = useCallback(() => {
-        console.log('[page] scrollToAfterChange complete, clearing');
         setScrollToAfterChange(null);
     }, []);
 
