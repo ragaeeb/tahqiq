@@ -1,19 +1,10 @@
 'use client';
 
-import { PlusIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import {
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATION_MODELS } from '@/lib/constants';
@@ -37,11 +28,11 @@ const getSavedModel = (): string => {
 };
 
 /**
- * Dialog content for adding bulk translations to excerpts.
+ * Tab content for adding bulk translations to excerpts.
  * Uses uncontrolled textarea for performance and batch store updates.
  * Validates translations on paste to catch AI hallucinations.
  */
-export function AddTranslationDialogContent({ onClose }: { onClose?: () => void }) {
+export function AddTranslationTab() {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [selectedModel, setSelectedModel] = useState<string>(getSavedModel());
     const [validationError, setValidationError] = useState<string | undefined>();
@@ -250,90 +241,72 @@ export function AddTranslationDialogContent({ onClose }: { onClose?: () => void 
     );
 
     return (
-        <DialogContent className="!max-w-[90vw] flex h-[85vh] w-[90vw] flex-col">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                    <PlusIcon className="h-5 w-5" />
-                    Add Translations
-                </DialogTitle>
-                <DialogDescription>
-                    Paste translations in the format: ID - Translation text. Multi-line translations are supported.
-                </DialogDescription>
-            </DialogHeader>
+        <form className="flex flex-1 flex-col gap-4 overflow-hidden" onSubmit={handleSubmit}>
+            <TranslatorSelect onChange={setSelectedModel} value={selectedModel} />
 
-            <form className="flex flex-1 flex-col gap-4 overflow-hidden" onSubmit={handleSubmit}>
-                <TranslatorSelect onChange={setSelectedModel} value={selectedModel} />
-
-                <div className="flex min-h-0 flex-1 flex-col gap-2">
-                    <Label htmlFor="translations">Translations:</Label>
-                    <Textarea
-                        className={`min-h-0 flex-1 resize-none text-base ${validationError ? 'border-red-500' : ''}`}
-                        id="translations"
-                        onChange={handleChange}
-                        onPaste={handlePaste}
-                        placeholder={`P11622a - ʿImrān al-Qaṭṭān; he is Ibn Dāwar. It has preceded.
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <Label htmlFor="translations">Translations:</Label>
+                <Textarea
+                    className={`min-h-0 flex-1 resize-none text-base ${validationError ? 'border-red-500' : ''}`}
+                    id="translations"
+                    onChange={handleChange}
+                    onPaste={handlePaste}
+                    placeholder={`P11622a - ʿImrān al-Qaṭṭān; he is Ibn Dāwar. It has preceded.
 Another line that is for this excerpt.
 
 C11623 - Those whose name is ʿUmayr and ʿUmayrah
 
 Another line that should be appended to this existing excerpt.`}
-                        ref={textareaRef}
-                    />
-                    {validationError && (
-                        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
-                            ⚠️ {validationError}
-                        </div>
-                    )}
-                    {pendingOverwrites && (
-                        <div className="space-y-2">
-                            {pendingOverwrites.duplicates.length > 0 && (
-                                <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-orange-800 text-sm">
-                                    <div className="font-medium">
-                                        ⚠️ Duplicate IDs in pasted text (later entries will override earlier ones):
-                                    </div>
-                                    <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
-                                        {pendingOverwrites.duplicates.join(', ')}
-                                    </div>
+                    ref={textareaRef}
+                />
+                {validationError && (
+                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
+                        ⚠️ {validationError}
+                    </div>
+                )}
+                {pendingOverwrites && (
+                    <div className="space-y-2">
+                        {pendingOverwrites.duplicates.length > 0 && (
+                            <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-orange-800 text-sm">
+                                <div className="font-medium">
+                                    ⚠️ Duplicate IDs in pasted text (later entries will override earlier ones):
                                 </div>
-                            )}
-                            {pendingOverwrites.overwrites.length > 0 && (
-                                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
-                                    <div className="font-medium">
-                                        ⚠️ {pendingOverwrites.overwrites.length} excerpt(s) already have translations
-                                        that will be overwritten:
-                                    </div>
-                                    <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
-                                        {pendingOverwrites.overwrites.join(', ')}
-                                    </div>
+                                <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
+                                    {pendingOverwrites.duplicates.join(', ')}
                                 </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                            </div>
+                        )}
+                        {pendingOverwrites.overwrites.length > 0 && (
+                            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
+                                <div className="font-medium">
+                                    ⚠️ {pendingOverwrites.overwrites.length} excerpt(s) already have translations that
+                                    will be overwritten:
+                                </div>
+                                <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
+                                    {pendingOverwrites.overwrites.join(', ')}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline">
-                            Cancel
+            <div className="flex justify-end gap-2">
+                {pendingOverwrites ? (
+                    <>
+                        <Button onClick={() => setPendingOverwrites(null)} type="button" variant="outline">
+                            Go Back
                         </Button>
-                    </DialogClose>
-                    {pendingOverwrites ? (
-                        <>
-                            <Button onClick={() => setPendingOverwrites(null)} type="button" variant="outline">
-                                Go Back
-                            </Button>
-                            <Button className="bg-amber-500 hover:bg-amber-600" type="submit">
-                                Confirm ({pendingOverwrites.duplicates.length + pendingOverwrites.overwrites.length}{' '}
-                                issues)
-                            </Button>
-                        </>
-                    ) : (
-                        <Button disabled={!!validationError} type="submit">
-                            Save Translations
+                        <Button className="bg-amber-500 hover:bg-amber-600" type="submit">
+                            Confirm ({pendingOverwrites.duplicates.length + pendingOverwrites.overwrites.length} issues)
                         </Button>
-                    )}
-                </DialogFooter>
-            </form>
-        </DialogContent>
+                    </>
+                ) : (
+                    <Button disabled={!!validationError} type="submit">
+                        Save Translations
+                    </Button>
+                )}
+            </div>
+        </form>
     );
 }

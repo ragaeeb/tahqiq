@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { getPrompts } from 'wobble-bibble';
 import { Pill } from '@/components/pill';
 import { Button } from '@/components/ui/button';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MASTER_PROMPT_ID } from '@/lib/constants';
@@ -19,11 +18,11 @@ import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 const MAX_VISIBLE_PILLS = 500;
 
 /**
- * Dialog content for selecting untranslated excerpts to send to LLM.
+ * Tab content for selecting untranslated excerpts to send to LLM.
  * Shows pills with excerpt IDs, supports range selection, and provides
  * copy/remove/reset functionality.
  */
-export function TranslationPickerDialogContent() {
+export function PickerTab() {
     const excerpts = useExcerptsStore((state) => state.excerpts);
     const collection = useExcerptsStore((state) => state.collection);
     const sentToLlmIds = useExcerptsStore((state) => state.sentToLlmIds);
@@ -141,32 +140,14 @@ export function TranslationPickerDialogContent() {
     }, [resetSentToLlm]);
 
     return (
-        <DialogContent className="!max-w-[80vw] flex h-[70vh] w-[80vw] flex-col">
-            <DialogHeader>
-                <DialogTitle className="flex items-center justify-between">
-                    <span>Select Excerpts for Translation</span>
-                    <div className="flex flex-col items-end gap-1">
-                        {selectedIds.length > 0 && (
-                            <span className="font-mono text-blue-600 text-sm">
-                                {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
-                            </span>
-                        )}
-                        <div className="flex gap-3 font-medium text-[8px] text-gray-400">
-                            <span>Grok 4: 256k / 4.1: 2M</span>
-                            <span>GPT-5.2: 400k / 5o: 128k</span>
-                            <span>Gemini 3 Pro: 1M</span>
-                        </div>
-                    </div>
-                </DialogTitle>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-4 pb-4">
+        <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex items-center justify-between pb-4">
                 <div className="flex items-center gap-4">
                     <Label htmlFor="prompt-select" className="whitespace-nowrap font-semibold">
                         Translation Prompt:
                     </Label>
                     <Select value={promptId} onValueChange={handlePromptChange}>
-                        <SelectTrigger id="prompt-select" className="flex-1">
+                        <SelectTrigger id="prompt-select" className="w-64">
                             <SelectValue placeholder="Select a prompt template" />
                         </SelectTrigger>
                         <SelectContent>
@@ -177,6 +158,18 @@ export function TranslationPickerDialogContent() {
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                    {selectedIds.length > 0 && (
+                        <span className="font-mono text-blue-600 text-sm">
+                            {selectedIds.length} selected • ~{tokenCount.toLocaleString()} tokens
+                        </span>
+                    )}
+                    <div className="flex gap-3 font-medium text-[8px] text-gray-400">
+                        <span>Grok 4: 256k / 4.1: 2M</span>
+                        <span>GPT-5.2: 400k / 5o: 128k</span>
+                        <span>Gemini 3 Pro: 1M</span>
+                    </div>
                 </div>
             </div>
 
@@ -233,6 +226,6 @@ export function TranslationPickerDialogContent() {
                     </div>
                 </>
             )}
-        </DialogContent>
+        </div>
     );
 }

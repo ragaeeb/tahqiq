@@ -1,15 +1,6 @@
 'use client';
 
-import {
-    DownloadIcon,
-    FileTextIcon,
-    LanguagesIcon,
-    Merge,
-    RefreshCwIcon,
-    SaveIcon,
-    SearchIcon,
-    TypeIcon,
-} from 'lucide-react';
+import { DownloadIcon, LanguagesIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { downloadFile } from '@/lib/domUtils';
 import { canMergeSegments } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
 import { findExcerptIssues } from '@/lib/validation';
@@ -46,7 +36,7 @@ import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
 import ExcerptsTableHeader from './table-header';
-import { TranslationPickerDialogContent } from './translation-picker-dialog';
+import { TranslationDialogContent } from './translation-dialog';
 import type { FilterScope } from './use-excerpt-filters';
 import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
@@ -227,30 +217,6 @@ function ExcerptsPageContent() {
         }
     }, [allExcerpts, filterExcerptsByIds]);
 
-    const handleExportToTxt = useCallback(() => {
-        const name = prompt('Enter output file name', 'prompt.txt');
-
-        if (name) {
-            record('DownloadExcerpts', name);
-
-            try {
-                const state = useExcerptsStore.getState();
-                const excerpts = state.excerpts
-                    .filter((e) => !e.text)
-                    .map((e) => `${e.id} - ${e.nass}`)
-                    .concat(['\n']);
-                const headings = state.headings.filter((e) => !e.text).map((e) => `${e.id} - ${e.nass}`);
-
-                const content = [state.promptForTranslation, excerpts.join('\n\n'), headings.join('\n')].join('\n\n\n');
-
-                downloadFile(name.endsWith('.txt') ? name : `${name}.txt`, content);
-            } catch (err) {
-                console.error('Export failed:', err);
-                toast.error('Failed to export to TXT');
-            }
-        }
-    }, []);
-
     const handleApplyFormatting = useCallback(async () => {
         setIsFormattingLoading(true);
         try {
@@ -347,14 +313,11 @@ function ExcerptsPageContent() {
                             <Button onClick={handleDownload}>
                                 <DownloadIcon />
                             </Button>
-                            <Button onClick={handleExportToTxt}>
-                                <FileTextIcon />
-                            </Button>
                             <DialogTriggerButton
                                 onClick={() => {
                                     record('OpenTranslationPicker');
                                 }}
-                                renderContent={() => <TranslationPickerDialogContent />}
+                                renderContent={() => <TranslationDialogContent />}
                                 title="Select excerpts for LLM translation"
                                 className="bg-indigo-500 hover:bg-indigo-600"
                             >
@@ -392,12 +355,14 @@ function ExcerptsPageContent() {
                                         {headingsCount}
                                     </span>
                                 </TabsTrigger>
-                                <TabsTrigger value="footnotes">
-                                    Footnotes
-                                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700 text-xs">
-                                        {footnotesCount}
-                                    </span>
-                                </TabsTrigger>
+                                {footnotesCount ? (
+                                    <TabsTrigger value="footnotes">
+                                        Footnotes
+                                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700 text-xs">
+                                            {footnotesCount}
+                                        </span>
+                                    </TabsTrigger>
+                                ) : null}
 
                                 {/* Translation Progress */}
                                 {(() => {

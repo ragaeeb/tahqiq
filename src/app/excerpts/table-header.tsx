@@ -1,15 +1,12 @@
 'use client';
 
-import { ArrowDownWideNarrowIcon, PlusIcon, ReplaceIcon } from 'lucide-react';
+import { ArrowDownWideNarrowIcon, ReplaceIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useState } from 'react';
 
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
-
-import { AddTranslationDialogContent } from './add-translation-dialog';
 import { SearchReplaceDialogContent } from './search-replace-dialog';
 import type { FilterField, SortMode } from './use-excerpt-filters';
 
@@ -29,13 +26,6 @@ type ExcerptsTableHeaderProps = {
 };
 
 /**
- * Gets the currently selected text from the window
- */
-function getSelectedText(): string {
-    return window.getSelection()?.toString().trim() || '';
-}
-
-/**
  * Search/Replace button that captures selected text when opened
  */
 function SearchReplaceButton({ activeTab }: { activeTab: string }) {
@@ -45,7 +35,7 @@ function SearchReplaceButton({ activeTab }: { activeTab: string }) {
                 record('OpenSearchReplace');
             }}
             renderContent={() => {
-                const selectedText = getSelectedText();
+                const selectedText = window.getSelection()?.toString().trim() || '';
                 return <SearchReplaceDialogContent activeTab={activeTab} initialSearchPattern={selectedText} />;
             }}
             size="sm"
@@ -53,29 +43,6 @@ function SearchReplaceButton({ activeTab }: { activeTab: string }) {
             variant="outline"
         >
             <ReplaceIcon className="h-4 w-4" />
-        </DialogTriggerButton>
-    );
-}
-
-/**
- * Add Translation button that opens bulk translation dialog
- */
-function AddTranslationButton() {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <DialogTriggerButton
-            onClick={() => {
-                record('OpenAddTranslation');
-            }}
-            onOpenChange={setIsOpen}
-            open={isOpen}
-            renderContent={() => <AddTranslationDialogContent onClose={() => setIsOpen(false)} />}
-            size="sm"
-            title="Add Translation"
-            variant="outline"
-        >
-            <PlusIcon className="h-4 w-4" />
         </DialogTriggerButton>
     );
 }
@@ -156,7 +123,6 @@ export default function ExcerptsTableHeader({
                 )}
                 <th className="w-28 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                     <div className="flex items-center justify-center gap-1">
-                        <AddTranslationButton />
                         <SearchReplaceButton activeTab={activeTab} />
                     </div>
                 </th>
@@ -207,7 +173,6 @@ export default function ExcerptsTableHeader({
                 </th>
                 <th className="w-16 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                     <div className="flex items-center justify-center gap-1">
-                        <AddTranslationButton />
                         <SearchReplaceButton activeTab={activeTab} />
                     </div>
                 </th>
@@ -256,7 +221,6 @@ export default function ExcerptsTableHeader({
             </th>
             <th className="w-16 px-1 py-1 text-center font-semibold text-gray-700 text-sm">
                 <div className="flex items-center justify-center gap-1">
-                    <AddTranslationButton />
                     <SearchReplaceButton activeTab={activeTab} />
                 </div>
             </th>

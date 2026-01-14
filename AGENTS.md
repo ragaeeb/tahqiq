@@ -167,6 +167,33 @@ For large dialogs that need to stretch horizontally, use `!max-w-[90vw]` to over
 
 The `!` prefix applies `!important` to override ShadCN's default `sm:max-w-lg` constraint.
 
+### Unified Tabbed Dialogs
+
+To consolidate related workflows (e.g., Exporting vs. Importing), use a single `DialogContent` with a `Tabs` component:
+
+```tsx
+// See src/app/excerpts/translation-dialog.tsx
+export function UnifiedDialog({ defaultTab = 'tab1' }) {
+    return (
+        <DialogContent className="!max-w-[90vw] h-[85vh] w-[90vw]">
+            <Tabs defaultValue={defaultTab}>
+                <TabsList>
+                    <TabsTrigger value="tab1">Export</TabsTrigger>
+                    <TabsTrigger value="tab2">Import</TabsTrigger>
+                </TabsList>
+                <TabsContent value="tab1"><ExportTab /></TabsContent>
+                <TabsContent value="tab2"><ImportTab /></TabsContent>
+            </Tabs>
+        </DialogContent>
+    );
+}
+```
+
+**Benefits:**
+- Reduced complexity for users (one dialog for the whole "workflow").
+- Shared context (e.g., selected IDs can persist while switching tabs).
+- Multiple entry points can open the same dialog to different tabs via `defaultTab` prop.
+
 ### ShadCN Components
 
 **Always prefer ShadCN UI components from `@/components/ui/` over vanilla HTML elements:**
@@ -250,6 +277,13 @@ mock.module('@/components/ui/button', () => ({
 
 // Import component AFTER mocks
 import MyComponent from './my-component';
+
+// CRITICAL: If you create a NEW component that is used by an existing component, 
+// you MUST add a mock for it in the existing component's test file.
+// Failure to do so will cause "Module not found" or resolution errors in Bun Test.
+mock.module('./new-component', () => ({
+    NewComponent: () => <div>Mock</div>,
+}));
 ```
 
 ### Test Utilities
@@ -519,14 +553,19 @@ This provides a conservative upper bound for models like Gemini, which can be hi
 
 ## Tooling Patterns
 
-### Translation Picker Dialog
+### Unified Translation Workflow
 
-Specifically designed for selecting untranslated segments for LLM translation. 
+The translation workflow is consolidated into a single tabbed dialog containing two main components:
 
+- **PickerTab** (`src/app/excerpts/picker-tab.tsx`): Selecting untranslated excerpts.
+- **AddTranslationTab** (`src/app/excerpts/add-translation-tab.tsx`): Applying pasted translations.
+
+**Key features:**
 - **State Sync**: Uses `sentToLlmIds` from the store to hide segments already "sent" in the current session.
 - **Selection Logic**: Clicking a segment pill selects a range from the first visible segment to the clicked one.
-- **Copy & Remove**: "Copy" formats the prompt + selected segments. "Remove" marks them as sent to hide them from the picker's view.
-- **Token Tracking**: Live estimation of the selected range (segments + prompt markers) is displayed in the dialog title.
+- **Copy & Mark**: "Copy" formats for LLM. "Copy + Use" marks them as sent to hide them from the picker's current view.
+- **ID Matching**: Multi-line paste in the "Add" tab automatically matches translations to excerpt IDs using regex.
+- **Validation**: Real-time validation of pasted text against the current store's expected IDs to catch hallucinated markers.
 
 ---
 
@@ -732,3 +771,7 @@ When dealing with very large datasets (like 40,000 excerpt IDs in the Translatio
 | Infinite Loop in Restore | Use `useRef` to store functional callbacks in custom hooks |
 | Immer crashes on Set/Map | Call `enableMapSet()` at the top of the store file |
 | Picker sluggish with 40k items | Cap DOM rendering nodes and use O(1) Map lookups for formatting |
+| `write_to_file` creating empty files | Always verify file content after writing; sometimes large writes fail silently |
+| Unrelated Build Errors | Distinguish between your changes and pre-existing breakage (e.g., missing files in other routes) |
+| Concise Naming | Prefer short, clear component names (e.g., `PickerTab` vs `TranslationPickerTabDialog`) |
+| Dialog Entry Points | Use a `defaultTab` prop to allow different buttons to open the same dialog to different states |

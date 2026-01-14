@@ -32,6 +32,8 @@ mock.module('./search-replace-dialog', () => ({
     SearchReplaceDialogContent: () => <div>Search Replace Dialog Content</div>,
 }));
 
+mock.module('./translation-dialog', () => ({ TranslationDialogContent: () => <div>Translation Dialog Content</div> }));
+
 import ExcerptsTableHeader from './table-header';
 
 describe('ExcerptsTableHeader', () => {
