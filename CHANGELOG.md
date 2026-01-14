@@ -1,3 +1,10 @@
+# [1.46.0](https://github.com/ragaeeb/tahqiq/compare/v1.45.1...v1.46.0) (2026-01-14)
+
+
+### Features
+
+* **copy:** Add copy to row below and new translation picker flow ([81227b3](https://github.com/ragaeeb/tahqiq/commit/81227b32d4df75ebae14fd304dbd7c6255cd5012))
+
 ## [1.45.1](https://github.com/ragaeeb/tahqiq/compare/v1.45.0...v1.45.1) (2026-01-14)
 
 
