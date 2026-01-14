@@ -1,3 +1,10 @@
+# [1.45.0](https://github.com/ragaeeb/tahqiq/compare/v1.44.0...v1.45.0) (2026-01-14)
+
+
+### Features
+
+* **prompts:** Use wobble-bibble prompts ([22d68a8](https://github.com/ragaeeb/tahqiq/commit/22d68a8a7c02c15d7ef95c6741228af427cb40a2))
+
 # [1.44.0](https://github.com/ragaeeb/tahqiq/compare/v1.43.0...v1.44.0) (2026-01-11)
 
 
