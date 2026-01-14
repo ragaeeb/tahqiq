@@ -390,3 +390,218 @@ describe('findUnmatchedTranslationIds', () => {
         expect(findUnmatchedTranslationIds(translationIds, [])).toEqual(['P1', 'P2']);
     });
 });
+
+// Import and test detectTruncatedTranslation
+import { detectTruncatedTranslation } from './validation';
+
+describe('detectTruncatedTranslation', () => {
+    describe('returns undefined (no issue) for valid translations', () => {
+        test('when translation length is proportional to Arabic', () => {
+            // Arabic: 100 chars, English: 150 chars - reasonable ratio
+            const arabic =
+                'هذا نص عربي طويل يحتوي على محتوى كافٍ للترجمة وهو يمثل فقرة كاملة من النص العربي الذي يحتاج إلى ترجمة';
+            const english =
+                'This is a long Arabic text that contains sufficient content for translation and it represents a full paragraph of Arabic text that needs to be translated.';
+            expect(detectTruncatedTranslation(arabic, english)).toBeUndefined();
+        });
+
+        test('when both texts are short', () => {
+            // Very short texts shouldn't trigger false positives
+            const arabic = 'نعم';
+            const english = 'Yes';
+            expect(detectTruncatedTranslation(arabic, english)).toBeUndefined();
+        });
+
+        test('when Arabic is empty', () => {
+            expect(detectTruncatedTranslation('', 'Some translation')).toBeUndefined();
+        });
+
+        test('when translation is empty but Arabic is also very short', () => {
+            // Edge case - single word Arabic with no translation might be intentional
+            expect(detectTruncatedTranslation('كلمة', '')).toBeUndefined();
+        });
+
+        test('when translation is reasonable for medium Arabic text', () => {
+            const arabic = 'قال الشيخ: هذا الحكم صحيح ولا إشكال فيه'; // ~40 chars
+            const english = 'The Shaykh said: This ruling is correct and there is no issue with it'; // ~70 chars
+            expect(detectTruncatedTranslation(arabic, english)).toBeUndefined();
+        });
+    });
+
+    describe('detects truncated translations', () => {
+        test('when long Arabic has only a single line translation', () => {
+            // A common LLM error: translating only the first line
+            const arabic = `قال الشيخ: هذا الحكم صحيح ولا إشكال فيه لأن النبي صلى الله عليه وسلم قال في الحديث الصحيح عن أبي هريرة رضي الله عنه أنه قال سمعت رسول الله صلى الله عليه وسلم يقول كذا وكذا وهذا يدل على صحة ما ذكرناه من الحكم الشرعي في هذه المسألة`;
+            const english = 'The Shaykh said:'; // Only translated the first few words
+            const error = detectTruncatedTranslation(arabic, english);
+            expect(error).toBeDefined();
+            expect(error).toContain('truncated');
+        });
+
+        test('when translation is suspiciously short for paragraph-length Arabic', () => {
+            // Arabic paragraph (~200 chars) with tiny translation
+            const arabic =
+                'السائل: يا شيخنا هذا سؤال مهم جداً في مسألة البيع والشراء وحكم الربا في المعاملات المالية المعاصرة وما يتعلق بها من الأحكام الشرعية التي يحتاج المسلم إلى معرفتها في حياته اليومية';
+            const english = 'Question about sales.'; // Way too short
+            const error = detectTruncatedTranslation(arabic, english);
+            expect(error).toBeDefined();
+        });
+
+        test('when translation is empty but Arabic is long', () => {
+            const arabic =
+                'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة وافية ولكن الترجمة فارغة تماماً';
+            const english = '';
+            const error = detectTruncatedTranslation(arabic, english);
+            expect(error).toBeDefined();
+            expect(error).toContain('empty');
+        });
+
+        test('when translation is only whitespace but Arabic is long', () => {
+            const arabic = 'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة';
+            const english = '   \n\t  ';
+            const error = detectTruncatedTranslation(arabic, english);
+            expect(error).toBeDefined();
+        });
+    });
+
+    describe('edge cases', () => {
+        test('handles undefined/null-like inputs gracefully', () => {
+            expect(detectTruncatedTranslation('', '')).toBeUndefined();
+        });
+
+        test('does not flag when Arabic is moderately longer due to script differences', () => {
+            // Arabic script can be more compact; allow for natural variance
+            const arabic = 'بسم الله الرحمن الرحيم والحمد لله رب العالمين'; // ~45 chars
+            const english =
+                'In the name of Allah, the Most Gracious, the Most Merciful, and praise be to Allah, Lord of the worlds'; // ~100 chars
+            expect(detectTruncatedTranslation(arabic, english)).toBeUndefined();
+        });
+
+        test('uses character count, not word count', () => {
+            // Arabic words are often longer due to prefixes/suffixes
+            const arabic = 'فسيكفيكهم الله'; // Single long word
+            const english = 'Allah will suffice you against them'; // Multiple words but reasonable
+            expect(detectTruncatedTranslation(arabic, english)).toBeUndefined();
+        });
+    });
+});
+
+// Import and test findExcerptIssues
+import { findExcerptIssues } from './validation';
+
+describe('findExcerptIssues', () => {
+    describe('gap detection', () => {
+        test('finds a single gap in the middle', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P2']);
+        });
+
+        test('finds multiple gaps', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+                { id: 'P4', nass: 'عربي', text: null }, // Gap
+                { id: 'P5', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P4');
+        });
+
+        test('does not flag first or last item even if missing translation', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: '' }, // First - not a gap
+                { id: 'P2', nass: 'عربي', text: 'Translation' },
+                { id: 'P3', nass: 'عربي', text: '' }, // Last - not a gap
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        test('does not flag consecutive missing translations as gaps', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Not a gap - next is also empty
+                { id: 'P3', nass: 'عربي', text: '' }, // Not a gap - prev is also empty
+                { id: 'P4', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+    });
+
+    describe('truncation detection', () => {
+        test('finds truncated translation', () => {
+            const longArabic = 'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة وافية';
+            const items = [
+                { id: 'P1', nass: longArabic, text: 'Short' }, // Truncated
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P1']);
+        });
+
+        test('does not flag properly translated items', () => {
+            const items = [
+                { id: 'P1', nass: 'نص قصير', text: 'Short text' },
+                { id: 'P2', nass: 'قال الشيخ: هذا الحكم صحيح', text: 'The Shaykh said: This ruling is correct' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+    });
+
+    describe('combined detection', () => {
+        test('finds both gaps and truncated translations', () => {
+            const longArabic = 'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة وافية';
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+                { id: 'P4', nass: longArabic, text: 'Too short' }, // Truncated
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P4');
+            expect(issues.length).toBe(2);
+        });
+
+        test('deduplicates if same item is both gap and truncated', () => {
+            const longArabic = 'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة وافية';
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: longArabic, text: '' }, // Gap AND empty translation
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toEqual(['P2']); // Only once
+        });
+    });
+
+    describe('edge cases', () => {
+        test('returns empty array for empty input', () => {
+            expect(findExcerptIssues([])).toEqual([]);
+        });
+
+        test('returns empty array for single item', () => {
+            expect(findExcerptIssues([{ id: 'P1', nass: 'عربي', text: '' }])).toEqual([]);
+        });
+
+        test('returns empty array for two items', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        test('handles null and undefined text values', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: null },
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P2']);
+        });
+    });
+});

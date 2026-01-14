@@ -31,6 +31,7 @@ import { STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
 import { canMergeSegments } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
+import { findExcerptIssues } from '@/lib/validation';
 import {
     selectAllExcerpts,
     selectAllFootnotes,
@@ -76,12 +77,15 @@ function ExcerptsPageContent() {
     const applyHeadingFormatting = useExcerptsStore((state) => state.applyHeadingFormatting);
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
+    const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
 
     const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode } =
         useExcerptFilters();
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    // Track an ID to scroll to after operations like merge
+    const [scrollToAfterChange, setScrollToAfterChange] = useState<string | null>(null);
     const hasData = excerptsCount > 0 || headingsCount > 0 || footnotesCount > 0;
 
     // Check if any excerpts have translations - if not, hide the column for more Arabic space
@@ -132,6 +136,8 @@ function ExcerptsPageContent() {
 
     // Handle merge of selected excerpts
     const handleMerge = useCallback(() => {
+        console.log('[handleMerge] Starting merge, selectedIds:', Array.from(selectedIds));
+
         // Get IDs in order
         const idsInOrder: string[] = [];
         for (const excerpt of excerpts) {
@@ -140,10 +146,18 @@ function ExcerptsPageContent() {
             }
         }
 
+        console.log('[handleMerge] IDs to merge in order:', idsInOrder);
+        const survivingId = idsInOrder[0]; // First ID survives the merge
         const success = mergeExcerpts(idsInOrder);
+        console.log('[handleMerge] Merge result:', success);
+
         if (success) {
             toast.success(`Merged ${idsInOrder.length} excerpts`);
             setSelectedIds(new Set());
+
+            // Set scroll target to the surviving excerpt
+            console.log('[handleMerge] Setting scrollToAfterChange to:', survivingId);
+            setScrollToAfterChange(survivingId);
 
             // Clear hash if it points to a deleted excerpt
             const hash = window.location.hash.slice(1);
@@ -155,6 +169,12 @@ function ExcerptsPageContent() {
             toast.error('Failed to merge excerpts');
         }
     }, [excerpts, selectedIds, mergeExcerpts, clearScrollTo]);
+
+    // Clear the scroll-after-change state once complete
+    const handleScrollAfterChangeComplete = useCallback(() => {
+        console.log('[page] scrollToAfterChange complete, clearing');
+        setScrollToAfterChange(null);
+    }, []);
 
     // Session restore hook
     useSessionRestore<Excerpts>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
@@ -193,22 +213,19 @@ function ExcerptsPageContent() {
         storageKey: STORAGE_KEYS.excerpts,
     });
 
-    // Find the first "gap" - an excerpt without translation surrounded by excerpts with translations
+    // Find all issues: gaps (missing translations) and truncated translations
     const handleFindGap = useCallback(() => {
-        for (let i = 1; i < allExcerpts.length - 1; i++) {
-            const prev = allExcerpts[i - 1];
-            const curr = allExcerpts[i];
-            const next = allExcerpts[i + 1];
+        const issueIds = findExcerptIssues(allExcerpts);
 
-            // Gap: previous has translation, current doesn't, next has translation
-            if (prev.text?.trim() && !curr.text?.trim() && next.text?.trim()) {
-                window.location.hash = curr.id;
-                toast.info(`Found gap at ${curr.id}`);
-                return;
-            }
+        if (issueIds.length > 0) {
+            filterExcerptsByIds(issueIds);
+            toast.info(
+                `Found ${issueIds.length} issue${issueIds.length > 1 ? 's' : ''} (gaps + truncated translations)`,
+            );
+        } else {
+            toast.info('No issues found');
         }
-        toast.info('No gaps found');
-    }, [allExcerpts]);
+    }, [allExcerpts, filterExcerptsByIds]);
 
     const handleExportToTxt = useCallback(() => {
         const name = prompt('Enter output file name', 'prompt.txt');
@@ -453,7 +470,9 @@ function ExcerptsPageContent() {
                                             sortMode={sortMode}
                                         />
                                     }
-                                    onScrollToComplete={clearScrollTo}
+                                    onScrollToComplete={
+                                        scrollToAfterChange ? handleScrollAfterChangeComplete : clearScrollTo
+                                    }
                                     renderRow={(item) => (
                                         <ExcerptRow
                                             data={item}
@@ -466,7 +485,7 @@ function ExcerptsPageContent() {
                                             onCopyDown={handleCopyDown}
                                         />
                                     )}
-                                    scrollToId={scrollToId ?? scrollToFrom}
+                                    scrollToId={scrollToAfterChange ?? scrollToId ?? scrollToFrom}
                                 />
                             </TabsContent>
 
