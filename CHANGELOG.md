@@ -1,3 +1,10 @@
+# [1.47.0](https://github.com/ragaeeb/tahqiq/compare/v1.46.0...v1.47.0) (2026-01-15)
+
+
+### Features
+
+* **clear:** Add clear text feature, confirmation on deletes and closest token pill detection ([#108](https://github.com/ragaeeb/tahqiq/issues/108)) ([9204bd1](https://github.com/ragaeeb/tahqiq/commit/9204bd1326b6c941ff78f7c897762a84f35fc3b7))
+
 # [1.46.0](https://github.com/ragaeeb/tahqiq/compare/v1.45.1...v1.46.0) (2026-01-14)
 
 
