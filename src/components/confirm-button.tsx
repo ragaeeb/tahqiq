@@ -15,23 +15,31 @@ export function ConfirmButton({
     confirmText = 'Confirm',
     onClick,
     resetTimeoutMs = 3000,
+    size,
     ...props
 }: ConfirmButtonProps) {
     const { handleClick, isConfirming } = useConfirmation(onClick, resetTimeoutMs);
+    const isIconOnly = size === 'icon';
 
     return (
         <Button
             aria-label={isConfirming ? `Confirm: ${confirmText}` : undefined}
             aria-pressed={isConfirming}
             onClick={handleClick as any}
-            variant="destructive"
+            variant={isConfirming ? 'destructive' : props.variant}
+            size={size}
             {...props}
+            className={`${props.className ?? ''} ${isConfirming && isIconOnly ? 'animate-pulse ring-2 ring-red-500' : ''}`}
         >
             {isConfirming ? (
-                <>
-                    <CheckIcon />
-                    {confirmText}
-                </>
+                isIconOnly ? (
+                    <CheckIcon className="h-4 w-4" />
+                ) : (
+                    <>
+                        <CheckIcon />
+                        {confirmText}
+                    </>
+                )
             ) : (
                 <>{children}</>
             )}

@@ -1,5 +1,6 @@
 'use client';
 
+import { SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -7,8 +8,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSLATION_MODELS } from '@/lib/constants';
+import { STORAGE_KEYS, TRANSLATION_MODELS } from '@/lib/constants';
+import { saveToOPFS } from '@/lib/io';
 import { parseTranslations } from '@/lib/textUtils';
+import { nowInSeconds } from '@/lib/time';
 import { cn } from '@/lib/utils';
 import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
@@ -143,7 +146,7 @@ export function AddTranslationTab() {
     }, [validationError, pendingOverwrites]);
 
     const doSubmit = useCallback(
-        (translationMap: Map<string, string>, translatorValue: number, total: number) => {
+        async (translationMap: Map<string, string>, translatorValue: number, total: number, shouldCommit: boolean) => {
             const { updated } = applyBulkTranslations(translationMap, translatorValue);
 
             record('AddBulkTranslations', `${updated}/${total}`);
@@ -153,10 +156,48 @@ export function AddTranslationTab() {
                 return;
             }
 
+            // Build result message
+            let message: string;
+            let isWarning = false;
+
             if (updated < total) {
-                toast.warning(`Updated ${updated} of ${total} translations`);
+                message = `Updated ${updated} of ${total} translations`;
+                isWarning = true;
             } else {
-                toast.success(`Successfully updated ${updated} translations`);
+                message = `Updated ${updated} translations`;
+            }
+
+            // If commit requested, save to OPFS
+            if (shouldCommit) {
+                try {
+                    const state = useExcerptsStore.getState();
+                    const exportData = {
+                        collection: state.collection,
+                        contractVersion: state.contractVersion,
+                        createdAt: state.createdAt,
+                        excerpts: state.excerpts,
+                        footnotes: state.footnotes,
+                        headings: state.headings,
+                        lastUpdatedAt: nowInSeconds(),
+                        options: state.options,
+                        postProcessingApps: state.postProcessingApps,
+                        promptForTranslation: state.promptForTranslation,
+                    };
+                    await saveToOPFS(STORAGE_KEYS.excerpts, exportData);
+                    message += ' & committed';
+                    record('CommitTranslationsToStorage');
+                } catch (err) {
+                    console.error('Failed to commit to storage:', err);
+                    toast.error('Translations saved but failed to commit to storage');
+                    return;
+                }
+            }
+
+            // Show single combined toast
+            if (isWarning) {
+                toast.warning(message);
+            } else {
+                toast.success(message);
             }
 
             if (textareaRef.current) {
@@ -167,10 +208,8 @@ export function AddTranslationTab() {
         [applyBulkTranslations],
     );
 
-    const handleSubmit = useCallback(
-        (e: React.FormEvent) => {
-            e.preventDefault();
-
+    const submitTranslations = useCallback(
+        (shouldCommit = false) => {
             const rawText = textareaRef.current?.value || '';
 
             if (!rawText.trim()) {
@@ -236,9 +275,25 @@ export function AddTranslationTab() {
 
             // Either no issues or user confirmed
             setPendingOverwrites(null);
-            doSubmit(translationMap, translatorValue, count);
+            doSubmit(translationMap, translatorValue, count, shouldCommit);
         },
         [selectedModel, expectedIds, existingTranslations, pendingOverwrites, doSubmit],
+    );
+
+    const handleSubmit = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault();
+            submitTranslations(false);
+        },
+        [submitTranslations],
+    );
+
+    const handleSaveAndCommit = useCallback(
+        (e: React.MouseEvent) => {
+            e.preventDefault();
+            submitTranslations(true);
+        },
+        [submitTranslations],
     );
 
     return (
@@ -303,9 +358,21 @@ Another line that should be appended to this existing excerpt.`}
                         </Button>
                     </>
                 ) : (
-                    <Button disabled={!!validationError} type="submit">
-                        Save Translations
-                    </Button>
+                    <>
+                        <Button disabled={!!validationError} type="submit">
+                            Save Translations
+                        </Button>
+                        <Button
+                            disabled={!!validationError}
+                            type="button"
+                            onClick={handleSaveAndCommit}
+                            className="bg-green-600 hover:bg-green-700"
+                            title="Save translations and commit to storage (prevents data loss)"
+                        >
+                            <SaveIcon className="mr-2 h-4 w-4" />
+                            Save & Commit
+                        </Button>
+                    </>
                 )}
             </div>
         </form>

@@ -138,7 +138,53 @@ export const estimateTokenCount = (text: string) => {
             arabicBaseCount / 2.5 + // ~2.5 chars/token
             otherCount / 4,
     );
-}; /**
+};
+
+/**
+ * Overhead tokens per item (for "ID - " prefix and newlines in formatted output)
+ */
+const TOKENS_OVERHEAD_PER_ITEM = 5;
+
+/**
+ * Finds the last index in items array where cumulative token count stays under the limit.
+ * Useful for determining how many items can be selected before exceeding a token budget.
+ *
+ * @param items - Array of items with text content
+ * @param getText - Function to extract text from each item for token counting
+ * @param tokenLimit - Maximum token count allowed
+ * @param baseTokens - Base tokens to start with (e.g., prompt tokens)
+ * @returns Last valid index (0-based), or -1 if even the first item exceeds the limit
+ */
+export const findLastIndexUnderTokenLimit = <T>(
+    items: T[],
+    getText: (item: T) => string,
+    tokenLimit: number,
+    baseTokens = 0,
+): number => {
+    if (items.length === 0) {
+        return -1;
+    }
+
+    let cumulative = baseTokens;
+    let lastValidIndex = -1;
+
+    for (let i = 0; i < items.length; i++) {
+        const text = getText(items[i]);
+        const itemTokens = estimateTokenCount(text) + TOKENS_OVERHEAD_PER_ITEM;
+        cumulative += itemTokens;
+
+        if (cumulative <= tokenLimit) {
+            lastValidIndex = i;
+        } else {
+            // Once we exceed, no point continuing
+            break;
+        }
+    }
+
+    return lastValidIndex;
+};
+
+/**
  * Parses bulk translation text into a Map for efficient O(1) lookup.
  * Handles multi-line translations where subsequent lines without markers belong to the previous entry.
  *
