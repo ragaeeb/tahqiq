@@ -33,6 +33,14 @@ mock.module('./edit-excerpt-dialog', () => ({
     EditExcerptDialogContent: () => <div data-testid="edit-dialog-content" />,
 }));
 
+mock.module('@/components/confirm-button', () => ({
+    ConfirmButton: ({ children, onClick, ...props }: any) => (
+        <button onClick={onClick} type="button" {...props}>
+            {children}
+        </button>
+    ),
+}));
+
 import ExcerptRow from './excerpt-row';
 
 describe('ExcerptRow', () => {

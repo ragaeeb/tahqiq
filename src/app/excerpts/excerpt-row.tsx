@@ -1,9 +1,10 @@
 'use client';
 
-import { ArrowDownIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { ArrowDownIcon, EyeIcon, PencilIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
@@ -18,6 +19,8 @@ type ExcerptRowProps = {
     data: Excerpt;
     /** Hide the translation column to maximize Arabic text real estate */
     hideTranslation?: boolean;
+    /** Whether this row is in a filtered view */
+    isFiltered?: boolean;
     /** Whether this row is selected */
     isSelected?: boolean;
     onCreateFromSelection: (sourceId: string, selectedText: string) => void;
@@ -26,17 +29,21 @@ type ExcerptRowProps = {
     onToggleSelect?: (id: string) => void;
     onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
     onCopyDown: (data: Excerpt) => void;
+    /** Callback to show this row in full context (clear filter and scroll to it) */
+    onShowInContext?: (id: string) => void;
 };
 
 function ExcerptRow({
     data,
     hideTranslation,
+    isFiltered,
     isSelected,
     onCreateFromSelection,
     onDelete,
     onToggleSelect,
     onUpdate,
     onCopyDown,
+    onShowInContext,
 }: ExcerptRowProps) {
     const [selectedText, setSelectedText] = useState('');
     const [showExtractButton, setShowExtractButton] = useState(false);
@@ -126,40 +133,56 @@ function ExcerptRow({
                         <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(data.id)} />
                     </td>
                 )}
-                <td className="w-24 px-1 py-1 text-center align-top text-gray-600 text-xs">
-                    {isEditingPages ? (
-                        <input
-                            className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
-                            defaultValue={[data.from, data.to].filter(Boolean).join('-')}
-                            onBlur={(e) => {
-                                const updates = createUpdate(e.target.value.trim(), data);
+                <td className="group w-24 px-1 py-1 text-center align-top text-gray-600 text-xs">
+                    <div className="flex items-center justify-center gap-1">
+                        {isEditingPages ? (
+                            <input
+                                className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
+                                defaultValue={[data.from, data.to].filter(Boolean).join('-')}
+                                onBlur={(e) => {
+                                    const updates = createUpdate(e.target.value.trim(), data);
 
-                                if (updates) {
-                                    onUpdate(data.id, updates);
-                                }
+                                    if (updates) {
+                                        onUpdate(data.id, updates);
+                                    }
 
-                                setIsEditingPages(false);
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.currentTarget.blur();
-                                } else if (e.key === 'Escape') {
                                     setIsEditingPages(false);
-                                }
-                            }}
-                            ref={(el) => el?.focus()}
-                            type="text"
-                        />
-                    ) : (
-                        <button
-                            className="cursor-pointer bg-transparent"
-                            onDoubleClick={() => setIsEditingPages(true)}
-                            title="Double-click to edit"
-                            type="button"
-                        >
-                            {[data.from, data.to].filter(Boolean).join('-')} {data.meta?.num && `#${data.meta?.num}`}
-                        </button>
-                    )}
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.currentTarget.blur();
+                                    } else if (e.key === 'Escape') {
+                                        setIsEditingPages(false);
+                                    }
+                                }}
+                                ref={(el) => el?.focus()}
+                                type="text"
+                            />
+                        ) : (
+                            <>
+                                <button
+                                    className="cursor-pointer bg-transparent"
+                                    onDoubleClick={() => setIsEditingPages(true)}
+                                    title="Double-click to edit"
+                                    type="button"
+                                >
+                                    {[data.from, data.to].filter(Boolean).join('-')}{' '}
+                                    {data.meta?.num && `#${data.meta?.num}`}
+                                </button>
+                                {isFiltered && onShowInContext && (
+                                    <Button
+                                        className="h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100"
+                                        onClick={() => onShowInContext(data.id)}
+                                        size="icon"
+                                        title="Show in context (clear filter and scroll to this row)"
+                                        variant="ghost"
+                                    >
+                                        <EyeIcon className="h-3 w-3" />
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </td>
                 <td className="relative px-2 py-1 align-top" dir="rtl">
                     <Textarea
@@ -208,14 +231,31 @@ function ExcerptRow({
                         >
                             <PencilIcon className="h-4 w-4 text-blue-500" />
                         </DialogTriggerButton>
-                        <Button
+                        <ConfirmButton
                             aria-label={`Delete excerpt ${data.id}`}
                             className="h-7 w-7 p-0"
                             onClick={() => onDelete(data.id)}
+                            title="Delete excerpt"
                             variant="ghost"
+                            size="icon"
                         >
                             <Trash2Icon className="h-4 w-4 text-red-500" />
-                        </Button>
+                        </ConfirmButton>
+                        {data.text && (
+                            <ConfirmButton
+                                aria-label={`Clear translation for ${data.id}`}
+                                className="h-7 w-7 p-0"
+                                onClick={() => {
+                                    record('ClearTranslation', data.id);
+                                    onUpdate(data.id, { text: '' });
+                                }}
+                                title="Clear translation"
+                                variant="ghost"
+                                size="icon"
+                            >
+                                <XIcon className="h-4 w-4 text-orange-500" />
+                            </ConfirmButton>
+                        )}
                         <Button
                             aria-label={`Copy translation down from ${data.id}`}
                             className="h-7 w-7 p-0"

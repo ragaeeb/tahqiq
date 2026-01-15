@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import {
+    detectEmptyParentheses,
     detectTruncatedTranslation,
     extractIdNumber,
     extractIdPrefix,
@@ -56,6 +57,53 @@ P789j - Still valid`;
             const text = 'Some text P123ab - Translation';
             const error = validateTranslationMarkers(text);
             expect(error).toContain('Suspicious reference');
+        });
+    });
+
+    describe('detectEmptyParentheses', () => {
+        it('should return undefined for text without empty parentheses', () => {
+            const text = 'This is normal text (with content) in parentheses.';
+            expect(detectEmptyParentheses(text)).toBeUndefined();
+        });
+
+        it('should return undefined for text with 3 or fewer empty parentheses', () => {
+            const text = 'First () then () and ().';
+            expect(detectEmptyParentheses(text)).toBeUndefined();
+        });
+
+        it('should return undefined for exactly 3 empty parentheses', () => {
+            const text = 'One () two () three ()';
+            expect(detectEmptyParentheses(text)).toBeUndefined();
+        });
+
+        it('should detect more than 3 empty parentheses', () => {
+            const text = 'First () then () and () plus () more.';
+            const error = detectEmptyParentheses(text);
+            expect(error).toBeDefined();
+            expect(error).toContain('4 empty parentheses');
+            expect(error).toContain('failed transliterations');
+        });
+
+        it('should detect many empty parentheses in realistic LLM output', () => {
+            const text = `P123 - Therefore, the word "thirty-three" is idle talk () here, because
+
+then the preponderant opinion () for them becomes what they call "observance of interest" ()—observing what
+
+These () are generally transliterations but sometimes the LLM chokes in producing them so it puts it as ().
+
+Another example () of this pattern.`;
+            const error = detectEmptyParentheses(text);
+            expect(error).toBeDefined();
+            expect(error).toContain('empty parentheses');
+        });
+
+        it('should not count parentheses with content', () => {
+            const text = 'Word (Arabic) and (more Arabic) and (yet more) and (this too) and (also this).';
+            expect(detectEmptyParentheses(text)).toBeUndefined();
+        });
+
+        it('should return undefined for empty text', () => {
+            expect(detectEmptyParentheses('')).toBeUndefined();
         });
     });
 
@@ -520,14 +568,56 @@ describe('findExcerptIssues', () => {
             expect(findExcerptIssues(items)).toEqual([]);
         });
 
-        it('should not flag consecutive missing translations as gaps', () => {
+        it('should flag 2 consecutive missing translations as gaps', () => {
             const items = [
                 { id: 'P1', nass: 'عربي', text: 'Translation' },
-                { id: 'P2', nass: 'عربي', text: '' }, // Not a gap - next is also empty
-                { id: 'P3', nass: 'عربي', text: '' }, // Not a gap - prev is also empty
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap
+                { id: 'P3', nass: 'عربي', text: '' }, // Gap
                 { id: 'P4', nass: 'عربي', text: 'Translation' },
             ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P3');
+            expect(issues.length).toBe(2);
+        });
+
+        it('should flag 3 consecutive missing translations as gaps', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap
+                { id: 'P3', nass: 'عربي', text: '' }, // Gap
+                { id: 'P4', nass: 'عربي', text: '' }, // Gap
+                { id: 'P5', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P3');
+            expect(issues).toContain('P4');
+            expect(issues.length).toBe(3);
+        });
+
+        it('should NOT flag more than 3 consecutive missing translations (likely untranslated section)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Not flagged - too many consecutive
+                { id: 'P3', nass: 'عربي', text: '' },
+                { id: 'P4', nass: 'عربي', text: '' },
+                { id: 'P5', nass: 'عربي', text: '' },
+                { id: 'P6', nass: 'عربي', text: 'Translation' },
+            ];
             expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should only flag gaps surrounded by translations on both sides', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: '' }, // Not a gap - no prev translation
+                { id: 'P2', nass: 'عربي', text: '' },
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+                { id: 'P4', nass: 'عربي', text: '' }, // Gap - surrounded by translations
+                { id: 'P5', nass: 'عربي', text: 'Translation' },
+                { id: 'P6', nass: 'عربي', text: '' }, // Not a gap - no next translation
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P4']);
         });
     });
 
@@ -600,6 +690,168 @@ describe('findExcerptIssues', () => {
                 { id: 'P3', nass: 'عربي', text: 'Translation' },
             ];
             expect(findExcerptIssues(items)).toEqual(['P2']);
+        });
+
+        it('should handle undefined text values in gaps', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي' }, // text is undefined
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P2']);
+        });
+
+        it('should handle whitespace-only text as missing translation', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '   \t\n  ' }, // Whitespace only
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P2']);
+        });
+
+        it('should handle all items having translations (no gaps)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation 1' },
+                { id: 'P2', nass: 'عربي', text: 'Translation 2' },
+                { id: 'P3', nass: 'عربي', text: 'Translation 3' },
+                { id: 'P4', nass: 'عربي', text: 'Translation 4' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should handle all items missing translations (no gaps to detect)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: '' },
+                { id: 'P2', nass: 'عربي', text: '' },
+                { id: 'P3', nass: 'عربي', text: '' },
+                { id: 'P4', nass: 'عربي', text: '' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should handle alternating translated/untranslated pattern', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+                { id: 'P4', nass: 'عربي', text: '' }, // Gap
+                { id: 'P5', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P4');
+            expect(issues.length).toBe(2);
+        });
+
+        it('should handle exactly 4 consecutive gaps (not flagged)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' },
+                { id: 'P3', nass: 'عربي', text: '' },
+                { id: 'P4', nass: 'عربي', text: '' },
+                { id: 'P5', nass: 'عربي', text: '' },
+                { id: 'P6', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should handle multiple separate gap regions', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap region 1 (1 item)
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+                { id: 'P4', nass: 'عربي', text: '' }, // Gap region 2 (2 items)
+                { id: 'P5', nass: 'عربي', text: '' },
+                { id: 'P6', nass: 'عربي', text: 'Translation' },
+                { id: 'P7', nass: 'عربي', text: '' }, // Gap region 3 (3 items)
+                { id: 'P8', nass: 'عربي', text: '' },
+                { id: 'P9', nass: 'عربي', text: '' },
+                { id: 'P10', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P4');
+            expect(issues).toContain('P5');
+            expect(issues).toContain('P7');
+            expect(issues).toContain('P8');
+            expect(issues).toContain('P9');
+            expect(issues.length).toBe(6);
+        });
+
+        it('should handle mixed gap sizes (some flagged, some not)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // Gap (1 item) - flagged
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+                { id: 'P4', nass: 'عربي', text: '' }, // Gap (4 items) - NOT flagged
+                { id: 'P5', nass: 'عربي', text: '' },
+                { id: 'P6', nass: 'عربي', text: '' },
+                { id: 'P7', nass: 'عربي', text: '' },
+                { id: 'P8', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues).toEqual(['P2']);
+        });
+
+        it('should not flag items with empty text for truncation', () => {
+            const longArabic = 'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة وافية';
+            const items = [
+                { id: 'P1', nass: longArabic, text: '' }, // Empty - not checked for truncation
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should flag item with truncated text (not empty)', () => {
+            const longArabic = 'هذا نص عربي طويل جداً يحتوي على فقرة كاملة من الكلام العربي الذي يحتاج إلى ترجمة وافية';
+            const items = [
+                { id: 'P1', nass: longArabic, text: 'X' }, // Has text, but truncated
+            ];
+            expect(findExcerptIssues(items)).toEqual(['P1']);
+        });
+
+        it('should handle gap at boundary of flaggable size (exactly 3)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' },
+                { id: 'P3', nass: 'عربي', text: '' },
+                { id: 'P4', nass: 'عربي', text: '' },
+                { id: 'P5', nass: 'عربي', text: 'Translation' },
+            ];
+            const issues = findExcerptIssues(items);
+            expect(issues.length).toBe(3);
+            expect(issues).toContain('P2');
+            expect(issues).toContain('P3');
+            expect(issues).toContain('P4');
+        });
+
+        it('should handle gap starting at first position (no prev translation)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: '' }, // No gap - no prev translation
+                { id: 'P2', nass: 'عربي', text: '' },
+                { id: 'P3', nass: 'عربي', text: 'Translation' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should handle gap ending at last position (no next translation)', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: 'Translation' },
+                { id: 'P2', nass: 'عربي', text: '' }, // No gap - no next translation
+                { id: 'P3', nass: 'عربي', text: '' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
+        });
+
+        it('should handle single translated item between untranslated sections', () => {
+            const items = [
+                { id: 'P1', nass: 'عربي', text: '' },
+                { id: 'P2', nass: 'عربي', text: '' },
+                { id: 'P3', nass: 'عربي', text: 'Translation' }, // Single translated
+                { id: 'P4', nass: 'عربي', text: '' },
+                { id: 'P5', nass: 'عربي', text: '' },
+            ];
+            expect(findExcerptIssues(items)).toEqual([]);
         });
     });
 });

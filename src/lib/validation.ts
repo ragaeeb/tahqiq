@@ -67,6 +67,30 @@ export const validateTranslationMarkers = (text: string): string | undefined => 
 };
 
 /**
+ * Maximum allowed occurrences of empty parentheses "()" before flagging as invalid.
+ * Single occurrences can be legitimate, but multiple usually indicates LLM failed
+ * to produce transliterations.
+ */
+const MAX_EMPTY_PARENTHESES = 3;
+
+/**
+ * Detects excessive empty parentheses "()" in translation text.
+ * LLMs sometimes fail to produce transliterations, leaving empty parentheses.
+ * A few occurrences can be legitimate, but many indicates a problem.
+ *
+ * @param text - Translation text to check
+ * @returns Error message if too many empty parentheses, undefined if valid
+ */
+export const detectEmptyParentheses = (text: string): string | undefined => {
+    const matches = text.match(/\(\)/g);
+    const count = matches?.length ?? 0;
+
+    if (count > MAX_EMPTY_PARENTHESES) {
+        return `Found ${count} empty parentheses "()" - this usually indicates failed transliterations. Please check if the LLM omitted Arabic/transliterated terms.`;
+    }
+};
+
+/**
  * Normalizes translation text by splitting merged markers onto separate lines.
  * LLMs sometimes put multiple translations on the same line.
  *
@@ -247,6 +271,12 @@ export const validateTranslations = (rawText: string, expectedIds: string[]): Tr
         return { error: 'No valid translation markers found', isValid: false, normalizedText, parsedIds: [] };
     }
 
+    // Check for excessive empty parentheses (LLM failed to produce transliterations)
+    const emptyParensError = detectEmptyParentheses(normalizedText);
+    if (emptyParensError) {
+        return { error: emptyParensError, isValid: false, normalizedText, parsedIds };
+    }
+
     // Validate order against expected IDs
     const orderError = validateTranslationOrder(parsedIds, expectedIds);
     if (orderError) {
@@ -326,8 +356,24 @@ export const detectTruncatedTranslation = (
 export type TextItem = { id: string; nass?: string | null; text?: string | null };
 
 /**
+ * Maximum consecutive gaps to flag as issues.
+ * If more than this many consecutive items are missing translations,
+ * they're likely just untranslated sections, not gaps.
+ */
+const MAX_CONSECUTIVE_GAPS_TO_FLAG = 3;
+
+/**
  * Finds all excerpts with issues: gaps (missing translations surrounded by translations)
  * and truncated translations (suspiciously short compared to Arabic source).
+ *
+ * Gap detection:
+ * - A gap is one or more consecutive items without translation, surrounded by items with translations
+ * - Only flags gaps if there are 1 to MAX_CONSECUTIVE_GAPS_TO_FLAG consecutive missing items
+ * - More than MAX_CONSECUTIVE_GAPS_TO_FLAG consecutive missing items are likely untranslated sections
+ *
+ * Truncation detection:
+ * - Only checks items that HAVE a translation (text is defined and non-empty)
+ * - Flags if translation is suspiciously short compared to Arabic source
  *
  * @param items - Array of excerpts/items to check
  * @returns Array of IDs that have issues
@@ -335,21 +381,52 @@ export type TextItem = { id: string; nass?: string | null; text?: string | null 
 export const findExcerptIssues = (items: TextItem[]): string[] => {
     const issueIds = new Set<string>();
 
-    // Find gaps: items without translation surrounded by items with translations
-    for (let i = 1; i < items.length - 1; i++) {
-        const prev = items[i - 1];
-        const curr = items[i];
-        const next = items[i + 1];
+    // Find gaps: consecutive items without translation, surrounded by items with translations
+    let i = 0;
+    while (i < items.length) {
+        const item = items[i];
+        const hasText = !!item.text?.trim();
 
-        if (prev.text?.trim() && !curr.text?.trim() && next.text?.trim()) {
-            issueIds.add(curr.id);
+        if (hasText) {
+            // This item has translation, move to next
+            i++;
+            continue;
         }
+
+        // Found an item without translation - count consecutive gaps
+        const gapStartIndex = i;
+        const gapIds: string[] = [item.id];
+
+        // Count consecutive items without translation
+        while (i + 1 < items.length && !items[i + 1].text?.trim()) {
+            i++;
+            gapIds.push(items[i].id);
+        }
+        const gapEndIndex = i;
+
+        // Check if this gap is surrounded by translated items
+        const hasPrevTranslation = gapStartIndex > 0 && !!items[gapStartIndex - 1].text?.trim();
+        const hasNextTranslation = gapEndIndex < items.length - 1 && !!items[gapEndIndex + 1].text?.trim();
+
+        // Only flag if:
+        // 1. Gap is surrounded by translations (both prev and next have text)
+        // 2. Gap size is between 1 and MAX_CONSECUTIVE_GAPS_TO_FLAG
+        if (hasPrevTranslation && hasNextTranslation && gapIds.length <= MAX_CONSECUTIVE_GAPS_TO_FLAG) {
+            for (const id of gapIds) {
+                issueIds.add(id);
+            }
+        }
+
+        i++;
     }
 
-    // Find truncated translations
+    // Find truncated translations - only for items that HAVE text
     for (const item of items) {
-        if (detectTruncatedTranslation(item.nass, item.text)) {
-            issueIds.add(item.id);
+        // Only check items that have a translation defined
+        if (item.text?.trim()) {
+            if (detectTruncatedTranslation(item.nass, item.text)) {
+                issueIds.add(item.id);
+            }
         }
     }
 

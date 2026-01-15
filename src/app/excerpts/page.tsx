@@ -68,6 +68,8 @@ function ExcerptsPageContent() {
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
     const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
+    const filteredExcerptIds = useExcerptsStore((state) => state.filteredExcerptIds);
+    const isExcerptsFiltered = filteredExcerptIds !== undefined && filteredExcerptIds.length > 0;
 
     const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode } =
         useExcerptFilters();
@@ -436,12 +438,17 @@ function ExcerptsPageContent() {
                                         <ExcerptRow
                                             data={item}
                                             hideTranslation={!hasAnyTranslations}
+                                            isFiltered={isExcerptsFiltered}
                                             isSelected={selectedIds.has(item.id)}
                                             onCreateFromSelection={createExcerptFromExisting}
                                             onDelete={(id) => deleteExcerpts([id])}
                                             onToggleSelect={toggleSelection}
                                             onUpdate={updateExcerpt}
                                             onCopyDown={handleCopyDown}
+                                            onShowInContext={(id) => {
+                                                filterExcerptsByIds(undefined);
+                                                setScrollToAfterChange(id);
+                                            }}
                                         />
                                     )}
                                     scrollToId={scrollToAfterChange ?? scrollToId ?? scrollToFrom}

@@ -11,11 +11,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MASTER_PROMPT_ID } from '@/lib/constants';
 import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
-import { estimateTokenCount } from '@/lib/textUtils';
+import { estimateTokenCount, findLastIndexUnderTokenLimit } from '@/lib/textUtils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 // Maximum pills to render for performance
 const MAX_VISIBLE_PILLS = 500;
+
+// Token limit for Gemini free tier
+const MAX_GEMINI_FREE_TOKENS = 11000;
 
 /**
  * Tab content for selecting untranslated excerpts to send to LLM.
@@ -99,6 +102,22 @@ export function PickerTab() {
 
     // Estimate token count
     const tokenCount = useMemo(() => estimateTokenCount(formattedContent), [formattedContent]);
+
+    // Find the last pill index that stays under the free token limit
+    const freeLimitIndex = useMemo(() => {
+        if (displayedIds.length === 0 || !promptForTranslation) {
+            return -1;
+        }
+
+        // Get excerpts for displayed IDs
+        const displayedExcerpts = displayedIds
+            .map((id) => excerptMap.get(id))
+            .filter((e): e is NonNullable<typeof e> => e != null);
+
+        const promptTokens = estimateTokenCount(promptForTranslation);
+
+        return findLastIndexUnderTokenLimit(displayedExcerpts, (e) => e.nass, MAX_GEMINI_FREE_TOKENS, promptTokens);
+    }, [displayedIds, excerptMap, promptForTranslation]);
 
     const handlePillClick = useCallback((index: number) => {
         setSelectedEndIndex(index);
@@ -185,6 +204,7 @@ export function PickerTab() {
                                 <Pill
                                     key={id}
                                     id={id}
+                                    isFreeLimit={index === freeLimitIndex}
                                     isSelected={selectedEndIndex !== null && index <= selectedEndIndex}
                                     onClick={() => handlePillClick(index)}
                                 />
