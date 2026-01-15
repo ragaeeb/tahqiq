@@ -32,9 +32,9 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 ```text
 src/
 ├── app/                    # Next.js App Router pages and components
-│   ├── api/                # API routes (translate, shamela, analytics)
-│   ├── book/               # Book viewing and translation dialogs
-│   ├── browse/             # Static browsable content pages
+│   ├── ajza/               # Manage groups of Juz for manuscript workflow
+│   ├── api/                # API routes (translate, shamela, analytics, rules)
+│   ├── book/               # Book browser and management
 │   ├── excerpts/           # Excerpts, headings, footnotes management
 │   ├── ketab/              # Ketab-online book editor
 │   ├── manuscript/         # Manuscript editing interface
@@ -47,7 +47,6 @@ src/
 │   ├── hooks/              # Custom React hooks
 │   └── ui/                 # UI primitives (shadcn/ui style)
 ├── lib/                    # Utility functions and helpers
-│   └── transform/          # Data transformations (excerpts, ketab, web)
 ├── stores/                 # Zustand state management stores
 │   ├── bookStore/          # Book compilation state (Kitab format)
 │   ├── excerptsStore/      # Excerpts, headings, footnotes state
@@ -530,13 +529,13 @@ const excerptMap = useMemo(() => {
 const selectedData = selectedIds.map(id => excerptMap.get(id));
 ```
 
-Parsing utilities for bulk data live in `@/lib/transform/excerpts.ts`.
+Parsing utilities for bulk data live in `@/lib/segmentation.ts` or `@/lib/textUtils.ts`.
 
 ---
 
 ## Token Estimation
 
-For LLM-based translation workflows, we use a custom Arabic-aware token estimation heuristic in `src/lib/transform/excerpts.ts`.
+For LLM-based translation workflows, we use a custom Arabic-aware token estimation heuristic in `src/lib/textUtils.ts`.
 
 ### Logic
 Standard whitespace-based or character-based counting is inaccurate for Arabic due to diacritics (tashkeel) and tatweel. Our `estimateTokenCount` function uses the following character-to-token ratios:
@@ -702,12 +701,7 @@ Create in `src/stores/newStore/`:
 
 ### 2. Transform Layer
 
-Create in `src/lib/transform/`:
-
-```text
-├── new-excerpts.ts      # Convert segments to Excerpts format
-└── new-excerpts.test.ts # Tests with realistic Arabic content
-```
+Data transformation logic should be implemented in specialized utility files in `src/lib/` (e.g., `textUtils.ts`, `segmentation.ts`, `legacy.ts`). Write unit tests for all transformation logic.
 
 **Note:** The `sanitizeArabic` function filters aggressively - use Arabic text in tests!
 
@@ -775,3 +769,8 @@ When dealing with very large datasets (like 40,000 excerpt IDs in the Translatio
 | Unrelated Build Errors | Distinguish between your changes and pre-existing breakage (e.g., missing files in other routes) |
 | Concise Naming | Prefer short, clear component names (e.g., `PickerTab` vs `TranslationPickerTabDialog`) |
 | Dialog Entry Points | Use a `defaultTab` prop to allow different buttons to open the same dialog to different states |
+| `findExcerptIssues` Gaps | Refine gap detection (1-3 gaps) to ignore boundaries and long sequences (>3) |
+| Virtualizer Jumps | Avoid `data.length` in `dataVersion` key to prevent remounts on middle deletions |
+| Initial Scroll vs ScrollTo | `initialScrollTop` (pixel-based) is safer for remounts; `scrollToId` (key-based) can conflict |
+| Icon Confirmations | Use visual cues (pulsing ring, icon swap) for small confirm buttons instead of text |
+| Bulk Toasting | Condense multiple success/warning toasts into a single combined message for better UX |

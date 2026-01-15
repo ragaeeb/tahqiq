@@ -12,6 +12,7 @@ import { STORAGE_KEYS, TRANSLATION_MODELS } from '@/lib/constants';
 import { saveToOPFS } from '@/lib/io';
 import { parseTranslations } from '@/lib/textUtils';
 import { nowInSeconds } from '@/lib/time';
+import { cn } from '@/lib/utils';
 import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { getTranslatorValue, TranslatorSelect } from './translator-select';
@@ -279,13 +280,6 @@ export function AddTranslationTab() {
             doSubmit(translationMap, translatorValue, count, shouldCommit);
         },
         [selectedModel, expectedIds, existingTranslations, pendingOverwrites, doSubmit],
-    );
-
-    const handleSave = useCallback(
-        (e: React.FormEvent) => {
-            handleSubmit(e, false);
-        },
-        [handleSubmit],
     );
 
     const handleSaveAndCommit = useCallback(

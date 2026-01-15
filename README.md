@@ -39,6 +39,10 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Hash-Based Scroll**: Navigate to specific rows via URL hash
   - `#2333` scrolls to excerpt with `from=2333` (page number)
   - `#P233` scrolls to excerpt/heading with `id=P233` or `id=C123`
+- **Show in Context**: Quick toggle in filtered views to clear filters and jump to a specific row in full context
+- **Gap Detection**: Refined logic to find "translation gaps" (1-3 consecutive missing items surrounded by translated text)
+- **Safe Operations**: Destructive actions (Delete, Clear Translation) use `ConfirmButton` with visual cues to prevent data loss
+- **Stability**: Intelligent virtualized list restoration preserves scroll position during book-wide deletions or merges
 - **Extract to New Excerpt**: Select Arabic text and extract as a new excerpt
 - **Inline Editing**: Edit Arabic (nass) and translation (text) fields directly
 - **Headings ID Column**: Headings tab displays the ID field for easy reference
@@ -335,9 +339,9 @@ RULES_ENDPOINT=your_rules_endpoint_url
 tahqiq/
 ├── src/
 │   ├── app/                # Next.js App Router pages
-│   │   ├── api/            # API routes (shamela, translate, analytics)
-│   │   ├── book/           # Book viewing and translation
-│   │   ├── browse/         # Static browsable content
+│   │   ├── ajza/           # Manage groups of Juz for manuscript workflow
+│   │   ├── api/            # API routes (shamela, translate, analytics, rules)
+│   │   ├── book/           # Book browser and management
 │   │   ├── excerpts/       # Excerpts management with virtualized lists
 │   │   ├── ketab/          # Ketab-online book editor
 │   │   ├── manuscript/     # Manuscript editing
@@ -350,7 +354,6 @@ tahqiq/
 │   │   ├── hooks/          # Custom React hooks
 │   │   └── ui/             # UI primitives (shadcn/ui style)
 │   ├── lib/                # Utility functions
-│   │   └── transform/      # Data transformation utils (excerpts, ketab, web)
 │   ├── stores/             # Zustand state management
 │   │   ├── bookStore/      # Book compilation state
 │   │   ├── excerptsStore/  # Excerpts state
