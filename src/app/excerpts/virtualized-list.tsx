@@ -91,10 +91,8 @@ function VirtualizerContent<T>({
 
     // Restore scroll position synchronously before paint
     useLayoutEffect(() => {
-        console.log('[VirtualizerContent] useLayoutEffect - initialScrollTop:', initialScrollTop);
         if (parentRef.current && initialScrollTop > 0) {
             parentRef.current.scrollTop = initialScrollTop;
-            console.log('[VirtualizerContent] Set scrollTop to:', initialScrollTop);
         }
     }, [parentRef, initialScrollTop]);
 
@@ -213,14 +211,6 @@ function VirtualizedList<T>({
         const first = data[0] ? getKeyStable(data[0], 0) : '';
         const last = data.at(-1) ? getKeyStable(data.at(-1)!, data.length - 1) : '';
         const version = `${first}-${last}`;
-        console.log(
-            '[VirtualizedList] dataVersion computed:',
-            version,
-            'length:',
-            data.length,
-            'scrollTop:',
-            scrollTopRef.current,
-        );
         return version;
     }, [data, getKeyStable]);
 
@@ -232,14 +222,6 @@ function VirtualizedList<T>({
     //
     // Update prevDataVersionRef to track changes but don't trigger restoration.
     useEffect(() => {
-        console.log(
-            '[VirtualizedList] Data version changed - prev:',
-            prevDataVersionRef.current,
-            'new:',
-            dataVersion,
-            'scrollTop preserved:',
-            scrollTopRef.current,
-        );
         prevDataVersionRef.current = dataVersion;
     }, [dataVersion]);
 

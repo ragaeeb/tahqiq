@@ -208,10 +208,8 @@ export function AddTranslationTab() {
         [applyBulkTranslations],
     );
 
-    const handleSubmit = useCallback(
-        (e: React.FormEvent, shouldCommit = false) => {
-            e.preventDefault();
-
+    const submitTranslations = useCallback(
+        (shouldCommit = false) => {
             const rawText = textareaRef.current?.value || '';
 
             if (!rawText.trim()) {
@@ -282,12 +280,20 @@ export function AddTranslationTab() {
         [selectedModel, expectedIds, existingTranslations, pendingOverwrites, doSubmit],
     );
 
+    const handleSubmit = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault();
+            submitTranslations(false);
+        },
+        [submitTranslations],
+    );
+
     const handleSaveAndCommit = useCallback(
         (e: React.MouseEvent) => {
             e.preventDefault();
-            handleSubmit(e as unknown as React.FormEvent, true);
+            submitTranslations(true);
         },
-        [handleSubmit],
+        [submitTranslations],
     );
 
     return (
