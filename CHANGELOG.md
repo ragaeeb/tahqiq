@@ -1,3 +1,10 @@
+# [1.48.0](https://github.com/ragaeeb/tahqiq/compare/v1.47.0...v1.48.0) (2026-01-17)
+
+
+### Features
+
+* **validation:** Add new validation report dialog ([257ba2d](https://github.com/ragaeeb/tahqiq/commit/257ba2d39cc7800f8143ce73e7da47ea532b2760))
+
 # [1.47.0](https://github.com/ragaeeb/tahqiq/compare/v1.46.0...v1.47.0) (2026-01-15)
 
 
