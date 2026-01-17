@@ -189,6 +189,10 @@ export function AddTranslationTab() {
                 textareaRef.current.value = '';
                 textareaRef.current.focus();
             }
+
+            // Clear validation errors after successful save
+            setValidationError(undefined);
+            setValidationErrors([]);
         },
         [applyBulkTranslations, handleCommit],
     );

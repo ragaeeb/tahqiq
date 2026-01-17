@@ -271,7 +271,19 @@ describe('formatValidationErrors', () => {
         expect(result).toBe('Custom fallback message');
     });
 
-    it('should format all errors with newlines', () => {
+    it('should group errors with same type into single line', () => {
+        const errors = [
+            { id: 'P1', message: 'First', type: 'arabic_leak' },
+            { id: 'P2', message: 'First', type: 'arabic_leak' },
+            { id: 'P3', message: 'First', type: 'arabic_leak' },
+        ];
+        const result = formatValidationErrors(errors);
+        // All IDs should be on a single line, comma-separated
+        expect(result).toContain('P1, P2, P3');
+        expect(result.split('\n').length).toBe(1);
+    });
+
+    it('should separate different error types on different lines', () => {
         const errors = [
             { id: 'P1', message: 'First', type: 'arabic_leak' },
             { id: 'P2', message: 'Second', type: 'duplicate_id' },
@@ -280,9 +292,23 @@ describe('formatValidationErrors', () => {
         expect(result).toContain('P1');
         expect(result).toContain('P2');
         expect(result).toContain('\n');
-        // Verify the structure: each error on its own line
         const lines = result.split('\n');
         expect(lines.length).toBe(2);
+    });
+
+    it('should group mixed errors correctly', () => {
+        const errors = [
+            { id: 'P1', message: 'Error A', type: 'arabic_leak' },
+            { id: 'P2', message: 'Error B', type: 'duplicate_id' },
+            { id: 'P3', message: 'Error A', type: 'arabic_leak' },
+        ];
+        const result = formatValidationErrors(errors);
+        const lines = result.split('\n');
+        expect(lines.length).toBe(2);
+        // P1 and P3 should be grouped together (same type)
+        const arabicLine = lines.find((l) => l.includes('Arabic script'));
+        expect(arabicLine).toContain('P1');
+        expect(arabicLine).toContain('P3');
     });
 });
 
