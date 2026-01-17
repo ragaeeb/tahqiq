@@ -1,21 +1,26 @@
 'use client';
 
-import { SaveIcon } from 'lucide-react';
+import { FileWarningIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { normalizeTranslationText, parseTranslations, validateTranslationResponse } from 'wobble-bibble';
 
 import { Button } from '@/components/ui/button';
+import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { STORAGE_KEYS, TRANSLATION_MODELS } from '@/lib/constants';
-import { saveToOPFS } from '@/lib/io';
-import { parseTranslations } from '@/lib/textUtils';
-import { nowInSeconds } from '@/lib/time';
+import { TRANSLATION_MODELS } from '@/lib/constants';
+import {
+    buildExistingTranslationsMap,
+    buildValidationSegments,
+    formatValidationErrors,
+    type ValidationErrorInfo,
+} from '@/lib/segmentation';
 import { cn } from '@/lib/utils';
-import { findUnmatchedTranslationIds, validateTranslations } from '@/lib/validation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { getTranslatorValue, TranslatorSelect } from './translator-select';
+import { ValidationReportDialog } from './validation-report-dialog';
 
 const STORAGE_KEY = 'translation-model';
 
@@ -40,6 +45,7 @@ export function AddTranslationTab() {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [selectedModel, setSelectedModel] = useState<string>(getSavedModel());
     const [validationError, setValidationError] = useState<string | undefined>();
+    const [validationErrors, setValidationErrors] = useState<ValidationErrorInfo[]>([]);
     const [pendingOverwrites, setPendingOverwrites] = useState<{ duplicates: string[]; overwrites: string[] } | null>(
         null,
     );
@@ -49,41 +55,17 @@ export function AddTranslationTab() {
     const headings = useExcerptsStore((state) => state.headings);
     const footnotes = useExcerptsStore((state) => state.footnotes);
 
-    // Build expected IDs list for order validation
-    const expectedIds = useMemo(() => {
-        const ids: string[] = [];
-        for (const e of excerpts) {
-            ids.push(e.id);
-        }
-        for (const h of headings) {
-            ids.push(h.id);
-        }
-        for (const f of footnotes) {
-            ids.push(f.id);
-        }
-        return ids;
-    }, [excerpts, headings, footnotes]);
+    // Build segments array for wobble-bibble validation (maps nass -> text)
+    const segments = useMemo(
+        () => buildValidationSegments(excerpts, headings, footnotes),
+        [excerpts, headings, footnotes],
+    );
 
     // Build map of IDs that already have translations
-    const existingTranslations = useMemo(() => {
-        const map = new Map<string, boolean>();
-        for (const e of excerpts) {
-            if (e.text?.trim()) {
-                map.set(e.id, true);
-            }
-        }
-        for (const h of headings) {
-            if (h.text?.trim()) {
-                map.set(h.id, true);
-            }
-        }
-        for (const f of footnotes) {
-            if (f.text?.trim()) {
-                map.set(f.id, true);
-            }
-        }
-        return map;
-    }, [excerpts, headings, footnotes]);
+    const existingTranslations = useMemo(
+        () => buildExistingTranslationsMap(excerpts, headings, footnotes),
+        [excerpts, headings, footnotes],
+    );
 
     // Track if we just pasted to avoid clearing the error (paste triggers onChange)
     const justPastedRef = useRef(false);
@@ -102,32 +84,41 @@ export function AddTranslationTab() {
                 return;
             }
 
-            // Validate the pasted content
-            const result = validateTranslations(pastedText, expectedIds);
+            const textarea = textareaRef.current;
+            if (!textarea) {
+                return;
+            }
 
-            if (!result.isValid) {
-                setValidationError(result.error);
+            // Calculate the full content AFTER the paste is applied
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const currentValue = textarea.value;
+
+            // Normalize the pasted text first
+            const normalizedPaste = normalizeTranslationText(pastedText);
+            const fullContentAfterPaste = currentValue.slice(0, start) + normalizedPaste + currentValue.slice(end);
+
+            // Validate the FULL content using wobble-bibble
+            const result = validateTranslationResponse(segments, fullContentAfterPaste);
+
+            if (result.errors.length > 0) {
+                setValidationErrors(result.errors);
+                setValidationError(formatValidationErrors(result.errors));
             } else {
+                setValidationErrors([]);
                 setValidationError(undefined);
             }
 
-            // If text was normalized (merged markers split), update the textarea
-            if (result.normalizedText !== pastedText) {
+            // If text was normalized (merged markers split), update the textarea manually
+            if (normalizedPaste !== pastedText) {
                 e.preventDefault();
-                const textarea = textareaRef.current;
-                if (textarea) {
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const currentValue = textarea.value;
-                    const newValue = currentValue.slice(0, start) + result.normalizedText + currentValue.slice(end);
-                    textarea.value = newValue;
-                    // Set cursor position after pasted text
-                    const newPosition = start + result.normalizedText.length;
-                    textarea.setSelectionRange(newPosition, newPosition);
-                }
+                textarea.value = fullContentAfterPaste;
+                // Set cursor position after pasted text
+                const newPosition = start + normalizedPaste.length;
+                textarea.setSelectionRange(newPosition, newPosition);
             }
         },
-        [expectedIds],
+        [segments],
     );
 
     const handleChange = useCallback(() => {
@@ -144,6 +135,15 @@ export function AddTranslationTab() {
             setPendingOverwrites(null);
         }
     }, [validationError, pendingOverwrites]);
+
+    const handleCommit = useCallback(async () => {
+        const success = await useExcerptsStore.getState().save();
+        if (success) {
+            record('CommitTranslationsToStorage');
+            return true;
+        }
+        return false;
+    }, []);
 
     const doSubmit = useCallback(
         async (translationMap: Map<string, string>, translatorValue: number, total: number, shouldCommit: boolean) => {
@@ -169,25 +169,10 @@ export function AddTranslationTab() {
 
             // If commit requested, save to OPFS
             if (shouldCommit) {
-                try {
-                    const state = useExcerptsStore.getState();
-                    const exportData = {
-                        collection: state.collection,
-                        contractVersion: state.contractVersion,
-                        createdAt: state.createdAt,
-                        excerpts: state.excerpts,
-                        footnotes: state.footnotes,
-                        headings: state.headings,
-                        lastUpdatedAt: nowInSeconds(),
-                        options: state.options,
-                        postProcessingApps: state.postProcessingApps,
-                        promptForTranslation: state.promptForTranslation,
-                    };
-                    await saveToOPFS(STORAGE_KEYS.excerpts, exportData);
+                const success = await handleCommit();
+                if (success) {
                     message += ' & committed';
-                    record('CommitTranslationsToStorage');
-                } catch (err) {
-                    console.error('Failed to commit to storage:', err);
+                } else {
                     toast.error('Translations saved but failed to commit to storage');
                     return;
                 }
@@ -205,46 +190,45 @@ export function AddTranslationTab() {
                 textareaRef.current.focus();
             }
         },
-        [applyBulkTranslations],
+        [applyBulkTranslations, handleCommit],
     );
 
     const submitTranslations = useCallback(
-        (shouldCommit = false) => {
+        async (shouldCommit = false) => {
             const rawText = textareaRef.current?.value || '';
 
             if (!rawText.trim()) {
+                if (shouldCommit) {
+                    const success = await handleCommit();
+                    if (success) {
+                        toast.success('Committed current state to storage');
+                    } else {
+                        toast.error('Failed to commit to storage');
+                    }
+                    return;
+                }
                 toast.error('Please enter some translations');
                 return;
             }
 
-            // Re-validate before submit
-            const validation = validateTranslations(rawText, expectedIds);
-            if (!validation.isValid) {
-                setValidationError(validation.error);
-                toast.error(`Validation failed: ${validation.error}`);
-                return;
+            // Validate using wobble-bibble (warn but don't block)
+            const validation = validateTranslationResponse(segments, rawText);
+
+            if (validation.errors.length > 0) {
+                setValidationErrors(validation.errors);
+                const errorMessage = formatValidationErrors(validation.errors);
+                setValidationError(errorMessage);
+                // Show warning but continue with save
             }
 
-            // Check for duplicates in pasted content
-            const idCounts = new Map<string, number>();
-            for (const id of validation.parsedIds) {
-                idCounts.set(id, (idCounts.get(id) || 0) + 1);
-            }
-            const duplicates: string[] = [];
-            for (const [id, count] of idCounts) {
-                if (count > 1) {
-                    duplicates.push(`${id} (×${count})`);
-                }
-            }
-
-            const { translationMap, count } = parseTranslations(validation.normalizedText);
+            const { translationMap, count } = parseTranslations(validation.normalizedResponse);
 
             if (count === 0) {
                 toast.error('No valid translations found. Format: ID - Translation text');
                 return;
             }
 
-            // Check for overwrites of existing translations
+            // Check for overwrites of existing translations (wobble-bibble checks duplicates in response)
             const overwrites: string[] = [];
             for (const id of translationMap.keys()) {
                 if (existingTranslations.has(id)) {
@@ -254,22 +238,9 @@ export function AddTranslationTab() {
 
             const translatorValue = getTranslatorValue(selectedModel);
 
-            // Combine issues for confirmation
-            const hasIssues = overwrites.length > 0 || duplicates.length > 0;
-            if (hasIssues && !pendingOverwrites) {
-                // Show confirmation - don't proceed yet
-                setPendingOverwrites({ duplicates, overwrites });
-                return;
-            }
-
-            // Validate that all translation IDs exist in the store before committing
-            const unmatchedIds = findUnmatchedTranslationIds(validation.parsedIds, expectedIds);
-            if (unmatchedIds.length > 0) {
-                const preview = unmatchedIds.slice(0, 10).join(', ');
-                const suffix = unmatchedIds.length > 10 ? ` and ${unmatchedIds.length - 10} more` : '';
-                setValidationError(
-                    `${unmatchedIds.length} translation ID(s) not found in excerpts: ${preview}${suffix}`,
-                );
+            // Show confirmation for overwrites
+            if (overwrites.length > 0 && !pendingOverwrites) {
+                setPendingOverwrites({ duplicates: [], overwrites });
                 return;
             }
 
@@ -277,21 +248,21 @@ export function AddTranslationTab() {
             setPendingOverwrites(null);
             doSubmit(translationMap, translatorValue, count, shouldCommit);
         },
-        [selectedModel, expectedIds, existingTranslations, pendingOverwrites, doSubmit],
+        [segments, selectedModel, existingTranslations, pendingOverwrites, doSubmit, handleCommit],
     );
 
     const handleSubmit = useCallback(
-        (e: React.FormEvent) => {
+        async (e: React.FormEvent) => {
             e.preventDefault();
-            submitTranslations(false);
+            await submitTranslations(false);
         },
         [submitTranslations],
     );
 
     const handleSaveAndCommit = useCallback(
-        (e: React.MouseEvent) => {
+        async (e: React.MouseEvent) => {
             e.preventDefault();
-            submitTranslations(true);
+            await submitTranslations(true);
         },
         [submitTranslations],
     );
@@ -317,7 +288,32 @@ Another line that should be appended to this existing excerpt.`}
                 />
                 {validationError && (
                     <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
-                        ⚠️ {validationError}
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 whitespace-pre-wrap">⚠️ {validationError}</div>
+                            <DialogTriggerButton
+                                className="shrink-0"
+                                renderContent={(close) => {
+                                    const model = TRANSLATION_MODELS.find((m) => m.value === selectedModel);
+                                    const modelName = (model?.label || 'unknown').replace(/\s+/g, '_');
+                                    const firstId = validationErrors[0]?.id || 'unknown';
+                                    return (
+                                        <ValidationReportDialog
+                                            defaultErrors={validationError}
+                                            defaultFileName={`${modelName}_${firstId}`}
+                                            defaultModel={selectedModel}
+                                            defaultResponse={textareaRef.current?.value || ''}
+                                            onClose={close}
+                                        />
+                                    );
+                                }}
+                                size="sm"
+                                type="button"
+                                variant="outline"
+                            >
+                                <FileWarningIcon className="mr-1 h-3 w-3" />
+                                Create Report
+                            </DialogTriggerButton>
+                        </div>
                     </div>
                 )}
                 {pendingOverwrites && (
@@ -359,11 +355,8 @@ Another line that should be appended to this existing excerpt.`}
                     </>
                 ) : (
                     <>
-                        <Button disabled={!!validationError} type="submit">
-                            Save Translations
-                        </Button>
+                        <Button type="submit">Save Translations</Button>
                         <Button
-                            disabled={!!validationError}
                             type="button"
                             onClick={handleSaveAndCommit}
                             className="bg-green-600 hover:bg-green-700"

@@ -4,6 +4,9 @@ import { immer } from 'zustand/middleware/immer';
 
 enableMapSet();
 
+import { STORAGE_KEYS } from '@/lib/constants';
+import { saveToOPFS } from '@/lib/io';
+import { nowInSeconds } from '@/lib/time';
 import * as actions from './actions';
 import type { ExcerptsState } from './types';
 
@@ -120,6 +123,30 @@ export const useExcerptsStore = create<ExcerptsState>()(
             set((state) => {
                 actions.resetSentToLlm(state);
             }),
+
+        save: async () => {
+            try {
+                const state = useExcerptsStore.getState();
+                const exportData = {
+                    collection: state.collection,
+                    contractVersion: state.contractVersion,
+                    createdAt: state.createdAt,
+                    excerpts: state.excerpts,
+                    footnotes: state.footnotes,
+                    headings: state.headings,
+                    lastUpdatedAt: nowInSeconds(),
+                    options: state.options,
+                    postProcessingApps: state.postProcessingApps,
+                    promptForTranslation: state.promptForTranslation,
+                };
+                await saveToOPFS(STORAGE_KEYS.excerpts, exportData);
+                return true;
+            } catch (err) {
+                console.error('Failed to save excerpts to OPFS:', err);
+                return false;
+            }
+        },
+
         setPrompt: (promptId, content) =>
             set((state) => {
                 actions.setPrompt(state, promptId, content);

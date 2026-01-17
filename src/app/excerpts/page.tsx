@@ -19,9 +19,8 @@ import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { canMergeSegments } from '@/lib/segmentation';
+import { canMergeSegments, findExcerptIssues } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
-import { findExcerptIssues } from '@/lib/validation';
 import {
     selectAllExcerpts,
     selectAllFootnotes,

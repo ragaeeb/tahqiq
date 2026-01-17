@@ -77,6 +77,11 @@ export type ShamelaActions = {
     reset: () => void;
 
     /**
+     * Saves the current shamela state to storage
+     */
+    save: () => Promise<boolean>;
+
+    /**
      * Updates a single page
      */
     updatePage: (id: number, updates: Partial<Omit<ShamelaPage, 'id'>>) => void;

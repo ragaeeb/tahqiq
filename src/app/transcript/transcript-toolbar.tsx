@@ -4,6 +4,7 @@ import { BotIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
@@ -38,12 +39,28 @@ export default function TranscriptToolbar() {
     // Storage actions hook
     const getExportData = useCallback(() => mapTranscriptsToLatestContract(useTranscriptStore.getState()), []);
 
-    const { handleSave, handleDownload, handleReset } = useStorageActions({
+    const { handleDownload, handleReset } = useStorageActions({
         analytics: { download: 'DownloadTranscript', reset: 'ResetTranscript', save: 'SaveTranscript' },
         getExportData,
         reset,
         storageKey: STORAGE_KEYS.transcript,
     });
+
+    const handleSave = useCallback(async () => {
+        record('SaveTranscript');
+        const success = await useTranscriptStore.getState().save();
+        if (success) {
+            toast.success('Saved transcript');
+        } else {
+            // If internal save fails, try downloading through useStorageActions logic or manual download?
+            // Replicating basic fallback:
+            console.error('Save failed, falling back to download');
+            const data = getExportData();
+            const name = `${STORAGE_KEYS.transcript}-${Date.now()}.json`;
+            const { downloadFile } = await import('@/lib/domUtils');
+            downloadFile(name, JSON.stringify(data, null, 2));
+        }
+    }, [getExportData]);
 
     return (
         <div className="flex space-x-2">

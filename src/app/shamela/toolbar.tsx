@@ -54,12 +54,26 @@ export const Toolbar = () => {
         };
     }, []);
 
-    const { handleSave, handleDownload, handleReset } = useStorageActions({
+    const { handleDownload, handleReset } = useStorageActions({
         analytics: { download: 'DownloadShamela', reset: 'ResetShamela', save: 'SaveShamela' },
         getExportData,
         reset,
         storageKey: STORAGE_KEYS.shamela,
     });
+
+    const handleSave = useCallback(async () => {
+        record('SaveShamela');
+        const success = await useShamelaStore.getState().save();
+        if (success) {
+            toast.success('Saved shamela book');
+        } else {
+            console.error('Save failed, falling back to download');
+            const data = getExportData();
+            const name = `${STORAGE_KEYS.shamela}-${Date.now()}.json`;
+            const { downloadFile } = await import('@/lib/domUtils');
+            downloadFile(name, JSON.stringify(data, null, 2));
+        }
+    }, [getExportData]);
 
     const handleRemovePageMarkers = useCallback(() => {
         record('RemovePageMarkers');

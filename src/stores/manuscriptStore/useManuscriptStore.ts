@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+
+import { STORAGE_KEYS } from '@/lib/constants';
+import { saveToOPFS } from '@/lib/io';
+import { mapManuscriptToJuz } from '@/lib/manuscript';
 import * as actions from './actions';
 import type { ManuscriptState } from './types';
 
@@ -87,6 +91,17 @@ export const useManuscriptStore = create<ManuscriptState>()(
                 state.sheets = [];
                 state.url = '';
             }),
+        save: async () => {
+            try {
+                const state = useManuscriptStore.getState();
+                const exportData = mapManuscriptToJuz(state);
+                await saveToOPFS(STORAGE_KEYS.juz, exportData);
+                return true;
+            } catch (err) {
+                console.error('Failed to save manuscript to OPFS:', err);
+                return false;
+            }
+        },
         savedIds: [],
         saveId: (id) =>
             set((state) => {

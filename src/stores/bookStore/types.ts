@@ -155,6 +155,11 @@ type BookActions = {
     reset: () => void;
 
     /**
+     * Saves the current book state to storage
+     */
+    save: () => Promise<boolean>;
+
+    /**
      * Changes the currently selected book volume
      * @param volume Volume number to select
      */

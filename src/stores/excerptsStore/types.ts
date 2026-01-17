@@ -296,6 +296,12 @@ export type ExcerptsActions = {
     resetSentToLlm: () => void;
 
     /**
+     * Saves the current state to OPFS storage.
+     * @returns Promise resolving to true if successful, false otherwise
+     */
+    save: () => Promise<boolean>;
+
+    /**
      * Updates the translation prompt and its ID
      */
     setPrompt: (promptId: string, content: string) => void;

@@ -148,6 +148,11 @@ type TranscriptActions = {
     selectAllSegments: (isSelected: boolean) => void;
 
     /**
+     * Saves the current transcript state to storage
+     */
+    save: () => Promise<boolean>;
+
+    /**
      * Updates formatting options for the transcript
      * @param options New formatting options to apply
      */

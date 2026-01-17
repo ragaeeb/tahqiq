@@ -1,12 +1,19 @@
 import { sanitizeArabic } from 'baburchi';
-import { preformatArabicText } from 'bitaboom';
+import { countWords, preformatArabicText } from 'bitaboom';
 import { type Page, type Segment, segmentPages } from 'flappa-doormal';
-import { LatestContractVersion, Markers, SHORT_SEGMENT_WORD_THRESHOLD } from '@/lib/constants';
+import { VALIDATION_ERROR_TYPE_INFO, type ValidationErrorType } from 'wobble-bibble';
+import {
+    LatestContractVersion,
+    MAX_CONSECUTIVE_GAPS_TO_FLAG,
+    Markers,
+    MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK,
+    MIN_TRANSLATION_RATIO,
+    SHORT_SEGMENT_WORD_THRESHOLD,
+} from '@/lib/constants';
 import { applyReplacements } from '@/lib/replace';
 import { nowInSeconds } from '@/lib/time';
 import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
 import type { BookSegmentationOptions } from '@/stores/segmentationStore/types';
-import { countWords } from './textUtils';
 
 const MAX_LETTERS = 26;
 
@@ -151,6 +158,217 @@ export const formatExcerptsForPrompt = (excerpts: Excerpt[], prompt: string, boo
  */
 export const getUntranslatedIds = (excerpts: Excerpt[], sentIds: Set<string>) => {
     return excerpts.filter((e) => !e.text && !sentIds.has(e.id)).map((e) => e.id);
+};
+
+/**
+ * Item with nass field for validation segment building.
+ */
+type NassItem = { id: string; nass?: string | null };
+
+/**
+ * Item with text field for existing translations map building.
+ */
+type TextItem = { id: string; text?: string | null };
+
+/**
+ * Builds an array of validation segments for wobble-bibble's validateTranslationResponse.
+ * Maps the nass (Arabic source) field to text as expected by the library.
+ *
+ * @param excerpts - Array of excerpts
+ * @param headings - Array of headings
+ * @param footnotes - Array of footnotes
+ * @returns Array of segments with { id, text } where text is the nass value
+ */
+export const buildValidationSegments = (
+    excerpts: NassItem[],
+    headings: NassItem[],
+    footnotes: NassItem[],
+): { id: string; text: string }[] => {
+    const result: { id: string; text: string }[] = [];
+
+    for (const e of excerpts) {
+        if (e.nass) {
+            result.push({ id: e.id, text: e.nass });
+        }
+    }
+    for (const h of headings) {
+        if (h.nass) {
+            result.push({ id: h.id, text: h.nass });
+        }
+    }
+    for (const f of footnotes) {
+        if (f.nass) {
+            result.push({ id: f.id, text: f.nass });
+        }
+    }
+
+    return result;
+};
+
+/**
+ * Builds a map of IDs that already have translations (text field is non-empty).
+ * Used to detect overwrites when applying new translations.
+ *
+ * @param excerpts - Array of excerpts
+ * @param headings - Array of headings
+ * @param footnotes - Array of footnotes
+ * @returns Map where keys are IDs with existing translations
+ */
+export const buildExistingTranslationsMap = (
+    excerpts: TextItem[],
+    headings: TextItem[],
+    footnotes: TextItem[],
+): Map<string, boolean> => {
+    const map = new Map<string, boolean>();
+
+    for (const e of excerpts) {
+        if (e.text?.trim()) {
+            map.set(e.id, true);
+        }
+    }
+    for (const h of headings) {
+        if (h.text?.trim()) {
+            map.set(h.id, true);
+        }
+    }
+    for (const f of footnotes) {
+        if (f.text?.trim()) {
+            map.set(f.id, true);
+        }
+    }
+
+    return map;
+};
+
+/**
+ * Validation error shape from wobble-bibble.
+ */
+export type ValidationErrorInfo = { type: string; message: string; id?: string };
+
+/**
+ * Formats wobble-bibble validation errors into human-readable messages.
+ * Uses VALIDATION_ERROR_TYPE_INFO to get detailed descriptions for each error type.
+ *
+ * @param errors - Array of validation errors from validateTranslationResponse
+ * @returns Formatted error messages joined by newlines, or empty string if no errors
+ */
+export const formatValidationErrors = (errors: ValidationErrorInfo[]): string => {
+    if (errors.length === 0) {
+        return '';
+    }
+
+    return errors
+        .map((error) => {
+            const errorInfo = VALIDATION_ERROR_TYPE_INFO[error.type as ValidationErrorType];
+            const description = errorInfo?.description || error.message;
+            return error.id ? `${error.id}: ${description}` : description;
+        })
+        .join('\n');
+};
+
+/**
+ * Detects when a translation appears truncated compared to its Arabic source.
+ * This catches LLM errors where only a portion of the text was translated.
+ *
+ * @param arabicText - The original Arabic text
+ * @param translationText - The English/target translation
+ * @returns Error message describing the issue, or undefined if valid
+ */
+export const detectTruncatedTranslation = (
+    arabicText: string | null | undefined,
+    translationText: string | null | undefined,
+): string | undefined => {
+    const arabic = (arabicText ?? '').trim();
+    const translation = (translationText ?? '').trim();
+
+    // Skip check if Arabic is empty or too short
+    if (arabic.length < MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK) {
+        return;
+    }
+
+    // Check for empty/whitespace-only translation with substantial Arabic
+    if (translation.length === 0) {
+        return `Translation appears empty but Arabic text has ${arabic.length} characters`;
+    }
+
+    // Calculate the ratio of translation to Arabic length
+    const ratio = translation.length / arabic.length;
+
+    // If ratio is below threshold, the translation is likely truncated
+    if (ratio < MIN_TRANSLATION_RATIO) {
+        const expectedMinLength = Math.round(arabic.length * MIN_TRANSLATION_RATIO);
+        return `Translation appears truncated: ${translation.length} chars for ${arabic.length} char Arabic text (expected at least ~${expectedMinLength} chars)`;
+    }
+};
+
+/**
+ * Item type for gap/issue detection (has both nass and text fields).
+ */
+type ExcerptIssueItem = { id: string; nass?: string | null; text?: string | null };
+
+/**
+ * Finds all excerpts with issues: gaps (missing translations surrounded by translations)
+ * and truncated translations (suspiciously short compared to Arabic source).
+ *
+ * Gap detection:
+ * - A gap is one or more consecutive items without translation, surrounded by items with translations
+ * - Only flags gaps if there are 1 to MAX_CONSECUTIVE_GAPS_TO_FLAG consecutive missing items
+ *
+ * Truncation detection:
+ * - Only checks items that HAVE a translation (text is defined and non-empty)
+ * - Flags if translation is suspiciously short compared to Arabic source
+ *
+ * @param items - Array of excerpts/items to check
+ * @returns Array of IDs that have issues
+ */
+export const findExcerptIssues = (items: ExcerptIssueItem[]): string[] => {
+    const issueIds = new Set<string>();
+
+    // Find gaps: consecutive items without translation, surrounded by items with translations
+    let i = 0;
+    while (i < items.length) {
+        const item = items[i];
+        const hasText = !!item.text?.trim();
+
+        if (hasText) {
+            i++;
+            continue;
+        }
+
+        // Found an item without translation - count consecutive gaps
+        const gapStartIndex = i;
+        const gapIds: string[] = [item.id];
+
+        while (i + 1 < items.length && !items[i + 1].text?.trim()) {
+            i++;
+            gapIds.push(items[i].id);
+        }
+        const gapEndIndex = i;
+
+        // Check if this gap is surrounded by translated items
+        const hasPrevTranslation = gapStartIndex > 0 && !!items[gapStartIndex - 1].text?.trim();
+        const hasNextTranslation = gapEndIndex < items.length - 1 && !!items[gapEndIndex + 1].text?.trim();
+
+        // Only flag if surrounded by translations and gap size is within limit
+        if (hasPrevTranslation && hasNextTranslation && gapIds.length <= MAX_CONSECUTIVE_GAPS_TO_FLAG) {
+            for (const id of gapIds) {
+                issueIds.add(id);
+            }
+        }
+
+        i++;
+    }
+
+    // Find truncated translations - only for items that HAVE text
+    for (const item of items) {
+        if (item.text?.trim()) {
+            if (detectTruncatedTranslation(item.nass, item.text)) {
+                issueIds.add(item.id);
+            }
+        }
+    }
+
+    return Array.from(issueIds);
 };
 
 export type DebugMeta = {

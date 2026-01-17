@@ -9,7 +9,10 @@ import {
     DEFAULT_MAX_SECONDS_PER_SEGMENT,
     DEFAULT_MIN_WORDS_PER_SEGMENT,
     DEFAULT_SILENCE_GAP_THRESHOLD,
+    STORAGE_KEYS,
 } from '@/lib/constants';
+import { saveToOPFS } from '@/lib/io';
+import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import {
     addTranscriptsFromFiles,
     applySelection,
@@ -92,6 +95,17 @@ export const useTranscriptStore = create<TranscriptState>()(
                 state.selectedToken = null;
                 state.transcripts = {};
             }),
+        save: async () => {
+            try {
+                const state = useTranscriptStore.getState();
+                const exportData = mapTranscriptsToLatestContract(state);
+                await saveToOPFS(STORAGE_KEYS.transcript, exportData);
+                return true;
+            } catch (err) {
+                console.error('Failed to save transcript to OPFS:', err);
+                return false;
+            }
+        },
         selectAllSegments: (isSelected: boolean) =>
             set((state) => {
                 const result = selectAllSegments(state, isSelected);

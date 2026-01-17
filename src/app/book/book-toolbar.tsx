@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
+import { toast } from 'sonner';
 
 import { ConfirmButton } from '@/components/confirm-button';
 import { JsonBrowseButton } from '@/components/json-browse-button';
@@ -51,6 +52,19 @@ function BookToolbar({
             <VolumeSelector />
             <Button
                 className="bg-emerald-500"
+                onClick={async () => {
+                    record('SaveBook');
+                    const success = await useBookStore.getState().save();
+                    if (success) {
+                        toast.success('Saved book');
+                    } else {
+                        toast.error('Failed to save book');
+                    }
+                }}
+            >
+                <SaveIcon />
+            </Button>
+            <Button
                 onClick={() => {
                     const state = useBookStore.getState();
                     const name = prompt('Enter output file name', state.inputFileName);
@@ -65,7 +79,7 @@ function BookToolbar({
                     }
                 }}
             >
-                <SaveIcon />
+                <DownloadIcon />
             </Button>
             <Button
                 onClick={() => {

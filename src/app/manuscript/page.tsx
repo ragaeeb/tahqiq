@@ -17,8 +17,8 @@ import '@/lib/analytics';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
 import { selectAllSheetLines } from '@/stores/manuscriptStore/selectors';
 import '@/stores/dev';
+import { toast } from 'sonner';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
-
 import { PdfDialog } from './pdf-modal';
 import ManuscriptTableBody from './table-body';
 import ManuscriptTableHeader from './table-header';
@@ -82,12 +82,26 @@ export default function Manuscript() {
     // Storage actions hook
     const getExportData = useCallback(() => mapManuscriptToJuz(useManuscriptStore.getState()), []);
 
-    const { handleSave, handleDownload, handleReset } = useStorageActions({
+    const { handleDownload, handleReset } = useStorageActions({
         analytics: { download: 'DownloadManuscriptJuz', reset: 'ResetManuscript', save: 'SaveManuscriptJuz' },
         getExportData,
         reset,
         storageKey: STORAGE_KEYS.juz,
     });
+
+    const handleSave = useCallback(async () => {
+        record('SaveManuscriptJuz');
+        const success = await useManuscriptStore.getState().save();
+        if (success) {
+            toast.success('Saved manuscript');
+        } else {
+            console.error('Save failed, falling back to download');
+            const data = getExportData();
+            const name = `${STORAGE_KEYS.juz}-${Date.now()}.json`;
+            const { downloadFile } = await import('@/lib/domUtils');
+            downloadFile(name, JSON.stringify(data, null, 2));
+        }
+    }, [getExportData]);
 
     const handleSelectAll = useCallback(
         (selected: boolean) => {

@@ -163,7 +163,7 @@ function ExcerptRow({
                                 <button
                                     className="cursor-pointer bg-transparent"
                                     onDoubleClick={() => setIsEditingPages(true)}
-                                    title="Double-click to edit"
+                                    title={data.id}
                                     type="button"
                                 >
                                     {[data.from, data.to].filter(Boolean).join('-')}{' '}

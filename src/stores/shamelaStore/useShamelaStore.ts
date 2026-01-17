@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+
+import { STORAGE_KEYS } from '@/lib/constants';
+import { saveToOPFS } from '@/lib/io';
 import * as actions from './actions';
 import type { ShamelaState } from './types';
 
@@ -53,6 +56,29 @@ export const useShamelaStore = create<ShamelaState>()(
                 const newState = actions.resetStore();
                 Object.assign(state, newState);
             }),
+
+        save: async () => {
+            try {
+                const state = useShamelaStore.getState();
+                const exportData = {
+                    majorRelease: state.majorRelease,
+                    pages: state.pages.map((p) => ({
+                        content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
+                        id: p.id,
+                        number: p.number,
+                        page: p.page,
+                        part: p.part,
+                    })),
+                    shamelaId: state.shamelaId,
+                    titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
+                };
+                await saveToOPFS(STORAGE_KEYS.shamela, exportData);
+                return true;
+            } catch (err) {
+                console.error('Failed to save shamela to OPFS:', err);
+                return false;
+            }
+        },
 
         updatePage: (id, updates) =>
             set((state) => {

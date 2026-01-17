@@ -99,9 +99,7 @@ export const SEGMENTATION_FETCH_ALL_TOP_K = 10000;
  * Segments with fewer words than this are candidates for merging with adjacent segments.
  */
 export const SHORT_SEGMENT_WORD_THRESHOLD = 30;
-// ============================================================================
-// Translation Parsing Utilities
-// ============================================================================
+
 /**
  * Components for building translation marker regex patterns
  */
@@ -115,17 +113,26 @@ export enum Markers {
     Plain = 'P',
 }
 
-export const TRANSLATION_MARKER_PARTS = {
-    /** Dash variations (hyphen, en dash, em dash) */
-    dashes: '[-–—]',
-    /** Numeric portion of the reference */
-    digits: '\\d+',
-    /** Valid marker prefixes (Book, Chapter, Footnote, Translation, Page) */
-    markers: `[${Markers.Book}${Markers.Chapter}${Markers.Footnote}${Markers.Heading}${Markers.Plain}${Markers.Note}]`,
-    /** Optional whitespace before dash */
-    optionalSpace: '\\s?',
-    /** Valid single-letter suffixes */
-    suffix: '[a-z]',
-} as const;
+/**
+ * Minimum Arabic text length (in characters) to consider for truncation detection.
+ * Short texts are exempt to avoid false positives on single-word or brief phrases.
+ */
+export const MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK = 50;
 
-export const MARKER_ID_PATTERN = `${TRANSLATION_MARKER_PARTS.markers}${TRANSLATION_MARKER_PARTS.digits}${TRANSLATION_MARKER_PARTS.suffix}?`;
+/**
+ * Minimum expected translation ratio (translation length / Arabic length).
+ *
+ * Research on Arabic↔English translation shows:
+ * - Word count: Arabic → English typically EXPANDS by 20-25%
+ * - Character count: Roughly similar or slightly expanded
+ *
+ * A ratio of 0.25 means we flag translations under 25% of the Arabic length.
+ * This is deliberately conservative to catch obvious truncation while avoiding false positives.
+ */
+export const MIN_TRANSLATION_RATIO = 0.25;
+
+/**
+ * Maximum consecutive gaps to flag as issues.
+ * More than this many consecutive missing items are likely untranslated sections.
+ */
+export const MAX_CONSECUTIVE_GAPS_TO_FLAG = 3;

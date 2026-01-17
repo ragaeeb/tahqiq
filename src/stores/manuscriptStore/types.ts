@@ -138,6 +138,11 @@ type ManuscriptActions = {
 
     reset: () => void;
 
+    /**
+     * Saves the current manuscript state to storage
+     */
+    save: () => Promise<boolean>;
+
     saveId: (id: number) => void;
 
     searchAndReplace: (pattern: RegExp | string, replacement: string) => void;

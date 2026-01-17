@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+
+import { mapBookStateToKitab } from '@/lib/bookFormats';
+import { STORAGE_KEYS } from '@/lib/constants';
+import { saveToOPFS } from '@/lib/io';
 import * as actions from './actions';
 import type { BookState } from './types';
 
@@ -74,6 +78,19 @@ export const useBookStore = create<BookState>()(
                 state.inputFileName = undefined;
                 state.isHighlighterEnabled = false;
             }),
+
+        save: async () => {
+            try {
+                const state = useBookStore.getState();
+                const exportData = mapBookStateToKitab(state);
+                await saveToOPFS(STORAGE_KEYS.ketab, exportData);
+                return true;
+            } catch (err) {
+                console.error('Failed to save book to OPFS:', err);
+                return false;
+            }
+        },
+
         selectedVolume: 0,
 
         setSelectedVolume: (selectedVolume) =>

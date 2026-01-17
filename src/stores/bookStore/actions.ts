@@ -1,8 +1,7 @@
 import { formatTextBlocks, mapTextLinesToParagraphs } from 'kokokor';
 import { getNextId } from '@/lib/common';
 import { mapManuscriptToJuz } from '@/lib/manuscript';
-import { mapTextLineToMarkdown } from '@/lib/markdown';
-import { preformatArabicText } from '@/lib/textUtils';
+import { mapTextLineToMarkdown, preformatArabicText } from '@/lib/textUtils';
 import type { Juz, ManuscriptStateCore } from '@/stores/manuscriptStore/types';
 import type { BookStateCore, Kitab, Page, TableOfContents } from './types';
 

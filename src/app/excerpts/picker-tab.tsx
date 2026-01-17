@@ -1,5 +1,6 @@
 'use client';
 
+import { estimateTokenCount } from 'bitaboom';
 import { ClipboardCopyIcon, RefreshCwIcon, SendIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -10,20 +11,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MASTER_PROMPT_ID } from '@/lib/constants';
+import { groupIdsByTokenLimits, type TokenGroup } from '@/lib/grouping';
 import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
-import { estimateTokenCount, findLastIndexUnderTokenLimit } from '@/lib/textUtils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 // Maximum pills to render for performance
 const MAX_VISIBLE_PILLS = 500;
 
-// Token limit for Gemini free tier
-const MAX_GEMINI_FREE_TOKENS = 11000;
-
 /**
  * Tab content for selecting untranslated excerpts to send to LLM.
- * Shows pills with excerpt IDs, supports range selection, and provides
- * copy/remove/reset functionality.
+ * Shows pills with excerpt IDs organized by token limit groups,
+ * supports range selection, and provides copy/remove/reset functionality.
  */
 export function PickerTab() {
     const excerpts = useExcerptsStore((state) => state.excerpts);
@@ -70,14 +68,6 @@ export function PickerTab() {
     const displayedIds = useMemo(() => availableIds.slice(0, MAX_VISIBLE_PILLS), [availableIds]);
     const hasMore = availableIds.length > MAX_VISIBLE_PILLS;
 
-    // Get selected IDs (from first to selectedEndIndex)
-    const selectedIds = useMemo(() => {
-        if (selectedEndIndex === null) {
-            return [];
-        }
-        return availableIds.slice(0, selectedEndIndex + 1);
-    }, [availableIds, selectedEndIndex]);
-
     // Build excerpt lookup map once for O(1) access
     const excerptMap = useMemo(() => {
         const map = new Map<string, (typeof excerpts)[0]>();
@@ -86,6 +76,24 @@ export function PickerTab() {
         }
         return map;
     }, [excerpts]);
+
+    // Group IDs by token limits
+    const tokenGroups = useMemo((): TokenGroup[] => {
+        if (displayedIds.length === 0 || !promptForTranslation) {
+            return groupIdsByTokenLimits([], () => undefined, 0);
+        }
+
+        const promptTokens = estimateTokenCount(promptForTranslation);
+        return groupIdsByTokenLimits(displayedIds, (id) => excerptMap.get(id)?.nass, promptTokens);
+    }, [displayedIds, excerptMap, promptForTranslation]);
+
+    // Get selected IDs (from first to selectedEndIndex)
+    const selectedIds = useMemo(() => {
+        if (selectedEndIndex === null) {
+            return [];
+        }
+        return availableIds.slice(0, selectedEndIndex + 1);
+    }, [availableIds, selectedEndIndex]);
 
     // Get selected excerpts for formatting using map lookup
     const selectedExcerpts = useMemo(() => {
@@ -103,25 +111,18 @@ export function PickerTab() {
     // Estimate token count
     const tokenCount = useMemo(() => estimateTokenCount(formattedContent), [formattedContent]);
 
-    // Find the last pill index that stays under the free token limit
-    const freeLimitIndex = useMemo(() => {
-        if (displayedIds.length === 0 || !promptForTranslation) {
-            return -1;
-        }
+    // Find original index in displayedIds for a given id
+    const getOriginalIndex = useCallback((id: string) => displayedIds.indexOf(id), [displayedIds]);
 
-        // Get excerpts for displayed IDs
-        const displayedExcerpts = displayedIds
-            .map((id) => excerptMap.get(id))
-            .filter((e): e is NonNullable<typeof e> => e != null);
-
-        const promptTokens = estimateTokenCount(promptForTranslation);
-
-        return findLastIndexUnderTokenLimit(displayedExcerpts, (e) => e.nass, MAX_GEMINI_FREE_TOKENS, promptTokens);
-    }, [displayedIds, excerptMap, promptForTranslation]);
-
-    const handlePillClick = useCallback((index: number) => {
-        setSelectedEndIndex(index);
-    }, []);
+    const handlePillClick = useCallback(
+        (id: string) => {
+            const index = getOriginalIndex(id);
+            if (index !== -1) {
+                setSelectedEndIndex(index);
+            }
+        },
+        [getOriginalIndex],
+    );
 
     const handleCopy = useCallback(async () => {
         if (!formattedContent) {
@@ -157,6 +158,20 @@ export function PickerTab() {
         setSelectedEndIndex(null);
         toast.info('Reset sent tracking');
     }, [resetSentToLlm]);
+
+    // Check if a group has any selected items
+    const isGroupPartiallySelected = useCallback(
+        (group: TokenGroup) => {
+            if (selectedEndIndex === null) {
+                return false;
+            }
+            return group.ids.some((id) => {
+                const idx = getOriginalIndex(id);
+                return idx !== -1 && idx <= selectedEndIndex;
+            });
+        },
+        [selectedEndIndex, getOriginalIndex],
+    );
 
     return (
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -198,20 +213,47 @@ export function PickerTab() {
                 </div>
             ) : (
                 <>
-                    <div className="flex-1 overflow-auto rounded border p-4">
-                        <div className="flex flex-wrap gap-2">
-                            {displayedIds.map((id, index) => (
-                                <Pill
-                                    key={id}
-                                    id={id}
-                                    isFreeLimit={index === freeLimitIndex}
-                                    isSelected={selectedEndIndex !== null && index <= selectedEndIndex}
-                                    onClick={() => handlePillClick(index)}
-                                />
-                            ))}
-                        </div>
+                    <div className="flex-1 overflow-auto rounded border">
+                        <table className="w-full">
+                            <tbody>
+                                {tokenGroups.map((group) => {
+                                    if (group.ids.length === 0) {
+                                        return null;
+                                    }
+                                    const isPartiallySelected = isGroupPartiallySelected(group);
+                                    return (
+                                        <tr
+                                            key={group.label}
+                                            className={`border-b last:border-b-0 ${isPartiallySelected ? 'bg-blue-50' : ''}`}
+                                        >
+                                            <td className="w-24 border-r bg-gray-50 px-3 py-2 text-center align-top font-medium text-gray-600 text-sm">
+                                                {group.label}
+                                            </td>
+                                            <td className="p-3">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {group.ids.map((id) => {
+                                                        const originalIndex = getOriginalIndex(id);
+                                                        return (
+                                                            <Pill
+                                                                key={id}
+                                                                id={id}
+                                                                isSelected={
+                                                                    selectedEndIndex !== null &&
+                                                                    originalIndex <= selectedEndIndex
+                                                                }
+                                                                onClick={() => handlePillClick(id)}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                         {hasMore && (
-                            <div className="mt-4 text-center text-gray-500 text-sm">
+                            <div className="border-t bg-gray-50 py-2 text-center text-gray-500 text-sm">
                                 Showing first {MAX_VISIBLE_PILLS.toLocaleString()} of{' '}
                                 {availableIds.length.toLocaleString()} available.
                             </div>
