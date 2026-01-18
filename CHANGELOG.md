@@ -1,3 +1,10 @@
+## [1.49.1](https://github.com/ragaeeb/tahqiq/compare/v1.49.0...v1.49.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* **dialog:** Fix bug where could not add new translations ([222e675](https://github.com/ragaeeb/tahqiq/commit/222e675cedcf7ae2c581adcb8ee9c3aa23c08efb))
+
 # [1.49.0](https://github.com/ragaeeb/tahqiq/compare/v1.48.0...v1.49.0) (2026-01-18)
 
 
