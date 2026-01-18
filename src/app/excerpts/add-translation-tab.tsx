@@ -306,7 +306,7 @@ export function AddTranslationTab() {
             setPendingOverwrites(null);
             doSubmit(translationMap, translatorValue, count, shouldCommit);
         },
-        [segments, selectedModel, existingTranslations, pendingOverwrites, doSubmit, handleCommit],
+        [segments, selectedModel, existingTranslations, pendingOverwrites, doSubmit, handleCommit, textValue],
     );
 
     const handleSubmit = async (e: React.FormEvent) => {
