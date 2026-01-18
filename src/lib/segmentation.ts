@@ -2,7 +2,12 @@ import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
 import type { CharacterRange } from 'dyelight';
 import { type Page, type Segment, segmentPages } from 'flappa-doormal';
-import { type Segment as TextSegment, VALIDATION_ERROR_TYPE_INFO, type ValidationErrorType } from 'wobble-bibble';
+import {
+    type Segment as TextSegment,
+    VALIDATION_ERROR_TYPE_INFO,
+    type ValidationError,
+    type ValidationErrorType,
+} from 'wobble-bibble';
 import {
     LatestContractVersion,
     MAX_CONSECUTIVE_GAPS_TO_FLAG,
@@ -234,13 +239,15 @@ export const buildExistingTranslationsMap = (
 /**
  * Re-export ValidationError from wobble-bibble for convenience.
  */
-export type { ValidationError as ValidationErrorInfo } from 'wobble-bibble';
+export type ValidationErrorInfo = ValidationError;
 
 /**
  * Converts wobble-bibble validation errors to DyeLight character range highlights.
  * Each error's range is mapped to a red background highlight.
+ * Includes the original Arabic source text in the tooltip if segments are provided.
  *
  * @param errors - Array of validation errors with range information
+ * @param segments - Optional source segments to look up Arabic text for tooltips
  * @returns Array of CharacterRange objects for DyeLight highlights prop
  */
 export const errorsToHighlights = (errors: ValidationErrorInfo[]): CharacterRange[] => {

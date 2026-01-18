@@ -84,9 +84,13 @@ export function PickerTab() {
             return groupIdsByTokenLimits([], () => undefined, 0);
         }
 
-        const promptTokens = estimateTokenCount(promptForTranslation);
+        // Process prompt with book title before estimating tokens to ensure grouping accuracy
+        const bookTitle = collection?.title || 'this book';
+        const finalPrompt = promptForTranslation.replace(/{{book}}/g, bookTitle);
+        const promptTokens = estimateTokenCount(finalPrompt);
+
         return groupIdsByTokenLimits(displayedIds, (id) => excerptMap.get(id)?.nass, promptTokens);
-    }, [displayedIds, excerptMap, promptForTranslation]);
+    }, [displayedIds, excerptMap, promptForTranslation, collection?.title]);
 
     // Get selected IDs (from first to selectedEndIndex)
     const selectedIds = useMemo(() => {

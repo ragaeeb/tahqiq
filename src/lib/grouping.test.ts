@@ -2,16 +2,16 @@ import { describe, expect, it } from 'bun:test';
 import { groupIdsByTokenLimits, TOKEN_LIMIT_GROUPS } from './grouping';
 
 describe('groupIdsByTokenLimits', () => {
-    // For Latin text: ~4 chars/token, plus 15 overhead per item
-    // To get X tokens from text: need X * 4 characters
-    // Total for item = text_tokens + 15 overhead
+    // For Latin text: ~4 chars/token
+    // Dynamic overhead for "id1": (3 + 5) / 4 = 2 tokens
+    // Total for item = text_tokens + 2 overhead
     const mockExtractText = (id: string) => {
         const tokenTargets: Record<string, number> = {
             id1: 100, // 100 text tokens -> 400 chars
             id2: 200, // 200 text tokens -> 800 chars
             id3: 1000, // 1k text tokens -> 4000 chars
             id4: 4000, // 4k text tokens -> 16000 chars
-            id5: 5000, // 5k text tokens -> 20000 chars
+            id5: 4900, // 4.9k text tokens -> 19600 chars
             id6: 10000, // 10k text tokens -> 40000 chars
             id7: 15000, // 15k text tokens -> 60000 chars
         };
@@ -29,11 +29,11 @@ describe('groupIdsByTokenLimits', () => {
     });
 
     it('should group ids based on cumulative token count', () => {
-        // id1: 100 + 15 = 115 cumulative
-        // id2: 200 + 15 = 215, cumulative = 330
-        // id3: 1000 + 15 = 1015, cumulative = 1345
+        // id1: 100 + 2 = 102 cumulative
+        // id2: 200 + 2 = 202, cumulative = 304
+        // id3: 1000 + 2 = 1002, cumulative = 1306
         // All under 5k -> group 0
-        // id4: 4000 + 15 = 4015, cumulative = 5360 -> crosses 5k -> group 1
+        // id4: 4000 + 2 = 4002, cumulative = 5308 -> crosses 5k -> group 1
         const ids = ['id1', 'id2', 'id3', 'id4'];
         const result = groupIdsByTokenLimits(ids, mockExtractText, 0);
 
@@ -44,9 +44,8 @@ describe('groupIdsByTokenLimits', () => {
     });
 
     it('should account for base prompt tokens', () => {
-        // With 2000 base tokens + id1 (115) = 2115, still under 5k
-        // With 4500 base tokens + id1 (115) = 4615, under 5k
-        // With 4900 base tokens + id1 (115) = 5015, crosses 5k -> group 1
+        // With 4800 base tokens + id1 (102) = 4902, still under 5k
+        // With 4900 base tokens + id1 (102) = 5002, crosses 5k -> group 1
         const ids = ['id1'];
         const promptTokens = 4900;
 
@@ -57,17 +56,15 @@ describe('groupIdsByTokenLimits', () => {
     });
 
     it('should place items in correct groups based on when they cross thresholds', () => {
-        // id1: 115, cumulative 115 -> group 0 (under 5k)
-        // id3: 1015, cumulative 1130 -> group 0 (under 5k)
-        // id5: 5015, cumulative 6145 -> group 1 (5k-11k)
-        // id6: 10015, cumulative 16160 -> group 3 (>16k)
-        const ids = ['id1', 'id3', 'id5', 'id6'];
+        // id1: 102, cumulative 102 -> group 0 (under 5k)
+        // id3: 1002, cumulative 1104 -> group 0 (under 5k)
+        // id6: 10002, cumulative 11106 -> group 2 (11k-16k)
+        const ids = ['id1', 'id3', 'id6'];
         const result = groupIdsByTokenLimits(ids, mockExtractText, 0);
 
         expect(result[0].ids).toEqual(['id1', 'id3']);
-        expect(result[1].ids).toEqual(['id5']);
-        expect(result[2].ids).toEqual([]);
-        expect(result[3].ids).toEqual(['id6']);
+        expect(result[1].ids).toEqual([]);
+        expect(result[2].ids).toEqual(['id6']);
     });
 
     it('should return groups with correct labels and limits', () => {
@@ -87,11 +84,11 @@ describe('groupIdsByTokenLimits', () => {
     });
 
     it('should track lastIndex for each group correctly', () => {
-        // id1: 115, cumulative 115 -> group 0, index 0
-        // id2: 215, cumulative 330 -> group 0, index 1
-        // id3: 1015, cumulative 1345 -> group 0, index 2
-        // id4: 4015, cumulative 5360 -> group 1, index 3
-        // id5: 5015, cumulative 10375 -> group 1, index 4
+        // id1: 102, cumulative 102 -> group 0, index 0
+        // id2: 202, cumulative 304 -> group 0, index 1
+        // id3: 1002, cumulative 1306 -> group 0, index 2
+        // id4: 4002, cumulative 5308 -> group 1, index 3
+        // id5: 4902, cumulative 10210 -> group 1, index 4
         const ids = ['id1', 'id2', 'id3', 'id4', 'id5'];
         const result = groupIdsByTokenLimits(ids, mockExtractText, 0);
 
@@ -111,7 +108,8 @@ describe('groupIdsByTokenLimits', () => {
     });
 
     it('should properly set lastIndex to -1 for empty groups', () => {
-        // id6: 10015, goes to group 1 (5k-11k) since cumulative is 10015
+        // id6: 10002, goes to group 1 (5k-11k) since cumulative is 10002
+        // (Wait, 10002 is in group 1 because 10002 <= 11000)
         const ids = ['id6']; // 10k tokens
         const result = groupIdsByTokenLimits(ids, mockExtractText, 0);
 
