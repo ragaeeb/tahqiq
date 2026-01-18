@@ -9,7 +9,6 @@ import { normalizeTranslationText, parseTranslations, validateTranslationRespons
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATION_MODELS } from '@/lib/constants';
 import {
     buildExistingTranslationsMap,
@@ -42,7 +41,8 @@ const getSavedModel = (): string => {
  * Validates translations on paste to catch AI hallucinations.
  */
 export function AddTranslationTab() {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [textValue, setTextValue] = useState('');
+    const dyeLightRef = useRef<{ focus: () => void } | null>(null);
     const [selectedModel, setSelectedModel] = useState<string>(getSavedModel());
     const [validationError, setValidationError] = useState<string | undefined>();
     const [validationErrors, setValidationErrors] = useState<ValidationErrorInfo[]>([]);
@@ -70,33 +70,31 @@ export function AddTranslationTab() {
     // Track if we just pasted to avoid clearing the error (paste triggers onChange)
     const justPastedRef = useRef(false);
 
+    // Compute highlights from validation errors for DyeLight
+    const highlights = useMemo(() => errorsToHighlights(validationErrors), [validationErrors]);
+
     const handlePaste = useCallback(
         (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-            justPastedRef.current = true;
-            // Reset after a short delay
-            setTimeout(() => {
-                justPastedRef.current = false;
-            }, 100);
-
             const pastedText = e.clipboardData.getData('text');
 
             if (!pastedText.trim()) {
                 return;
             }
 
-            const textarea = textareaRef.current;
-            if (!textarea) {
-                return;
-            }
+            justPastedRef.current = true;
+            // Reset after a short delay
+            setTimeout(() => {
+                justPastedRef.current = false;
+            }, 100);
 
-            // Calculate the full content AFTER the paste is applied
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const currentValue = textarea.value;
+            // We need to get selection from the underlying textarea
+            const target = e.target as HTMLTextAreaElement;
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
 
             // Normalize the pasted text first
             const normalizedPaste = normalizeTranslationText(pastedText);
-            const fullContentAfterPaste = currentValue.slice(0, start) + normalizedPaste + currentValue.slice(end);
+            const fullContentAfterPaste = textValue.slice(0, start) + normalizedPaste + textValue.slice(end);
 
             // Validate the FULL content using wobble-bibble
             const result = validateTranslationResponse(segments, fullContentAfterPaste);
@@ -109,32 +107,33 @@ export function AddTranslationTab() {
                 setValidationError(undefined);
             }
 
-            // If text was normalized (merged markers split), update the textarea manually
-            if (normalizedPaste !== pastedText) {
-                e.preventDefault();
-                textarea.value = fullContentAfterPaste;
-                // Set cursor position after pasted text
-                const newPosition = start + normalizedPaste.length;
-                textarea.setSelectionRange(newPosition, newPosition);
-            }
+            // Always prevent default and update controlled state with normalized content
+            e.preventDefault();
+            setTextValue(fullContentAfterPaste);
         },
-        [segments],
+        [segments, textValue],
     );
 
-    const handleChange = useCallback(() => {
-        // Don't clear error if we just pasted (paste also triggers onChange)
-        if (justPastedRef.current) {
-            return;
-        }
-        // Clear validation error when user manually edits
-        if (validationError) {
-            setValidationError(undefined);
-        }
-        // Clear pending overwrites when user edits
-        if (pendingOverwrites) {
-            setPendingOverwrites(null);
-        }
-    }, [validationError, pendingOverwrites]);
+    const handleChange = useCallback(
+        (newValue: string) => {
+            setTextValue(newValue);
+
+            // Don't clear error if we just pasted (paste also triggers onChange)
+            if (justPastedRef.current) {
+                return;
+            }
+            // Clear validation error when user manually edits
+            if (validationError) {
+                setValidationError(undefined);
+                setValidationErrors([]);
+            }
+            // Clear pending overwrites when user edits
+            if (pendingOverwrites) {
+                setPendingOverwrites(null);
+            }
+        },
+        [validationError, pendingOverwrites],
+    );
 
     const handleCommit = useCallback(async () => {
         const success = await useExcerptsStore.getState().save();
@@ -185,10 +184,9 @@ export function AddTranslationTab() {
                 toast.success(message);
             }
 
-            if (textareaRef.current) {
-                textareaRef.current.value = '';
-                textareaRef.current.focus();
-            }
+            // Clear textarea and focus
+            setTextValue('');
+            dyeLightRef.current?.focus();
 
             // Clear validation errors after successful save
             setValidationError(undefined);
@@ -199,7 +197,7 @@ export function AddTranslationTab() {
 
     const submitTranslations = useCallback(
         async (shouldCommit = false) => {
-            const rawText = textareaRef.current?.value || '';
+            const rawText = textValue;
 
             if (!rawText.trim()) {
                 if (shouldCommit) {
@@ -277,8 +275,10 @@ export function AddTranslationTab() {
 
             <div className="flex min-h-0 flex-1 flex-col gap-2">
                 <Label htmlFor="translations">Translations:</Label>
-                <Textarea
+                <DyeLight
                     className={cn('min-h-0 flex-1 resize-none text-base', validationError && 'border-red-500')}
+                    enableAutoResize={false}
+                    highlights={highlights}
                     id="translations"
                     onChange={handleChange}
                     onPaste={handlePaste}
@@ -288,7 +288,8 @@ Another line that is for this excerpt.
 C11623 - Those whose name is ʿUmayr and ʿUmayrah
 
 Another line that should be appended to this existing excerpt.`}
-                    ref={textareaRef}
+                    ref={dyeLightRef}
+                    value={textValue}
                 />
                 {validationError && (
                     <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
@@ -305,7 +306,7 @@ Another line that should be appended to this existing excerpt.`}
                                             defaultErrors={validationError}
                                             defaultFileName={`${modelName}_${firstId}`}
                                             defaultModel={selectedModel}
-                                            defaultResponse={textareaRef.current?.value || ''}
+                                            defaultResponse={textValue}
                                             onClose={close}
                                         />
                                     );

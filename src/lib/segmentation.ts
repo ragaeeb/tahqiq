@@ -1,5 +1,6 @@
 import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
+import type { CharacterRange } from 'dyelight';
 import { type Page, type Segment, segmentPages } from 'flappa-doormal';
 import { type Segment as TextSegment, VALIDATION_ERROR_TYPE_INFO, type ValidationErrorType } from 'wobble-bibble';
 import {
@@ -231,9 +232,20 @@ export const buildExistingTranslationsMap = (
 };
 
 /**
- * Validation error shape from wobble-bibble.
+ * Re-export ValidationError from wobble-bibble for convenience.
  */
-export type ValidationErrorInfo = { type: string; message: string; id?: string };
+export type { ValidationError as ValidationErrorInfo } from 'wobble-bibble';
+
+/**
+ * Converts wobble-bibble validation errors to DyeLight character range highlights.
+ * Each error's range is mapped to a red background highlight.
+ *
+ * @param errors - Array of validation errors with range information
+ * @returns Array of CharacterRange objects for DyeLight highlights prop
+ */
+export const errorsToHighlights = (errors: ValidationErrorInfo[]): CharacterRange[] => {
+    return errors.map((error) => ({ className: 'bg-red-200', end: error.range.end, start: error.range.start }));
+};
 
 /**
  * Formats wobble-bibble validation errors into human-readable messages.

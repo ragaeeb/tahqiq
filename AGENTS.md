@@ -531,25 +531,6 @@ const selectedData = selectedIds.map(id => excerptMap.get(id));
 
 Parsing utilities for bulk data live in `@/lib/segmentation.ts` or `@/lib/textUtils.ts`.
 
----
-
-## Token Estimation
-
-For LLM-based translation workflows, we use a custom Arabic-aware token estimation heuristic in `src/lib/textUtils.ts`.
-
-### Logic
-Standard whitespace-based or character-based counting is inaccurate for Arabic due to diacritics (tashkeel) and tatweel. Our `estimateTokenCount` function uses the following character-to-token ratios:
-
-- **Arabic Diacritics (Tashkeel)**: ~1 token per character (high entropy/cost)
-- **Tatweel (Elongation)**: ~1 token per character
-- **Arabic-Indic Numerals**: ~4 characters per token
-- **Base Arabic Characters**: ~2.5 characters per token
-- **Latin/Other (Punctuation, Western Numerals)**: ~4 characters per token
-
-This provides a conservative upper bound for models like Gemini, which can be highly sensitive to diacritics in their output generation and token limits.
-
----
-
 ## Tooling Patterns
 
 ### Unified Translation Workflow
