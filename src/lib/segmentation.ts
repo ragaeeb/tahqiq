@@ -1,7 +1,13 @@
 import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
+import type { CharacterRange } from 'dyelight';
 import { type Page, type Segment, segmentPages } from 'flappa-doormal';
-import { VALIDATION_ERROR_TYPE_INFO, type ValidationErrorType } from 'wobble-bibble';
+import {
+    type Segment as TextSegment,
+    VALIDATION_ERROR_TYPE_INFO,
+    type ValidationError,
+    type ValidationErrorType,
+} from 'wobble-bibble';
 import {
     LatestContractVersion,
     MAX_CONSECUTIVE_GAPS_TO_FLAG,
@@ -161,16 +167,6 @@ export const getUntranslatedIds = (excerpts: Excerpt[], sentIds: Set<string>) =>
 };
 
 /**
- * Item with nass field for validation segment building.
- */
-type NassItem = { id: string; nass?: string | null };
-
-/**
- * Item with text field for existing translations map building.
- */
-type TextItem = { id: string; text?: string | null };
-
-/**
  * Builds an array of validation segments for wobble-bibble's validateTranslationResponse.
  * Maps the nass (Arabic source) field to text as expected by the library.
  *
@@ -180,24 +176,24 @@ type TextItem = { id: string; text?: string | null };
  * @returns Array of segments with { id, text } where text is the nass value
  */
 export const buildValidationSegments = (
-    excerpts: NassItem[],
-    headings: NassItem[],
-    footnotes: NassItem[],
+    excerpts: Excerpt[],
+    headings: Heading[],
+    footnotes: Excerpt[],
 ): { id: string; text: string }[] => {
     const result: { id: string; text: string }[] = [];
 
     for (const e of excerpts) {
-        if (e.nass) {
+        if (e.nass && !e.text) {
             result.push({ id: e.id, text: e.nass });
         }
     }
     for (const h of headings) {
-        if (h.nass) {
+        if (h.nass && !h.text) {
             result.push({ id: h.id, text: h.nass });
         }
     }
     for (const f of footnotes) {
-        if (f.nass) {
+        if (f.nass && !f.text) {
             result.push({ id: f.id, text: f.nass });
         }
     }
@@ -215,9 +211,9 @@ export const buildValidationSegments = (
  * @returns Map where keys are IDs with existing translations
  */
 export const buildExistingTranslationsMap = (
-    excerpts: TextItem[],
-    headings: TextItem[],
-    footnotes: TextItem[],
+    excerpts: TextSegment[],
+    headings: TextSegment[],
+    footnotes: TextSegment[],
 ): Map<string, boolean> => {
     const map = new Map<string, boolean>();
 
@@ -241,9 +237,22 @@ export const buildExistingTranslationsMap = (
 };
 
 /**
- * Validation error shape from wobble-bibble.
+ * Re-export ValidationError from wobble-bibble for convenience.
  */
-export type ValidationErrorInfo = { type: string; message: string; id?: string };
+export type ValidationErrorInfo = ValidationError;
+
+/**
+ * Converts wobble-bibble validation errors to DyeLight character range highlights.
+ * Each error's range is mapped to a red background highlight.
+ * Includes the original Arabic source text in the tooltip if segments are provided.
+ *
+ * @param errors - Array of validation errors with range information
+ * @param segments - Optional source segments to look up Arabic text for tooltips
+ * @returns Array of CharacterRange objects for DyeLight highlights prop
+ */
+export const errorsToHighlights = (errors: ValidationErrorInfo[]): CharacterRange[] => {
+    return errors.map((error) => ({ className: 'bg-red-200', end: error.range.end, start: error.range.start }));
+};
 
 /**
  * Formats wobble-bibble validation errors into human-readable messages.
@@ -257,11 +266,32 @@ export const formatValidationErrors = (errors: ValidationErrorInfo[]): string =>
         return '';
     }
 
-    return errors
-        .map((error) => {
-            const errorInfo = VALIDATION_ERROR_TYPE_INFO[error.type as ValidationErrorType];
-            const description = errorInfo?.description || error.message;
-            return error.id ? `${error.id}: ${description}` : description;
+    // Group errors by their description (error type)
+    const groupedErrors = new Map<string, string[]>();
+
+    for (const error of errors) {
+        const errorInfo = VALIDATION_ERROR_TYPE_INFO[error.type as ValidationErrorType];
+        const description = errorInfo?.description || error.message;
+
+        if (error.id) {
+            const ids = groupedErrors.get(description) || [];
+            ids.push(error.id);
+            groupedErrors.set(description, ids);
+        } else {
+            // Errors without IDs get their own entry with empty array
+            if (!groupedErrors.has(description)) {
+                groupedErrors.set(description, []);
+            }
+        }
+    }
+
+    // Format grouped errors: "P1, P2, P3: Error message" or just "Error message" if no IDs
+    return Array.from(groupedErrors.entries())
+        .map(([description, ids]) => {
+            if (ids.length > 0) {
+                return `${ids.join(', ')}: ${description}`;
+            }
+            return description;
         })
         .join('\n');
 };

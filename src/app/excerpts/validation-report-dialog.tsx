@@ -39,6 +39,7 @@ export function ValidationReportDialog({
     const responseRef = useRef<HTMLTextAreaElement>(null);
     const reasoningRef = useRef<HTMLTextAreaElement>(null);
     const notesRef = useRef<HTMLTextAreaElement>(null);
+    const errorsRef = useRef<HTMLTextAreaElement>(null);
     const modelRef = useRef<string>(defaultModel);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -47,7 +48,7 @@ export function ValidationReportDialog({
 
         const model = TRANSLATION_MODELS.find((m) => m.value === modelRef.current);
         const reportData = {
-            errors: defaultErrors,
+            errors: errorsRef.current?.value || defaultErrors,
             model: model?.label || 'Unknown',
             notes: notesRef.current?.value || '',
             prompt: promptRef.current?.value || '',
@@ -96,7 +97,7 @@ export function ValidationReportDialog({
                 <div className="space-y-2">
                     <Label htmlFor="report-prompt">Prompt Sent to LLM</Label>
                     <Textarea
-                        className="min-h-[100px] font-mono text-sm"
+                        className="h-[100px] resize-none font-mono text-sm"
                         id="report-prompt"
                         placeholder="Paste the prompt you sent to the LLM..."
                         ref={promptRef}
@@ -106,7 +107,7 @@ export function ValidationReportDialog({
                 <div className="space-y-2">
                     <Label htmlFor="report-response">LLM Response</Label>
                     <Textarea
-                        className="min-h-[120px] font-mono text-sm"
+                        className="h-[120px] resize-none font-mono text-sm"
                         defaultValue={defaultResponse}
                         id="report-response"
                         ref={responseRef}
@@ -116,7 +117,7 @@ export function ValidationReportDialog({
                 <div className="space-y-2">
                     <Label htmlFor="report-reasoning">LLM Reasoning Logs</Label>
                     <Textarea
-                        className="min-h-[100px] font-mono text-sm"
+                        className="h-[100px] resize-none font-mono text-sm"
                         id="report-reasoning"
                         placeholder="Paste reasoning/thinking logs from the LLM..."
                         ref={reasoningRef}
@@ -124,10 +125,19 @@ export function ValidationReportDialog({
                 </div>
 
                 <div className="space-y-2">
+                    <Label htmlFor="report-errors">Validation Errors</Label>
+                    <Textarea
+                        className="h-[100px] resize-none font-mono text-xs"
+                        defaultValue={defaultErrors}
+                        id="report-errors"
+                        ref={errorsRef}
+                    />
+                </div>
+
+                <div className="space-y-2">
                     <Label htmlFor="report-notes">Additional Notes</Label>
                     <Textarea
-                        className="min-h-[80px] text-sm"
-                        defaultValue={defaultErrors}
+                        className="h-[80px] resize-none text-sm"
                         id="report-notes"
                         placeholder="Any additional context or observations..."
                         ref={notesRef}

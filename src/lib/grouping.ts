@@ -22,15 +22,17 @@ export type TokenGroup = {
     lastIndex: number;
 };
 
-// Overhead per item (ID marker, newlines, etc.)
-const TOKENS_OVERHEAD_PER_ITEM = 15;
+// Estimated tokens for "ID - " and separators "\n\n"
+// "\n\n" (2 chars) + " - " (3 chars) = 5 chars.
+// Plus safety margin for ID length.
+const TOKENS_OVERHEAD_BASE = 5;
 
 /**
  * Groups an array of IDs by cumulative token count thresholds.
  *
  * @param ids - Array of excerpt IDs to group
  * @param extractText - Function to get the text content for token estimation from an ID
- * @param basePromptTokens - Base token count from the prompt template
+ * @param basePromptTokens - Base token count from the prompt template (already processed)
  * @returns Array of TokenGroup objects, one for each threshold
  */
 export const groupIdsByTokenLimits = (
@@ -51,7 +53,13 @@ export const groupIdsByTokenLimits = (
     for (let i = 0; i < ids.length; i++) {
         const id = ids[i];
         const text = extractText(id) || '';
-        const itemTokens = estimateTokenCount(text) + TOKENS_OVERHEAD_PER_ITEM;
+
+        // Exact overhead for this item: ID + " - " + potential newlines
+        // We use a simplified but more accurate estimate than a flat 15.
+        // ID length + " - " is roughly (id.length + 3) chars.
+        const overheadChars = id.length + 5; // +5 for " - " and "\n\n"
+        const itemTokens = estimateTokenCount(text) + Math.ceil(overheadChars / 4);
+
         cumulativeTokens += itemTokens;
 
         // Find the appropriate group based on cumulative tokens

@@ -4,6 +4,7 @@ import {
     buildValidationSegments,
     type DebugMeta,
     detectTruncatedTranslation,
+    errorsToHighlights,
     findExcerptIssues,
     formatExcerptsForPrompt,
     formatValidationErrors,
@@ -11,6 +12,7 @@ import {
     getSegmentFilterKey,
     getUntranslatedIds,
     summarizeRulePattern,
+    type ValidationErrorInfo,
 } from './segmentation';
 
 describe('formatExcerptsForPrompt', () => {
@@ -248,41 +250,100 @@ describe('buildExistingTranslationsMap', () => {
 });
 
 describe('formatValidationErrors', () => {
+    // Helper to create a complete error object with defaults
+    const makeError = (
+        overrides: Partial<ValidationErrorInfo> & { type: string; message: string },
+    ): ValidationErrorInfo => ({ matchText: 'test', range: { end: 10, start: 0 }, ...overrides });
+
     it('should return empty string for empty errors array', () => {
         expect(formatValidationErrors([])).toBe('');
     });
 
     it('should format error with ID', () => {
-        const errors = [{ id: 'P123', message: 'Segment appears truncated', type: 'truncated_segment' }];
+        const errors = [makeError({ id: 'P123', message: 'Segment appears truncated', type: 'truncated_segment' })];
         const result = formatValidationErrors(errors);
         expect(result).toContain('P123');
     });
 
     it('should use VALIDATION_ERROR_TYPE_INFO description when available', () => {
-        const errors = [{ id: 'P1', message: 'fallback', type: 'arabic_leak' }];
+        const errors = [makeError({ id: 'P1', message: 'fallback', type: 'arabic_leak' })];
         const result = formatValidationErrors(errors);
         // Should use the VALIDATION_ERROR_TYPE_INFO description, not the fallback
         expect(result).toContain('Arabic script');
     });
 
     it('should fallback to message when type is unknown', () => {
-        const errors = [{ message: 'Custom fallback message', type: 'unknown_type' }];
+        const errors = [makeError({ message: 'Custom fallback message', type: 'unknown_type' })];
         const result = formatValidationErrors(errors);
         expect(result).toBe('Custom fallback message');
     });
 
-    it('should format all errors with newlines', () => {
+    it('should group errors with same type into single line', () => {
         const errors = [
-            { id: 'P1', message: 'First', type: 'arabic_leak' },
-            { id: 'P2', message: 'Second', type: 'duplicate_id' },
+            makeError({ id: 'P1', message: 'First', type: 'arabic_leak' }),
+            makeError({ id: 'P2', message: 'First', type: 'arabic_leak' }),
+            makeError({ id: 'P3', message: 'First', type: 'arabic_leak' }),
+        ];
+        const result = formatValidationErrors(errors);
+        // All IDs should be on a single line, comma-separated
+        expect(result).toContain('P1, P2, P3');
+        expect(result.split('\n').length).toBe(1);
+    });
+
+    it('should separate different error types on different lines', () => {
+        const errors = [
+            makeError({ id: 'P1', message: 'First', type: 'arabic_leak' }),
+            makeError({ id: 'P2', message: 'Second', type: 'duplicate_id' }),
         ];
         const result = formatValidationErrors(errors);
         expect(result).toContain('P1');
         expect(result).toContain('P2');
         expect(result).toContain('\n');
-        // Verify the structure: each error on its own line
         const lines = result.split('\n');
         expect(lines.length).toBe(2);
+    });
+
+    it('should group mixed errors correctly', () => {
+        const errors = [
+            makeError({ id: 'P1', message: 'Error A', type: 'arabic_leak' }),
+            makeError({ id: 'P2', message: 'Error B', type: 'duplicate_id' }),
+            makeError({ id: 'P3', message: 'Error A', type: 'arabic_leak' }),
+        ];
+        const result = formatValidationErrors(errors);
+        const lines = result.split('\n');
+        expect(lines.length).toBe(2);
+        // P1 and P3 should be grouped together (same type)
+        const arabicLine = lines.find((l) => l.includes('Arabic script'));
+        expect(arabicLine).toContain('P1');
+        expect(arabicLine).toContain('P3');
+    });
+});
+
+describe('errorsToHighlights', () => {
+    it('should return empty array for empty errors', () => {
+        expect(errorsToHighlights([])).toEqual([]);
+    });
+
+    it('should convert error ranges to highlight objects', () => {
+        const errors: ValidationErrorInfo[] = [
+            { matchText: 'test', message: 'Arabic', range: { end: 10, start: 0 }, type: 'arabic_leak' },
+            { matchText: 'test2', message: 'Dup', range: { end: 30, start: 20 }, type: 'duplicate_id' },
+        ];
+        const highlights = errorsToHighlights(errors);
+
+        expect(highlights).toHaveLength(2);
+        expect(highlights[0]).toEqual({ className: 'bg-red-200', end: 10, start: 0 });
+        expect(highlights[1]).toEqual({ className: 'bg-red-200', end: 30, start: 20 });
+    });
+
+    it('should preserve exact range boundaries', () => {
+        const errors: ValidationErrorInfo[] = [
+            { matchText: 'exact', message: 'Test', range: { end: 15, start: 5 }, type: 'test' },
+        ];
+        const [highlight] = errorsToHighlights(errors);
+
+        expect(highlight.start).toBe(5);
+        expect(highlight.end).toBe(15);
     });
 });
 

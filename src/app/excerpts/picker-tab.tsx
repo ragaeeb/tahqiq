@@ -10,6 +10,7 @@ import { Pill } from '@/components/pill';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { pageNumberToColor } from '@/lib/colorUtils';
 import { MASTER_PROMPT_ID } from '@/lib/constants';
 import { groupIdsByTokenLimits, type TokenGroup } from '@/lib/grouping';
 import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
@@ -83,9 +84,13 @@ export function PickerTab() {
             return groupIdsByTokenLimits([], () => undefined, 0);
         }
 
-        const promptTokens = estimateTokenCount(promptForTranslation);
+        // Process prompt with book title before estimating tokens to ensure grouping accuracy
+        const bookTitle = collection?.title || 'this book';
+        const finalPrompt = promptForTranslation.replace(/{{book}}/g, bookTitle);
+        const promptTokens = estimateTokenCount(finalPrompt);
+
         return groupIdsByTokenLimits(displayedIds, (id) => excerptMap.get(id)?.nass, promptTokens);
-    }, [displayedIds, excerptMap, promptForTranslation]);
+    }, [displayedIds, excerptMap, promptForTranslation, collection?.title]);
 
     // Get selected IDs (from first to selectedEndIndex)
     const selectedIds = useMemo(() => {
@@ -233,10 +238,15 @@ export function PickerTab() {
                                                 <div className="flex flex-wrap gap-2">
                                                     {group.ids.map((id) => {
                                                         const originalIndex = getOriginalIndex(id);
+                                                        const excerpt = excerptMap.get(id);
+                                                        const bgColor = excerpt
+                                                            ? pageNumberToColor(excerpt.from)
+                                                            : undefined;
                                                         return (
                                                             <Pill
                                                                 key={id}
                                                                 id={id}
+                                                                backgroundColor={bgColor}
                                                                 isSelected={
                                                                     selectedEndIndex !== null &&
                                                                     originalIndex <= selectedEndIndex
