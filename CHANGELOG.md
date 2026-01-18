@@ -1,3 +1,10 @@
+# [1.49.0](https://github.com/ragaeeb/tahqiq/compare/v1.48.0...v1.49.0) (2026-01-18)
+
+
+### Features
+
+* **color:** Add color coding, highlighting errors, Arabic comparison drawer ([1046de6](https://github.com/ragaeeb/tahqiq/commit/1046de6e31da881a4b292cdc6110bcb86924d8d4))
+
 # [1.48.0](https://github.com/ragaeeb/tahqiq/compare/v1.47.0...v1.48.0) (2026-01-17)
 
 
