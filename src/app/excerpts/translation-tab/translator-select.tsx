@@ -8,7 +8,7 @@ import { TRANSLATION_MODELS } from '@/lib/constants';
 const STORAGE_KEY = 'translation-model';
 
 /** Get saved model from sessionStorage, falling back to first model */
-const getSavedModel = (): string => {
+export const getSavedModel = (): string => {
     if (typeof window === 'undefined') {
         return TRANSLATION_MODELS[0].value;
     }

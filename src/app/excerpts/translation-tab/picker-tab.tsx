@@ -5,26 +5,30 @@ import { ClipboardCopyIcon, RefreshCwIcon, SendIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { getPrompts } from 'wobble-bibble';
+import { formatExcerptsForPrompt, getPrompts } from 'wobble-bibble';
 import { Pill } from '@/components/pill';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { pageNumberToColor } from '@/lib/colorUtils';
-import { MASTER_PROMPT_ID } from '@/lib/constants';
+import { MASTER_PROMPT_ID, type TranslationModel } from '@/lib/constants';
 import { groupIdsByTokenLimits, type TokenGroup } from '@/lib/grouping';
-import { formatExcerptsForPrompt, getUntranslatedIds } from '@/lib/segmentation';
+import { getUntranslatedIds } from '@/lib/segmentation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
 // Maximum pills to render for performance
 const MAX_VISIBLE_PILLS = 500;
+
+interface PickerTabProps {
+    model: TranslationModel;
+}
 
 /**
  * Tab content for selecting untranslated excerpts to send to LLM.
  * Shows pills with excerpt IDs organized by token limit groups,
  * supports range selection, and provides copy/remove/reset functionality.
  */
-export function PickerTab() {
+export function PickerTab({ model }: PickerTabProps) {
     const excerpts = useExcerptsStore((state) => state.excerpts);
     const collection = useExcerptsStore((state) => state.collection);
     const sentToLlmIds = useExcerptsStore((state) => state.sentToLlmIds);
@@ -84,13 +88,17 @@ export function PickerTab() {
             return groupIdsByTokenLimits([], () => undefined, 0);
         }
 
-        // Process prompt with book title before estimating tokens to ensure grouping accuracy
         const bookTitle = collection?.title || 'this book';
         const finalPrompt = promptForTranslation.replace(/{{book}}/g, bookTitle);
-        const promptTokens = estimateTokenCount(finalPrompt);
 
-        return groupIdsByTokenLimits(displayedIds, (id) => excerptMap.get(id)?.nass, promptTokens);
-    }, [displayedIds, excerptMap, promptForTranslation, collection?.title]);
+        // Use provider from model object directly
+        const provider = model.provider;
+
+        // Pass provider to estimateTokenCount
+        const promptTokens = estimateTokenCount(finalPrompt, provider);
+
+        return groupIdsByTokenLimits(displayedIds, (id) => excerptMap.get(id)?.nass, promptTokens, provider);
+    }, [displayedIds, excerptMap, promptForTranslation, collection?.title, model]);
 
     // Get selected IDs (from first to selectedEndIndex)
     const selectedIds = useMemo(() => {
@@ -110,11 +118,16 @@ export function PickerTab() {
         if (selectedExcerpts.length === 0 || !promptForTranslation) {
             return '';
         }
-        return formatExcerptsForPrompt(selectedExcerpts, promptForTranslation, collection?.title);
-    }, [selectedExcerpts, promptForTranslation, collection?.title]);
+        return formatExcerptsForPrompt(
+            selectedExcerpts.map((s) => ({ id: s.id, text: s.nass })),
+            promptForTranslation,
+        );
+    }, [selectedExcerpts, promptForTranslation]);
 
-    // Estimate token count
-    const tokenCount = useMemo(() => estimateTokenCount(formattedContent), [formattedContent]);
+    // Estimate token count - also use provider here for accurate count (although less critical for display, good for consistency)
+    const tokenCount = useMemo(() => {
+        return estimateTokenCount(formattedContent, model.provider);
+    }, [formattedContent, model]);
 
     // Find original index in displayedIds for a given id
     const getOriginalIndex = useCallback((id: string) => displayedIds.indexOf(id), [displayedIds]);

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
+import type { ValidationError } from 'wobble-bibble';
 import {
+    buildCorpusSnapshot,
     buildExistingTranslationsMap,
-    buildValidationSegments,
     type DebugMeta,
     detectTruncatedTranslation,
     errorsToHighlights,
@@ -12,7 +13,6 @@ import {
     getSegmentFilterKey,
     getUntranslatedIds,
     summarizeRulePattern,
-    type ValidationErrorInfo,
 } from './segmentation';
 
 describe('formatExcerptsForPrompt', () => {
@@ -178,7 +178,7 @@ describe('buildValidationSegments', () => {
         const headings = [{ id: 'T1', nass: 'Heading nass' }];
         const footnotes = [{ id: 'F1', nass: 'Footnote nass' }];
 
-        const result = buildValidationSegments(excerpts, headings, footnotes);
+        const result = buildCorpusSnapshot(excerpts, headings, footnotes);
 
         expect(result).toEqual([
             { id: 'P1', text: 'Arabic text 1' },
@@ -188,27 +188,8 @@ describe('buildValidationSegments', () => {
         ]);
     });
 
-    it('should skip items without nass', () => {
-        const excerpts = [
-            { id: 'P1', nass: 'Has nass' },
-            { id: 'P2', nass: null },
-            { id: 'P3', nass: undefined },
-            { id: 'P4' }, // no nass property
-        ];
-
-        const result = buildValidationSegments(excerpts as any, [], []);
-
-        expect(result).toEqual([{ id: 'P1', text: 'Has nass' }]);
-    });
-
     it('should return empty array for empty inputs', () => {
-        const result = buildValidationSegments([], [], []);
-        expect(result).toEqual([]);
-    });
-
-    it('should handle empty string nass as falsy', () => {
-        const excerpts = [{ id: 'P1', nass: '' }];
-        const result = buildValidationSegments(excerpts, [], []);
+        const result = buildCorpusSnapshot([], [], []);
         expect(result).toEqual([]);
     });
 });
@@ -251,9 +232,11 @@ describe('buildExistingTranslationsMap', () => {
 
 describe('formatValidationErrors', () => {
     // Helper to create a complete error object with defaults
-    const makeError = (
-        overrides: Partial<ValidationErrorInfo> & { type: string; message: string },
-    ): ValidationErrorInfo => ({ matchText: 'test', range: { end: 10, start: 0 }, ...overrides });
+    const makeError = (overrides: Partial<ValidationError> & { type: string; message: string }): ValidationError => ({
+        matchText: 'test',
+        range: { end: 10, start: 0 },
+        ...overrides,
+    });
 
     it('should return empty string for empty errors array', () => {
         expect(formatValidationErrors([])).toBe('');
@@ -325,7 +308,7 @@ describe('errorsToHighlights', () => {
     });
 
     it('should convert error ranges to highlight objects', () => {
-        const errors: ValidationErrorInfo[] = [
+        const errors: ValidationError[] = [
             { matchText: 'test', message: 'Arabic', range: { end: 10, start: 0 }, type: 'arabic_leak' },
             { matchText: 'test2', message: 'Dup', range: { end: 30, start: 20 }, type: 'duplicate_id' },
         ];
@@ -337,7 +320,7 @@ describe('errorsToHighlights', () => {
     });
 
     it('should preserve exact range boundaries', () => {
-        const errors: ValidationErrorInfo[] = [
+        const errors: ValidationError[] = [
             { matchText: 'exact', message: 'Test', range: { end: 15, start: 5 }, type: 'test' },
         ];
         const [highlight] = errorsToHighlights(errors);

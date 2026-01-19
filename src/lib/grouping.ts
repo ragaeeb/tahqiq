@@ -1,3 +1,4 @@
+import type { LLMProvider } from 'bitaboom';
 import { estimateTokenCount } from 'bitaboom';
 
 /**
@@ -33,12 +34,14 @@ const TOKENS_OVERHEAD_BASE = 5;
  * @param ids - Array of excerpt IDs to group
  * @param extractText - Function to get the text content for token estimation from an ID
  * @param basePromptTokens - Base token count from the prompt template (already processed)
+ * @param provider - Optional LLM provider for accurate token counting
  * @returns Array of TokenGroup objects, one for each threshold
  */
 export const groupIdsByTokenLimits = (
     ids: string[],
     extractText: (id: string) => string | undefined,
     basePromptTokens: number,
+    provider?: LLMProvider,
 ): TokenGroup[] => {
     // Initialize groups
     const groups: TokenGroup[] = TOKEN_LIMIT_GROUPS.map((g) => ({
@@ -58,7 +61,7 @@ export const groupIdsByTokenLimits = (
         // We use a simplified but more accurate estimate than a flat 15.
         // ID length + " - " is roughly (id.length + 3) chars.
         const overheadChars = id.length + 5; // +5 for " - " and "\n\n"
-        const itemTokens = estimateTokenCount(text) + Math.ceil(overheadChars / 4);
+        const itemTokens = estimateTokenCount(text, provider) + Math.ceil(overheadChars / 4);
 
         cumulativeTokens += itemTokens;
 
