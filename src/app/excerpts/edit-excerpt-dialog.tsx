@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { createObjectDiff } from '@/lib/common';
 import type { Excerpt } from '@/stores/excerptsStore/types';
-import { TranslatorSelect } from './translator-select';
+import { TranslatorSelect } from './translation-tab/translator-select';
 
 type EditExcerptDialogContentProps = {
     /** The excerpt data to edit */

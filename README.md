@@ -33,7 +33,9 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
     - **Flow Management**: Mark excerpts as "sent" to track translation progress across sessions
   - **Bulk Translation**: Paste translations in batch with automatic ID matching
     - **Model Selection**: Color-coded translator select (persisted per session)
-    - **Validation**: Smart detection of duplicate IDs and overwrite warnings before saving
+    - **Validation**: Smart detection of duplicate IDs and overwrite warnings
+    - **Validation UI**: Elegant grouping of errors by type with scrollable diagnostics for large batches
+    - **Auto-Fix**: One-click "Wrench" button to automatically repair common translation formatting issues
 - **Dynamic Tabs**: Footnotes tab only shows if the collection contains footnotes
 - **URL-Based Filtering**: Shareable filter state via URL parameters
 - **Hash-Based Scroll**: Navigate to specific rows via URL hash

@@ -1,48 +1,17 @@
 import { describe, expect, it } from 'bun:test';
+import type { ValidationError } from 'wobble-bibble';
 import {
-    buildExistingTranslationsMap,
-    buildValidationSegments,
+    buildCorpusSnapshot,
     type DebugMeta,
     detectTruncatedTranslation,
     errorsToHighlights,
     findExcerptIssues,
-    formatExcerptsForPrompt,
     formatValidationErrors,
     getMetaKey,
     getSegmentFilterKey,
     getUntranslatedIds,
     summarizeRulePattern,
-    type ValidationErrorInfo,
 } from './segmentation';
-
-describe('formatExcerptsForPrompt', () => {
-    it('should format excerpts with prompt', async () => {
-        const excerpts = [
-            { from: 1, id: 'P1', nass: 'النص الأول' },
-            { from: 2, id: 'P2', nass: 'النص الثاني' },
-        ];
-        const prompt = 'Translate the following:';
-
-        const result = formatExcerptsForPrompt(excerpts as any, prompt);
-
-        expect(result).toContain('Translate the following:');
-        expect(result).toContain('P1 - النص الأول');
-        expect(result).toContain('P2 - النص الثاني');
-        // Excerpts should be separated by double newlines
-        expect(result).toContain('\n\n');
-    });
-
-    it('should handle empty excerpts array', async () => {
-        const result = formatExcerptsForPrompt([], 'Prompt');
-        expect(result).toBe('Prompt\n\n');
-    });
-
-    it('should use triple newline between prompt and excerpts', async () => {
-        const excerpts = [{ from: 1, id: 'P1', nass: 'Test' }];
-        const result = formatExcerptsForPrompt(excerpts as any, 'Prompt');
-        expect(result).toContain('Prompt\n\nP1 - Test');
-    });
-});
 
 describe('getUntranslatedIds', () => {
     it('should return IDs of untranslated excerpts not in sent set', async () => {
@@ -169,7 +138,7 @@ describe('Debug Metadata Utilities', () => {
     });
 });
 
-describe('buildValidationSegments', () => {
+describe('buildCorpusSnapshot', () => {
     it('should build segments from excerpts, headings, and footnotes', () => {
         const excerpts = [
             { id: 'P1', nass: 'Arabic text 1' },
@@ -178,82 +147,43 @@ describe('buildValidationSegments', () => {
         const headings = [{ id: 'T1', nass: 'Heading nass' }];
         const footnotes = [{ id: 'F1', nass: 'Footnote nass' }];
 
-        const result = buildValidationSegments(excerpts, headings, footnotes);
+        const result = buildCorpusSnapshot(excerpts as any, headings as any, footnotes as any);
 
-        expect(result).toEqual([
+        expect(result.untranslated).toEqual([
             { id: 'P1', text: 'Arabic text 1' },
             { id: 'P2', text: 'Arabic text 2' },
             { id: 'T1', text: 'Heading nass' },
             { id: 'F1', text: 'Footnote nass' },
         ]);
+        expect(result.translatedIds).toBeInstanceOf(Set);
+        expect(result.translatedIds.size).toBe(0);
     });
 
-    it('should skip items without nass', () => {
+    it('should track translated IDs', () => {
         const excerpts = [
-            { id: 'P1', nass: 'Has nass' },
-            { id: 'P2', nass: null },
-            { id: 'P3', nass: undefined },
-            { id: 'P4' }, // no nass property
+            { id: 'P1', nass: 'Arabic 1', text: 'English 1' },
+            { id: 'P2', nass: 'Arabic 2' },
         ];
-
-        const result = buildValidationSegments(excerpts as any, [], []);
-
-        expect(result).toEqual([{ id: 'P1', text: 'Has nass' }]);
+        const result = buildCorpusSnapshot(excerpts as any, [], []);
+        expect(result.translatedIds.has('P1')).toBe(true);
+        expect(result.translatedIds.has('P2')).toBe(false);
+        expect(result.untranslated).toEqual([{ id: 'P2', text: 'Arabic 2' }]);
     });
 
-    it('should return empty array for empty inputs', () => {
-        const result = buildValidationSegments([], [], []);
-        expect(result).toEqual([]);
-    });
-
-    it('should handle empty string nass as falsy', () => {
-        const excerpts = [{ id: 'P1', nass: '' }];
-        const result = buildValidationSegments(excerpts, [], []);
-        expect(result).toEqual([]);
-    });
-});
-
-describe('buildExistingTranslationsMap', () => {
-    it('should map IDs with non-empty text', () => {
-        const excerpts = [
-            { id: 'P1', text: 'Translated' },
-            { id: 'P2', text: '' },
-            { id: 'P3', text: '   ' }, // whitespace only
-            { id: 'P4' }, // no text
-        ];
-
-        const result = buildExistingTranslationsMap(excerpts as any, [], []);
-
-        expect(result.has('P1')).toBe(true);
-        expect(result.has('P2')).toBe(false);
-        expect(result.has('P3')).toBe(false);
-        expect(result.has('P4')).toBe(false);
-    });
-
-    it('should include headings and footnotes', () => {
-        const excerpts = [{ id: 'P1', text: 'Trans' }];
-        const headings = [{ id: 'T1', text: 'Heading trans' }];
-        const footnotes = [{ id: 'F1', text: 'Footnote trans' }];
-
-        const result = buildExistingTranslationsMap(excerpts, headings, footnotes);
-
-        expect(result.has('P1')).toBe(true);
-        expect(result.has('T1')).toBe(true);
-        expect(result.has('F1')).toBe(true);
-    });
-
-    it('should return empty map for no translations', () => {
-        const excerpts = [{ id: 'P1' }, { id: 'P2', text: '' }];
-        const result = buildExistingTranslationsMap(excerpts as any, [], []);
-        expect(result.size).toBe(0);
+    it('should return empty snapshot for empty inputs', () => {
+        const result = buildCorpusSnapshot([], [], []);
+        expect(result.untranslated).toEqual([]);
+        expect(result.translatedIds.size).toBe(0);
     });
 });
 
 describe('formatValidationErrors', () => {
     // Helper to create a complete error object with defaults
-    const makeError = (
-        overrides: Partial<ValidationErrorInfo> & { type: string; message: string },
-    ): ValidationErrorInfo => ({ matchText: 'test', range: { end: 10, start: 0 }, ...overrides });
+    const makeError = (overrides: Partial<ValidationError> & { type: string; message: string }): ValidationError => ({
+        matchText: 'test',
+        range: { end: 10, start: 0 },
+        ...overrides,
+    });
 
     it('should return empty string for empty errors array', () => {
         expect(formatValidationErrors([])).toBe('');
@@ -325,7 +255,7 @@ describe('errorsToHighlights', () => {
     });
 
     it('should convert error ranges to highlight objects', () => {
-        const errors: ValidationErrorInfo[] = [
+        const errors: ValidationError[] = [
             { matchText: 'test', message: 'Arabic', range: { end: 10, start: 0 }, type: 'arabic_leak' },
             { matchText: 'test2', message: 'Dup', range: { end: 30, start: 20 }, type: 'duplicate_id' },
         ];
@@ -337,7 +267,7 @@ describe('errorsToHighlights', () => {
     });
 
     it('should preserve exact range boundaries', () => {
-        const errors: ValidationErrorInfo[] = [
+        const errors: ValidationError[] = [
             { matchText: 'exact', message: 'Test', range: { end: 15, start: 5 }, type: 'test' },
         ];
         const [highlight] = errorsToHighlights(errors);

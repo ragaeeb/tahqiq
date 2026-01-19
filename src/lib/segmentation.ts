@@ -149,17 +149,6 @@ export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: Boo
 };
 
 /**
- * Format excerpts for LLM prompt (matches handleExportToTxt format)
- */
-export const formatExcerptsForPrompt = (excerpts: Excerpt[], prompt: string, bookTitle?: string) => {
-    // Replace placeholders
-    const finalPrompt = bookTitle ? prompt.replace(/{{book}}/g, bookTitle) : prompt.replace(/{{book}}/g, 'this book');
-
-    const formatted = excerpts.map((e) => `${e.id} - ${e.nass}`).join('\n\n');
-    return [finalPrompt, formatted].join('\n\n');
-};
-
-/**
  * Get untranslated excerpt IDs not in the "sent" set
  */
 export const getUntranslatedIds = (excerpts: Excerpt[], sentIds: Set<string>) => {
@@ -175,71 +164,20 @@ export const getUntranslatedIds = (excerpts: Excerpt[], sentIds: Set<string>) =>
  * @param footnotes - Array of footnotes
  * @returns Array of segments with { id, text } where text is the nass value
  */
-export const buildValidationSegments = (
-    excerpts: Excerpt[],
-    headings: Heading[],
-    footnotes: Excerpt[],
-): { id: string; text: string }[] => {
-    const result: { id: string; text: string }[] = [];
+export const buildCorpusSnapshot = (excerpts: Excerpt[], headings: Heading[], footnotes: Excerpt[]) => {
+    const untranslated: TextSegment[] = [];
+    const translatedIds = new Set<string>();
 
-    for (const e of excerpts) {
-        if (e.nass && !e.text) {
-            result.push({ id: e.id, text: e.nass });
-        }
-    }
-    for (const h of headings) {
-        if (h.nass && !h.text) {
-            result.push({ id: h.id, text: h.nass });
-        }
-    }
-    for (const f of footnotes) {
-        if (f.nass && !f.text) {
-            result.push({ id: f.id, text: f.nass });
+    for (const e of [...excerpts, ...headings, ...footnotes]) {
+        if (e.text) {
+            translatedIds.add(e.id);
+        } else {
+            untranslated.push({ id: e.id, text: e.nass });
         }
     }
 
-    return result;
+    return { translatedIds, untranslated };
 };
-
-/**
- * Builds a map of IDs that already have translations (text field is non-empty).
- * Used to detect overwrites when applying new translations.
- *
- * @param excerpts - Array of excerpts
- * @param headings - Array of headings
- * @param footnotes - Array of footnotes
- * @returns Map where keys are IDs with existing translations
- */
-export const buildExistingTranslationsMap = (
-    excerpts: TextSegment[],
-    headings: TextSegment[],
-    footnotes: TextSegment[],
-): Map<string, boolean> => {
-    const map = new Map<string, boolean>();
-
-    for (const e of excerpts) {
-        if (e.text?.trim()) {
-            map.set(e.id, true);
-        }
-    }
-    for (const h of headings) {
-        if (h.text?.trim()) {
-            map.set(h.id, true);
-        }
-    }
-    for (const f of footnotes) {
-        if (f.text?.trim()) {
-            map.set(f.id, true);
-        }
-    }
-
-    return map;
-};
-
-/**
- * Re-export ValidationError from wobble-bibble for convenience.
- */
-export type ValidationErrorInfo = ValidationError;
 
 /**
  * Converts wobble-bibble validation errors to DyeLight character range highlights.
@@ -250,7 +188,7 @@ export type ValidationErrorInfo = ValidationError;
  * @param segments - Optional source segments to look up Arabic text for tooltips
  * @returns Array of CharacterRange objects for DyeLight highlights prop
  */
-export const errorsToHighlights = (errors: ValidationErrorInfo[]): CharacterRange[] => {
+export const errorsToHighlights = (errors: ValidationError[]): CharacterRange[] => {
     return errors.map((error) => ({ className: 'bg-red-200', end: error.range.end, start: error.range.start }));
 };
 
@@ -261,7 +199,7 @@ export const errorsToHighlights = (errors: ValidationErrorInfo[]): CharacterRang
  * @param errors - Array of validation errors from validateTranslationResponse
  * @returns Formatted error messages joined by newlines, or empty string if no errors
  */
-export const formatValidationErrors = (errors: ValidationErrorInfo[]): string => {
+export const formatValidationErrors = (errors: ValidationError[]): string => {
     if (errors.length === 0) {
         return '';
     }
