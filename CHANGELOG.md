@@ -1,3 +1,10 @@
+## [1.49.2](https://github.com/ragaeeb/tahqiq/compare/v1.49.1...v1.49.2) (2026-01-19)
+
+
+### Bug Fixes
+
+* **validation:** Usability enhancements and fixes to translation tab ([#110](https://github.com/ragaeeb/tahqiq/issues/110)) ([f9b889f](https://github.com/ragaeeb/tahqiq/commit/f9b889fa9df22f4d204b4cc1029f35af1a9132c3))
+
 ## [1.49.1](https://github.com/ragaeeb/tahqiq/compare/v1.49.0...v1.49.1) (2026-01-18)
 
 
