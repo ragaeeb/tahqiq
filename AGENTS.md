@@ -755,3 +755,8 @@ When dealing with very large datasets (like 40,000 excerpt IDs in the Translatio
 | Initial Scroll vs ScrollTo | `initialScrollTop` (pixel-based) is safer for remounts; `scrollToId` (key-based) can conflict |
 | Icon Confirmations | Use visual cues (pulsing ring, icon swap) for small confirm buttons instead of text |
 | Bulk Toasting | Condense multiple success/warning toasts into a single combined message for better UX |
+| DyeLight Ghost Text | Ensure `clampedStart` and `lastIndex` management in `renderHighlightedLine` to prevent duplication on overlapping ranges |
+| Form Submit Hijacking | Explicitly set `type="button"` on buttons inside `<form>` to prevent accidental submission, especially in validation lists |
+| Validation Grouping | Group errors by `ValidationErrorType` instead of raw message for cleaner UI and easier bulk fixing |
+| Auto-Fix Logic | Use `wobble-bibble`'s `fixAll` with specific types for safe, automated text corrections |
+| Snapshot API | `buildCorpusSnapshot` returns `{ untranslated: Segment[], translatedIds: Set<string> }` to simplify downstream selection logic |
