@@ -1,3 +1,10 @@
+## [1.49.3](https://github.com/ragaeeb/tahqiq/compare/v1.49.2...v1.49.3) (2026-01-19)
+
+
+### Bug Fixes
+
+* **error:** Don't show error container if there are no grouped errors ([090b164](https://github.com/ragaeeb/tahqiq/commit/090b164093d602df1b0b33e7afcec57d6991a513))
+
 ## [1.49.2](https://github.com/ragaeeb/tahqiq/compare/v1.49.1...v1.49.2) (2026-01-19)
 
 
