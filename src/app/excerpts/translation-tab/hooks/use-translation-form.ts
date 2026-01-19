@@ -1,11 +1,10 @@
-'use client';
-
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { normalizeTranslationText, type ValidationError, validateTranslationResponse } from 'wobble-bibble';
 import { errorsToHighlights } from '@/lib/segmentation';
 
 interface UseTranslationFormProps {
     untranslated: { id: string; text: string }[];
+    translatedIds: Set<string>;
     setPendingOverwrites: (val: { duplicates: string[]; overwrites: string[] } | null) => void;
 }
 
@@ -13,7 +12,7 @@ interface UseTranslationFormProps {
  * Hook for managing translation form state.
  * No longer manages selectedModel state internally.
  */
-export function useTranslationForm({ untranslated, setPendingOverwrites }: UseTranslationFormProps) {
+export function useTranslationForm({ untranslated, translatedIds, setPendingOverwrites }: UseTranslationFormProps) {
     const [textValue, setTextValue] = useState('');
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
@@ -42,12 +41,21 @@ export function useTranslationForm({ untranslated, setPendingOverwrites }: UseTr
             const fullContentAfterPaste = textValue.slice(0, start) + normalizedPaste + textValue.slice(end);
 
             const result = validateTranslationResponse(untranslated, fullContentAfterPaste);
-            setValidationErrors(result.errors);
+
+            // Post-process errors to identify ones that are actually just already translated
+            const processedErrors = result.errors.map((err) => {
+                if (err.type === 'invented_id' && err.id && translatedIds.has(err.id)) {
+                    return { ...err, message: `Already Translated: "${err.id}" - this ID has already been translated` };
+                }
+                return err;
+            });
+
+            setValidationErrors(processedErrors);
 
             e.preventDefault();
             setTextValue(fullContentAfterPaste);
         },
-        [untranslated, textValue],
+        [untranslated, textValue, translatedIds],
     );
 
     const handleChange = useCallback(

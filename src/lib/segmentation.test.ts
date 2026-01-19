@@ -2,47 +2,16 @@ import { describe, expect, it } from 'bun:test';
 import type { ValidationError } from 'wobble-bibble';
 import {
     buildCorpusSnapshot,
-    buildExistingTranslationsMap,
     type DebugMeta,
     detectTruncatedTranslation,
     errorsToHighlights,
     findExcerptIssues,
-    formatExcerptsForPrompt,
     formatValidationErrors,
     getMetaKey,
     getSegmentFilterKey,
     getUntranslatedIds,
     summarizeRulePattern,
 } from './segmentation';
-
-describe('formatExcerptsForPrompt', () => {
-    it('should format excerpts with prompt', async () => {
-        const excerpts = [
-            { from: 1, id: 'P1', nass: 'النص الأول' },
-            { from: 2, id: 'P2', nass: 'النص الثاني' },
-        ];
-        const prompt = 'Translate the following:';
-
-        const result = formatExcerptsForPrompt(excerpts as any, prompt);
-
-        expect(result).toContain('Translate the following:');
-        expect(result).toContain('P1 - النص الأول');
-        expect(result).toContain('P2 - النص الثاني');
-        // Excerpts should be separated by double newlines
-        expect(result).toContain('\n\n');
-    });
-
-    it('should handle empty excerpts array', async () => {
-        const result = formatExcerptsForPrompt([], 'Prompt');
-        expect(result).toBe('Prompt\n\n');
-    });
-
-    it('should use triple newline between prompt and excerpts', async () => {
-        const excerpts = [{ from: 1, id: 'P1', nass: 'Test' }];
-        const result = formatExcerptsForPrompt(excerpts as any, 'Prompt');
-        expect(result).toContain('Prompt\n\nP1 - Test');
-    });
-});
 
 describe('getUntranslatedIds', () => {
     it('should return IDs of untranslated excerpts not in sent set', async () => {
@@ -169,7 +138,7 @@ describe('Debug Metadata Utilities', () => {
     });
 });
 
-describe('buildValidationSegments', () => {
+describe('buildCorpusSnapshot', () => {
     it('should build segments from excerpts, headings, and footnotes', () => {
         const excerpts = [
             { id: 'P1', nass: 'Arabic text 1' },
@@ -178,55 +147,33 @@ describe('buildValidationSegments', () => {
         const headings = [{ id: 'T1', nass: 'Heading nass' }];
         const footnotes = [{ id: 'F1', nass: 'Footnote nass' }];
 
-        const result = buildCorpusSnapshot(excerpts, headings, footnotes);
+        const result = buildCorpusSnapshot(excerpts as any, headings as any, footnotes as any);
 
-        expect(result).toEqual([
+        expect(result.untranslated).toEqual([
             { id: 'P1', text: 'Arabic text 1' },
             { id: 'P2', text: 'Arabic text 2' },
             { id: 'T1', text: 'Heading nass' },
             { id: 'F1', text: 'Footnote nass' },
         ]);
+        expect(result.translatedIds).toBeInstanceOf(Set);
+        expect(result.translatedIds.size).toBe(0);
     });
 
-    it('should return empty array for empty inputs', () => {
-        const result = buildCorpusSnapshot([], [], []);
-        expect(result).toEqual([]);
-    });
-});
-
-describe('buildExistingTranslationsMap', () => {
-    it('should map IDs with non-empty text', () => {
+    it('should track translated IDs', () => {
         const excerpts = [
-            { id: 'P1', text: 'Translated' },
-            { id: 'P2', text: '' },
-            { id: 'P3', text: '   ' }, // whitespace only
-            { id: 'P4' }, // no text
+            { id: 'P1', nass: 'Arabic 1', text: 'English 1' },
+            { id: 'P2', nass: 'Arabic 2' },
         ];
-
-        const result = buildExistingTranslationsMap(excerpts as any, [], []);
-
-        expect(result.has('P1')).toBe(true);
-        expect(result.has('P2')).toBe(false);
-        expect(result.has('P3')).toBe(false);
-        expect(result.has('P4')).toBe(false);
+        const result = buildCorpusSnapshot(excerpts as any, [], []);
+        expect(result.translatedIds.has('P1')).toBe(true);
+        expect(result.translatedIds.has('P2')).toBe(false);
+        expect(result.untranslated).toEqual([{ id: 'P2', text: 'Arabic 2' }]);
     });
 
-    it('should include headings and footnotes', () => {
-        const excerpts = [{ id: 'P1', text: 'Trans' }];
-        const headings = [{ id: 'T1', text: 'Heading trans' }];
-        const footnotes = [{ id: 'F1', text: 'Footnote trans' }];
-
-        const result = buildExistingTranslationsMap(excerpts, headings, footnotes);
-
-        expect(result.has('P1')).toBe(true);
-        expect(result.has('T1')).toBe(true);
-        expect(result.has('F1')).toBe(true);
-    });
-
-    it('should return empty map for no translations', () => {
-        const excerpts = [{ id: 'P1' }, { id: 'P2', text: '' }];
-        const result = buildExistingTranslationsMap(excerpts as any, [], []);
-        expect(result.size).toBe(0);
+    it('should return empty snapshot for empty inputs', () => {
+        const result = buildCorpusSnapshot([], [], []);
+        expect(result.untranslated).toEqual([]);
+        expect(result.translatedIds.size).toBe(0);
     });
 });
 

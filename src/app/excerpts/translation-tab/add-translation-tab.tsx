@@ -3,12 +3,15 @@
 import { DyeLight } from 'dyelight';
 import { SaveIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { fixAll, type ValidationErrorType } from 'wobble-bibble';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import type { TranslationModel } from '@/lib/constants';
+import { buildCorpusSnapshot } from '@/lib/segmentation';
 import { cn } from '@/lib/utils';
-import { useCorpusSnapshot } from './hooks/use-corpus-snapshot';
+import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useInspector } from './hooks/use-inspector';
 import { useTranslationForm } from './hooks/use-translation-form';
 import { useTranslationSubmit } from './hooks/use-translation-submit';
@@ -16,14 +19,19 @@ import { InspectorSheet } from './inspector-sheet';
 import { PendingOverwritesWarning } from './pending-overwrites-warning';
 import { ValidationErrors } from './validation-errors';
 
-// ...
-
 interface AddTranslationTabProps {
     model: TranslationModel;
 }
 
 export function AddTranslationTab({ model }: AddTranslationTabProps) {
-    const { untranslated, translatedIds } = useCorpusSnapshot();
+    const excerpts = useExcerptsStore((state) => state.excerpts);
+    const headings = useExcerptsStore((state) => state.headings);
+    const footnotes = useExcerptsStore((state) => state.footnotes);
+
+    const { untranslated, translatedIds } = useMemo(
+        () => buildCorpusSnapshot(excerpts, headings, footnotes),
+        [excerpts, headings, footnotes],
+    );
 
     // Shared state for pending overwrites
     const [pendingOverwrites, setPendingOverwrites] = useState<{ duplicates: string[]; overwrites: string[] } | null>(
@@ -31,7 +39,7 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
     );
 
     const { textValue, setTextValue, validationErrors, setValidationErrors, highlights, handlePaste, handleChange } =
-        useTranslationForm({ setPendingOverwrites, untranslated });
+        useTranslationForm({ setPendingOverwrites, translatedIds, untranslated });
 
     const { inspectorSegmentId, setInspectorSegmentId, inspectSegment, dyeLightRef } = useInspector();
 
@@ -60,6 +68,17 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
     const handleSaveAndCommit = async (e: React.MouseEvent) => {
         e.preventDefault();
         await submitTranslations(true);
+    };
+
+    const handleFix = (type: ValidationErrorType) => {
+        const result = fixAll(textValue, { types: [type] });
+        if (result.text !== textValue) {
+            setTextValue(result.text);
+            const count = result.applied.length;
+            toast.success(`Fixed ${count} issues`, { description: `Applied fixes for ${type}` });
+        } else {
+            toast.info('No changes could be applied automatically');
+        }
     };
 
     // Derived validation error text for rendering conditional borders
@@ -96,6 +115,7 @@ Another line that should be appended to this existing excerpt.`}
 
                 <ValidationErrors
                     errors={validationErrors}
+                    onFix={handleFix}
                     onInspect={inspectSegment}
                     selectedModel={model}
                     textValue={textValue}
