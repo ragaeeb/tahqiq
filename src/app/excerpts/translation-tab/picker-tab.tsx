@@ -30,7 +30,8 @@ interface PickerTabProps {
  */
 export function PickerTab({ model }: PickerTabProps) {
     const excerpts = useExcerptsStore((state) => state.excerpts);
-    const collection = useExcerptsStore((state) => state.collection);
+    const headings = useExcerptsStore((state) => state.headings);
+    const footnotes = useExcerptsStore((state) => state.footnotes);
     const sentToLlmIds = useExcerptsStore((state) => state.sentToLlmIds);
     const promptForTranslation = useExcerptsStore((state) => state.promptForTranslation);
     const promptId = useExcerptsStore((state) => state.promptId);
@@ -63,8 +64,11 @@ export function PickerTab({ model }: PickerTabProps) {
         }
     }, [promptId, visiblePrompts, setPrompt]);
 
+    // Combine all selectable items
+    const allItems = useMemo(() => [...excerpts, ...headings, ...footnotes], [excerpts, headings, footnotes]);
+
     // Get untranslated IDs not already sent - computed once
-    const availableIds = useMemo(() => getUntranslatedIds(excerpts, sentToLlmIds), [excerpts, sentToLlmIds]);
+    const availableIds = useMemo(() => getUntranslatedIds(allItems, sentToLlmIds), [allItems, sentToLlmIds]);
 
     // Selected index (from 0 to this index inclusive)
     const [selectedEndIndex, setSelectedEndIndex] = useState<number | null>(null);
@@ -73,14 +77,14 @@ export function PickerTab({ model }: PickerTabProps) {
     const displayedIds = useMemo(() => availableIds.slice(0, MAX_VISIBLE_PILLS), [availableIds]);
     const hasMore = availableIds.length > MAX_VISIBLE_PILLS;
 
-    // Build excerpt lookup map once for O(1) access
-    const excerptMap = useMemo(() => {
-        const map = new Map<string, (typeof excerpts)[0]>();
-        for (const e of excerpts) {
+    // Build item lookup map once for O(1) access
+    const itemMap = useMemo(() => {
+        const map = new Map<string, (typeof allItems)[0]>();
+        for (const e of allItems) {
             map.set(e.id, e);
         }
         return map;
-    }, [excerpts]);
+    }, [allItems]);
 
     // Group IDs by token limits
     const tokenGroups = useMemo((): TokenGroup[] => {
@@ -88,17 +92,14 @@ export function PickerTab({ model }: PickerTabProps) {
             return groupIdsByTokenLimits([], () => undefined, 0);
         }
 
-        const bookTitle = collection?.title || 'this book';
-        const finalPrompt = promptForTranslation.replace(/{{book}}/g, bookTitle);
-
         // Use provider from model object directly
         const provider = model.provider;
 
         // Pass provider to estimateTokenCount
-        const promptTokens = estimateTokenCount(finalPrompt, provider);
+        const promptTokens = estimateTokenCount(promptForTranslation, provider);
 
-        return groupIdsByTokenLimits(displayedIds, (id) => excerptMap.get(id)?.nass, promptTokens, provider);
-    }, [displayedIds, excerptMap, promptForTranslation, collection?.title, model]);
+        return groupIdsByTokenLimits(displayedIds, (id) => itemMap.get(id)?.nass, promptTokens, provider);
+    }, [displayedIds, itemMap, promptForTranslation, model]);
 
     // Get selected IDs (from first to selectedEndIndex)
     const selectedIds = useMemo(() => {
@@ -108,21 +109,21 @@ export function PickerTab({ model }: PickerTabProps) {
         return availableIds.slice(0, selectedEndIndex + 1);
     }, [availableIds, selectedEndIndex]);
 
-    // Get selected excerpts for formatting using map lookup
-    const selectedExcerpts = useMemo(() => {
-        return selectedIds.map((id) => excerptMap.get(id)).filter(Boolean) as typeof excerpts;
-    }, [excerptMap, selectedIds]);
+    // Get selected items for formatting using map lookup
+    const selectedItems = useMemo(() => {
+        return selectedIds.map((id) => itemMap.get(id)).filter(Boolean) as typeof allItems;
+    }, [itemMap, selectedIds]);
 
     // Format content for clipboard
     const formattedContent = useMemo(() => {
-        if (selectedExcerpts.length === 0 || !promptForTranslation) {
+        if (selectedItems.length === 0 || !promptForTranslation) {
             return '';
         }
         return formatExcerptsForPrompt(
-            selectedExcerpts.map((s) => ({ id: s.id, text: s.nass })),
+            selectedItems.map((s) => ({ id: s.id, text: s.nass })),
             promptForTranslation,
         );
-    }, [selectedExcerpts, promptForTranslation]);
+    }, [selectedItems, promptForTranslation]);
 
     // Estimate token count - also use provider here for accurate count (although less critical for display, good for consistency)
     const tokenCount = useMemo(() => {
@@ -225,13 +226,13 @@ export function PickerTab({ model }: PickerTabProps) {
                 </div>
             </div>
 
-            {availableIds.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center text-gray-500">
-                    <p>No untranslated excerpts available</p>
-                </div>
-            ) : (
-                <>
-                    <div className="flex-1 overflow-auto rounded border">
+            <div className="flex-1 overflow-hidden">
+                {availableIds.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-gray-500 text-sm">
+                        No untranslated items available
+                    </div>
+                ) : (
+                    <div className="h-full overflow-auto rounded border">
                         <table className="w-full">
                             <tbody>
                                 {tokenGroups.map((group) => {
@@ -251,9 +252,9 @@ export function PickerTab({ model }: PickerTabProps) {
                                                 <div className="flex flex-wrap gap-2">
                                                     {group.ids.map((id) => {
                                                         const originalIndex = getOriginalIndex(id);
-                                                        const excerpt = excerptMap.get(id);
-                                                        const bgColor = excerpt
-                                                            ? pageNumberToColor(excerpt.from)
+                                                        const item = itemMap.get(id);
+                                                        const bgColor = item
+                                                            ? pageNumberToColor(item.from as number)
                                                             : undefined;
                                                         return (
                                                             <Pill
@@ -282,35 +283,35 @@ export function PickerTab({ model }: PickerTabProps) {
                             </div>
                         )}
                     </div>
+                )}
+            </div>
 
-                    <div className="flex justify-between gap-2 pt-4">
-                        <Button onClick={handleReset} variant="outline" title="Reset sent tracking">
-                            <RefreshCwIcon className="mr-2 h-4 w-4" />
-                            Reset
-                        </Button>
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={handleCopy}
-                                disabled={selectedIds.length === 0}
-                                variant="outline"
-                                title="Copy prompt + excerpts to clipboard"
-                            >
-                                <ClipboardCopyIcon className="mr-2 h-4 w-4" />
-                                Copy
-                            </Button>
-                            <Button
-                                onClick={handleRemove}
-                                disabled={selectedIds.length === 0}
-                                className="bg-blue-500 hover:bg-blue-600"
-                                title="Copy prompt + excerpts and mark as sent"
-                            >
-                                <SendIcon className="mr-2 h-4 w-4" />
-                                Copy + Use
-                            </Button>
-                        </div>
-                    </div>
-                </>
-            )}
+            <div className="flex justify-between gap-2 pt-4">
+                <Button onClick={handleReset} variant="outline" title="Reset sent tracking">
+                    <RefreshCwIcon className="mr-2 h-4 w-4" />
+                    Reset
+                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        onClick={handleCopy}
+                        disabled={selectedIds.length === 0}
+                        variant="outline"
+                        title="Copy prompt + excerpts to clipboard"
+                    >
+                        <ClipboardCopyIcon className="mr-2 h-4 w-4" />
+                        Copy
+                    </Button>
+                    <Button
+                        onClick={handleRemove}
+                        disabled={selectedIds.length === 0}
+                        className="bg-blue-500 hover:bg-blue-600"
+                        title="Copy prompt + excerpts and mark as sent"
+                    >
+                        <SendIcon className="mr-2 h-4 w-4" />
+                        Copy + Use
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }

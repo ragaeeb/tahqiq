@@ -68,7 +68,7 @@ export function ClickToReveal({
     return (
         <fieldset
             className={cn(
-                'relative px-3 py-2 text-sm font-medium w-full text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-md',
+                'relative w-full rounded-md border border-slate-200 px-3 py-2 font-medium text-slate-800 text-sm dark:border-slate-800 dark:text-slate-200',
                 className,
             )}
             {...props}
@@ -76,7 +76,7 @@ export function ClickToReveal({
             {!isRevealed && (
                 <Button
                     className={cn(
-                        'inline-block absolute px-2 py-0.5 border border-slate-200 dark:border-slate-800 rounded-sm ring-2 ring-offset-0 ring-white/60 dark:ring-slate-900/60 z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hover:border-slate-300 dark:hover:border-slate-700 transition-colors',
+                        'absolute top-1/2 left-1/2 z-10 inline-block -translate-x-1/2 -translate-y-1/2 rounded-sm border border-slate-200 px-2 py-0.5 ring-2 ring-white/60 ring-offset-0 transition-colors hover:border-slate-300 dark:border-slate-800 dark:ring-slate-900/60 dark:hover:border-slate-700',
                     )}
                     onClick={handleReveal}
                     variant="outline"
@@ -87,8 +87,8 @@ export function ClickToReveal({
 
             <Textarea
                 className={cn(
-                    'transition-all duration-200 border-0 shadow-none px-0 h-auto bg-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-transparent focus-visible:border-transparent text-xs',
-                    !isRevealed && 'blur-[var(--blur-amount)] pointer-events-none select-none',
+                    'h-auto border-0 bg-transparent px-0 text-xs shadow-none transition-all duration-200 focus:border-transparent focus:outline-none focus:ring-0 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-0',
+                    !isRevealed && 'pointer-events-none select-none blur-[var(--blur-amount)]',
                 )}
                 defaultValue={defaultValue}
                 name="sensitive-input"

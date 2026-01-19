@@ -1,6 +1,5 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import type { FormatOptions } from '@/stores/transcriptStore/types';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';

@@ -1,7 +1,6 @@
-import { act, render, screen } from '@testing-library/react';
-import React from 'react';
-import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';

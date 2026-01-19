@@ -2,7 +2,6 @@
 
 import { autoResize } from 'dyelight';
 import { record } from 'nanolytics';
-import React from 'react';
 
 import { Textarea } from '@/components/ui/textarea';
 import { selectCurrentTranscript } from '@/stores/transcriptStore/selectors';
@@ -18,7 +17,7 @@ export default function UrlField() {
 
     return (
         <Textarea
-            className="w-full overflow-hidden resize-none"
+            className="w-full resize-none overflow-hidden"
             defaultValue={mergedUrls}
             key={transcript.volume.toString()}
             onBlur={(e) => {

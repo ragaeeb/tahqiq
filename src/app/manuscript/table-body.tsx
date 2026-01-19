@@ -74,7 +74,7 @@ function ManuscriptTableBody({ onSelectionChange, previewPdf, rows, selectedRows
                             }}
                         >
                             <table className="w-full table-fixed">
-                                <tbody className="bg-white divide-y divide-gray-100">
+                                <tbody className="divide-y divide-gray-100 bg-white">
                                     <TextRow
                                         data={row}
                                         isNewPage={

@@ -1,5 +1,4 @@
-import { areSimilarAfterNormalization } from 'baburchi';
-import { hasInvalidFootnotes } from 'baburchi';
+import { areSimilarAfterNormalization, hasInvalidFootnotes } from 'baburchi';
 import memoizeOne from 'memoize-one';
 
 import { SWS_SYMBOL } from '@/lib/constants';

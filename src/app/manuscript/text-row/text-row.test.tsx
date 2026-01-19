@@ -1,6 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import type { SheetLine } from '@/stores/manuscriptStore/types';
 
@@ -90,8 +89,8 @@ mock.module('@/stores/manuscriptStore/useManuscriptStore', () => ({
     useManuscriptStore: (selector: any) => selector(storeState),
 }));
 
-import TextRow from './index';
 import AslContainer from './asl-container';
+import TextRow from './index';
 import PageInfo from './page-info';
 import SupportContainer from './support-container';
 

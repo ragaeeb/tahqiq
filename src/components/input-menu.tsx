@@ -26,11 +26,11 @@ export const InputMenu = ({ label, onSubmit, ...props }: InputMenuProps) => {
         <DropdownMenuSub>
             <DropdownMenuSubTrigger>{label}</DropdownMenuSubTrigger>
             <DropdownMenuPortal>
-                <DropdownMenuSubContent className="p-2 min-w-[200px]">
+                <DropdownMenuSubContent className="min-w-[200px] p-2">
                     <form onSubmit={handleSubmit}>
                         <Input
                             autoFocus
-                            className="w-full text-sm px-2 py-1.5 focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
+                            className="w-full px-2 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-0"
                             name="input"
                             {...props}
                         />

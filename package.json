@@ -49,7 +49,7 @@
         "@semantic-release/changelog": "^6.0.3",
         "@semantic-release/git": "^10.0.1",
         "@tailwindcss/postcss": "^4.1.18",
-        "@testing-library/react": "^16.3.1",
+        "@testing-library/react": "^16.3.2",
         "@testing-library/user-event": "^14.6.1",
         "@types/bun": "^1.3.6",
         "@types/node": "^25.0.9",
@@ -68,7 +68,7 @@
     "packageManager": "bun@1.3.6",
     "private": true,
     "scripts": {
-        "build": "next build",
+        "build": "biome check . && next build",
         "dev": "next dev --turbopack",
         "format": "biome format --write",
         "lint": "biome check",

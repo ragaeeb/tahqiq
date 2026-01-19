@@ -20,7 +20,7 @@ export function SearchDialog() {
     const setSelectedPart = useTranscriptStore((state) => state.setSelectedPart)!;
 
     return (
-        <DialogContent className="w-[80vw] sm:max-w-none max-h-[80vh] flex flex-col">
+        <DialogContent className="flex max-h-[80vh] w-[80vw] flex-col sm:max-w-none">
             <DialogHeader>
                 <DialogTitle>
                     <div className="flex items-center space-x-2">
@@ -54,8 +54,8 @@ export function SearchDialog() {
                     <table className="w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-2 py-1 w-8 text-left font-normal">Volume</th>
-                                <th aria-label="Timestamp" className="px-2 py-1 w-36 text-left font-normal">
+                                <th className="w-8 px-2 py-1 text-left font-normal">Volume</th>
+                                <th aria-label="Timestamp" className="w-36 px-2 py-1 text-left font-normal">
                                     Time:
                                 </th>
                                 <th aria-label="Text" className="px-4 py-1 text-right font-normal">
@@ -65,8 +65,8 @@ export function SearchDialog() {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {segmentResults.map((s) => (
-                                <tr className="px-2 py-1 space-y-1 text-xs align-top" key={s.volume + '/' + s.start}>
-                                    <td aria-label="Volume" className="px-2 py-1 w-36 text-left">
+                                <tr className="space-y-1 px-2 py-1 align-top text-xs" key={`${s.volume}/${s.start}`}>
+                                    <td aria-label="Volume" className="w-36 px-2 py-1 text-left">
                                         <Button
                                             onClick={() => {
                                                 record('SelectPartSearchTranscript');
@@ -77,7 +77,7 @@ export function SearchDialog() {
                                             {s.volume}
                                         </Button>
                                     </td>
-                                    <td aria-label="Volume" className="px-2 py-1 w-36 text-left">
+                                    <td aria-label="Volume" className="w-36 px-2 py-1 text-left">
                                         {formatSecondsToTimestamp(s.start)}
                                     </td>
                                     <td aria-label="Text" className="px-4 py-1 text-right">

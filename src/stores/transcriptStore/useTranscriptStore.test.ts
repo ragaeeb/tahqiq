@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-
-import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
+import { resetTranscriptStoreState } from '@/test-utils/transcriptStore';
 
 describe('useTranscriptStore', () => {
     beforeEach(() => {
@@ -273,8 +272,8 @@ describe('useTranscriptStore', () => {
 
             const state = useTranscriptStore.getState();
             expect(state.selectedSegments).toHaveLength(0);
-            expect(state.transcripts[1]?.segments[0]!.status).toBe('done');
-            expect(state.transcripts[1]?.segments[1]!.status).toBeUndefined();
+            expect(state.transcripts[1]?.segments[0]?.status).toBe('done');
+            expect(state.transcripts[1]?.segments[1]?.status).toBeUndefined();
         });
     });
 

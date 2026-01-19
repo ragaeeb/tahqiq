@@ -2,10 +2,8 @@ import clsx from 'clsx';
 import { Trash2Icon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React from 'react';
-
-import type { SheetLine } from '@/stores/manuscriptStore/types';
-
 import { Textarea } from '@/components/ui/textarea';
+import type { SheetLine } from '@/stores/manuscriptStore/types';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 import { ActionButton } from './shared';
@@ -18,7 +16,7 @@ const getAltTextAreaClassName = (data: SheetLine) => {
         data.isFootnote ? 'text-sm' : 'text-xl',
         data.isCentered ? 'text-center' : 'text-right',
         data.isHeading && 'font-bold',
-        'focus:bg-white focus:rounded',
+        'focus:rounded focus:bg-white',
     );
 };
 
@@ -79,7 +77,7 @@ function SupportContainer({ data }: SupportContainerProps) {
                 onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement;
                     target.style.height = 'auto';
-                    target.style.height = target.scrollHeight + 'px';
+                    target.style.height = `${target.scrollHeight}px`;
                 }}
                 placeholder="✗"
                 rows={1}

@@ -1,16 +1,13 @@
-import type { Dispatch, SetStateAction } from 'react';
-
 import { parsePageRanges } from 'bitaboom';
 import { BookmarkIcon, BracketsIcon, SignatureIcon, StrikethroughIcon, SubscriptIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-
-import type { SheetLine } from '@/stores/manuscriptStore/types';
-
+import type { Dispatch, SetStateAction } from 'react';
 import SubmittableInput from '@/components/submittable-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { INTAHA_TYPO, SWS_SYMBOL } from '@/lib/constants';
 import { filterRowsByDivergence } from '@/lib/filtering';
+import type { SheetLine } from '@/stores/manuscriptStore/types';
 import { useManuscriptStore } from '@/stores/manuscriptStore/useManuscriptStore';
 
 type ManuscriptTableHeaderProps = {
@@ -41,17 +38,17 @@ export default function ManuscriptTableHeader({
         <tr>
             <th
                 aria-label="Select All"
-                className="w-12 px-4 py-3 text-center text-sm font-semibold text-gray-700 uppercase tracking-wide"
+                className="w-12 px-4 py-3 text-center font-semibold text-gray-700 text-sm uppercase tracking-wide"
             >
                 <Checkbox checked={isAllSelected} onCheckedChange={(checked) => onSelectAll(Boolean(checked))} />
             </th>
             <th
                 aria-label="Page"
-                className="w-20 px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide"
+                className="w-20 px-4 py-3 text-left font-semibold text-gray-700 text-sm uppercase tracking-wide"
             >
                 <div className="flex items-center justify-between">
                     <SubmittableInput
-                        className={`w-full !text-xl text-xs! leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                        className={`!text-xl w-full border-none bg-transparent px-1 py-1 text-gray-800 text-xs! leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50`}
                         name="range"
                         onSubmit={(range) => {
                             record('FilterByPages', range);
@@ -63,13 +60,13 @@ export default function ManuscriptTableHeader({
             </th>
             <th
                 aria-label="Text"
-                className="w-1/2 px-4 py-3 text-right text-sm font-semibold text-gray-700 uppercase tracking-wide"
+                className="w-1/2 px-4 py-3 text-right font-semibold text-gray-700 text-sm uppercase tracking-wide"
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
                     <Button
                         aria-label="Filter Intaha"
-                        className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                        className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                         onClick={() => {
                             record('FilterIntaha');
 
@@ -84,7 +81,7 @@ export default function ManuscriptTableHeader({
                     {hasCenteredContent && (
                         <Button
                             aria-label="Centered Content"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                             onClick={() => {
                                 record('FilterByCentered');
                                 filterByIds(rows.filter((r) => r.isCentered).map((r) => r.id));
@@ -97,7 +94,7 @@ export default function ManuscriptTableHeader({
                     {hasHeadings && (
                         <Button
                             aria-label="Headings"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                             onClick={() => {
                                 record('FilterByHeadings');
                                 filterByIds(rows.filter((r) => r.isHeading).map((r) => r.id));
@@ -110,7 +107,7 @@ export default function ManuscriptTableHeader({
                     {hasFootnotes && (
                         <Button
                             aria-label="Footnotes"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                             onClick={() => {
                                 const pageGroups = new Map<number, SheetLine[]>();
 
@@ -146,7 +143,7 @@ export default function ManuscriptTableHeader({
                     {hasInvalidFootnotes && (
                         <Button
                             aria-label="Invalid Footnotes"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
+                            className="flex h-6 w-6 items-center justify-center transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
                             onClick={() => {
                                 record('FilterByInvalidFootnotes');
                                 filterByPages(rows.filter((r) => r.hasInvalidFootnotes).map((r) => r.page));
@@ -159,7 +156,7 @@ export default function ManuscriptTableHeader({
                     {savedIds.length > 0 && (
                         <Button
                             aria-label="Saved Rows"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none"
+                            className="flex h-6 w-6 items-center justify-center transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
                             onClick={() => {
                                 record('FilterBySavedRows', savedIds.length.toString());
                                 filterByIds(savedIds);
@@ -172,7 +169,7 @@ export default function ManuscriptTableHeader({
                     {includesPoetry && (
                         <Button
                             aria-label="Poetic"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
+                            className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
                             onClick={() => {
                                 record('FilterByPoetic');
                                 filterByIds(rows.filter((r) => r.isPoetic).map((r) => r.id));
@@ -182,9 +179,9 @@ export default function ManuscriptTableHeader({
                             <SignatureIcon />
                         </Button>
                     )}
-                    <div className="text-right w-full">
+                    <div className="w-full text-right">
                         <SubmittableInput
-                            className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                            className={`!text-xl w-full border-none bg-transparent px-1 py-1 text-gray-800 leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50`}
                             name="query"
                             onSubmit={(query) => {
                                 record('QueryObservations');
@@ -197,14 +194,14 @@ export default function ManuscriptTableHeader({
             </th>
             <th
                 aria-label="Support"
-                className="w-1/2 px-4 py-3 text-sm font-semibold text-gray-700 uppercase tracking-wide"
+                className="w-1/2 px-4 py-3 font-semibold text-gray-700 text-sm uppercase tracking-wide"
                 dir="rtl"
             >
                 <div className="flex items-center justify-between">
                     {altCount !== rows.length && (
                         <Button
                             aria-label="Filter Misaligned Observations"
-                            className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex h-6 w-6 items-center justify-center rounded-full font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                             onClick={() => {
                                 record('FilterByMissingAlt');
                                 filterByPages(rows.filter((r) => !r.alt).map((r) => r.page));
@@ -217,7 +214,7 @@ export default function ManuscriptTableHeader({
                     {hasMissingHonorifics && (
                         <Button
                             aria-label="Fix Typos"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 font-bold"
+                            className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                             onClick={() => {
                                 record('FilterByHonorifics');
                                 filterByIds(rows.filter((r) => r.includesHonorifics).map((r) => r.id));
@@ -230,7 +227,7 @@ export default function ManuscriptTableHeader({
                     {hasDivergence && (
                         <Button
                             aria-label="Divergence"
-                            className="flex items-center justify-center w-6 h-6 hover:bg-blue-200 hover:text-blue-800 transition-colors duration-150 focus:outline-none font-bold"
+                            className="flex h-6 w-6 items-center justify-center font-bold transition-colors duration-150 hover:bg-blue-200 hover:text-blue-800 focus:outline-none"
                             onClick={() => {
                                 const pages = filterRowsByDivergence(rows);
                                 record('FilterByDivergence', pages.length.toString());
@@ -242,9 +239,9 @@ export default function ManuscriptTableHeader({
                             <StrikethroughIcon />
                         </Button>
                     )}
-                    <div className="text-right w-full">
+                    <div className="w-full text-right">
                         <SubmittableInput
-                            className={`w-full !text-xl leading-relaxed text-gray-800 bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-1 py-1 transition-colors duration-150`}
+                            className={`!text-xl w-full border-none bg-transparent px-1 py-1 text-gray-800 leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50`}
                             name="query"
                             onSubmit={(query) => {
                                 record('QueryAlt');

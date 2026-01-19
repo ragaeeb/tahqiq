@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { describe, expect, it, jest, mock } from 'bun:test';
+import { fireEvent, render, screen } from '@testing-library/react';
+import type React from 'react';
 
 const record = jest.fn();
 const formattingCalls: string[] = [];

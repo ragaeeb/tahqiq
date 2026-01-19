@@ -1,7 +1,6 @@
 'use client';
 
 import { record } from 'nanolytics';
-import React from 'react';
 
 import { selectVolumes } from '@/stores/bookStore/selectors';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
@@ -17,10 +16,10 @@ export default function VolumeSelector() {
 
     return (
         <select
-            className="p-2 border rounded"
+            className="rounded border p-2"
             onChange={(e) => {
                 record('SetBookVolume', e.target.value);
-                setSelectedVolume(parseInt(e.target.value));
+                setSelectedVolume(parseInt(e.target.value, 10));
             }}
             value={selectedVolume}
         >
