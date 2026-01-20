@@ -1,3 +1,10 @@
+# [1.50.0](https://github.com/ragaeeb/tahqiq/compare/v1.49.3...v1.50.0) (2026-01-20)
+
+
+### Features
+
+* **filter:** Add next/prev row during filter ([0683132](https://github.com/ragaeeb/tahqiq/commit/0683132f986912b1c1ef3784916dc7e49592fc2a))
+
 ## [1.49.3](https://github.com/ragaeeb/tahqiq/compare/v1.49.2...v1.49.3) (2026-01-19)
 
 
