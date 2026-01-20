@@ -50,53 +50,46 @@ const normalizeReplaceFlags = (flags?: string) => {
     return ['g', 'i', 'm', 's', 'y', 'u'].filter((c) => set.has(c)).join('');
 };
 
+const createPageMatcher = (pages?: string) => {
+    if (!pages) {
+        return () => true;
+    }
+
+    const staticSet = new Set<number>();
+    const openRanges: number[] = [];
+
+    for (const p of pages.split(',').map((p) => p.trim())) {
+        if (p.endsWith('+')) {
+            const start = Number.parseInt(p.slice(0, -1), 10);
+            if (!Number.isNaN(start)) {
+                openRanges.push(start);
+            }
+        } else {
+            try {
+                for (const n of parsePageRanges(p)) {
+                    staticSet.add(n);
+                }
+            } catch {}
+        }
+    }
+
+    return (pageIdStr: string) => {
+        const pageId = Number.parseInt(pageIdStr, 10);
+        if (Number.isNaN(pageId)) {
+            return false;
+        }
+        return staticSet.has(pageId) || openRanges.some((start) => pageId >= start);
+    };
+};
+
 const compileReplaceRules = (rules: Replacement[]) => {
     return rules
         .filter((r) => r.pages !== '')
-        .map((r) => {
-            let isMatch = (_: string) => true;
-
-            if (r.pages) {
-                const staticSet = new Set<number>();
-                const openRanges: number[] = [];
-
-                const parts = r.pages.split(',').map((p) => p.trim());
-                for (const p of parts) {
-                    if (p.endsWith('+')) {
-                        const start = Number.parseInt(p.replace('+', ''), 10);
-                        if (!Number.isNaN(start)) {
-                            openRanges.push(start);
-                        }
-                    } else {
-                        try {
-                            const parsed = parsePageRanges(p);
-                            for (const n of parsed) {
-                                staticSet.add(n);
-                            }
-                        } catch {
-                            // ignore invalid ranges
-                        }
-                    }
-                }
-
-                isMatch = (pageIdStr: string) => {
-                    const pageId = Number.parseInt(pageIdStr, 10);
-                    if (Number.isNaN(pageId)) {
-                        return false;
-                    }
-
-                    if (staticSet.has(pageId)) {
-                        return true;
-                    }
-                    if (openRanges.some((start) => pageId >= start)) {
-                        return true;
-                    }
-                    return false;
-                };
-            }
-
-            return { isMatch, re: new RegExp(r.regex, normalizeReplaceFlags(r.flags)), replacement: r.replacement };
-        });
+        .map((r) => ({
+            isMatch: createPageMatcher(r.pages),
+            re: new RegExp(r.regex, normalizeReplaceFlags(r.flags)),
+            replacement: r.replacement,
+        }));
 };
 
 export const applyReplacements = (pages: Page[], rules?: Replacement[]) => {

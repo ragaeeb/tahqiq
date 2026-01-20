@@ -71,32 +71,20 @@ export const mergeShortSegments = (segments: Segment[], minWordCount: number) =>
 
     for (let i = 1; i < segments.length; i++) {
         const next = segments[i];
-        const currentWordCount = countWords(current.content || '');
-        const nextWordCount = countWords(next.content || '');
+        const isMergable =
+            (countWords(current.content || '') < minWordCount || countWords(next.content || '') < minWordCount) &&
+            current.from === next.from &&
+            current.to === next.to;
 
-        // Check if either segment is short and have same from/to
-        const currentIsShort = currentWordCount < minWordCount;
-        const nextIsShort = nextWordCount < minWordCount;
-        const sameFrom = current.from === next.from;
-        const sameTo = current.to === next.to;
-
-        if ((currentIsShort || nextIsShort) && sameFrom && sameTo) {
-            // Merge: combine nass with newline separator
-            current = {
-                ...current,
-                content: `${current.content || ''}\n${next.content || ''}`,
-                // Keep first excerpt's text/translator, extend to if next has larger
-                to: next.to && next.to > (current.to || current.from) ? next.to : current.to,
-            };
+        if (isMergable) {
+            current.content = `${current.content || ''}\n${next.content || ''}`;
+            current.to = Math.max(current.to || current.from, next.to || next.from);
         } else {
-            // Push current and move to next
             result.push(current);
             current = { ...next };
         }
     }
-    // Don't forget the last segment
     result.push(current);
-
     return result;
 };
 
@@ -284,56 +272,55 @@ type ExcerptIssueItem = { id: string; nass?: string | null; text?: string | null
  *
  * Truncation detection:
  * - Only checks items that HAVE a translation (text is defined and non-empty)
- * - Flags if translation is suspiciously short compared to Arabic source
+ * Checks if a translation is truncated compared to its Arabic source.
+ */
+function isTranslationTruncated(item: ExcerptIssueItem): boolean {
+    return !!detectTruncatedTranslation(item.nass, item.text);
+}
+
+/**
+ * Checks if a segment point is a gap surrounded by translations
+ */
+function isSurroundedGap(items: ExcerptIssueItem[], start: number, end: number): boolean {
+    const hasPrev = start > 0 && !!items[start - 1].text?.trim();
+    const hasNext = end < items.length - 1 && !!items[end + 1].text?.trim();
+    return hasPrev && hasNext && end - start + 1 <= MAX_CONSECUTIVE_GAPS_TO_FLAG;
+}
+
+/**
+ * Finds all issues in a list of items: gaps (missing translations between translated blocks)
+ * and truncated translations (too short for the Arabic text).
  *
- * @param items - Array of excerpts/items to check
+ * @param items - List of items to check
  * @returns Array of IDs that have issues
  */
 export const findExcerptIssues = (items: ExcerptIssueItem[]): string[] => {
     const issueIds = new Set<string>();
 
-    // Find gaps: consecutive items without translation, surrounded by items with translations
     let i = 0;
     while (i < items.length) {
-        const item = items[i];
-        const hasText = !!item.text?.trim();
-
-        if (hasText) {
+        if (items[i].text?.trim()) {
+            // Check for truncation if it has text
+            if (isTranslationTruncated(items[i])) {
+                issueIds.add(items[i].id);
+            }
             i++;
             continue;
         }
 
-        // Found an item without translation - count consecutive gaps
-        const gapStartIndex = i;
-        const gapIds: string[] = [item.id];
-
+        // Found an item without translation - find the end of this gap
+        const start = i;
         while (i + 1 < items.length && !items[i + 1].text?.trim()) {
             i++;
-            gapIds.push(items[i].id);
         }
-        const gapEndIndex = i;
 
-        // Check if this gap is surrounded by translated items
-        const hasPrevTranslation = gapStartIndex > 0 && !!items[gapStartIndex - 1].text?.trim();
-        const hasNextTranslation = gapEndIndex < items.length - 1 && !!items[gapEndIndex + 1].text?.trim();
-
-        // Only flag if surrounded by translations and gap size is within limit
-        if (hasPrevTranslation && hasNextTranslation && gapIds.length <= MAX_CONSECUTIVE_GAPS_TO_FLAG) {
-            for (const id of gapIds) {
-                issueIds.add(id);
+        // Check if this gap is surrounded by translated items and within size limit
+        if (isSurroundedGap(items, start, i)) {
+            for (let j = start; j <= i; j++) {
+                issueIds.add(items[j].id);
             }
         }
-
         i++;
-    }
-
-    // Find truncated translations - only for items that HAVE text
-    for (const item of items) {
-        if (item.text?.trim()) {
-            if (detectTruncatedTranslation(item.nass, item.text)) {
-                issueIds.add(item.id);
-            }
-        }
     }
 
     return Array.from(issueIds);
@@ -382,32 +369,27 @@ export const getMetaKey = (debug: unknown): string => {
     return '_flappa';
 };
 
+function summarizeArray(arr: any[]): string {
+    if (arr.length === 0) {
+        return '';
+    }
+    return arr.length > 1 ? `${arr[0]} (+${arr.length - 1})` : (arr[0] ?? '');
+}
+
 export const summarizeRulePattern = (rule: any) => {
     if (!rule || typeof rule !== 'object') {
         return '';
     }
     if (Array.isArray(rule.lineStartsWith)) {
-        return rule.lineStartsWith.length > 1
-            ? `${rule.lineStartsWith[0]} (+${rule.lineStartsWith.length - 1})`
-            : (rule.lineStartsWith[0] ?? '');
+        return summarizeArray(rule.lineStartsWith);
     }
     if (Array.isArray(rule.lineStartsAfter)) {
-        return rule.lineStartsAfter.length > 1
-            ? `${rule.lineStartsAfter[0]} (+${rule.lineStartsAfter.length - 1})`
-            : (rule.lineStartsAfter[0] ?? '');
+        return summarizeArray(rule.lineStartsAfter);
     }
     if (Array.isArray(rule.lineEndsWith)) {
-        return rule.lineEndsWith.length > 1
-            ? `${rule.lineEndsWith[0]} (+${rule.lineEndsWith.length - 1})`
-            : (rule.lineEndsWith[0] ?? '');
+        return summarizeArray(rule.lineEndsWith);
     }
-    if (typeof rule.template === 'string') {
-        return rule.template;
-    }
-    if (typeof rule.regex === 'string') {
-        return rule.regex;
-    }
-    return '';
+    return (rule.template as string) || (rule.regex as string) || '';
 };
 
 export const getSegmentFilterKey = (dbg: DebugMeta | undefined): string => {

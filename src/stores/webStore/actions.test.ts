@@ -34,7 +34,7 @@ describe('webStore/actions', () => {
             expect(result.pages).toHaveLength(2);
             expect(result.pages[0]?.id).toBe(1);
             expect(result.pages[0]?.body).toBe('First page body');
-            expect(result.pages[0]?.pageTitle).toBe('First Title');
+            expect(result.pages[0]?.title).toBe('First Title');
             expect(result.pages[1]?.id).toBe(2);
             expect(result.titles).toHaveLength(2);
             expect(result.titles[0]?.id).toBe(1);

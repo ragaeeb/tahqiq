@@ -41,7 +41,7 @@ export function ConfirmButton({
                     </>
                 )
             ) : (
-                <>{children}</>
+                children
             )}
         </Button>
     );

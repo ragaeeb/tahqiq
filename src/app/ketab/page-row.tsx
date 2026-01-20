@@ -11,7 +11,7 @@ type PageRowProps = {
     bookId?: number;
 };
 
-function PageRow({ data, onUpdate, bookId }: PageRowProps) {
+function PageRow({ data, onUpdate }: PageRowProps) {
     const bodyRef = useRef<string>(data.body);
     const footnoteRef = useRef<string>(data.footnote || '');
 

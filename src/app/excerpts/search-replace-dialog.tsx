@@ -199,39 +199,28 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
             return;
         }
 
-        // Use bulk actions for single state update instead of individual updates
-        const count = matches.length;
+        const formatFn = (text: string) => {
+            regex.lastIndex = 0;
+            return text.replace(regex, replacePattern);
+        };
 
         if (targetField === 'text') {
-            // Use existing bulk formatting actions for text field
-            const formatFn = (text: string) => {
-                regex.lastIndex = 0;
-                return text.replace(regex, replacePattern);
+            const formatMap: Record<TargetScope, (fn: (v: string) => string) => void> = {
+                excerpts: applyTranslationFormatting,
+                footnotes: applyFootnoteFormatting,
+                headings: applyHeadingFormatting,
             };
-
-            if (scope === 'headings') {
-                applyHeadingFormatting(formatFn);
-            } else if (scope === 'footnotes') {
-                applyFootnoteFormatting(formatFn);
-            } else {
-                applyTranslationFormatting(formatFn);
-            }
+            formatMap[scope]?.(formatFn);
         } else {
-            // For nass field, use bulk nass formatting actions
-            const formatFn = (nass: string) => {
-                regex.lastIndex = 0;
-                return nass.replace(regex, replacePattern);
+            const formatMap: Record<TargetScope, (fn: (v: string) => string) => void> = {
+                excerpts: applyExcerptNassFormatting,
+                footnotes: applyFootnoteNassFormatting,
+                headings: applyHeadingNassFormatting,
             };
-
-            if (scope === 'headings') {
-                applyHeadingNassFormatting(formatFn);
-            } else if (scope === 'footnotes') {
-                applyFootnoteNassFormatting(formatFn);
-            } else {
-                applyExcerptNassFormatting(formatFn);
-            }
+            formatMap[scope]?.(formatFn);
         }
 
+        const count = matches.length;
         record('SearchReplace', `${scope}:${targetField}:${count}`);
         setAppliedCount(count);
         setTimeout(() => setAppliedCount(null), 3000);
@@ -244,9 +233,9 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
         applyTranslationFormatting,
         applyHeadingFormatting,
         applyFootnoteFormatting,
+        applyExcerptNassFormatting,
         applyHeadingNassFormatting,
         applyFootnoteNassFormatting,
-        applyExcerptNassFormatting,
     ]);
 
     const handleInsertToken = useCallback((token: string) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDownIcon, EyeIcon, PencilIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { ArrowDownIcon, ChevronDownIcon, ChevronUpIcon, EyeIcon, PencilIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -31,6 +31,12 @@ type ExcerptRowProps = {
     onCopyDown: (data: Excerpt) => void;
     /** Callback to show this row in full context (clear filter and scroll to it) */
     onShowInContext?: (id: string) => void;
+    /** ID of the row directly before this in the unfiltered view */
+    prevId?: string;
+    /** ID of the row directly after this in the unfiltered view */
+    nextId?: string;
+    /** Callback to add a neighbor ID to the current filter */
+    onAddNeighbor?: (id: string) => void;
 };
 
 function ExcerptRow({
@@ -44,6 +50,9 @@ function ExcerptRow({
     onUpdate,
     onCopyDown,
     onShowInContext,
+    prevId,
+    nextId,
+    onAddNeighbor,
 }: ExcerptRowProps) {
     const [selectedText, setSelectedText] = useState('');
     const [showExtractButton, setShowExtractButton] = useState(false);
@@ -118,7 +127,7 @@ function ExcerptRow({
     return (
         <>
             <tr
-                className={`border-gray-100 border-b transition-colors duration-150 ease-in-out ${
+                className={`group relative border-gray-100 border-b transition-colors duration-150 ease-in-out hover:z-30 ${
                     isSelected
                         ? 'bg-blue-100 hover:bg-blue-200'
                         : data.meta?.type === Markers.Chapter
@@ -128,6 +137,15 @@ function ExcerptRow({
                             : 'hover:bg-gray-50'
                 }`}
             >
+                {/* Neighbor navigation buttons appear on hover in filtered state */}
+                <td className="h-0 w-0 overflow-visible border-none p-0">
+                    <NeighborButtons
+                        isFiltered={isFiltered}
+                        nextId={nextId}
+                        onAddNeighbor={onAddNeighbor}
+                        prevId={prevId}
+                    />
+                </td>
                 {onToggleSelect && (
                     <td className="w-8 px-1 py-1 text-center align-top">
                         <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(data.id)} />
@@ -136,51 +154,23 @@ function ExcerptRow({
                 <td className="group w-24 px-1 py-1 text-center align-top text-gray-600 text-xs">
                     <div className="flex items-center justify-center gap-1">
                         {isEditingPages ? (
-                            <input
-                                className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
-                                defaultValue={[data.from, data.to].filter(Boolean).join('-')}
-                                onBlur={(e) => {
-                                    const updates = createUpdate(e.target.value.trim(), data);
-
+                            <PageEditInput
+                                data={data}
+                                onBlur={(updates) => {
                                     if (updates) {
                                         onUpdate(data.id, updates);
                                     }
-
                                     setIsEditingPages(false);
                                 }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.currentTarget.blur();
-                                    } else if (e.key === 'Escape') {
-                                        setIsEditingPages(false);
-                                    }
-                                }}
-                                ref={(el) => el?.focus()}
-                                type="text"
+                                onCancel={() => setIsEditingPages(false)}
                             />
                         ) : (
-                            <>
-                                <button
-                                    className="cursor-pointer bg-transparent"
-                                    onDoubleClick={() => setIsEditingPages(true)}
-                                    title={data.id}
-                                    type="button"
-                                >
-                                    {[data.from, data.to].filter(Boolean).join('-')}{' '}
-                                    {data.meta?.num && `#${data.meta?.num}`}
-                                </button>
-                                {isFiltered && onShowInContext && (
-                                    <Button
-                                        className="h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100"
-                                        onClick={() => onShowInContext(data.id)}
-                                        size="icon"
-                                        title="Show in context (clear filter and scroll to this row)"
-                                        variant="ghost"
-                                    >
-                                        <EyeIcon className="h-3 w-3" />
-                                    </Button>
-                                )}
-                            </>
+                            <PageStaticDisplay
+                                data={data}
+                                isFiltered={isFiltered}
+                                onShowInContext={onShowInContext}
+                                onStartEdit={() => setIsEditingPages(true)}
+                            />
                         )}
                     </div>
                 </td>
@@ -272,6 +262,111 @@ function ExcerptRow({
                 </td>
             </tr>
             {floatingButton}
+        </>
+    );
+}
+
+function PageEditInput({
+    data,
+    onBlur,
+    onCancel,
+}: {
+    data: Excerpt;
+    onBlur: (updates: any) => void;
+    onCancel: () => void;
+}) {
+    return (
+        <input
+            className="w-full bg-transparent text-center text-gray-600 text-xs outline-none"
+            defaultValue={[data.from, data.to].filter(Boolean).join('-')}
+            onBlur={(e) => onBlur(createUpdate(e.target.value.trim(), data))}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                } else if (e.key === 'Escape') {
+                    onCancel();
+                }
+            }}
+            ref={(el) => el?.focus()}
+            type="text"
+        />
+    );
+}
+
+function PageStaticDisplay({
+    data,
+    isFiltered,
+    onShowInContext,
+    onStartEdit,
+}: {
+    data: Excerpt;
+    isFiltered?: boolean;
+    onShowInContext?: (id: string) => void;
+    onStartEdit: () => void;
+}) {
+    return (
+        <>
+            <button className="cursor-pointer bg-transparent" onDoubleClick={onStartEdit} title={data.id} type="button">
+                {[data.from, data.to].filter(Boolean).join('-')} {data.meta?.num && `#${data.meta?.num}`}
+            </button>
+            {isFiltered && onShowInContext && (
+                <Button
+                    className="h-5 w-5 opacity-0 transition-opacity group-hover:opacity-100"
+                    onClick={() => onShowInContext(data.id)}
+                    size="icon"
+                    title="Show in context (clear filter and scroll to this row)"
+                    variant="ghost"
+                >
+                    <EyeIcon className="h-3 w-3" />
+                </Button>
+            )}
+        </>
+    );
+}
+
+function NeighborButtons({
+    isFiltered,
+    onAddNeighbor,
+    prevId,
+    nextId,
+}: {
+    isFiltered?: boolean;
+    onAddNeighbor?: (id: string) => void;
+    prevId?: string;
+    nextId?: string;
+}) {
+    if (!isFiltered || !onAddNeighbor) {
+        return null;
+    }
+
+    return (
+        <>
+            {prevId && (
+                <div className="absolute top-0 right-0 left-0 z-20 flex h-0 translate-y-[-50%] justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                    <Button
+                        className="h-6 gap-1 rounded-full border-blue-200 bg-white px-3 py-0 font-medium text-blue-600 text-xs shadow-sm hover:bg-blue-50 hover:text-blue-700"
+                        onClick={() => onAddNeighbor(prevId)}
+                        size="sm"
+                        variant="outline"
+                    >
+                        <ChevronUpIcon className="h-3 w-3" />
+                        Show Previous ({prevId})
+                    </Button>
+                </div>
+            )}
+            {nextId && (
+                <div className="absolute right-0 bottom-0 left-0 z-20 flex h-0 translate-y-[50%] justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                    <Button
+                        className="h-6 gap-1 rounded-full border-blue-200 bg-white px-3 py-0 font-medium text-blue-600 text-xs shadow-sm hover:bg-blue-50 hover:text-blue-700"
+                        onClick={() => onAddNeighbor(nextId)}
+                        size="sm"
+                        variant="outline"
+                    >
+                        <ChevronDownIcon className="h-3 w-3" />
+                        Show Next ({nextId})
+                    </Button>
+                </div>
+            )}
         </>
     );
 }

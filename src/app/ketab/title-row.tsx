@@ -13,7 +13,7 @@ type TitleRowProps = {
     bookId?: number;
 };
 
-function TitleRow({ data, allTitles, onUpdate, onNavigateToPage, bookId }: TitleRowProps) {
+function TitleRow({ data, onUpdate, onNavigateToPage }: TitleRowProps) {
     const handleTitleBlur = useCallback(
         (e: React.FocusEvent<HTMLInputElement>) => {
             const newTitle = e.target.value;

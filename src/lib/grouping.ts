@@ -26,7 +26,6 @@ export type TokenGroup = {
 // Estimated tokens for "ID - " and separators "\n\n"
 // "\n\n" (2 chars) + " - " (3 chars) = 5 chars.
 // Plus safety margin for ID length.
-const TOKENS_OVERHEAD_BASE = 5;
 
 /**
  * Groups an array of IDs by cumulative token count thresholds.

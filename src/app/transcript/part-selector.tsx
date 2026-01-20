@@ -19,7 +19,7 @@ export default function PartSelector() {
             className="rounded border p-2"
             onChange={(e) => {
                 record('SetTranscriptPart', e.target.value);
-                setSelectedPart(parseInt(e.target.value));
+                setSelectedPart(Number(e.target.value));
             }}
             value={selectedPart}
         >

@@ -760,3 +760,7 @@ When dealing with very large datasets (like 40,000 excerpt IDs in the Translatio
 | Validation Grouping | Group errors by `ValidationErrorType` instead of raw message for cleaner UI and easier bulk fixing |
 | Auto-Fix Logic | Use `wobble-bibble`'s `fixAll` with specific types for safe, automated text corrections |
 | Snapshot API | `buildCorpusSnapshot` returns `{ untranslated: Segment[], translatedIds: Set<string> }` to simplify downstream selection logic |
+| HTML Table Structure | Wrap interactive elements (like absolute-positioned buttons) in a `<td>` to avoid hydration errors where a `<div>` is a direct child of `<tr>` |
+| Hover Z-Index | Use `hover:z-index` (e.g., `hover:z-30`) on table rows to ensure interactive elements like floating buttons maintain visual priority over adjacent rows |
+| Virtualized List Resilience | Implement null checks in `getKey` and `renderRow` for virtualized items to handle transient `undefined` states during rapid data transitions or filtering |
+| Multi-ID Filtering | Use comma-separated URL parameters and implementation-level additive logic (`addIdsToFilter`) for non-destructive, shareable filtering state |

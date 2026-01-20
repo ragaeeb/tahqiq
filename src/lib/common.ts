@@ -11,55 +11,37 @@ export const getNextId = () => ++ID_COUNTER;
  * @param options - Configuration options
  * @returns Object containing only the changed fields, or empty object if no changes
  */
+const normalizeValue = (key: string, value: unknown, numberFields: string[]) => {
+    let normalized = value;
+    if (numberFields.includes(key) && typeof normalized === 'string') {
+        const trimmed = normalized.trim();
+        normalized = trimmed === '' ? undefined : Number.parseInt(trimmed, 10) || undefined;
+    }
+    return normalized === '' ? undefined : normalized;
+};
+
 export function createObjectDiff<T extends Record<string, unknown>>(
     original: T,
     updated: Record<string, unknown>,
-    options: {
-        /** Fields to exclude from comparison (e.g., 'id', 'lastUpdatedAt') */
-        excludeKeys?: string[];
-        /** Fields that should be parsed as numbers */
-        numberFields?: string[];
-    } = {},
+    options: { excludeKeys?: string[]; numberFields?: string[] } = {},
 ): Partial<T> {
     const { excludeKeys = [], numberFields = [] } = options;
     const diff: Record<string, unknown> = {};
 
-    // Get all unique keys from both objects
-    const allKeys = new Set([...Object.keys(original), ...Object.keys(updated)]);
-
-    for (const key of allKeys) {
+    for (const key of Object.keys(updated)) {
         if (excludeKeys.includes(key)) {
             continue;
         }
 
         const originalValue = original[key];
-        let updatedValue = updated[key];
+        const updatedValue = normalizeValue(key, updated[key], numberFields);
 
-        // Skip if key doesn't exist in updated
-        if (!(key in updated)) {
-            continue;
-        }
+        const isObject = typeof originalValue === 'object' && originalValue !== null;
+        const changed = isObject
+            ? JSON.stringify(originalValue) !== (updatedValue ? JSON.stringify(updatedValue) : '')
+            : originalValue !== updatedValue;
 
-        // Handle number fields - parse string to number
-        if (numberFields.includes(key) && typeof updatedValue === 'string') {
-            const trimmed = updatedValue.trim();
-            updatedValue = trimmed === '' ? undefined : Number.parseInt(trimmed, 10) || undefined;
-        }
-
-        // Normalize empty strings to undefined for comparison
-        if (updatedValue === '') {
-            updatedValue = undefined;
-        }
-
-        // Compare values
-        if (typeof originalValue === 'object' && originalValue !== null) {
-            // For objects (like meta), compare JSON strings
-            const originalJson = JSON.stringify(originalValue);
-            const updatedJson = updatedValue ? JSON.stringify(updatedValue) : '';
-            if (originalJson !== updatedJson) {
-                diff[key] = updatedValue;
-            }
-        } else if (originalValue !== updatedValue) {
+        if (changed) {
             diff[key] = updatedValue;
         }
     }
@@ -72,22 +54,16 @@ export const createUpdate = <T extends { from: number; to?: number }>(value: str
     const newFrom = parts[0];
     const newTo = parts.length > 1 ? parts[1] : undefined;
 
-    // Check if values actually changed
-    const fromChanged = !Number.isNaN(newFrom) && newFrom !== data.from;
-    const toChanged = newTo !== undefined ? !Number.isNaN(newTo) && newTo !== data.to : data.to !== undefined;
+    const updates: { from?: number; to?: number } = {};
 
-    if (fromChanged || toChanged) {
-        const updates: { from?: number; to?: number } = {};
-        if (!Number.isNaN(newFrom)) {
-            updates.from = newFrom;
-        }
-        if (newTo !== undefined && !Number.isNaN(newTo)) {
-            updates.to = newTo;
-        } else if (newTo === undefined && data.to !== undefined) {
-            // User removed the 'to' value (e.g., changed "100-200" to "100")
-            updates.to = undefined;
-        }
-
-        return Object.keys(updates).length > 0 ? updates : undefined;
+    if (!Number.isNaN(newFrom) && newFrom !== data.from) {
+        updates.from = newFrom;
     }
+
+    const toVal = !Number.isNaN(newTo as number) ? newTo : undefined;
+    if (toVal !== data.to) {
+        updates.to = toVal;
+    }
+
+    return Object.keys(updates).length > 0 ? updates : undefined;
 };

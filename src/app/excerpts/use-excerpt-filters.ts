@@ -7,25 +7,27 @@ import { createMatcher } from '@/lib/search';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 
-export type FilterField = 'nass' | 'text' | 'page';
+export type FilterField = 'nass' | 'text' | 'page' | 'ids';
 export type FilterScope = 'excerpts' | 'headings' | 'footnotes';
 export type SortMode = 'default' | 'length';
 
-type Filters = { nass: string; page: string; text: string };
+type Filters = { ids?: string[]; nass: string; page: string; text: string };
 
 /**
  * Filters items based on page, nass, and text criteria
  */
-function filterItems<T extends Pick<Excerpt, 'from' | 'nass' | 'text'> | Pick<Heading, 'from' | 'nass' | 'text'>>(
-    items: T[],
-    filters: Filters,
-): T[] {
+function filterItems<
+    T extends Pick<Excerpt, 'id' | 'from' | 'nass' | 'text'> | Pick<Heading, 'id' | 'from' | 'nass' | 'text'>,
+>(items: T[], filters: Filters): T[] {
     return items.filter((item) => {
         if (filters.page) {
             const pageNum = Number.parseInt(filters.page, 10);
             if (!Number.isNaN(pageNum) && item.from !== pageNum) {
                 return false;
             }
+        }
+        if (filters.ids && filters.ids.length > 0 && !filters.ids.includes(item.id)) {
+            return false;
         }
         if (filters.nass && !createMatcher(filters.nass)(item.nass)) {
             return false;
@@ -60,14 +62,20 @@ export function useExcerptFilters() {
     // Read current tab and filter values from URL
     const activeTab = (searchParams.get('tab') as FilterScope) || 'excerpts';
     const sortMode = (searchParams.get('sort') as SortMode) || 'default';
-    const filters = useMemo(
-        () => ({
+    const filters = useMemo(() => {
+        const idsParam = searchParams.get('ids');
+        return {
+            ids: idsParam
+                ? idsParam
+                      .split(',')
+                      .filter(Boolean)
+                      .map((id) => id.trim())
+                : undefined,
             nass: searchParams.get('nass') || '',
             page: searchParams.get('page') || '',
             text: searchParams.get('text') || '',
-        }),
-        [searchParams],
-    );
+        };
+    }, [searchParams]);
 
     // Read scroll target from URL hash
     // For excerpts: #2333 scrolls to row with `from` matching 2333
@@ -106,7 +114,7 @@ export function useExcerptFilters() {
 
     // Track if filters have been applied for current URL params + data state
     const prevFiltersRef = useRef<string>('');
-    const filtersKey = `${activeTab}:${filters.nass}:${filters.text}:${filters.page}`;
+    const filtersKey = `${activeTab}:${filters.nass}:${filters.text}:${filters.page}:${filters.ids?.join(',') || ''}`;
 
     // Track data loading state - we need to reapply filters when data first loads
     const dataLoadedRef = useRef(false);
@@ -121,6 +129,7 @@ export function useExcerptFilters() {
             params.delete('nass');
             params.delete('text');
             params.delete('page');
+            params.delete('ids');
             router.replace(`${pathname}?${params.toString()}`, { scroll: false });
         },
         [searchParams, router, pathname],
@@ -158,82 +167,70 @@ export function useExcerptFilters() {
         [searchParams, router, pathname],
     );
 
-    /**
-     * Clear the scroll state after scrolling is complete.
-     * The hash remains in the URL for shareability.
-     */
+    // Clear the scroll state
     const clearScrollTo = useCallback(() => {
         setScrollToFrom(null);
         setScrollToId(null);
     }, []);
 
-    // Apply filters when URL params change OR when data is first loaded
-    useEffect(() => {
-        const hasFilters = filters.nass || filters.text || filters.page;
+    // Add specific IDs to the current filter
+    const addIdsToFilter = useCallback(
+        (newIds: string[]) => {
+            const params = new URLSearchParams(searchParams.toString());
+            const currentIds = params.get('ids')?.split(',').filter(Boolean) || [];
+            const updatedIds = Array.from(new Set([...currentIds, ...newIds]));
+            params.set('ids', updatedIds.join(','));
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        },
+        [searchParams, router, pathname],
+    );
 
-        // Check if this is a data load event (went from no data to having data)
-        const isDataLoadEvent = !dataLoadedRef.current && hasData;
-        if (isDataLoadEvent) {
+    // Compute filtered IDs for each tab based on active tab and filters
+    const filteredResults = useMemo(() => {
+        if (!hasData) {
+            return { eIds: undefined, fIds: undefined, hIds: undefined };
+        }
+        const hasFilters = !!(filters.nass || filters.text || filters.page || filters.ids?.length);
+        if (!hasFilters) {
+            return { eIds: undefined, fIds: undefined, hIds: undefined };
+        }
+
+        return {
+            eIds: activeTab === 'excerpts' ? filterItems(allExcerpts, filters).map((e) => e.id) : undefined,
+            fIds: activeTab === 'footnotes' ? filterItems(allFootnotes, filters).map((f) => f.id) : undefined,
+            hIds: activeTab === 'headings' ? filterItems(allHeadings, filters).map((h) => h.id) : undefined,
+        };
+    }, [hasData, filters, activeTab, allExcerpts, allFootnotes, allHeadings]);
+
+    // Sync filtered IDs to store when filters change or data is loaded
+    useEffect(() => {
+        const isInitialDataLoad = !dataLoadedRef.current && hasData;
+        if (isInitialDataLoad) {
             dataLoadedRef.current = true;
         }
 
-        // Skip if:
-        // 1. Filters haven't changed AND this isn't a data load event
-        // 2. There are no filters to apply
-        const filtersChanged = prevFiltersRef.current !== filtersKey;
-
-        if (!filtersChanged && !isDataLoadEvent) {
-            return;
-        }
-
-        if (!hasFilters) {
-            prevFiltersRef.current = filtersKey;
-            filterExcerptsByIds(undefined);
-            filterHeadingsByIds(undefined);
-            filterFootnotesByIds(undefined);
-            return;
-        }
-
-        if (!hasData) {
+        if (prevFiltersRef.current === filtersKey && !isInitialDataLoad) {
             return;
         }
 
         prevFiltersRef.current = filtersKey;
 
-        // Clear other tab filters
-        if (activeTab !== 'excerpts') {
-            filterExcerptsByIds(undefined);
-        }
-        if (activeTab !== 'headings') {
-            filterHeadingsByIds(undefined);
-        }
-        if (activeTab !== 'footnotes') {
-            filterFootnotesByIds(undefined);
-        }
+        // Apply to store
+        filterExcerptsByIds(filteredResults.eIds);
+        filterHeadingsByIds(filteredResults.hIds);
+        filterFootnotesByIds(filteredResults.fIds);
+    }, [filtersKey, hasData, filteredResults, filterExcerptsByIds, filterHeadingsByIds, filterFootnotesByIds]);
 
-        // Apply filter only to active tab
-        if (activeTab === 'excerpts') {
-            const filtered = filterItems(allExcerpts, filters);
-            filterExcerptsByIds(filtered.map((e) => e.id));
-        } else if (activeTab === 'headings') {
-            const filtered = filterItems(allHeadings, filters);
-            filterHeadingsByIds(filtered.map((h) => h.id));
-        } else if (activeTab === 'footnotes') {
-            const filtered = filterItems(allFootnotes, filters);
-            filterFootnotesByIds(filtered.map((f) => f.id));
-        }
-    }, [
-        filtersKey,
-        hasData,
+    return {
         activeTab,
+        addIdsToFilter,
+        clearScrollTo,
         filters,
-        allExcerpts,
-        allHeadings,
-        allFootnotes,
-        filterExcerptsByIds,
-        filterHeadingsByIds,
-        filterFootnotesByIds,
-    ]);
-
-    return { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode };
+        scrollToFrom,
+        scrollToId,
+        setActiveTab,
+        setFilter,
+        setSort,
+        sortMode,
+    };
 }

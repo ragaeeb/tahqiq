@@ -36,7 +36,7 @@ export function TranslateDialog({ defaultPrompt, defaultText }: TranslateDialogP
         try {
             const res = await fetch('/api/translate', {
                 body: JSON.stringify({
-                    apiKey: rawKeys[parseInt(apiKey)],
+                    apiKey: rawKeys[Number(apiKey)],
                     model: 'gemini-2.5-pro',
                     prompt: [data.get('prompt'), data.get('text')].join('\n\n'),
                 } satisfies TranslateRequestBody),

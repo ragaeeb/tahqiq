@@ -13,7 +13,7 @@ import type { FilterField, SortMode } from './use-excerpt-filters';
 type ExcerptsTableHeaderProps = {
     activeTab: string;
     excerpts: Excerpt[];
-    filters: { nass: string; page: string; text: string };
+    filters: { ids?: string[]; nass: string; page: string; text: string };
     footnotes: Excerpt[];
     headings: Heading[];
     /** Hide the translation column (only for excerpts tab) */

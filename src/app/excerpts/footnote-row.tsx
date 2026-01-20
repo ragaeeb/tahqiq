@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2Icon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon, Trash2Icon } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,11 +12,48 @@ type FootnoteRowProps = {
     data: Excerpt;
     onDelete: (id: string) => void;
     onUpdate: (id: string, updates: Partial<Omit<Excerpt, 'id'>>) => void;
+    prevId?: string;
+    nextId?: string;
+    onAddNeighbor?: (id: string) => void;
+    isFiltered?: boolean;
 };
 
-function FootnoteRow({ data, onDelete, onUpdate }: FootnoteRowProps) {
+function FootnoteRow({ data, onDelete, onUpdate, prevId, nextId, onAddNeighbor, isFiltered }: FootnoteRowProps) {
     return (
-        <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">
+        <tr className="group relative border-gray-100 border-b transition-colors duration-150 ease-in-out hover:z-30 hover:bg-gray-50">
+            {/* Neighbor navigation buttons appear on hover in filtered state */}
+            <td className="h-0 w-0 overflow-visible border-none p-0">
+                {isFiltered && onAddNeighbor && (
+                    <>
+                        {prevId && (
+                            <div className="absolute top-0 right-0 left-0 z-20 flex h-0 translate-y-[-50%] justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                                <Button
+                                    className="h-6 gap-1 rounded-full border-blue-200 bg-white px-3 py-0 font-medium text-blue-600 text-xs shadow-sm hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={() => onAddNeighbor(prevId)}
+                                    size="sm"
+                                    variant="outline"
+                                >
+                                    <ChevronUpIcon className="h-3 w-3" />
+                                    Show Previous ({prevId})
+                                </Button>
+                            </div>
+                        )}
+                        {nextId && (
+                            <div className="absolute right-0 bottom-0 left-0 z-20 flex h-0 translate-y-[50%] justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                                <Button
+                                    className="h-6 gap-1 rounded-full border-blue-200 bg-white px-3 py-0 font-medium text-blue-600 text-xs shadow-sm hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={() => onAddNeighbor(nextId)}
+                                    size="sm"
+                                    variant="outline"
+                                >
+                                    <ChevronDownIcon className="h-3 w-3" />
+                                    Show Next ({nextId})
+                                </Button>
+                            </div>
+                        )}
+                    </>
+                )}
+            </td>
             <td className="w-24 px-1 py-1 text-center align-top text-gray-700 text-sm">
                 <Input
                     className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"

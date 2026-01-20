@@ -89,9 +89,9 @@ export function useTranslationSubmit({
 
     const submitTranslations = useCallback(
         async (shouldCommit = false) => {
-            const rawText = textValue;
+            const rawText = textValue.trim();
 
-            if (!rawText.trim()) {
+            if (!rawText) {
                 if (shouldCommit) {
                     const success = await handleCommit();
                     if (success) {
@@ -99,38 +99,29 @@ export function useTranslationSubmit({
                     } else {
                         toast.error('Failed to commit to storage');
                     }
-                    return;
+                } else {
+                    toast.error('Please enter some translations');
                 }
-                toast.error('Please enter some translations');
                 return;
             }
 
-            const validation = validateTranslationResponse(untranslated, rawText);
-            setValidationErrors(validation.errors);
+            const { errors, normalizedResponse } = validateTranslationResponse(untranslated, rawText);
+            setValidationErrors(errors);
 
-            const { translationMap, count } = parseTranslations(validation.normalizedResponse);
-
+            const { translationMap, count } = parseTranslations(normalizedResponse);
             if (count === 0) {
                 toast.error('No valid translations found. Format: ID - Translation text');
                 return;
             }
 
-            const overwrites: string[] = [];
-            for (const id of translationMap.keys()) {
-                if (translatedIds.has(id)) {
-                    overwrites.push(id);
-                }
-            }
-
-            const translatorValue = getTranslatorValue(selectedModel);
-
+            const overwrites = Array.from(translationMap.keys()).filter((id) => translatedIds.has(id));
             if (overwrites.length > 0 && !pendingOverwrites) {
                 setPendingOverwrites({ duplicates: [], overwrites });
                 return;
             }
 
             setPendingOverwrites(null);
-            doSubmit(translationMap, translatorValue, count, shouldCommit);
+            doSubmit(translationMap, getTranslatorValue(selectedModel), count, shouldCommit);
         },
         [
             textValue,

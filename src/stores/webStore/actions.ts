@@ -18,7 +18,7 @@ export const initStore = (data: WebBook, fileName?: string): WebStateCore => {
             body: p.body,
             ...(p.footnote && { footnote: p.footnote }),
             id: p.page,
-            ...(p.title && { pageTitle: p.title }),
+            ...(p.title && { title: p.title }),
             ...(p.url && { url: p.url }),
         }));
 

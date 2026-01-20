@@ -22,6 +22,133 @@ type PreviewTabProps = { pages: Page[] };
 
 const pagesLabel = (seg: IndexedExcerpt) => (seg.to ? `${seg.from}-${seg.to}` : String(seg.from));
 
+const PreviewRow = ({
+    seg,
+    index,
+    metaKey,
+    options,
+    filterKey,
+    setFilterKey,
+    setJumpToPage,
+    expandedIds,
+    toggleExpand,
+}: {
+    seg: IndexedExcerpt;
+    index: number;
+    metaKey: string;
+    options: any;
+    filterKey: string;
+    setFilterKey: (v: string) => void;
+    setJumpToPage: (v: string | null) => void;
+    expandedIds: Set<string>;
+    toggleExpand: (id: string) => void;
+}) => {
+    const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
+    const referencedRule = dbg?.rule ? options.rules?.[dbg.rule.index] : undefined;
+    const ruleText =
+        dbg?.rule && referencedRule
+            ? `${dbg.rule.patternType}: ${summarizeRulePattern(referencedRule)}`
+            : dbg?.rule
+              ? `${dbg.rule.index}:${dbg.rule.patternType}`
+              : '';
+
+    const bpPattern = dbg?.breakpoint?.pattern;
+    const bpText = typeof bpPattern === 'string' ? (bpPattern === '' ? '<page-boundary>' : bpPattern) : '';
+    const contentSplit = dbg?.contentLengthSplit;
+
+    const renderRuleBadge = () => {
+        if (!ruleText) {
+            return <span className="text-muted-foreground text-xs">—</span>;
+        }
+        return (
+            <Badge
+                className="max-w-full justify-start truncate font-mono text-[11px] leading-tight"
+                title={ruleText}
+                variant="outline"
+            >
+                {ruleText}
+            </Badge>
+        );
+    };
+
+    const renderBreakpointBadges = () => {
+        if (!bpText && !contentSplit) {
+            return <span className="text-muted-foreground text-xs">—</span>;
+        }
+        return (
+            <div className="flex flex-col gap-1">
+                {bpText && (
+                    <Badge
+                        className="max-w-full justify-start truncate font-mono text-[10px] leading-tight"
+                        title={bpText}
+                        variant="secondary"
+                    >
+                        {bpText}
+                    </Badge>
+                )}
+                {contentSplit && (
+                    <Badge
+                        className="max-w-full justify-start gap-1 truncate font-mono text-[10px] leading-tight"
+                        title={`Safety split at ${contentSplit.maxContentLength} chars (${contentSplit.splitReason})`}
+                        variant="destructive"
+                    >
+                        <Scissors className="h-3 w-3" />
+                        <span>maxLength: {contentSplit.maxContentLength}</span>
+                        <span className="text-destructive-foreground/70">({contentSplit.splitReason})</span>
+                    </Badge>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <tr className="border-b" key={`${seg.from}-${seg.to ?? seg.from}-${index}`}>
+            <td className="group w-24 px-2 py-2 text-muted-foreground text-xs tabular-nums">
+                <div className="flex items-center justify-between">
+                    <span>{pagesLabel(seg)}</span>
+                    {filterKey !== 'all' && (
+                        <Button
+                            className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                            onClick={() => {
+                                setFilterKey('all');
+                                setJumpToPage(String(seg.from));
+                            }}
+                            size="icon"
+                            title="Show in context"
+                            variant="ghost"
+                        >
+                            <Eye className="h-3 w-3" />
+                        </Button>
+                    )}
+                </div>
+            </td>
+            <td className="w-64 px-2 py-2 align-top">{renderRuleBadge()}</td>
+            <td className="w-56 px-2 py-2 align-top">{renderBreakpointBadges()}</td>
+            <td className="relative px-2 py-2 text-right" dir="rtl">
+                <div className="flex gap-2">
+                    <div
+                        className={`${expandedIds.has(seg.id) ? '' : 'line-clamp-3'} flex-1 whitespace-pre-wrap break-words font-arabic text-xs leading-relaxed`}
+                    >
+                        {seg.nass}
+                    </div>
+                    <Button
+                        className="h-6 w-6 shrink-0 rounded-full"
+                        onClick={() => toggleExpand(seg.id)}
+                        size="icon"
+                        variant="ghost"
+                    >
+                        {expandedIds.has(seg.id) ? (
+                            <ChevronUp className="h-3 w-3" />
+                        ) : (
+                            <ChevronDown className="h-3 w-3" />
+                        )}
+                    </Button>
+                </div>
+            </td>
+        </tr>
+    );
+};
+
 export const PreviewTab = ({ pages }: PreviewTabProps) => {
     const options = useSegmentationStore((s) => s.options);
     const debug = (options as any).debug && typeof (options as any).debug === 'object' ? (options as any).debug : true;
@@ -129,109 +256,19 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                         </tr>
                     }
                     height="100%"
-                    renderRow={(seg, i) => {
-                        const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
-                        const referencedRule = dbg?.rule ? options.rules?.[dbg.rule.index] : undefined;
-                        const ruleText =
-                            dbg?.rule && referencedRule
-                                ? `${dbg.rule.patternType}: ${summarizeRulePattern(referencedRule)}`
-                                : dbg?.rule
-                                  ? `${dbg.rule.index}:${dbg.rule.patternType}`
-                                  : '';
-
-                        const bpPattern = dbg?.breakpoint?.pattern;
-                        const bpText =
-                            typeof bpPattern === 'string' ? (bpPattern === '' ? '<page-boundary>' : bpPattern) : '';
-
-                        const contentSplit = dbg?.contentLengthSplit;
-
-                        return (
-                            <tr className="border-b" key={`${seg.from}-${seg.to ?? seg.from}-${i}`}>
-                                <td className="group w-24 px-2 py-2 text-muted-foreground text-xs tabular-nums">
-                                    <div className="flex items-center justify-between">
-                                        <span>{pagesLabel(seg)}</span>
-                                        {filterKey !== 'all' && (
-                                            <Button
-                                                className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                                                onClick={() => {
-                                                    setFilterKey('all');
-                                                    setJumpToPage(String(seg.from));
-                                                }}
-                                                size="icon"
-                                                title="Show in context"
-                                                variant="ghost"
-                                            >
-                                                <Eye className="h-3 w-3" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="w-64 px-2 py-2 align-top">
-                                    {ruleText ? (
-                                        <Badge
-                                            className="max-w-full justify-start truncate font-mono text-[11px] leading-tight"
-                                            title={ruleText}
-                                            variant="outline"
-                                        >
-                                            {ruleText}
-                                        </Badge>
-                                    ) : (
-                                        <span className="text-muted-foreground text-xs">—</span>
-                                    )}
-                                </td>
-                                <td className="w-56 px-2 py-2 align-top">
-                                    <div className="flex flex-col gap-1">
-                                        {bpText && (
-                                            <Badge
-                                                className="max-w-full justify-start truncate font-mono text-[10px] leading-tight"
-                                                title={bpText}
-                                                variant="secondary"
-                                            >
-                                                {bpText}
-                                            </Badge>
-                                        )}
-                                        {contentSplit && (
-                                            <Badge
-                                                className="max-w-full justify-start gap-1 truncate font-mono text-[10px] leading-tight"
-                                                title={`Safety split at ${contentSplit.maxContentLength} chars (${contentSplit.splitReason})`}
-                                                variant="destructive"
-                                            >
-                                                <Scissors className="h-3 w-3" />
-                                                <span>maxLength: {contentSplit.maxContentLength}</span>
-                                                <span className="text-destructive-foreground/70">
-                                                    ({contentSplit.splitReason})
-                                                </span>
-                                            </Badge>
-                                        )}
-                                        {!bpText && !contentSplit && (
-                                            <span className="text-muted-foreground text-xs">—</span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="relative px-2 py-2 text-right" dir="rtl">
-                                    <div className="flex gap-2">
-                                        <div
-                                            className={`${expandedIds.has(seg.id) ? '' : 'line-clamp-3'} flex-1 whitespace-pre-wrap break-words font-arabic text-xs leading-relaxed`}
-                                        >
-                                            {seg.nass}
-                                        </div>
-                                        <Button
-                                            className="h-6 w-6 shrink-0 rounded-full"
-                                            onClick={() => toggleExpand(seg.id)}
-                                            size="icon"
-                                            variant="ghost"
-                                        >
-                                            {expandedIds.has(seg.id) ? (
-                                                <ChevronUp className="h-3 w-3" />
-                                            ) : (
-                                                <ChevronDown className="h-3 w-3" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </td>
-                            </tr>
-                        );
-                    }}
+                    renderRow={(seg, i) => (
+                        <PreviewRow
+                            seg={seg}
+                            index={i}
+                            metaKey={metaKey}
+                            options={options}
+                            filterKey={filterKey}
+                            setFilterKey={setFilterKey}
+                            setJumpToPage={setJumpToPage}
+                            expandedIds={expandedIds}
+                            toggleExpand={toggleExpand}
+                        />
+                    )}
                 />
             </div>
         </div>

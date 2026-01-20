@@ -34,7 +34,7 @@ export function ConfirmDropdownMenuItem({
                     {confirmText}
                 </>
             ) : (
-                <>{children}</>
+                children
             )}
         </DropdownMenuItem>
     );

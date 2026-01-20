@@ -104,7 +104,7 @@ export const initStoreFromJuz = (juz: Juz): Partial<ManuscriptStateCore> => {
 export const initStore = (fileNameToData: RawInputFiles) => {
     assertHasRequiredFiles(fileNameToData);
 
-    const { ['mac.json']: macOCR, ['structures.json']: metadata, ['surya.json']: suryaJson } = fileNameToData;
+    const { 'mac.json': macOCR, 'structures.json': metadata, 'surya.json': suryaJson } = fileNameToData;
 
     const [surya] = Object.values(suryaJson);
 

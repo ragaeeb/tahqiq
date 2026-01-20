@@ -2,6 +2,7 @@
 
 import { DownloadIcon, LanguagesIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
@@ -44,6 +45,9 @@ import VirtualizedList from './virtualized-list';
  * Inner component that uses useSearchParams (requires Suspense boundary)
  */
 function ExcerptsPageContent() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const init = useExcerptsStore((state) => state.init);
     const reset = useExcerptsStore((state) => state.reset);
     const excerpts = useExcerptsStore(selectAllExcerpts);
@@ -67,11 +71,22 @@ function ExcerptsPageContent() {
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
     const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
-    const filteredExcerptIds = useExcerptsStore((state) => state.filteredExcerptIds);
-    const isExcerptsFiltered = filteredExcerptIds !== undefined && filteredExcerptIds.length > 0;
+    const {
+        activeTab,
+        clearScrollTo,
+        filters,
+        scrollToFrom,
+        scrollToId,
+        setActiveTab,
+        setFilter,
+        setSort,
+        sortMode,
+        addIdsToFilter,
+    } = useExcerptFilters();
 
-    const { activeTab, clearScrollTo, filters, scrollToFrom, scrollToId, setActiveTab, setFilter, setSort, sortMode } =
-        useExcerptFilters();
+    const isAnyFilterActive = useMemo(() => {
+        return !!(filters.nass || filters.text || filters.page || (filters.ids && filters.ids.length > 0));
+    }, [filters]);
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -89,6 +104,37 @@ function ExcerptsPageContent() {
         }
         return [...excerpts].sort((a, b) => (b.nass?.length || 0) - (a.nass?.length || 0));
     }, [excerpts, sortMode]);
+
+    // Compute original neighbor maps for navigation in filtered state
+    const neighborMaps = useMemo(() => {
+        const getNeighbors = (list: any[]) => {
+            const map: Record<string, { prev?: string; next?: string }> = {};
+            for (let i = 0; i < list.length; i++) {
+                map[list[i].id] = {
+                    next: i < list.length - 1 ? list[i + 1].id : undefined,
+                    prev: i > 0 ? list[i - 1].id : undefined,
+                };
+            }
+            return map;
+        };
+
+        return {
+            excerpts: getNeighbors(allExcerpts),
+            footnotes: getNeighbors(allFootnotes),
+            headings: getNeighbors(allHeadings),
+        };
+    }, [allExcerpts, allHeadings, allFootnotes]);
+
+    // Current set of visible IDs to avoid showing neighbors already in view
+    const visibleIds = useMemo(() => {
+        if (activeTab === 'excerpts') {
+            return new Set(excerpts.map((e) => e.id));
+        }
+        if (activeTab === 'headings') {
+            return new Set(headings.map((h) => h.id));
+        }
+        return new Set(footnotes.map((f) => f.id));
+    }, [activeTab, excerpts, headings, footnotes]);
 
     const handleCopyDown = useCallback(
         (source: Excerpt) => {
@@ -203,14 +249,23 @@ function ExcerptsPageContent() {
         const issueIds = findExcerptIssues(allExcerpts);
 
         if (issueIds.length > 0) {
-            filterExcerptsByIds(issueIds);
+            const params = new URLSearchParams(searchParams.toString());
+            // Clear previous filters to show only the issues
+            params.delete('nass');
+            params.delete('text');
+            params.delete('page');
+            params.set('tab', 'excerpts');
+            params.set('ids', issueIds.join(','));
+
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
             toast.info(
                 `Found ${issueIds.length} issue${issueIds.length > 1 ? 's' : ''} (gaps + truncated translations)`,
             );
         } else {
             toast.info('No issues found');
         }
-    }, [allExcerpts, filterExcerptsByIds]);
+    }, [allExcerpts, router, pathname, searchParams]);
 
     const handleApplyFormatting = useCallback(async () => {
         setIsFormattingLoading(true);
@@ -416,7 +471,7 @@ function ExcerptsPageContent() {
                                         // If it's a string, search by id field (e.g., P233)
                                         return data.findIndex((item) => item.id === scrollValue);
                                     }}
-                                    getKey={(item) => `${item.id}/${item.lastUpdatedAt}`}
+                                    getKey={(item) => (item ? `${item.id}/${item.lastUpdatedAt}` : 'loading')}
                                     header={
                                         <ExcerptsTableHeader
                                             activeTab="excerpts"
@@ -433,23 +488,41 @@ function ExcerptsPageContent() {
                                     onScrollToComplete={
                                         scrollToAfterChange ? handleScrollAfterChangeComplete : clearScrollTo
                                     }
-                                    renderRow={(item) => (
-                                        <ExcerptRow
-                                            data={item}
-                                            hideTranslation={!hasAnyTranslations}
-                                            isFiltered={isExcerptsFiltered}
-                                            isSelected={selectedIds.has(item.id)}
-                                            onCreateFromSelection={createExcerptFromExisting}
-                                            onDelete={(id) => deleteExcerpts([id])}
-                                            onToggleSelect={toggleSelection}
-                                            onUpdate={updateExcerpt}
-                                            onCopyDown={handleCopyDown}
-                                            onShowInContext={(id) => {
-                                                filterExcerptsByIds(undefined);
-                                                setScrollToAfterChange(id);
-                                            }}
-                                        />
-                                    )}
+                                    renderRow={(item) => {
+                                        if (!item) {
+                                            return null;
+                                        }
+                                        const neighbors = neighborMaps.excerpts[item.id];
+                                        const prevId =
+                                            neighbors?.prev && !visibleIds.has(neighbors.prev)
+                                                ? neighbors.prev
+                                                : undefined;
+                                        const nextId =
+                                            neighbors?.next && !visibleIds.has(neighbors.next)
+                                                ? neighbors.next
+                                                : undefined;
+
+                                        return (
+                                            <ExcerptRow
+                                                data={item}
+                                                hideTranslation={!hasAnyTranslations}
+                                                isFiltered={isAnyFilterActive}
+                                                isSelected={selectedIds.has(item.id)}
+                                                onCreateFromSelection={createExcerptFromExisting}
+                                                onDelete={(id) => deleteExcerpts([id])}
+                                                onToggleSelect={toggleSelection}
+                                                onUpdate={updateExcerpt}
+                                                onCopyDown={handleCopyDown}
+                                                onShowInContext={(id) => {
+                                                    filterExcerptsByIds(undefined);
+                                                    setScrollToAfterChange(id);
+                                                }}
+                                                prevId={prevId}
+                                                nextId={nextId}
+                                                onAddNeighbor={(id) => addIdsToFilter([id])}
+                                            />
+                                        );
+                                    }}
                                     scrollToId={scrollToAfterChange ?? scrollToId ?? scrollToFrom}
                                 />
                             </TabsContent>
@@ -458,7 +531,7 @@ function ExcerptsPageContent() {
                                 <VirtualizedList
                                     data={headings}
                                     findScrollIndex={(data, idValue) => data.findIndex((item) => item.id === idValue)}
-                                    getKey={(item) => item.id}
+                                    getKey={(item) => (item ? item.id : 'loading')}
                                     header={
                                         <ExcerptsTableHeader
                                             activeTab="headings"
@@ -470,13 +543,32 @@ function ExcerptsPageContent() {
                                         />
                                     }
                                     onScrollToComplete={clearScrollTo}
-                                    renderRow={(item) => (
-                                        <HeadingRow
-                                            data={item}
-                                            onDelete={(id) => deleteHeadings([id])}
-                                            onUpdate={updateHeading}
-                                        />
-                                    )}
+                                    renderRow={(item) => {
+                                        if (!item) {
+                                            return null;
+                                        }
+                                        const neighbors = neighborMaps.headings[item.id];
+                                        const prevId =
+                                            neighbors?.prev && !visibleIds.has(neighbors.prev)
+                                                ? neighbors.prev
+                                                : undefined;
+                                        const nextId =
+                                            neighbors?.next && !visibleIds.has(neighbors.next)
+                                                ? neighbors.next
+                                                : undefined;
+
+                                        return (
+                                            <HeadingRow
+                                                data={item}
+                                                onDelete={(id) => deleteHeadings([id])}
+                                                onUpdate={updateHeading}
+                                                prevId={prevId}
+                                                nextId={nextId}
+                                                onAddNeighbor={(id) => addIdsToFilter([id])}
+                                                isFiltered={isAnyFilterActive}
+                                            />
+                                        );
+                                    }}
                                     scrollToId={scrollToId}
                                 />
                             </TabsContent>
@@ -484,7 +576,7 @@ function ExcerptsPageContent() {
                             <TabsContent className="mt-0" value="footnotes">
                                 <VirtualizedList
                                     data={footnotes}
-                                    getKey={(item) => item.id}
+                                    getKey={(item) => (item ? item.id : 'loading')}
                                     header={
                                         <ExcerptsTableHeader
                                             activeTab="footnotes"
@@ -495,13 +587,32 @@ function ExcerptsPageContent() {
                                             onFilterChange={setFilter}
                                         />
                                     }
-                                    renderRow={(item) => (
-                                        <FootnoteRow
-                                            data={item}
-                                            onDelete={(id) => deleteFootnotes([id])}
-                                            onUpdate={updateFootnote}
-                                        />
-                                    )}
+                                    renderRow={(item) => {
+                                        if (!item) {
+                                            return null;
+                                        }
+                                        const neighbors = neighborMaps.footnotes[item.id];
+                                        const prevId =
+                                            neighbors?.prev && !visibleIds.has(neighbors.prev)
+                                                ? neighbors.prev
+                                                : undefined;
+                                        const nextId =
+                                            neighbors?.next && !visibleIds.has(neighbors.next)
+                                                ? neighbors.next
+                                                : undefined;
+
+                                        return (
+                                            <FootnoteRow
+                                                data={item}
+                                                onDelete={(id) => deleteFootnotes([id])}
+                                                onUpdate={updateFootnote}
+                                                prevId={prevId}
+                                                nextId={nextId}
+                                                onAddNeighbor={(id) => addIdsToFilter([id])}
+                                                isFiltered={isAnyFilterActive}
+                                            />
+                                        );
+                                    }}
                                 />
                             </TabsContent>
                         </Tabs>

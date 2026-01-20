@@ -42,7 +42,8 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
   - `#2333` scrolls to excerpt with `from=2333` (page number)
   - `#P233` scrolls to excerpt/heading with `id=P233` or `id=C123`
 - **Show in Context**: Quick toggle in filtered views to clear filters and jump to a specific row in full context
-- **Gap Detection**: Refined logic to find "translation gaps" (1-3 consecutive missing items surrounded by translated text)
+- **Neighbor Navigation**: Interactive buttons (ChevronUp/Down) that appear on hover to bring adjacent untranslated rows into the current filtered view without clearing filters
+- **Gap Detection**: Intelligent logic to find "translation gaps" (1-3 consecutive missing items) surrounded by translated text, with quick-filter support
 - **Safe Operations**: Destructive actions (Delete, Clear Translation) use `ConfirmButton` with visual cues to prevent data loss
 - **Stability**: Intelligent virtualized list restoration preserves scroll position during book-wide deletions or merges
 - **Extract to New Excerpt**: Select Arabic text and extract as a new excerpt

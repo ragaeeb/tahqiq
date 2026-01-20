@@ -64,7 +64,10 @@ function VirtualizerContent<T>({
         (index: number) => estimateSizeRef.current?.(index) ?? defaultEstimateSize(),
         [defaultEstimateSize],
     );
-    const getItemKey = useCallback((index: number) => getKeyRef.current(dataRef.current[index], index), []);
+    const getItemKey = useCallback((index: number) => {
+        const item = dataRef.current[index];
+        return item ? getKeyRef.current(item, index) : `loading-${index}`;
+    }, []);
     const getScrollElement = useCallback(() => parentRef.current, [parentRef]);
     const measureElement = useMemo(() => {
         if (typeof window === 'undefined' || navigator.userAgent.indexOf('Firefox') !== -1) {
@@ -154,6 +157,9 @@ function VirtualizerContent<T>({
             </div>
             {virtualItems.map((virtualItem) => {
                 const item = data[virtualItem.index];
+                if (!item) {
+                    return null;
+                }
                 const key = getKey(item, virtualItem.index);
 
                 return (

@@ -16,12 +16,13 @@ export const Toolbar = () => {
     const reset = useWebStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
     const allPages = useWebStore((state) => state.pages);
+    const allTitles = useWebStore((state) => state.titles);
 
     // Transform web pages to flappa-doormal Page format for segmentation
     const pages = useMemo<Page[]>(() => allPages.map((p) => ({ content: p.body, id: p.id })), [allPages]);
     const headings = useMemo<Page[]>(
-        () => allPages.filter((p) => p.pageTitle).map((p) => ({ content: p.body, id: p.id })),
-        [allPages],
+        () => allTitles.filter((p) => p.content).map((p) => ({ content: p.content, id: p.id })),
+        [allTitles],
     );
 
     /**
@@ -36,7 +37,7 @@ export const Toolbar = () => {
                 body: p.body,
                 ...(p.footnote && { footnote: p.footnote }),
                 page: p.id,
-                ...(p.pageTitle && { title: p.pageTitle }),
+                ...(p.title && { title: p.title }),
                 ...(p.url && { url: p.url }),
             })),
             ...(state.scrapingEngine && { scrapingEngine: state.scrapingEngine }),

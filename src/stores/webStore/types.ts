@@ -45,7 +45,7 @@ export type WebPage = {
     /** Timestamp when last updated in editor */
     lastUpdatedAt?: number;
     /** Page title if available */
-    pageTitle?: string;
+    title?: string;
     /** Original URL if available */
     url?: string;
 };
