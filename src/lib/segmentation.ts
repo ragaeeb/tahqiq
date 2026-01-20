@@ -78,7 +78,6 @@ export const mergeShortSegments = (segments: Segment[], minWordCount: number) =>
 
         if (isMergable) {
             current.content = `${current.content || ''}\n${next.content || ''}`;
-            current.to = Math.max(current.to || current.from, next.to || next.from);
         } else {
             result.push(current);
             current = { ...next };
@@ -97,7 +96,7 @@ export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: Boo
     pages = applyReplacements(pages, replaceRules);
     let segments = segmentPages(pages, segmentationOptions);
     segments = mergeShortSegments(segments, minWordsPerSegment);
-    const texts = preformatArabicText(segments.map((s) => s.content)); // format the segments not the pages because the pages might have segmentation rules based on the original format
+    let texts = preformatArabicText(segments.map((s) => s.content)); // format the segments not the pages because the pages might have segmentation rules based on the original format
     const sanitized = sanitizeArabic(texts, 'aggressive'); // this is used to filter out false positives
 
     const excerpts: IndexedExcerpt[] = [];
@@ -121,13 +120,15 @@ export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: Boo
         }
     }
 
+    texts = preformatArabicText(headings.map((h) => h.content));
+
     return {
         contractVersion: LatestContractVersion.Excerpts,
         createdAt: nowInSeconds(),
         excerpts: excerpts as Excerpt[],
         footnotes: [],
-        headings: headings.map((t) => {
-            return { from: t.id, id: `T${t.id}`, nass: t.content };
+        headings: headings.map((t, i) => {
+            return { from: t.id, id: `T${t.id}`, nass: texts[i] };
         }) as Heading[],
         lastUpdatedAt: nowInSeconds(),
         options,
