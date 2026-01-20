@@ -1,3 +1,10 @@
+## [1.50.1](https://github.com/ragaeeb/tahqiq/compare/v1.50.0...v1.50.1) (2026-01-20)
+
+
+### Bug Fixes
+
+* **to:** Fix to field being added during merges ([b8153ae](https://github.com/ragaeeb/tahqiq/commit/b8153ae83e72cda51bd68434e258ea9bc8714a52))
+
 # [1.50.0](https://github.com/ragaeeb/tahqiq/compare/v1.49.3...v1.50.0) (2026-01-20)
 
 
