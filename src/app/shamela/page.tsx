@@ -24,6 +24,35 @@ import { Toolbar } from './toolbar';
 import { useShamelaFilters } from './use-shamela-filters';
 
 /**
+ * Reads a streaming response and reconstructs the JSON
+ */
+async function readStreamedJson<T>(response: Response): Promise<T> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+        throw new Error('Response body is not readable');
+    }
+
+    const decoder = new TextDecoder();
+    let result = '';
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            result += decoder.decode(value, { stream: true });
+        }
+        // Final decode to flush any remaining bytes
+        result += decoder.decode();
+
+        return JSON.parse(result);
+    } finally {
+        reader.releaseLock();
+    }
+}
+
+/**
  * Inner component that uses store state
  */
 function ShamelaPageContent() {
@@ -87,6 +116,10 @@ function ShamelaPageContent() {
 
     const handleUrlSubmit = useCallback(
         async (url: string) => {
+            if (/^\d+$/.test(url)) {
+                url = `https://shamela.ws/book/${url}`;
+            }
+
             // Parse book ID from URL like https://shamela.ws/book/1681
             const match = url.match(/shamela\.ws\/book\/(\d+)/);
             if (!match) {
@@ -110,11 +143,19 @@ function ShamelaPageContent() {
                 });
 
                 if (!response.ok) {
+                    // For non-streaming errors (validation failures), we can still read as JSON
                     const error = await response.json();
                     throw new Error(error.error || 'Failed to download book');
                 }
 
-                const book: ShamelaBook = await response.json();
+                // Read the streamed response
+                const book = await readStreamedJson<ShamelaBook>(response);
+
+                // Check if response contains an error
+                if ('error' in book) {
+                    throw new Error((book as { error: string }).error);
+                }
+
                 setBookId(book.shamelaId);
                 init(book, `shamela-${bookId}.json`);
                 toast.success(`Downloaded book ${bookId} from Shamela`);

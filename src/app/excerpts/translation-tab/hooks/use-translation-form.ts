@@ -60,12 +60,13 @@ export function useTranslationForm({ untranslated, translatedIds, setPendingOver
 
     const handleChange = useCallback(
         (newValue: string) => {
-            setTextValue(newValue);
-
             // Don't clear error if we just pasted (paste also triggers onChange)
             if (justPastedRef.current) {
                 return;
             }
+
+            setTextValue(newValue);
+
             if (validationErrors.length) {
                 setValidationErrors([]);
             }
