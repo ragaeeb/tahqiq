@@ -1,9 +1,18 @@
 'use client';
 
-import { DownloadIcon, LanguagesIcon, Merge, RefreshCwIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
+import {
+    DownloadIcon,
+    LanguagesIcon,
+    Merge,
+    PackageIcon,
+    RefreshCwIcon,
+    SaveIcon,
+    SearchIcon,
+    TypeIcon,
+} from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -20,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { STORAGE_KEYS } from '@/lib/constants';
+import { getNeighbors } from '@/lib/grouping';
 import { canMergeSegments, findExcerptIssues } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
 import {
@@ -32,6 +42,7 @@ import {
 } from '@/stores/excerptsStore/selectors';
 import type { Excerpt, Excerpts } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
+import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
@@ -71,6 +82,12 @@ function ExcerptsPageContent() {
     const applyFootnoteFormatting = useExcerptsStore((state) => state.applyFootnoteFormatting);
     const mergeExcerpts = useExcerptsStore((state) => state.mergeExcerpts);
     const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
+
+    const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
+    const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
+    const hydrateSettings = useSettingsStore((state) => state.hydrate);
+    console.log('huggingfaceToken', huggingfaceToken);
+
     const {
         activeTab,
         clearScrollTo,
@@ -89,6 +106,7 @@ function ExcerptsPageContent() {
     }, [filters]);
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
+    const [isUploadingToHf, setIsUploadingToHf] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     // Track an ID to scroll to after operations like merge
     const [scrollToAfterChange, setScrollToAfterChange] = useState<string | null>(null);
@@ -96,6 +114,10 @@ function ExcerptsPageContent() {
 
     // Check if any excerpts have translations - if not, hide the column for more Arabic space
     const hasAnyTranslations = allExcerpts.some((e) => e.text);
+
+    useEffect(() => {
+        hydrateSettings();
+    }, [hydrateSettings]);
 
     // Sort excerpts by length if sortMode is 'length'
     const sortedExcerpts = useMemo(() => {
@@ -107,17 +129,6 @@ function ExcerptsPageContent() {
 
     // Compute original neighbor maps for navigation in filtered state
     const neighborMaps = useMemo(() => {
-        const getNeighbors = (list: any[]) => {
-            const map: Record<string, { prev?: string; next?: string }> = {};
-            for (let i = 0; i < list.length; i++) {
-                map[list[i].id] = {
-                    next: i < list.length - 1 ? list[i + 1].id : undefined,
-                    prev: i > 0 ? list[i - 1].id : undefined,
-                };
-            }
-            return map;
-        };
-
         return {
             excerpts: getNeighbors(allExcerpts),
             footnotes: getNeighbors(allFootnotes),
@@ -317,6 +328,49 @@ function ExcerptsPageContent() {
         footnotesCount,
     ]);
 
+    const handleUploadToHuggingFace = useCallback(async () => {
+        const filename = prompt('Enter filename for compressed upload (without extension, ie: 1234):') || '';
+
+        if (!/^\d+$/.test(filename)) {
+            return; // User cancelled
+        }
+
+        setIsUploadingToHf(true);
+        record('UploadToHuggingFace');
+
+        try {
+            const data = getExportData();
+            const jsonData = JSON.stringify(data);
+
+            // Stream data to backend
+            const response = await fetch('/api/huggingface', {
+                body: jsonData,
+                headers: {
+                    Authorization: `Bearer ${huggingfaceToken}`,
+                    'Content-Type': 'application/json',
+                    'X-Dataset': huggingfaceExcerptDataset,
+                    'X-Filename': `${filename}.json.br`,
+                },
+                method: 'POST',
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed');
+            }
+
+            const result = await response.json();
+            toast.success(
+                `Uploaded to HuggingFace! ${result.filename} (${result.compressionRatio} compression, ${(result.compressedSize / 1024 / 1024).toFixed(2)}MB)`,
+            );
+        } catch (error) {
+            console.error('HuggingFace upload error:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to upload to HuggingFace');
+        } finally {
+            setIsUploadingToHf(false);
+        }
+    }, [huggingfaceToken, huggingfaceExcerptDataset, getExportData]);
+
     const handleTabChange = useCallback(
         (tab: string) => {
             setActiveTab(tab as FilterScope);
@@ -363,6 +417,16 @@ function ExcerptsPageContent() {
                             <Button onClick={handleDownload}>
                                 <DownloadIcon />
                             </Button>
+                            {huggingfaceToken && huggingfaceExcerptDataset && (
+                                <Button
+                                    className="bg-purple-500 hover:bg-purple-600"
+                                    disabled={isUploadingToHf}
+                                    onClick={handleUploadToHuggingFace}
+                                    title="Upload compressed excerpts to HuggingFace dataset"
+                                >
+                                    <PackageIcon />
+                                </Button>
+                            )}
                             <DialogTriggerButton
                                 onClick={() => {
                                     record('OpenTranslationPicker');

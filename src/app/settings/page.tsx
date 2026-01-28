@@ -15,7 +15,7 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 /**
  * Settings page for managing application configuration.
  *
- * Allows users to configure and manage their Gemini API keys and Shamela settings.
+ * Allows users to configure and manage their Gemini API keys, Shamela settings, and HuggingFace dataset uploads.
  * API keys are stored in browser localStorage with base64 encoding.
  */
 export default function Settings() {
@@ -28,6 +28,10 @@ export default function Settings() {
     const updateShamelaApiKey = useSettingsStore((state) => state.updateShamelaApiKey);
     const shamelaBookEndpoint = useSettingsStore((state) => state.shamelaBookEndpoint);
     const updateShamelaBookEndpoint = useSettingsStore((state) => state.updateShamelaBookEndpoint);
+    const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
+    const updateHuggingfaceToken = useSettingsStore((state) => state.updateHuggingfaceToken);
+    const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
+    const updateHuggingfaceDataset = useSettingsStore((state) => state.updateHuggingfaceExcerptDataset);
 
     // Hydrate settings from localStorage on client mount
     useEffect(() => {
@@ -85,6 +89,38 @@ export default function Settings() {
                                     onBlur={(e) => updateShamelaBookEndpoint(e.target.value)}
                                     placeholder="Custom books endpoint URL (optional)"
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>HuggingFace Dataset</CardTitle>
+                            <CardDescription>
+                                Configure HuggingFace access for uploading compressed excerpt data to your dataset
+                                repository.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="hf-token">Access Token</Label>
+                                <ClickToReveal
+                                    defaultValue={huggingfaceToken}
+                                    onSubmit={updateHuggingfaceToken}
+                                    placeholder="Enter your HuggingFace access token"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="hf-dataset">Dataset URL</Label>
+                                <Input
+                                    defaultValue={huggingfaceExcerptDataset}
+                                    id="hf-dataset"
+                                    onBlur={(e) => updateHuggingfaceDataset(e.target.value)}
+                                    placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
+                                />
+                                <p className="text-gray-500 text-xs">
+                                    The dataset of your HuggingFace repository where excerpts will be uploaded.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

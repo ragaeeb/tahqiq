@@ -4,6 +4,8 @@ import type { SettingsState } from './types';
 
 const STORAGE_KEYS = {
     geminiApiKeys: 'geminiApiKeys',
+    huggingfaceExcerptDataset: 'huggingfaceExcerptDataset',
+    huggingfaceToken: 'huggingfaceToken',
     quickSubs: 'quickSubs',
     shamelaApiKey: 'shamelaApiKey',
     shamelaBookEndpoint: 'shamelaBookEndpoint',
@@ -21,6 +23,8 @@ const STORAGE_KEYS = {
 export const useSettingsStore = create<SettingsState>((set) => ({
     // Initialize with empty defaults to avoid SSR hydration mismatch
     geminiApiKeys: [],
+    huggingfaceExcerptDataset: '',
+    huggingfaceToken: '',
 
     hydrate: () =>
         set(() => {
@@ -28,9 +32,13 @@ export const useSettingsStore = create<SettingsState>((set) => ({
             const quickSubs = localStorage.getItem(STORAGE_KEYS.quickSubs);
             const encryptedShamelaApiKey = localStorage.getItem(STORAGE_KEYS.shamelaApiKey);
             const shamelaBookEndpoint = localStorage.getItem(STORAGE_KEYS.shamelaBookEndpoint);
+            const encryptedHuggingfaceToken = localStorage.getItem(STORAGE_KEYS.huggingfaceToken);
+            const huggingfaceExcerptDataset = localStorage.getItem(STORAGE_KEYS.huggingfaceExcerptDataset);
 
             return {
                 geminiApiKeys: encryptedGeminiApiKeys ? atob(encryptedGeminiApiKeys).split('\n') : [],
+                huggingfaceExcerptDataset: huggingfaceExcerptDataset || '',
+                huggingfaceToken: encryptedHuggingfaceToken ? atob(encryptedHuggingfaceToken) : '',
                 quickSubs: quickSubs ? quickSubs.split('\n') : [],
                 shamelaApiKey: encryptedShamelaApiKey ? atob(encryptedShamelaApiKey) : '',
                 shamelaBookEndpoint: shamelaBookEndpoint || '',
@@ -44,6 +52,18 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         set(() => {
             localStorage.setItem(STORAGE_KEYS.geminiApiKeys, btoa(keys.join('\n')));
             return { geminiApiKeys: keys };
+        }),
+
+    updateHuggingfaceExcerptDataset: (huggingfaceExcerptDataset) =>
+        set(() => {
+            localStorage.setItem(STORAGE_KEYS.huggingfaceExcerptDataset, huggingfaceExcerptDataset);
+            return { huggingfaceExcerptDataset };
+        }),
+
+    updateHuggingfaceToken: (token) =>
+        set(() => {
+            localStorage.setItem(STORAGE_KEYS.huggingfaceToken, btoa(token));
+            return { huggingfaceToken: token };
         }),
 
     updateQuickSubs: (values) =>
