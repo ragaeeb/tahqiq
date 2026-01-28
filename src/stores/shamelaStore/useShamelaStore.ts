@@ -61,7 +61,6 @@ export const useShamelaStore = create<ShamelaState>()(
             try {
                 const state = useShamelaStore.getState();
                 const exportData = {
-                    majorRelease: state.majorRelease,
                     pages: state.pages.map((p) => ({
                         content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
                         id: p.id,
@@ -71,6 +70,7 @@ export const useShamelaStore = create<ShamelaState>()(
                     })),
                     shamelaId: state.shamelaId,
                     titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
+                    version: state.version,
                 };
                 await saveToOPFS(STORAGE_KEYS.shamela, exportData);
                 return true;

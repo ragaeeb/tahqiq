@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { normalizeTranslationText, type ValidationError, validateTranslationResponse } from 'wobble-bibble';
+import { filterNoisyError } from '@/lib/errorUtils';
 import { errorsToHighlights } from '@/lib/segmentation';
 
 interface UseTranslationFormProps {
@@ -43,7 +44,7 @@ export function useTranslationForm({ untranslated, translatedIds, setPendingOver
             const result = validateTranslationResponse(untranslated, fullContentAfterPaste);
 
             // Post-process errors to identify ones that are actually just already translated
-            const processedErrors = result.errors.map((err) => {
+            const processedErrors = result.errors.filter(filterNoisyError).map((err) => {
                 if (err.type === 'invented_id' && err.id && translatedIds.has(err.id)) {
                     return { ...err, message: `Already Translated: "${err.id}" - this ID has already been translated` };
                 }

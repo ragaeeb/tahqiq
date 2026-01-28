@@ -8,10 +8,10 @@ const resetStore = () => {
         filteredTitleIds: undefined,
         inputFileName: undefined,
         lastUpdatedAt: undefined,
-        majorRelease: 0,
         pages: [],
         shamelaId: undefined,
         titles: [],
+        version: '0',
     });
 };
 
@@ -27,16 +27,16 @@ describe('useShamelaStore', () => {
     describe('init', () => {
         it('should initialize store with book data', () => {
             const book: ShamelaBook = {
-                majorRelease: 5,
+                id: 9999,
                 pages: [{ content: 'Body text', id: 1 }],
-                shamelaId: 9999,
-                titles: [{ content: 'Intro', id: 1, level: 1, page: 1 }],
+                titles: [{ content: 'Intro', id: 1, page: 1 }],
+                version: '5',
             };
 
             useShamelaStore.getState().init(book, 'book.json');
 
             const state = useShamelaStore.getState();
-            expect(state.majorRelease).toBe(5);
+            expect(state.version).toBe('5');
             expect(state.shamelaId).toBe(9999);
             expect(state.inputFileName).toBe('book.json');
             expect(state.pages).toHaveLength(1);
@@ -46,7 +46,7 @@ describe('useShamelaStore', () => {
 
     describe('updatePage', () => {
         it('should update page properties', () => {
-            useShamelaStore.setState({ majorRelease: 1, pages: [{ body: 'Original', id: 1 }], titles: [] });
+            useShamelaStore.setState({ pages: [{ body: 'Original', id: 1 }], titles: [], version: '1' });
 
             useShamelaStore.getState().updatePage(1, { body: 'Updated' });
 
@@ -56,11 +56,7 @@ describe('useShamelaStore', () => {
 
     describe('updateTitle', () => {
         it('should update title properties', () => {
-            useShamelaStore.setState({
-                majorRelease: 1,
-                pages: [],
-                titles: [{ content: 'Old', id: 1, level: 1, page: 1 }],
-            });
+            useShamelaStore.setState({ pages: [], titles: [{ content: 'Old', id: 1, page: 1 }], version: '1' });
 
             useShamelaStore.getState().updateTitle(1, { content: 'New' });
 
@@ -71,12 +67,12 @@ describe('useShamelaStore', () => {
     describe('deletePage', () => {
         it('should delete page by ID', () => {
             useShamelaStore.setState({
-                majorRelease: 1,
                 pages: [
                     { body: 'Page 1', id: 1 },
                     { body: 'Page 2', id: 2 },
                 ],
                 titles: [],
+                version: '1',
             });
 
             useShamelaStore.getState().deletePage(1);
@@ -90,12 +86,12 @@ describe('useShamelaStore', () => {
     describe('deleteTitle', () => {
         it('should delete title by ID', () => {
             useShamelaStore.setState({
-                majorRelease: 1,
                 pages: [],
                 titles: [
-                    { content: 'T1', id: 1, level: 1, page: 1 },
-                    { content: 'T2', id: 2, level: 1, page: 2 },
+                    { content: 'T1', id: 1, page: 1 },
+                    { content: 'T2', id: 2, page: 2 },
                 ],
+                version: '1',
             });
 
             useShamelaStore.getState().deleteTitle(1);
@@ -131,7 +127,7 @@ describe('useShamelaStore', () => {
 
     describe('removePageMarkers', () => {
         it('should set lastUpdatedAt after processing', () => {
-            useShamelaStore.setState({ majorRelease: 1, pages: [{ body: 'Some text', id: 1 }], titles: [] });
+            useShamelaStore.setState({ pages: [{ body: 'Some text', id: 1 }], titles: [], version: '1' });
 
             useShamelaStore.getState().removePageMarkers();
 
@@ -141,11 +137,7 @@ describe('useShamelaStore', () => {
 
     describe('removeFootnoteReferences', () => {
         it('should clear footnote from pages', () => {
-            useShamelaStore.setState({
-                majorRelease: 1,
-                pages: [{ body: 'Text', footnote: 'Note', id: 1 }],
-                titles: [],
-            });
+            useShamelaStore.setState({ pages: [{ body: 'Text', footnote: 'Note', id: 1 }], titles: [], version: '1' });
 
             useShamelaStore.getState().removeFootnoteReferences();
 
@@ -157,16 +149,16 @@ describe('useShamelaStore', () => {
         it('should reset store pages and titles to initial state', () => {
             useShamelaStore.setState({
                 inputFileName: 'file.json',
-                majorRelease: 5,
                 pages: [{ body: 'Test', id: 1 }],
                 shamelaId: 123,
-                titles: [{ content: 'Title', id: 1, level: 1, page: 1 }],
+                titles: [{ content: 'Title', id: 1, page: 1 }],
+                version: '5',
             });
 
             useShamelaStore.getState().reset();
 
             const state = useShamelaStore.getState();
-            expect(state.majorRelease).toBe(0);
+            expect(state.version).toBe('0');
             expect(state.pages).toEqual([]);
             expect(state.titles).toEqual([]);
         });

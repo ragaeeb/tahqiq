@@ -3,12 +3,10 @@ import { create } from 'zustand';
 import type { SettingsState } from './types';
 
 const STORAGE_KEYS = {
-    geminiApiKeys: 'geminiApiKeys',
     huggingfaceExcerptDataset: 'huggingfaceExcerptDataset',
     huggingfaceToken: 'huggingfaceToken',
     quickSubs: 'quickSubs',
-    shamelaApiKey: 'shamelaApiKey',
-    shamelaBookEndpoint: 'shamelaBookEndpoint',
+    shamelaDataset: 'shamelaBookEndpoint',
 } as const;
 
 /**
@@ -22,37 +20,25 @@ const STORAGE_KEYS = {
  */
 export const useSettingsStore = create<SettingsState>((set) => ({
     // Initialize with empty defaults to avoid SSR hydration mismatch
-    geminiApiKeys: [],
     huggingfaceExcerptDataset: '',
     huggingfaceToken: '',
 
     hydrate: () =>
         set(() => {
-            const encryptedGeminiApiKeys = localStorage.getItem(STORAGE_KEYS.geminiApiKeys);
             const quickSubs = localStorage.getItem(STORAGE_KEYS.quickSubs);
-            const encryptedShamelaApiKey = localStorage.getItem(STORAGE_KEYS.shamelaApiKey);
-            const shamelaBookEndpoint = localStorage.getItem(STORAGE_KEYS.shamelaBookEndpoint);
+            const shamelaDataset = localStorage.getItem(STORAGE_KEYS.shamelaDataset);
             const encryptedHuggingfaceToken = localStorage.getItem(STORAGE_KEYS.huggingfaceToken);
             const huggingfaceExcerptDataset = localStorage.getItem(STORAGE_KEYS.huggingfaceExcerptDataset);
 
             return {
-                geminiApiKeys: encryptedGeminiApiKeys ? atob(encryptedGeminiApiKeys).split('\n') : [],
                 huggingfaceExcerptDataset: huggingfaceExcerptDataset || '',
                 huggingfaceToken: encryptedHuggingfaceToken ? atob(encryptedHuggingfaceToken) : '',
                 quickSubs: quickSubs ? quickSubs.split('\n') : [],
-                shamelaApiKey: encryptedShamelaApiKey ? atob(encryptedShamelaApiKey) : '',
-                shamelaBookEndpoint: shamelaBookEndpoint || '',
+                shamelaDataset: shamelaDataset || '',
             };
         }),
     quickSubs: [],
-    shamelaApiKey: '',
-    shamelaBookEndpoint: '',
-
-    updateGeminiApiKeys: (keys) =>
-        set(() => {
-            localStorage.setItem(STORAGE_KEYS.geminiApiKeys, btoa(keys.join('\n')));
-            return { geminiApiKeys: keys };
-        }),
+    shamelaDataset: '',
 
     updateHuggingfaceExcerptDataset: (huggingfaceExcerptDataset) =>
         set(() => {
@@ -72,15 +58,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
             return { quickSubs: values };
         }),
 
-    updateShamelaApiKey: (key) =>
+    updateShamelaDataset: (endpoint) =>
         set(() => {
-            localStorage.setItem(STORAGE_KEYS.shamelaApiKey, btoa(key));
-            return { shamelaApiKey: key };
-        }),
-
-    updateShamelaBookEndpoint: (endpoint) =>
-        set(() => {
-            localStorage.setItem(STORAGE_KEYS.shamelaBookEndpoint, endpoint);
-            return { shamelaBookEndpoint: endpoint };
+            localStorage.setItem(STORAGE_KEYS.shamelaDataset, endpoint);
+            return { shamelaDataset: endpoint };
         }),
 }));

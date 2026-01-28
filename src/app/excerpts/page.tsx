@@ -28,8 +28,10 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { compressOnClient } from '@/lib/compression';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { getNeighbors } from '@/lib/grouping';
+import { uploadToHuggingFace } from '@/lib/network';
 import { canMergeSegments, findExcerptIssues } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
 import {
@@ -48,7 +50,6 @@ import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
 import ExcerptsTableHeader from './table-header';
 import { TranslationDialogContent } from './translation-dialog';
-import type { FilterScope } from './use-excerpt-filters';
 import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
 
@@ -86,7 +87,6 @@ function ExcerptsPageContent() {
     const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
     const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
-    console.log('huggingfaceToken', huggingfaceToken);
 
     const {
         activeTab,
@@ -335,48 +335,30 @@ function ExcerptsPageContent() {
             return; // User cancelled
         }
 
+        const id = toast.info('Uploading excerpts...');
+
         setIsUploadingToHf(true);
         record('UploadToHuggingFace');
 
         try {
-            const data = getExportData();
-            const jsonData = JSON.stringify(data);
+            const { blob: fileBlob } = await compressOnClient(getExportData());
 
-            // Stream data to backend
-            const response = await fetch('/api/huggingface', {
-                body: jsonData,
-                headers: {
-                    Authorization: `Bearer ${huggingfaceToken}`,
-                    'Content-Type': 'application/json',
-                    'X-Dataset': huggingfaceExcerptDataset,
-                    'X-Filename': `${filename}.json.br`,
-                },
-                method: 'POST',
+            const result = await uploadToHuggingFace({
+                fileBlob,
+                pathInRepo: `${filename}.json.br`,
+                repoId: huggingfaceExcerptDataset,
+                token: huggingfaceToken,
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Upload failed');
-            }
-
-            const result = await response.json();
-            toast.success(
-                `Uploaded to HuggingFace! ${result.filename} (${result.compressionRatio} compression, ${(result.compressedSize / 1024 / 1024).toFixed(2)}MB)`,
-            );
+            toast.success(`Uploaded to HuggingFace! ${result}`);
         } catch (error) {
             console.error('HuggingFace upload error:', error);
             toast.error(error instanceof Error ? error.message : 'Failed to upload to HuggingFace');
         } finally {
             setIsUploadingToHf(false);
+            toast.dismiss(id);
         }
     }, [huggingfaceToken, huggingfaceExcerptDataset, getExportData]);
-
-    const handleTabChange = useCallback(
-        (tab: string) => {
-            setActiveTab(tab as FilterScope);
-        },
-        [setActiveTab],
-    );
 
     return (
         <DataGate
@@ -455,7 +437,7 @@ function ExcerptsPageContent() {
                     </div>
 
                     <div className="w-full">
-                        <Tabs className="w-full" onValueChange={handleTabChange} value={activeTab}>
+                        <Tabs className="w-full" onValueChange={setActiveTab as any} value={activeTab}>
                             <TabsList className="w-full justify-start rounded-none border-gray-200 border-b bg-white">
                                 <TabsTrigger value="excerpts">
                                     Excerpts

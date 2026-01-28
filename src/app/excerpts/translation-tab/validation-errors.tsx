@@ -1,25 +1,20 @@
-import { EyeIcon, FileWarningIcon, WrenchIcon } from 'lucide-react';
+import { EyeIcon, WrenchIcon } from 'lucide-react';
 import { useMemo } from 'react';
-import type { ValidationError, ValidationErrorType } from 'wobble-bibble';
+import type { Range, ValidationError, ValidationErrorType } from 'wobble-bibble';
 
 import { Button } from '@/components/ui/button';
-import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import type { TranslationModel } from '@/lib/constants';
 import { groupErrorMessages } from '@/lib/errorUtils';
-import { formatValidationErrors } from '@/lib/segmentation';
-import { ValidationReportDialog } from './validation-report-dialog';
 
 interface ValidationErrorsProps {
     errors: ValidationError[];
     onFix?: (type: ValidationErrorType) => void;
-    onInspect: (e: React.MouseEvent, id: string, range: { start: number; end: number }) => void;
+    onInspect: (e: React.MouseEvent, id: string, range: Range) => void;
     selectedModel: TranslationModel;
     textValue: string;
 }
 
-export function ValidationErrors({ errors, onFix, onInspect, selectedModel, textValue }: ValidationErrorsProps) {
-    const formattedErrors = useMemo(() => formatValidationErrors(errors), [errors]);
-
+export function ValidationErrors({ errors, onFix, onInspect }: ValidationErrorsProps) {
     const groupedErrors = useMemo(() => {
         return groupErrorMessages(errors);
     }, [errors]);
@@ -86,28 +81,6 @@ export function ValidationErrors({ errors, onFix, onInspect, selectedModel, text
                         );
                     })}
                 </div>
-                <DialogTriggerButton
-                    className="shrink-0"
-                    renderContent={(close) => {
-                        const modelName = (selectedModel.label || 'unknown').replace(/\s+/g, '_');
-                        const firstId = errors[0]?.id || 'unknown';
-                        return (
-                            <ValidationReportDialog
-                                defaultErrors={formattedErrors || ''}
-                                defaultFileName={`${modelName}_${firstId}`}
-                                defaultModel={selectedModel.value}
-                                defaultResponse={textValue}
-                                onClose={close}
-                            />
-                        );
-                    }}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                >
-                    <FileWarningIcon className="mr-1 h-3 w-3" />
-                    Create Report
-                </DialogTriggerButton>
             </div>
         </div>
     );

@@ -2,12 +2,7 @@ import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
 import type { CharacterRange } from 'dyelight';
 import { type Page, type Segment, segmentPages } from 'flappa-doormal';
-import {
-    type Segment as TextSegment,
-    VALIDATION_ERROR_TYPE_INFO,
-    type ValidationError,
-    type ValidationErrorType,
-} from 'wobble-bibble';
+import type { Segment as TextSegment, ValidationError } from 'wobble-bibble';
 import {
     LatestContractVersion,
     MAX_CONSECUTIVE_GAPS_TO_FLAG,
@@ -179,48 +174,6 @@ export const buildCorpusSnapshot = (excerpts: Excerpt[], headings: Heading[], fo
  */
 export const errorsToHighlights = (errors: ValidationError[]): CharacterRange[] => {
     return errors.map((error) => ({ className: 'bg-red-200', end: error.range.end, start: error.range.start }));
-};
-
-/**
- * Formats wobble-bibble validation errors into human-readable messages.
- * Uses VALIDATION_ERROR_TYPE_INFO to get detailed descriptions for each error type.
- *
- * @param errors - Array of validation errors from validateTranslationResponse
- * @returns Formatted error messages joined by newlines, or empty string if no errors
- */
-export const formatValidationErrors = (errors: ValidationError[]): string => {
-    if (errors.length === 0) {
-        return '';
-    }
-
-    // Group errors by their description (error type)
-    const groupedErrors = new Map<string, string[]>();
-
-    for (const error of errors) {
-        const errorInfo = VALIDATION_ERROR_TYPE_INFO[error.type as ValidationErrorType];
-        const description = errorInfo?.description || error.message;
-
-        if (error.id) {
-            const ids = groupedErrors.get(description) || [];
-            ids.push(error.id);
-            groupedErrors.set(description, ids);
-        } else {
-            // Errors without IDs get their own entry with empty array
-            if (!groupedErrors.has(description)) {
-                groupedErrors.set(description, []);
-            }
-        }
-    }
-
-    // Format grouped errors: "P1, P2, P3: Error message" or just "Error message" if no IDs
-    return Array.from(groupedErrors.entries())
-        .map(([description, ids]) => {
-            if (ids.length > 0) {
-                return `${ids.join(', ')}: ${description}`;
-            }
-            return description;
-        })
-        .join('\n');
 };
 
 /**

@@ -1,7 +1,6 @@
-import { join } from 'node:path';
-import process from 'node:process';
 import { type NextRequest, NextResponse } from 'next/server';
-import { configure, getBook, resetConfig } from 'shamela';
+import { decompressJson } from '@/lib/compression';
+import { createJsonStream, downloadFromHuggingFace } from '@/lib/network';
 
 /**
  * Downloads a book from the Shamela database and streams the response.
@@ -19,7 +18,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const bookId = searchParams.get('bookId');
     const authHeader = req.headers.get('Authorization');
-    const booksEndpoint = req.headers.get('X-Shamela-Endpoint');
+    const shamelaDataset = req.headers.get('X-Shamela-Dataset');
 
     // Validate request parameters
     if (!bookId) {
@@ -30,58 +29,16 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
     }
 
-    if (!booksEndpoint) {
-        return NextResponse.json({ error: 'Missing required header: X-Shamela-Endpoint' }, { status: 400 });
+    if (!shamelaDataset) {
+        return NextResponse.json({ error: 'Missing required header: X-Shamela-Dataset' }, { status: 400 });
     }
 
-    const apiKey = authHeader.slice(7); // Remove 'Bearer ' prefix
-    const encoder = new TextEncoder();
+    const token = authHeader.slice(7); // Remove 'Bearer ' prefix
 
-    // Create a streaming response
-    const stream = new ReadableStream({
-        async start(controller) {
-            try {
-                // Configure shamela with provided credentials
-                configure({
-                    apiKey,
-                    booksEndpoint,
-                    masterPatchEndpoint: booksEndpoint.replace('book-updates', 'master'),
-                    sqlJsWasmUrl: join(process.cwd(), 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm'),
-                });
+    const blob = await downloadFromHuggingFace({ pathInRepo: `${bookId}.json.br`, repoId: shamelaDataset, token });
 
-                const bookData = await getBook(parseInt(bookId, 10));
-
-                // Construct the response object
-                const responseData = {
-                    majorRelease: 1, // Default since getBook doesn't return this
-                    pages: bookData.pages,
-                    shamelaId: parseInt(bookId, 10),
-                    titles: bookData.titles,
-                };
-
-                // Serialize to JSON
-                const json = JSON.stringify(responseData);
-
-                // Stream in 64KB chunks to avoid payload limits
-                const chunkSize = 64 * 1024;
-                for (let i = 0; i < json.length; i += chunkSize) {
-                    const chunk = json.slice(i, i + chunkSize);
-                    controller.enqueue(encoder.encode(chunk));
-                }
-
-                controller.close();
-            } catch (error) {
-                console.error('Shamela download error:', error);
-                const errorMessage = error instanceof Error ? error.message : 'Failed to fetch book from Shamela';
-                const errorResponse = JSON.stringify({ error: errorMessage });
-                controller.enqueue(encoder.encode(errorResponse));
-                controller.close();
-            } finally {
-                // Reset config to avoid leaking credentials
-                resetConfig();
-            }
-        },
-    });
+    const book = decompressJson(await blob.arrayBuffer());
+    const stream = createJsonStream(book);
 
     return new Response(stream, { headers: { 'Content-Type': 'application/json', 'Transfer-Encoding': 'chunked' } });
 }

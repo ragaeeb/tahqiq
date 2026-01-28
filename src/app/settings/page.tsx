@@ -20,14 +20,10 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
  */
 export default function Settings() {
     const hydrate = useSettingsStore((state) => state.hydrate);
-    const geminiApiKeys = useSettingsStore((state) => state.geminiApiKeys);
-    const updateGeminiApiKeys = useSettingsStore((state) => state.updateGeminiApiKeys);
     const quickSubs = useSettingsStore((state) => state.quickSubs);
     const updateQuickSubs = useSettingsStore((state) => state.updateQuickSubs);
-    const shamelaApiKey = useSettingsStore((state) => state.shamelaApiKey);
-    const updateShamelaApiKey = useSettingsStore((state) => state.updateShamelaApiKey);
-    const shamelaBookEndpoint = useSettingsStore((state) => state.shamelaBookEndpoint);
-    const updateShamelaBookEndpoint = useSettingsStore((state) => state.updateShamelaBookEndpoint);
+    const shamelaDataset = useSettingsStore((state) => state.shamelaDataset);
+    const updateShamelaDataset = useSettingsStore((state) => state.updateShamelaDataset);
     const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
     const updateHuggingfaceToken = useSettingsStore((state) => state.updateHuggingfaceToken);
     const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
@@ -51,50 +47,6 @@ export default function Settings() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Gemini API Keys</CardTitle>
-                            <CardDescription>
-                                API keys for AI-powered translation features. One key per line.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ClickToReveal
-                                defaultValue={geminiApiKeys.join('\n')}
-                                onSubmit={(value) => updateGeminiApiKeys(value.split('\n').filter(Boolean))}
-                                placeholder="Enter your Gemini API keys (one per line)"
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Shamela Configuration</CardTitle>
-                            <CardDescription>
-                                Configure your Shamela API access for downloading books directly.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="shamela-api-key">API Key</Label>
-                                <ClickToReveal
-                                    defaultValue={shamelaApiKey}
-                                    onSubmit={updateShamelaApiKey}
-                                    placeholder="Enter your Shamela API key"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="shamela-endpoint">Books Endpoint</Label>
-                                <Input
-                                    defaultValue={shamelaBookEndpoint}
-                                    id="shamela-endpoint"
-                                    onBlur={(e) => updateShamelaBookEndpoint(e.target.value)}
-                                    placeholder="Custom books endpoint URL (optional)"
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
                             <CardTitle>HuggingFace Dataset</CardTitle>
                             <CardDescription>
                                 Configure HuggingFace access for uploading compressed excerpt data to your dataset
@@ -111,7 +63,7 @@ export default function Settings() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="hf-dataset">Dataset URL</Label>
+                                <Label htmlFor="hf-dataset">Excerpts Dataset</Label>
                                 <Input
                                     defaultValue={huggingfaceExcerptDataset}
                                     id="hf-dataset"
@@ -121,6 +73,16 @@ export default function Settings() {
                                 <p className="text-gray-500 text-xs">
                                     The dataset of your HuggingFace repository where excerpts will be uploaded.
                                 </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="shamela-endpoint">Shamela Dataset</Label>
+                                <Input
+                                    defaultValue={shamelaDataset}
+                                    id="shamela-endpoint"
+                                    onBlur={(e) => updateShamelaDataset(e.target.value)}
+                                    placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
+                                />
                             </div>
                         </CardContent>
                     </Card>

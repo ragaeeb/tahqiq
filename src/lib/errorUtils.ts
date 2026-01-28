@@ -6,11 +6,11 @@ type GroupedError = {
     type?: ValidationErrorType;
 };
 
+export const filterNoisyError = (e: ValidationError) => e.type !== 'archaic_register' && e.type !== 'missing_id_gap';
+
 export const groupErrorMessages = (errors: ValidationError[]) => {
     const groups = new Map<string, GroupedError>();
-    const filteredErrors = errors.filter(
-        (e) => e.type !== 'mismatched_colons' && e.type !== 'archaic_register' && e.type !== 'missing_id_gap',
-    );
+    const filteredErrors = errors.filter(filterNoisyError);
 
     for (const err of filteredErrors) {
         const isAlreadyTranslated = err.message.startsWith('Already Translated:');
