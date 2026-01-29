@@ -8,7 +8,7 @@ import type { ShamelaBook, ShamelaPage, ShamelaStateCore, ShamelaTitle } from '.
 /**
  * Initial state for the Shamela store.
  */
-export const INITIAL_STATE: ShamelaStateCore = { majorRelease: 0, pages: [], titles: [] };
+export const INITIAL_STATE: ShamelaStateCore = { pages: [], titles: [], version: '0' };
 
 /**
  * Initializes the store from Shamela book data
@@ -22,10 +22,10 @@ export const initStore = (data: ShamelaBook, fileName?: string): ShamelaStateCor
     return {
         ...INITIAL_STATE,
         inputFileName: fileName,
-        majorRelease: data.majorRelease,
         pages,
-        shamelaId: data.shamelaId,
+        shamelaId: data.id,
         titles: data.titles || [],
+        version: data.version,
     };
 };
 

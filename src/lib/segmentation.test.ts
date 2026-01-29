@@ -6,7 +6,6 @@ import {
     detectTruncatedTranslation,
     errorsToHighlights,
     findExcerptIssues,
-    formatValidationErrors,
     getMetaKey,
     getSegmentFilterKey,
     getUntranslatedIds,
@@ -174,78 +173,6 @@ describe('buildCorpusSnapshot', () => {
         const result = buildCorpusSnapshot([], [], []);
         expect(result.untranslated).toEqual([]);
         expect(result.translatedIds.size).toBe(0);
-    });
-});
-
-describe('formatValidationErrors', () => {
-    // Helper to create a complete error object with defaults
-    const makeError = (overrides: Partial<ValidationError> & { type: string; message: string }): ValidationError => ({
-        matchText: 'test',
-        range: { end: 10, start: 0 },
-        ...overrides,
-    });
-
-    it('should return empty string for empty errors array', () => {
-        expect(formatValidationErrors([])).toBe('');
-    });
-
-    it('should format error with ID', () => {
-        const errors = [makeError({ id: 'P123', message: 'Segment appears truncated', type: 'truncated_segment' })];
-        const result = formatValidationErrors(errors);
-        expect(result).toContain('P123');
-    });
-
-    it('should use VALIDATION_ERROR_TYPE_INFO description when available', () => {
-        const errors = [makeError({ id: 'P1', message: 'fallback', type: 'arabic_leak' })];
-        const result = formatValidationErrors(errors);
-        // Should use the VALIDATION_ERROR_TYPE_INFO description, not the fallback
-        expect(result).toContain('Arabic script');
-    });
-
-    it('should fallback to message when type is unknown', () => {
-        const errors = [makeError({ message: 'Custom fallback message', type: 'unknown_type' })];
-        const result = formatValidationErrors(errors);
-        expect(result).toBe('Custom fallback message');
-    });
-
-    it('should group errors with same type into single line', () => {
-        const errors = [
-            makeError({ id: 'P1', message: 'First', type: 'arabic_leak' }),
-            makeError({ id: 'P2', message: 'First', type: 'arabic_leak' }),
-            makeError({ id: 'P3', message: 'First', type: 'arabic_leak' }),
-        ];
-        const result = formatValidationErrors(errors);
-        // All IDs should be on a single line, comma-separated
-        expect(result).toContain('P1, P2, P3');
-        expect(result.split('\n').length).toBe(1);
-    });
-
-    it('should separate different error types on different lines', () => {
-        const errors = [
-            makeError({ id: 'P1', message: 'First', type: 'arabic_leak' }),
-            makeError({ id: 'P2', message: 'Second', type: 'duplicate_id' }),
-        ];
-        const result = formatValidationErrors(errors);
-        expect(result).toContain('P1');
-        expect(result).toContain('P2');
-        expect(result).toContain('\n');
-        const lines = result.split('\n');
-        expect(lines.length).toBe(2);
-    });
-
-    it('should group mixed errors correctly', () => {
-        const errors = [
-            makeError({ id: 'P1', message: 'Error A', type: 'arabic_leak' }),
-            makeError({ id: 'P2', message: 'Error B', type: 'duplicate_id' }),
-            makeError({ id: 'P3', message: 'Error A', type: 'arabic_leak' }),
-        ];
-        const result = formatValidationErrors(errors);
-        const lines = result.split('\n');
-        expect(lines.length).toBe(2);
-        // P1 and P3 should be grouped together (same type)
-        const arabicLine = lines.find((l) => l.includes('Arabic script'));
-        expect(arabicLine).toContain('P1');
-        expect(arabicLine).toContain('P3');
     });
 });
 

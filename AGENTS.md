@@ -713,7 +713,6 @@ src/app/new/
 | EditableHTML not preserving newlines | Use CSS `whitespace-pre-wrap` |
 | Duplicate columns (ID/Page) | Consolidate into single clickable column |
 | Non-Arabic tests failing sanitization | Use realistic Arabic content in tests |
-| `IndexedExcerpt` requires vol/vp | Set `vol: 0, vp: 0` for non-book content |
 | Tatweel Removal | Use simple regex `/\u0640/g` to preserve line breaks instead of aggressive libraries |
 
 ### 6. Prompt Management System
@@ -741,7 +740,6 @@ When dealing with very large datasets (like 40,000 excerpt IDs in the Translatio
 | EditableHTML not preserving newlines | Use CSS `whitespace-pre-wrap` |
 | Duplicate columns (ID/Page) | Consolidate into single clickable column |
 | Non-Arabic tests failing sanitization | Use realistic Arabic content in tests |
-| `IndexedExcerpt` requires vol/vp | Set `vol: 0, vp: 0` for non-book content |
 | Tatweel Removal | Use simple regex `/\u0640/g` to preserve line breaks instead of aggressive libraries |
 | Infinite Loop in Restore | Use `useRef` to store functional callbacks in custom hooks |
 | Immer crashes on Set/Map | Call `enableMapSet()` at the top of the store file |

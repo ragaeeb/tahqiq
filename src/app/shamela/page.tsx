@@ -11,6 +11,7 @@ import JsonDropZone from '@/components/json-drop-zone';
 import SubmittableInput from '@/components/submittable-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loadFromOPFS } from '@/lib/io';
+import { readStreamedJson } from '@/lib/network';
 import { usePatchStore } from '@/stores/patchStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
@@ -34,7 +35,7 @@ function ShamelaPageContent() {
     const allTitles = useShamelaStore((state) => state.titles);
     const pagesCount = useShamelaStore(selectPageCount);
     const titlesCount = useShamelaStore(selectTitleCount);
-    const majorRelease = useShamelaStore((state) => state.majorRelease);
+    const version = useShamelaStore((state) => state.version);
     const shamelaId = useShamelaStore((state) => state.shamelaId);
     const updatePage = useShamelaStore((state) => state.updatePage);
     const updateTitle = useShamelaStore((state) => state.updateTitle);
@@ -42,8 +43,8 @@ function ShamelaPageContent() {
     const setBookId = usePatchStore((state) => state.setBookId);
 
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
-    const shamelaApiKey = useSettingsStore((state) => state.shamelaApiKey);
-    const shamelaBookEndpoint = useSettingsStore((state) => state.shamelaBookEndpoint);
+    const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
+    const shamelaDataset = useSettingsStore((state) => state.shamelaDataset);
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -61,7 +62,7 @@ function ShamelaPageContent() {
         loadFromOPFS('shamela').then((data) => {
             if (data) {
                 record('RestoreShamelaFromSession');
-                setBookId((data as ShamelaBook).shamelaId);
+                setBookId((data as ShamelaBook).id);
                 init(data as ShamelaBook);
             }
         });
@@ -87,18 +88,21 @@ function ShamelaPageContent() {
 
     const handleUrlSubmit = useCallback(
         async (url: string) => {
+            if (/^\d+$/.test(url)) {
+                url = `https://shamela.ws/book/${url}`;
+            }
+
             // Parse book ID from URL like https://shamela.ws/book/1681
-            const match = url.match(/shamela\.ws\/book\/(\d+)/);
-            if (!match) {
-                toast.error('Invalid Shamela URL. Expected format: https://shamela.ws/book/1681');
+            const [, bookId] = url.match(/shamela\.ws\/book\/(\d+)/) || [];
+
+            if (!bookId) {
+                toast.error('Invalid Shamela URL. Expected format: https://shamela.ws/book/1681 or just 1681');
                 return;
             }
 
-            const bookId = parseInt(match[1], 10);
-
             // Update URL with the shamela URL param for bookmarking/sharing
             const params = new URLSearchParams(searchParams.toString());
-            params.set('url', url);
+            params.set('book', bookId);
             router.replace(`${pathname}?${params.toString()}`, { scroll: false });
 
             setIsLoading(true);
@@ -106,16 +110,19 @@ function ShamelaPageContent() {
 
             try {
                 const response = await fetch(`/api/shamela?bookId=${bookId}`, {
-                    headers: { Authorization: `Bearer ${shamelaApiKey}`, 'X-Shamela-Endpoint': shamelaBookEndpoint },
+                    headers: { Authorization: `Bearer ${huggingfaceToken}`, 'X-Shamela-Dataset': shamelaDataset },
                 });
 
                 if (!response.ok) {
+                    // For non-streaming errors (validation failures), we can still read as JSON
                     const error = await response.json();
                     throw new Error(error.error || 'Failed to download book');
                 }
 
-                const book: ShamelaBook = await response.json();
-                setBookId(book.shamelaId);
+                // Read the streamed response
+                const book = await readStreamedJson<ShamelaBook>(response);
+
+                setBookId(book.id);
                 init(book, `shamela-${bookId}.json`);
                 toast.success(`Downloaded book ${bookId} from Shamela`);
             } catch (error) {
@@ -125,28 +132,26 @@ function ShamelaPageContent() {
                 setIsLoading(false);
             }
         },
-        [init, shamelaApiKey, shamelaBookEndpoint, searchParams, router, pathname, setBookId],
+        [init, huggingfaceToken, shamelaDataset, searchParams, router, pathname, setBookId],
     );
 
     // Auto-load book from URL param if present (only once per mount)
     useEffect(() => {
-        const urlParam = searchParams.get('url');
-        if (urlParam && !hasAutoLoaded.current && shamelaApiKey && shamelaBookEndpoint) {
+        const bookId = searchParams.get('book');
+        if (bookId && !hasAutoLoaded.current && huggingfaceToken && shamelaDataset) {
             hasAutoLoaded.current = true;
             // Defer to next tick to ensure settings are hydrated
             setTimeout(() => {
-                handleUrlSubmit(urlParam);
+                handleUrlSubmit(bookId);
             }, 0);
         }
-    }, [searchParams, shamelaApiKey, shamelaBookEndpoint, handleUrlSubmit]);
-
-    const canDownloadFromShamela = shamelaApiKey && shamelaBookEndpoint;
+    }, [searchParams, huggingfaceToken, shamelaDataset, handleUrlSubmit]);
 
     return (
         <DataGate
             dropZone={
                 <div className="flex flex-col gap-6">
-                    {canDownloadFromShamela && (
+                    {huggingfaceToken && shamelaDataset && (
                         <>
                             <div className="space-y-2">
                                 <p className="font-medium text-gray-700 text-sm">Download from Shamela URL</p>
@@ -195,7 +200,7 @@ function ShamelaPageContent() {
                         <div>
                             <h1 className="font-bold text-gray-800 text-xl">Shamela Editor</h1>
                             <span className="text-gray-500 text-sm">
-                                Version: {majorRelease}
+                                Version: {version}
                                 {shamelaId && ` • Book ID: ${shamelaId}`}
                             </span>
                         </div>

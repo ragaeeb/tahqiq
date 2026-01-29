@@ -99,8 +99,9 @@ export type IndexedExcerpt = Pick<Segment, 'from' | 'to'> & {
 
 enum AITranslator {
     Gemini3 = 890,
-    OpenAIGpt51Thinking = 889,
+    OpenAIGpt52Thinking = 893,
     OpenAIGpt5 = 879,
+    Grok4Expert = 895,
 }
 
 type AITranslation = {

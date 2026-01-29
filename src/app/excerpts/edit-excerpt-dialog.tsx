@@ -69,8 +69,6 @@ export function EditExcerptDialogContent({ excerpt, onClose, onUpdate }: EditExc
                 text: str('text'),
                 to: num('to'),
                 translator: num('translator'),
-                vol: num('vol'),
-                vp: num('vp'),
             };
 
             const diff = createObjectDiff(excerpt, updated, { excludeKeys: EXCLUDE_KEYS });

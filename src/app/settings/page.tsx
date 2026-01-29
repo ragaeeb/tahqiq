@@ -15,19 +15,19 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 /**
  * Settings page for managing application configuration.
  *
- * Allows users to configure and manage their Gemini API keys and Shamela settings.
+ * Allows users to configure and manage their Gemini API keys, Shamela settings, and HuggingFace dataset uploads.
  * API keys are stored in browser localStorage with base64 encoding.
  */
 export default function Settings() {
     const hydrate = useSettingsStore((state) => state.hydrate);
-    const geminiApiKeys = useSettingsStore((state) => state.geminiApiKeys);
-    const updateGeminiApiKeys = useSettingsStore((state) => state.updateGeminiApiKeys);
     const quickSubs = useSettingsStore((state) => state.quickSubs);
     const updateQuickSubs = useSettingsStore((state) => state.updateQuickSubs);
-    const shamelaApiKey = useSettingsStore((state) => state.shamelaApiKey);
-    const updateShamelaApiKey = useSettingsStore((state) => state.updateShamelaApiKey);
-    const shamelaBookEndpoint = useSettingsStore((state) => state.shamelaBookEndpoint);
-    const updateShamelaBookEndpoint = useSettingsStore((state) => state.updateShamelaBookEndpoint);
+    const shamelaDataset = useSettingsStore((state) => state.shamelaDataset);
+    const updateShamelaDataset = useSettingsStore((state) => state.updateShamelaDataset);
+    const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
+    const updateHuggingfaceToken = useSettingsStore((state) => state.updateHuggingfaceToken);
+    const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
+    const updateHuggingfaceDataset = useSettingsStore((state) => state.updateHuggingfaceExcerptDataset);
 
     // Hydrate settings from localStorage on client mount
     useEffect(() => {
@@ -47,43 +47,41 @@ export default function Settings() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Gemini API Keys</CardTitle>
+                            <CardTitle>HuggingFace Dataset</CardTitle>
                             <CardDescription>
-                                API keys for AI-powered translation features. One key per line.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <ClickToReveal
-                                defaultValue={geminiApiKeys.join('\n')}
-                                onSubmit={(value) => updateGeminiApiKeys(value.split('\n').filter(Boolean))}
-                                placeholder="Enter your Gemini API keys (one per line)"
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Shamela Configuration</CardTitle>
-                            <CardDescription>
-                                Configure your Shamela API access for downloading books directly.
+                                Configure HuggingFace access for uploading compressed excerpt data to your dataset
+                                repository.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="shamela-api-key">API Key</Label>
+                                <Label htmlFor="hf-token">Access Token</Label>
                                 <ClickToReveal
-                                    defaultValue={shamelaApiKey}
-                                    onSubmit={updateShamelaApiKey}
-                                    placeholder="Enter your Shamela API key"
+                                    defaultValue={huggingfaceToken}
+                                    onSubmit={updateHuggingfaceToken}
+                                    placeholder="Enter your HuggingFace access token"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="shamela-endpoint">Books Endpoint</Label>
+                                <Label htmlFor="hf-dataset">Excerpts Dataset</Label>
                                 <Input
-                                    defaultValue={shamelaBookEndpoint}
+                                    defaultValue={huggingfaceExcerptDataset}
+                                    id="hf-dataset"
+                                    onBlur={(e) => updateHuggingfaceDataset(e.target.value)}
+                                    placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
+                                />
+                                <p className="text-gray-500 text-xs">
+                                    The dataset of your HuggingFace repository where excerpts will be uploaded.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="shamela-endpoint">Shamela Dataset</Label>
+                                <Input
+                                    defaultValue={shamelaDataset}
                                     id="shamela-endpoint"
-                                    onBlur={(e) => updateShamelaBookEndpoint(e.target.value)}
-                                    placeholder="Custom books endpoint URL (optional)"
+                                    onBlur={(e) => updateShamelaDataset(e.target.value)}
+                                    placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
                                 />
                             </div>
                         </CardContent>

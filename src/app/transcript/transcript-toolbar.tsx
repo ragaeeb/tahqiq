@@ -10,7 +10,7 @@ import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
-import { STORAGE_KEYS, TRANSLATE_DRAFT_TRANSCRIPT_PROMPT } from '@/lib/constants';
+import { STORAGE_KEYS } from '@/lib/constants';
 import { mapTranscriptsToLatestContract } from '@/lib/legacy';
 import { generateFormattedTranscriptFromState } from '@/lib/transcriptUtils';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
@@ -141,9 +141,7 @@ export default function TranscriptToolbar() {
                     const state = useTranscriptStore.getState();
                     const defaultText = generateFormattedTranscriptFromState(state);
 
-                    return (
-                        <TranslateDialog defaultPrompt={TRANSLATE_DRAFT_TRANSCRIPT_PROMPT} defaultText={defaultText} />
-                    );
+                    return <TranslateDialog defaultText={defaultText} />;
                 }}
             >
                 <BotIcon /> AI Translate

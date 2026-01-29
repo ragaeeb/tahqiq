@@ -16,12 +16,13 @@ import { useInspector } from './hooks/use-inspector';
 import { useTranslationForm } from './hooks/use-translation-form';
 import { useTranslationSubmit } from './hooks/use-translation-submit';
 import { InspectorSheet } from './inspector-sheet';
-import { PendingOverwritesWarning } from './pending-overwrites-warning';
 import { ValidationErrors } from './validation-errors';
 
 interface AddTranslationTabProps {
     model: TranslationModel;
 }
+
+type PendingOverwrites = { duplicates: string[]; overwrites: string[] };
 
 export function AddTranslationTab({ model }: AddTranslationTabProps) {
     const excerpts = useExcerptsStore((state) => state.excerpts);
@@ -34,9 +35,7 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
     );
 
     // Shared state for pending overwrites
-    const [pendingOverwrites, setPendingOverwrites] = useState<{ duplicates: string[]; overwrites: string[] } | null>(
-        null,
-    );
+    const [pendingOverwrites, setPendingOverwrites] = useState<PendingOverwrites | null>(null);
 
     const { textValue, setTextValue, validationErrors, setValidationErrors, highlights, handlePaste, handleChange } =
         useTranslationForm({ setPendingOverwrites, translatedIds, untranslated });
@@ -128,10 +127,29 @@ Another line that should be appended to this existing excerpt.`}
                 />
 
                 {pendingOverwrites && (
-                    <PendingOverwritesWarning
-                        duplicates={pendingOverwrites.duplicates}
-                        overwrites={pendingOverwrites.overwrites}
-                    />
+                    <div className="space-y-2">
+                        {pendingOverwrites.duplicates.length > 0 && (
+                            <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-orange-800 text-sm">
+                                <div className="font-medium">
+                                    ⚠️ Duplicate IDs in pasted text (later entries will override earlier ones):
+                                </div>
+                                <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
+                                    {pendingOverwrites.duplicates.join(', ')}
+                                </div>
+                            </div>
+                        )}
+                        {pendingOverwrites.overwrites.length > 0 && (
+                            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm">
+                                <div className="font-medium">
+                                    ⚠️ {pendingOverwrites.overwrites.length} excerpt(s) already have translations that
+                                    will be overwritten:
+                                </div>
+                                <div className="mt-1 max-h-16 overflow-y-auto font-mono text-xs">
+                                    {pendingOverwrites.overwrites.join(', ')}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 

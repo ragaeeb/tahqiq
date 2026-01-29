@@ -41,7 +41,7 @@ export const Toolbar = () => {
     const getExportData = useCallback((): ShamelaBook => {
         const state = useShamelaStore.getState();
         return {
-            majorRelease: state.majorRelease,
+            id: state.shamelaId!,
             pages: state.pages.map((p) => ({
                 content: p.footnote ? `${p.body}_________${p.footnote}` : p.body,
                 id: p.id,
@@ -49,9 +49,9 @@ export const Toolbar = () => {
                 page: p.page,
                 part: p.part,
             })),
-            shamelaId: state.shamelaId,
             titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
-        };
+            version: state.version,
+        } as any;
     }, []);
 
     const { handleDownload, handleReset } = useStorageActions({

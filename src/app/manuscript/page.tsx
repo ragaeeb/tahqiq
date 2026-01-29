@@ -73,7 +73,7 @@ export default function Manuscript() {
                 return prev.filter((p) => p !== item);
             });
         },
-        [setSelectedRows, rows],
+        [rows],
     );
 
     // Session restore hook
@@ -108,7 +108,7 @@ export default function Manuscript() {
             record(selected ? 'SelectAllLines' : 'ClearAllLines');
             setSelectedRows(selected ? rows : []);
         },
-        [rows, setSelectedRows],
+        [rows],
     );
 
     return (

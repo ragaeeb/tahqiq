@@ -1,4 +1,4 @@
-import type { BookData, Page as ShamelaPageBase, Title as ShamelaTitleBase } from 'shamela';
+import type { BookData, DenormalizedBook, Page as ShamelaPageBase, Title as ShamelaTitleBase } from 'shamela';
 
 /**
  * Extended page type for the editor with parsed content
@@ -23,19 +23,14 @@ export type ShamelaTitle = ShamelaTitleBase & {
 /**
  * Re-export the BookData type as ShamelaBook for consistency
  */
-export type ShamelaBook = BookData & {
-    /** Major release version */
-    majorRelease: number;
-    /** Shamela book ID for linking to shamela.ws */
-    shamelaId?: number;
-};
+export type ShamelaBook = BookData & DenormalizedBook;
 
 /**
  * Core state for Shamela editor
  */
 export type ShamelaStateCore = {
     /** Major release version */
-    majorRelease: number;
+    version: string;
     /** All pages with parsed content */
     pages: ShamelaPage[];
     /** Shamela book ID for linking to shamela.ws */
