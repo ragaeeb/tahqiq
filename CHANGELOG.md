@@ -1,3 +1,10 @@
+# [1.51.0](https://github.com/ragaeeb/tahqiq/compare/v1.50.1...v1.51.0) (2026-01-29)
+
+
+### Features
+
+* **huggingface:** Implement Hugging Face integration, streaming, and improved segmentation validation ([#111](https://github.com/ragaeeb/tahqiq/issues/111)) ([1e3e20e](https://github.com/ragaeeb/tahqiq/commit/1e3e20e244ededd23e9f5bbec4474ca8020c8bb3))
+
 ## [1.50.1](https://github.com/ragaeeb/tahqiq/compare/v1.50.0...v1.50.1) (2026-01-20)
 
 
