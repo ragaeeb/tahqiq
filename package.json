@@ -64,7 +64,7 @@
     },
     "engines": {
         "bun": ">=1.3.7",
-        "node": ">=25.x"
+        "node": ">=24.x"
     },
     "name": "tahqiq",
     "packageManager": "bun@1.3.7",
