@@ -3,6 +3,7 @@
 import type { Page } from 'flappa-doormal';
 import { ChevronDown, ChevronUp, Eye, Scissors, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import VirtualizedList from '@/app/excerpts/virtualized-list';
 import SubmittableInput from '@/components/submittable-input';
 import { Badge } from '@/components/ui/badge';
@@ -171,6 +172,11 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
 
     const segments = useMemo(() => {
         const result = mapPagesToExcerpts(pages, [], { ...(options as any), debug });
+
+        if (!result.report.ok) {
+            toast.warning(`${result.report.issues.length} issues found: ${result.report.summary}`);
+        }
+
         return result.excerpts;
     }, [pages, options, debug]);
 

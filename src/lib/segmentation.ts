@@ -1,7 +1,7 @@
 import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
 import type { CharacterRange } from 'dyelight';
-import { type Page, type Segment, segmentPages } from 'flappa-doormal';
+import { type Page, type Segment, type SegmentValidationReport, segmentPages, validateSegments } from 'flappa-doormal';
 import type { Segment as TextSegment, ValidationError } from 'wobble-bibble';
 import {
     LatestContractVersion,
@@ -82,7 +82,11 @@ export const mergeShortSegments = (segments: Segment[], minWordCount: number) =>
     return result;
 };
 
-export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: BookSegmentationOptions): Excerpts => {
+export const mapPagesToExcerpts = (
+    pages: Page[],
+    headings: Page[],
+    options: BookSegmentationOptions,
+): Excerpts & { report: SegmentValidationReport } => {
     const {
         replace: replaceRules,
         minWordsPerSegment = SHORT_SEGMENT_WORD_THRESHOLD,
@@ -90,6 +94,8 @@ export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: Boo
     } = options;
     pages = applyReplacements(pages, replaceRules);
     let segments = segmentPages(pages, segmentationOptions);
+    const report = validateSegments(pages, options, segments);
+
     segments = mergeShortSegments(segments, minWordsPerSegment);
     let texts = preformatArabicText(segments.map((s) => s.content)); // format the segments not the pages because the pages might have segmentation rules based on the original format
     const sanitized = sanitizeArabic(texts, 'aggressive'); // this is used to filter out false positives
@@ -129,6 +135,7 @@ export const mapPagesToExcerpts = (pages: Page[], headings: Page[], options: Boo
         options,
         postProcessingApps: [],
         promptForTranslation: '',
+        report,
     };
 };
 
