@@ -1,49 +1,45 @@
-import type { Page } from 'flappa-doormal';
 import { DownloadIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { STORAGE_KEYS } from '@/lib/constants';
-import type { WebBook } from '@/stores/webStore/types';
+import { selectAllPages, selectAllTitles } from '@/stores/webStore/selectors';
+import type { ScrapeResult } from '@/stores/webStore/types';
 import { useWebStore } from '@/stores/webStore/useWebStore';
 
 export const Toolbar = () => {
     const removeFootnotes = useWebStore((state) => state.removeFootnotes);
     const reset = useWebStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
-    const allPages = useWebStore((state) => state.pages);
-    const allTitles = useWebStore((state) => state.titles);
+    const pages = useWebStore(selectAllPages);
+    const titles = useWebStore(selectAllTitles);
 
-    // Transform web pages to flappa-doormal Page format for segmentation
-    const pages = useMemo<Page[]>(() => allPages.map((p) => ({ content: p.body, id: p.id })), [allPages]);
-    const headings = useMemo<Page[]>(
-        () => allTitles.filter((p) => p.content).map((p) => ({ content: p.content, id: p.id })),
-        [allTitles],
-    );
+    const getExportData = useCallback(() => {
+        const {
+            contractVersion,
+            urlPattern,
+            lastUpdatedAt,
+            createdAt,
+            pages,
+            type,
+            scrapingEngine,
+            postProcessingApps,
+        } = useWebStore.getState();
 
-    /**
-     * Creates a WebBook object from the current store state.
-     * Shared between save and download handlers to avoid duplication.
-     */
-    const getExportData = useCallback((): Partial<WebBook> => {
-        const state = useWebStore.getState();
         return {
-            pages: state.pages.map((p) => ({
-                ...(p.accessed && { accessed: p.accessed }),
-                body: p.body,
-                ...(p.footnote && { footnote: p.footnote }),
-                page: p.id,
-                ...(p.title && { title: p.title }),
-                ...(p.url && { url: p.url }),
-            })),
-            ...(state.scrapingEngine && { scrapingEngine: state.scrapingEngine }),
-            timestamp: new Date().toISOString(),
-            ...(state.urlPattern && { urlPattern: state.urlPattern }),
-        };
+            contractVersion,
+            createdAt,
+            lastUpdatedAt,
+            pages,
+            postProcessingApps,
+            scrapingEngine,
+            type,
+            urlPattern,
+        } satisfies ScrapeResult;
     }, []);
 
     const { handleSave, handleDownload, handleReset } = useStorageActions({
@@ -77,8 +73,8 @@ export const Toolbar = () => {
             {isSegmentationPanelOpen && (
                 <SegmentationPanel
                     onClose={() => setIsSegmentationPanelOpen(false)}
-                    pages={pages}
-                    headings={headings}
+                    pages={pages as any}
+                    headings={titles}
                 />
             )}
             <Button className="bg-emerald-500" onClick={handleSave}>

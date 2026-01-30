@@ -33,6 +33,7 @@ export const LatestContractVersion = {
     Excerpts: 'v4.0',
     Juz: 'v3.0',
     Transcript: 'v1.1',
+    Web: 'v1.0',
 } as const;
 
 /**

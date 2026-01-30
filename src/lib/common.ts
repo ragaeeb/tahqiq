@@ -67,3 +67,9 @@ export const createUpdate = <T extends { from: number; to?: number }>(value: str
 
     return Object.keys(updates).length > 0 ? updates : undefined;
 };
+
+export function filterByProperty<T, K extends keyof T>(key: K): (item: T) => item is T & Record<K, NonNullable<T[K]>> {
+    return (item): item is T & Record<K, NonNullable<T[K]>> => {
+        return !!item[key];
+    };
+}

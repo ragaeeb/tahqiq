@@ -1,10 +1,10 @@
 'use client';
 
+import type { Page } from 'flappa-doormal';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
 import { createMatcher } from '@/lib/search';
-import type { WebPage, WebTitle } from '@/stores/webStore/types';
+import { selectAllPages, selectAllTitles } from '@/stores/webStore/selectors';
 import { useWebStore } from '@/stores/webStore/useWebStore';
 
 export type FilterField = 'content' | 'id';
@@ -34,9 +34,7 @@ function filterItems<T extends { id: number }>(items: T[], filters: Filters, get
     });
 }
 
-const filterPages = (items: WebPage[], filters: Filters) => filterItems(items, filters, (item) => item.body);
-
-const filterTitles = (items: WebTitle[], filters: Filters) => filterItems(items, filters, (item) => item.content);
+const filterContents = (items: Page[], filters: Filters) => filterItems(items, filters, (item) => item.content);
 
 /**
  * Hook to manage URL-based filtering for web pages and titles.
@@ -50,8 +48,8 @@ export function useWebFilters() {
     const pathname = usePathname();
 
     // Get store data and filter actions
-    const allPages = useWebStore((state) => state.pages);
-    const allTitles = useWebStore((state) => state.titles);
+    const allPages = useWebStore(selectAllPages);
+    const allTitles = useWebStore(selectAllTitles);
     const filterPagesByIds = useWebStore((state) => state.filterPagesByIds);
     const filterTitlesByIds = useWebStore((state) => state.filterTitlesByIds);
 
@@ -165,13 +163,13 @@ export function useWebFilters() {
     // Helper to apply filters to the active tab
     const applyFiltersToTab = useCallback(() => {
         if (activeTab === 'pages') {
-            const filtered = filterPages(allPages, filters);
+            const filtered = filterContents(allPages, filters);
             filterPagesByIds(filtered.map((p) => p.id));
-            filterTitlesByIds(undefined);
+            filterTitlesByIds([]);
         } else {
-            const filtered = filterTitles(allTitles, filters);
+            const filtered = filterContents(allTitles, filters);
             filterTitlesByIds(filtered.map((t) => t.id));
-            filterPagesByIds(undefined);
+            filterPagesByIds([]);
         }
     }, [activeTab, allPages, allTitles, filters, filterPagesByIds, filterTitlesByIds]);
 
@@ -192,8 +190,8 @@ export function useWebFilters() {
         prevFiltersRef.current = filtersKey;
 
         if (!hasFilters) {
-            filterPagesByIds(undefined);
-            filterTitlesByIds(undefined);
+            filterPagesByIds([]);
+            filterTitlesByIds([]);
             return;
         }
 

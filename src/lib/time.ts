@@ -1,8 +1,12 @@
+export const mapUnixTimestampToSeconds = (t: number) => Math.floor(t / 1000);
+
+export const mapDateToSeconds = (date: Date) => mapUnixTimestampToSeconds(date.getTime());
+
 /**
  * Returns the current Unix timestamp in seconds (not milliseconds).
  * Used for lastUpdatedAt fields which track time in seconds for data persistence.
  */
-export const nowInSeconds = () => Math.floor(Date.now() / 1000);
+export const nowInSeconds = () => mapUnixTimestampToSeconds(Date.now());
 
 /**
  * Converts a time string to seconds
