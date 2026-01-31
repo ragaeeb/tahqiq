@@ -1,5 +1,6 @@
 import { DownloadIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
@@ -12,6 +13,8 @@ import type { ScrapeResult } from '@/stores/webStore/types';
 import { useWebStore } from '@/stores/webStore/useWebStore';
 
 export const Toolbar = () => {
+    const searchParams = useSearchParams();
+    const bookId = searchParams.get('book') || undefined;
     const removeFootnotes = useWebStore((state) => state.removeFootnotes);
     const reset = useWebStore((state) => state.reset);
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
@@ -76,6 +79,7 @@ export const Toolbar = () => {
             </Button>
             {isSegmentationPanelOpen && (
                 <SegmentationPanel
+                    bookId={bookId}
                     onClose={() => setIsSegmentationPanelOpen(false)}
                     pages={segmentationPages}
                     headings={titles}

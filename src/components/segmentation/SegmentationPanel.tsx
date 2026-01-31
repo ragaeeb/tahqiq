@@ -19,9 +19,9 @@ import { mapPagesToExcerpts } from '@/lib/segmentation';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
-type SegmentationPanelProps = { onClose: () => void; pages: Page[]; headings: Page[] };
+type SegmentationPanelProps = { bookId?: string; onClose: () => void; pages: Page[]; headings: Page[] };
 
-export function SegmentationPanel({ onClose, pages, headings }: SegmentationPanelProps) {
+export function SegmentationPanel({ bookId, onClose, pages, headings }: SegmentationPanelProps) {
     const options = useSegmentationStore((s) => s.options);
     const analysisCount = useSegmentationStore((s) => s.allLineStarts.length);
     const replaceRules = options.replace;
@@ -81,6 +81,12 @@ export function SegmentationPanel({ onClose, pages, headings }: SegmentationPane
                                     const id = toast.info('Segmenting pages...');
 
                                     const excerpts = mapPagesToExcerpts(pages, headings, options);
+
+                                    // Include book ID in collection if provided
+                                    if (bookId) {
+                                        excerpts.collection = { id: bookId, title: '' };
+                                    }
+
                                     useExcerptsStore.getState().init(excerpts);
 
                                     router.push('/excerpts');

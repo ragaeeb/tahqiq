@@ -8,7 +8,7 @@ import { readStreamedJson } from '@/lib/network';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 
 type DatasetLoaderProps<T> = {
-    datasetKey: 'aslDataset' | 'shamelaDataset';
+    datasetKey: 'aslDataset' | 'excerptsDataset' | 'shamelaDataset';
     onDataLoaded: (data: T, fileName?: string) => void;
 
     placeholder: string;

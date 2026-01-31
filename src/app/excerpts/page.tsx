@@ -22,6 +22,7 @@ import '@/lib/analytics';
 import '@/stores/dev';
 import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
+import { DatasetLoader } from '@/components/dataset-loader';
 import { useSessionRestore } from '@/components/hooks/use-session-restore';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
@@ -87,6 +88,7 @@ function ExcerptsPageContent() {
     const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
     const huggingfaceExcerptDataset = useSettingsStore((state) => state.excerptsDataset);
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
+    const collectionId = useExcerptsStore((state) => state.collection?.id);
 
     const {
         activeTab,
@@ -218,6 +220,20 @@ function ExcerptsPageContent() {
         setScrollToAfterChange(null);
     }, []);
 
+    // Callback for DatasetLoader
+    const onExcerptsLoaded = useCallback(
+        (data: Excerpts, fileName?: string) => {
+            // Extract book ID from fileName (e.g., "1234.json" -> "1234")
+            // and set it as collection.id for HuggingFace upload default
+            if (fileName) {
+                const bookId = fileName.replace(/\.json$/, '');
+                data.collection = { ...data.collection, id: bookId, title: data.collection?.title || '' };
+            }
+            init(data, fileName);
+        },
+        [init],
+    );
+
     // Session restore hook
     useSessionRestore<Excerpts>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
 
@@ -329,7 +345,9 @@ function ExcerptsPageContent() {
     ]);
 
     const handleUploadToHuggingFace = useCallback(async () => {
-        const filename = prompt('Enter filename for compressed upload (without extension, ie: 1234):') || '';
+        const defaultFilename = collectionId || '';
+        const filename =
+            prompt('Enter filename for compressed upload (without extension, ie: 1234):', defaultFilename) || '';
 
         if (!/^\d+$/.test(filename)) {
             return; // User cancelled
@@ -358,33 +376,43 @@ function ExcerptsPageContent() {
             setIsUploadingToHf(false);
             toast.dismiss(id);
         }
-    }, [huggingfaceToken, huggingfaceExcerptDataset, getExportData]);
+    }, [collectionId, huggingfaceToken, huggingfaceExcerptDataset, getExportData]);
 
     return (
         <DataGate
             dropZone={
-                <JsonDropZone
-                    description="Drag and drop an Excerpts JSON file"
-                    maxFiles={1}
-                    onFiles={(fileNameToData) => {
-                        const keys = Object.keys(fileNameToData);
-                        const data = fileNameToData[keys[0]];
+                <div className="flex flex-col gap-6">
+                    <DatasetLoader<Excerpts>
+                        datasetKey="excerptsDataset"
+                        description="Download from Excerpts Dataset"
+                        onDataLoaded={onExcerptsLoaded}
+                        placeholder="Enter Book ID (e.g. 1234)"
+                        recordEventName="DownloadExcerptsBook"
+                        urlParam="book"
+                    />
+                    <JsonDropZone
+                        description="Drag and drop an Excerpts JSON file"
+                        maxFiles={1}
+                        onFiles={(fileNameToData) => {
+                            const keys = Object.keys(fileNameToData);
+                            const data = fileNameToData[keys[0]];
 
-                        // Validate basic structure before casting
-                        if (
-                            data &&
-                            typeof data === 'object' &&
-                            'excerpts' in data &&
-                            'headings' in data &&
-                            'footnotes' in data
-                        ) {
-                            record('LoadExcerpts', keys[0]);
-                            init(data as unknown as Excerpts, keys[0]);
-                        } else {
-                            toast.error('Invalid Excerpts file format');
-                        }
-                    }}
-                />
+                            // Validate basic structure before casting
+                            if (
+                                data &&
+                                typeof data === 'object' &&
+                                'excerpts' in data &&
+                                'headings' in data &&
+                                'footnotes' in data
+                            ) {
+                                record('LoadExcerpts', keys[0]);
+                                init(data as unknown as Excerpts, keys[0]);
+                            } else {
+                                toast.error('Invalid Excerpts file format');
+                            }
+                        }}
+                    />
+                </div>
             }
             hasData={hasData}
         >
