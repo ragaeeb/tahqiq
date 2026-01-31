@@ -85,7 +85,7 @@ function ExcerptsPageContent() {
     const filterExcerptsByIds = useExcerptsStore((state) => state.filterExcerptsByIds);
 
     const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
-    const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
+    const huggingfaceExcerptDataset = useSettingsStore((state) => state.excerptsDataset);
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
 
     const {

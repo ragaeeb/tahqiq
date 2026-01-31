@@ -4,7 +4,8 @@ export type SettingsStateCore = {
     readonly quickSubs: string[];
     readonly shamelaDataset: string;
     readonly huggingfaceToken: string;
-    readonly huggingfaceExcerptDataset: string;
+    readonly excerptsDataset: string;
+    readonly aslDataset: string;
 };
 
 /**
@@ -14,7 +15,8 @@ type SettingsActions = {
     /** Hydrate settings from localStorage (call on client mount) */
     hydrate: () => void;
     updateHuggingfaceToken: (token: string) => void;
-    updateHuggingfaceExcerptDataset: (value: string) => void;
+    updateExcerptsDataset: (value: string) => void;
     updateQuickSubs: (values: string[]) => void;
     updateShamelaDataset: (endpoint: string) => void;
+    updateAslDataset: (endpoint: string) => void;
 };

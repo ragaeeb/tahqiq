@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import '@/lib/analytics';
 import { DataGate } from '@/components/data-gate';
+import { DatasetLoader } from '@/components/dataset-loader';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loadFromOPFS } from '@/lib/io';
@@ -75,27 +76,44 @@ function WebPageContent() {
         [navigateToItem],
     );
 
+    const onWebLoaded = useCallback(
+        (data: ScrapeResult, _fileName?: string) => {
+            init(data);
+        },
+        [init],
+    );
+
     const origin = getOriginFromPattern(urlPattern);
 
     return (
         <DataGate
             dropZone={
-                <JsonDropZone
-                    description="Drag and drop a Web content JSON file"
-                    maxFiles={1}
-                    onFiles={(fileNameToData) => {
-                        const keys = Object.keys(fileNameToData);
-                        const data = fileNameToData[keys[0]];
+                <div className="flex flex-col gap-6">
+                    <DatasetLoader<ScrapeResult>
+                        datasetKey="aslDataset"
+                        description="Download from ASL Dataset"
+                        onDataLoaded={onWebLoaded}
+                        placeholder="Enter Book ID"
+                        recordEventName="DownloadWebBook"
+                        urlParam="book"
+                    />
+                    <JsonDropZone
+                        description="Drag and drop a Web content JSON file"
+                        maxFiles={1}
+                        onFiles={(fileNameToData) => {
+                            const keys = Object.keys(fileNameToData);
+                            const data = fileNameToData[keys[0]];
 
-                        // Validate basic structure before casting
-                        if (typeof data === 'object' && 'pages' in data && Array.isArray(data.pages)) {
-                            record('LoadWeb', keys[0]);
-                            init(data as unknown as ScrapeResult);
-                        } else {
-                            toast.error('Invalid Web content format. Expected pages array.');
-                        }
-                    }}
-                />
+                            // Validate basic structure before casting
+                            if (typeof data === 'object' && 'pages' in data && Array.isArray(data.pages)) {
+                                record('LoadWeb', keys[0]);
+                                init(data as unknown as ScrapeResult);
+                            } else {
+                                toast.error('Invalid Web content format. Expected pages array.');
+                            }
+                        }}
+                    />
+                </div>
             }
             hasData={pages.length > 0}
         >

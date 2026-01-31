@@ -1,17 +1,15 @@
 'use client';
 
 import { record } from 'nanolytics';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
 import { DataGate } from '@/components/data-gate';
+import { DatasetLoader } from '@/components/dataset-loader';
 import JsonDropZone from '@/components/json-drop-zone';
-import SubmittableInput from '@/components/submittable-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loadFromOPFS } from '@/lib/io';
-import { readStreamedJson } from '@/lib/network';
 import { usePatchStore } from '@/stores/patchStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
@@ -43,15 +41,6 @@ function ShamelaPageContent() {
     const setBookId = usePatchStore((state) => state.setBookId);
 
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
-    const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
-    const shamelaDataset = useSettingsStore((state) => state.shamelaDataset);
-
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const pathname = usePathname();
-
-    const [isLoading, setIsLoading] = useState(false);
-    const hasAutoLoaded = useRef(false);
 
     const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } =
         useShamelaFilters();
@@ -86,94 +75,35 @@ function ShamelaPageContent() {
         [navigateToItem],
     );
 
-    const handleUrlSubmit = useCallback(
-        async (url: string) => {
-            if (/^\d+$/.test(url)) {
-                url = `https://shamela.ws/book/${url}`;
-            }
-
-            // Parse book ID from URL like https://shamela.ws/book/1681
-            const [, bookId] = url.match(/shamela\.ws\/book\/(\d+)/) || [];
-
-            if (!bookId) {
-                toast.error('Invalid Shamela URL. Expected format: https://shamela.ws/book/1681 or just 1681');
-                return;
-            }
-
-            // Update URL with the shamela URL param for bookmarking/sharing
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('book', bookId);
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-
-            setIsLoading(true);
-            record('DownloadShamelaBook', bookId.toString());
-
-            try {
-                const response = await fetch(`/api/shamela?bookId=${bookId}`, {
-                    headers: { Authorization: `Bearer ${huggingfaceToken}`, 'X-Shamela-Dataset': shamelaDataset },
-                });
-
-                if (!response.ok) {
-                    // For non-streaming errors (validation failures), we can still read as JSON
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to download book');
-                }
-
-                // Read the streamed response
-                const book = await readStreamedJson<ShamelaBook>(response);
-
-                setBookId(book.id);
-                init(book, `shamela-${bookId}.json`);
-                toast.success(`Downloaded book ${bookId} from Shamela`);
-            } catch (error) {
-                console.error('Failed to download book:', error);
-                toast.error(error instanceof Error ? error.message : 'Failed to download book');
-            } finally {
-                setIsLoading(false);
-            }
+    const onShamelaLoaded = useCallback(
+        (book: ShamelaBook, fileName?: string) => {
+            setBookId(book.id);
+            init(book, fileName || `shamela-${book.id}.json`);
         },
-        [init, huggingfaceToken, shamelaDataset, searchParams, router, pathname, setBookId],
+        [init, setBookId],
     );
 
-    // Auto-load book from URL param if present (only once per mount)
-    useEffect(() => {
-        const bookId = searchParams.get('book');
-        if (bookId && !hasAutoLoaded.current && huggingfaceToken && shamelaDataset) {
-            hasAutoLoaded.current = true;
-            // Defer to next tick to ensure settings are hydrated
-            setTimeout(() => {
-                handleUrlSubmit(bookId);
-            }, 0);
+    const parseShamelaUrl = useCallback((url: string) => {
+        if (/^\d+$/.test(url)) {
+            return url;
         }
-    }, [searchParams, huggingfaceToken, shamelaDataset, handleUrlSubmit]);
+        const match = url.match(/shamela\.ws\/book\/(\d+)/);
+        return match ? match[1] : undefined;
+    }, []);
 
     return (
         <DataGate
             dropZone={
                 <div className="flex flex-col gap-6">
-                    {huggingfaceToken && shamelaDataset && (
-                        <>
-                            <div className="space-y-2">
-                                <p className="font-medium text-gray-700 text-sm">Download from Shamela URL</p>
-                                <SubmittableInput
-                                    className="w-full"
-                                    disabled={isLoading}
-                                    name="shamelaUrl"
-                                    onSubmit={handleUrlSubmit}
-                                    placeholder="Paste shamela.ws URL (e.g. https://shamela.ws/book/1681)"
-                                />
-                                {isLoading && <p className="text-gray-500 text-sm">Downloading book...</p>}
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white px-2 text-gray-500">Or</span>
-                                </div>
-                            </div>
-                        </>
-                    )}
+                    <DatasetLoader<ShamelaBook>
+                        datasetKey="shamelaDataset"
+                        description="Download from Shamela URL"
+                        onDataLoaded={onShamelaLoaded}
+                        parseInput={parseShamelaUrl}
+                        placeholder="Paste shamela.ws URL (e.g. https://shamela.ws/book/1681)"
+                        recordEventName="DownloadShamelaBook"
+                        urlParam="book"
+                    />
                     <JsonDropZone
                         description="Drag and drop a Shamela book JSON file"
                         maxFiles={1}
