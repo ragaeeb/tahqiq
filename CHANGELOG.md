@@ -1,3 +1,10 @@
+## [1.52.1](https://github.com/ragaeeb/tahqiq/compare/v1.52.0...v1.52.1) (2026-01-31)
+
+
+### Bug Fixes
+
+* **load:** Retain ids when uploading and downloading from dataset ([1aa3590](https://github.com/ragaeeb/tahqiq/commit/1aa3590f8f4c54b581ae911c51bceead77b07c19))
+
 # [1.52.0](https://github.com/ragaeeb/tahqiq/compare/v1.51.0...v1.52.0) (2026-01-31)
 
 
