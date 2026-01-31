@@ -1,7 +1,20 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import * as actions from './actions';
-import type { WebState } from './types';
+import { LatestContractVersion } from '@/lib/constants';
+import { nowInSeconds } from '@/lib/time';
+import type { WebState, WebStateCore } from './types';
+
+const INITIAL_STATE: WebStateCore = {
+    contractVersion: LatestContractVersion.Web,
+    createdAt: nowInSeconds(),
+    filteredPageIds: [],
+    filteredTitleIds: [],
+    lastUpdatedAt: nowInSeconds(),
+    pages: [],
+    postProcessingApps: [],
+    type: 'web',
+    urlPattern: '',
+};
 
 /**
  * Creates a Zustand store for managing Web book state.
@@ -9,59 +22,35 @@ import type { WebState } from './types';
  */
 export const useWebStore = create<WebState>()(
     immer((set) => ({
-        // Spread initial state values
-        ...actions.INITIAL_STATE,
-
-        applyBodyFormatting: (formatFn) =>
-            set((state) => {
-                actions.applyBodyFormatting(state, formatFn);
-            }),
-
-        deletePage: (id) =>
-            set((state) => {
-                actions.deletePage(state, id);
-            }),
-
-        deleteTitle: (id) =>
-            set((state) => {
-                actions.deleteTitle(state, id);
-            }),
+        ...INITIAL_STATE,
 
         filterPagesByIds: (ids) =>
             set((state) => {
-                actions.filterPagesByIds(state, ids);
+                state.filteredPageIds = ids;
             }),
 
         filterTitlesByIds: (ids) =>
             set((state) => {
-                actions.filterTitlesByIds(state, ids);
+                state.filteredTitleIds = ids;
             }),
 
-        init: (data, fileName) =>
+        init: (data) =>
             set((state) => {
-                const newState = actions.initStore(data, fileName);
-                Object.assign(state, newState);
+                Object.assign(state, { ...INITIAL_STATE, ...data });
             }),
 
         removeFootnotes: () =>
             set((state) => {
-                actions.removeFootnotes(state);
+                for (const page of state.pages) {
+                    if (page.metadata?.footnotes) {
+                        page.metadata.footnotes = undefined;
+                    }
+                }
             }),
 
         reset: () =>
             set((state) => {
-                const newState = actions.resetStore();
-                Object.assign(state, newState);
-            }),
-
-        updatePage: (id, updates) =>
-            set((state) => {
-                actions.updatePage(state, id, updates);
-            }),
-
-        updateTitle: (id, updates) =>
-            set((state) => {
-                actions.updateTitle(state, id, updates);
+                Object.assign(state, INITIAL_STATE);
             }),
     })),
 );

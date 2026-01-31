@@ -26,8 +26,10 @@ export default function Settings() {
     const updateShamelaDataset = useSettingsStore((state) => state.updateShamelaDataset);
     const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
     const updateHuggingfaceToken = useSettingsStore((state) => state.updateHuggingfaceToken);
-    const huggingfaceExcerptDataset = useSettingsStore((state) => state.huggingfaceExcerptDataset);
-    const updateHuggingfaceDataset = useSettingsStore((state) => state.updateHuggingfaceExcerptDataset);
+    const huggingfaceExcerptDataset = useSettingsStore((state) => state.excerptsDataset);
+    const updateHuggingfaceDataset = useSettingsStore((state) => state.updateExcerptsDataset);
+    const aslDataset = useSettingsStore((state) => state.aslDataset);
+    const updateAslDataset = useSettingsStore((state) => state.updateAslDataset);
 
     // Hydrate settings from localStorage on client mount
     useEffect(() => {
@@ -81,6 +83,16 @@ export default function Settings() {
                                     defaultValue={shamelaDataset}
                                     id="shamela-endpoint"
                                     onBlur={(e) => updateShamelaDataset(e.target.value)}
+                                    placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="asl-dataset">ASL Dataset</Label>
+                                <Input
+                                    defaultValue={aslDataset}
+                                    id="asl-dataset"
+                                    onBlur={(e) => updateAslDataset(e.target.value)}
                                     placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
                                 />
                             </div>

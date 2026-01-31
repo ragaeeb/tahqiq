@@ -1,44 +1,34 @@
+import type { Page } from 'flappa-doormal';
 import memoizeOne from 'memoize-one';
-import type { WebPage, WebState, WebTitle } from './types';
+import { filterByProperty } from '@/lib/common';
+import type { WebPage, WebState } from './types';
 
 /**
  * Selects all pages, respecting any active filter
  */
 export const selectAllPages = memoizeOne(
-    (state: WebState): WebPage[] => {
-        if (!state.filteredPageIds) {
-            return state.pages;
-        }
-        const idSet = new Set(state.filteredPageIds);
-        return state.pages.filter((p) => idSet.has(p.id));
+    (state: WebState): Array<WebPage & { content: string }> => {
+        const ids = new Set(state.filteredPageIds);
+        const pages = state.pages.filter(filterByProperty('content'));
+        return (ids.size === 0 ? pages : pages.filter((t) => ids.has(t.id))) as any;
     },
     // Custom equality: only recompute if pages array or filter IDs changed
-    ([prevState], [nextState]) =>
-        prevState.pages === nextState.pages && prevState.filteredPageIds === nextState.filteredPageIds,
+    ([prevState]: WebState[], [nextState]: WebState[]) => {
+        return prevState.pages === nextState.pages && prevState.filteredPageIds === nextState.filteredPageIds;
+    },
 );
 
 /**
  * Selects all titles, respecting any active filter
  */
 export const selectAllTitles = memoizeOne(
-    (state: WebState): WebTitle[] => {
-        if (!state.filteredTitleIds) {
-            return state.titles;
-        }
-        const idSet = new Set(state.filteredTitleIds);
-        return state.titles.filter((t) => idSet.has(t.id));
+    (state: WebState): Page[] => {
+        const ids = new Set(state.filteredTitleIds);
+        const titles = state.pages.filter((p) => p.title).map((p) => ({ content: p.title!, id: p.id }));
+
+        return ids.size === 0 ? titles : titles.filter((t) => ids.has(t.id));
     },
-    // Custom equality: only recompute if titles array or filter IDs changed
-    ([prevState], [nextState]) =>
-        prevState.titles === nextState.titles && prevState.filteredTitleIds === nextState.filteredTitleIds,
+    ([prevState]: WebState[], [nextState]: WebState[]) => {
+        return prevState.pages === nextState.pages && prevState.filteredTitleIds === nextState.filteredTitleIds;
+    },
 );
-
-/**
- * Selects the total page count (unfiltered)
- */
-export const selectPageCount = (state: WebState) => state.pages.length;
-
-/**
- * Selects the total title count (unfiltered)
- */
-export const selectTitleCount = (state: WebState) => state.titles.length;

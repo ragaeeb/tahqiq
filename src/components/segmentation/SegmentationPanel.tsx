@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { PanelContainer } from '@/components/PanelContainer';
 import { AnalysisTab } from '@/components/segmentation/AnalysisTab';
+import { ErrorsTab } from '@/components/segmentation/ErrorsTab';
 import { JsonTab } from '@/components/segmentation/JsonTab';
 import { PreviewTab } from '@/components/segmentation/PreviewTab';
 import { ReplacementsTab } from '@/components/segmentation/ReplacementsTab';
@@ -41,6 +42,7 @@ export function SegmentationPanel({ onClose, pages, headings }: SegmentationPane
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                     <TabsTrigger value="rules">Rules ({rulesCount})</TabsTrigger>
                     <TabsTrigger value="replacements">Replacements ({replacementCount})</TabsTrigger>
+                    <TabsTrigger value="errors">Errors</TabsTrigger>
                 </TabsList>
 
                 <TabsContent className="flex min-h-0 flex-1 flex-col overflow-hidden" value="json">
@@ -61,6 +63,10 @@ export function SegmentationPanel({ onClose, pages, headings }: SegmentationPane
 
                 <TabsContent className="flex min-h-0 flex-1 flex-col overflow-hidden" value="replacements">
                     <ReplacementsTab />
+                </TabsContent>
+
+                <TabsContent className="flex min-h-0 flex-1 flex-col overflow-hidden" value="errors">
+                    <ErrorsTab pages={pages} />
                 </TabsContent>
 
                 <div className="flex flex-shrink-0 items-center justify-end gap-4 border-t bg-gray-50 p-4">

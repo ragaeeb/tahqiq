@@ -52,6 +52,9 @@ export function createObjectDiff<T extends Record<string, unknown>>(
 export const createUpdate = <T extends { from: number; to?: number }>(value: string, data: T) => {
     const parts = value.split('-').map((p) => Number.parseInt(p.trim(), 10));
     const newFrom = parts[0];
+    if (Number.isNaN(newFrom)) {
+        return undefined;
+    }
     const newTo = parts.length > 1 ? parts[1] : undefined;
 
     const updates: { from?: number; to?: number } = {};
@@ -67,3 +70,13 @@ export const createUpdate = <T extends { from: number; to?: number }>(value: str
 
     return Object.keys(updates).length > 0 ? updates : undefined;
 };
+
+/**
+ * Creates a type-guarded filter predicate that checks for truthy values at the specified key.
+ * Note: Filters out all falsy values (null, undefined, 0, '', false), not just null/undefined.
+ */
+export function filterByProperty<T, K extends keyof T>(key: K): (item: T) => item is T & Record<K, NonNullable<T[K]>> {
+    return (item): item is T & Record<K, NonNullable<T[K]>> => {
+        return !!item[key];
+    };
+}

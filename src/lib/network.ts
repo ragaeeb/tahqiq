@@ -7,6 +7,10 @@ type HuggingFaceDownloadOptions = {
     pathInRepo: string;
     /** HuggingFace API token */
     token: string;
+    /** Optional AbortSignal for request cancellation */
+    signal?: AbortSignal;
+    /** Timeout in milliseconds (default: 30000) */
+    timeoutMs?: number;
 };
 
 /**
@@ -54,13 +58,49 @@ export const uploadToHuggingFace = async ({ fileBlob, repoId, pathInRepo, token 
     return fileUrl;
 };
 
-export const downloadFromHuggingFace = async ({ repoId, pathInRepo, token }: HuggingFaceDownloadOptions) => {
+const DEFAULT_TIMEOUT_MS = 30000;
+
+/**
+ * Creates a fetch function with timeout handling.
+ * Combines an external signal (if provided) with an internal timeout signal.
+ */
+const createTimeoutFetch = (
+    timeoutMs: number,
+    externalSignal?: AbortSignal,
+): ((input: URL | RequestInfo, init?: RequestInit) => Promise<Response>) => {
+    return async (input, init) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        // If external signal aborts, also abort our controller
+        const onExternalAbort = () => controller.abort();
+        externalSignal?.addEventListener('abort', onExternalAbort);
+
+        try {
+            return await fetch(input, { ...init, signal: controller.signal });
+        } finally {
+            clearTimeout(timeoutId);
+            externalSignal?.removeEventListener('abort', onExternalAbort);
+        }
+    };
+};
+
+export const downloadFromHuggingFace = async ({
+    repoId,
+    pathInRepo,
+    token,
+    signal,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+}: HuggingFaceDownloadOptions) => {
     console.log('Downloading from HuggingFace...');
     console.info(`Repository: ${repoId}`);
     console.info(`Path: ${pathInRepo}`);
 
+    const timeoutFetch = createTimeoutFetch(timeoutMs, signal);
+
     const blob = await downloadFile({
         credentials: { accessToken: token },
+        fetch: timeoutFetch as any,
         hubUrl: 'https://huggingface.co',
         path: pathInRepo,
         repo: { name: repoId, type: 'dataset' },
@@ -103,14 +143,15 @@ export const readStreamedJson = async <T>(response: Response): Promise<T> => {
 };
 
 export const createJsonStream = (data: unknown) => {
-    // Serialize to JSON
-    const json = JSON.stringify(data);
     const encoder = new TextEncoder();
 
     // Create a streaming response
     const stream = new ReadableStream({
         async start(controller) {
             try {
+                // Serialize to JSON
+                const json = JSON.stringify(data);
+
                 // Stream in 64KB chunks to avoid payload limits
                 const chunkSize = 64 * 1024;
                 for (let i = 0; i < json.length; i += chunkSize) {

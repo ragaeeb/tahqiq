@@ -6,11 +6,12 @@ import { toast } from 'sonner';
 
 import '@/lib/analytics';
 import { DataGate } from '@/components/data-gate';
+import { DatasetLoader } from '@/components/dataset-loader';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loadFromOPFS } from '@/lib/io';
-import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/webStore/selectors';
-import type { WebBook } from '@/stores/webStore/types';
+import { selectAllPages, selectAllTitles } from '@/stores/webStore/selectors';
+import type { ScrapeResult } from '@/stores/webStore/types';
 import { useWebStore } from '@/stores/webStore/useWebStore';
 import VirtualizedList from '../excerpts/virtualized-list';
 import PageRow from './page-row';
@@ -43,23 +44,16 @@ function WebPageContent() {
     const init = useWebStore((state) => state.init);
     const pages = useWebStore(selectAllPages);
     const titles = useWebStore(selectAllTitles);
-    const allPages = useWebStore((state) => state.pages);
-    const allTitles = useWebStore((state) => state.titles);
-    const pagesCount = useWebStore(selectPageCount);
-    const titlesCount = useWebStore(selectTitleCount);
     const urlPattern = useWebStore((state) => state.urlPattern);
     const scrapingEngine = useWebStore((state) => state.scrapingEngine);
-    const updatePage = useWebStore((state) => state.updatePage);
-    const updateTitle = useWebStore((state) => state.updateTitle);
 
     const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } = useWebFilters();
-    const hasData = pagesCount > 0 || titlesCount > 0;
 
     useEffect(() => {
         loadFromOPFS('web').then((data) => {
             if (data) {
                 record('RestoreWebFromSession');
-                init(data as WebBook);
+                init(data as ScrapeResult);
             }
         });
     }, [init]);
@@ -82,29 +76,46 @@ function WebPageContent() {
         [navigateToItem],
     );
 
+    const onWebLoaded = useCallback(
+        (data: ScrapeResult, _fileName?: string) => {
+            init(data);
+        },
+        [init],
+    );
+
     const origin = getOriginFromPattern(urlPattern);
 
     return (
         <DataGate
             dropZone={
-                <JsonDropZone
-                    description="Drag and drop a Web content JSON file"
-                    maxFiles={1}
-                    onFiles={(fileNameToData) => {
-                        const keys = Object.keys(fileNameToData);
-                        const data = fileNameToData[keys[0]];
+                <div className="flex flex-col gap-6">
+                    <DatasetLoader<ScrapeResult>
+                        datasetKey="aslDataset"
+                        description="Download from ASL Dataset"
+                        onDataLoaded={onWebLoaded}
+                        placeholder="Enter Book ID"
+                        recordEventName="DownloadWebBook"
+                        urlParam="book"
+                    />
+                    <JsonDropZone
+                        description="Drag and drop a Web content JSON file"
+                        maxFiles={1}
+                        onFiles={(fileNameToData) => {
+                            const keys = Object.keys(fileNameToData);
+                            const data = fileNameToData[keys[0]];
 
-                        // Validate basic structure before casting
-                        if (typeof data === 'object' && 'pages' in data && Array.isArray(data.pages)) {
-                            record('LoadWeb', keys[0]);
-                            init(data as unknown as WebBook, keys[0]);
-                        } else {
-                            toast.error('Invalid Web content format. Expected pages array.');
-                        }
-                    }}
-                />
+                            // Validate basic structure before casting
+                            if (typeof data === 'object' && 'pages' in data && Array.isArray(data.pages)) {
+                                record('LoadWeb', keys[0]);
+                                init(data as unknown as ScrapeResult);
+                            } else {
+                                toast.error('Invalid Web content format. Expected pages array.');
+                            }
+                        }}
+                    />
+                </div>
             }
-            hasData={hasData}
+            hasData={pages.length > 0}
         >
             <div className="flex min-h-screen flex-col font-[family-name:var(--font-geist-sans)]">
                 <div className="w-full">
@@ -125,13 +136,13 @@ function WebPageContent() {
                                 <TabsTrigger value="pages">
                                     Pages
                                     <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-blue-700 text-xs">
-                                        {pagesCount}
+                                        {pages.length}
                                     </span>
                                 </TabsTrigger>
                                 <TabsTrigger value="titles">
                                     Titles
                                     <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-purple-700 text-xs">
-                                        {titlesCount}
+                                        {titles.length}
                                     </span>
                                 </TabsTrigger>
                             </TabsList>
@@ -145,14 +156,12 @@ function WebPageContent() {
                                             activeTab="pages"
                                             filters={filters}
                                             onFilterChange={setFilter}
-                                            pages={allPages}
-                                            titles={allTitles}
+                                            pages={pages}
+                                            titles={titles}
                                         />
                                     }
                                     onScrollToComplete={clearScrollTo}
-                                    renderRow={(item) => (
-                                        <PageRow data={item} onUpdate={updatePage} urlPattern={urlPattern} />
-                                    )}
+                                    renderRow={(item) => <PageRow data={item} urlPattern={urlPattern} />}
                                     scrollToId={scrollToId}
                                 />
                             </TabsContent>
@@ -166,16 +175,12 @@ function WebPageContent() {
                                             activeTab="titles"
                                             filters={filters}
                                             onFilterChange={setFilter}
-                                            pages={allPages}
-                                            titles={allTitles}
+                                            pages={pages}
+                                            titles={titles}
                                         />
                                     }
                                     renderRow={(item) => (
-                                        <TitleRow
-                                            data={item}
-                                            onNavigateToPage={handleNavigateToPage}
-                                            onUpdate={updateTitle}
-                                        />
+                                        <TitleRow data={item} onNavigateToPage={handleNavigateToPage} />
                                     )}
                                 />
                             </TabsContent>

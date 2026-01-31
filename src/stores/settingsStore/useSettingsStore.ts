@@ -3,7 +3,8 @@ import { create } from 'zustand';
 import type { SettingsState } from './types';
 
 const STORAGE_KEYS = {
-    huggingfaceExcerptDataset: 'huggingfaceExcerptDataset',
+    aslDataset: 'aslDataset',
+    excerptsDataset: 'huggingfaceExcerptDataset',
     huggingfaceToken: 'huggingfaceToken',
     quickSubs: 'quickSubs',
     shamelaDataset: 'shamelaBookEndpoint',
@@ -19,8 +20,9 @@ const STORAGE_KEYS = {
  * @returns A Zustand store with settings state and actions
  */
 export const useSettingsStore = create<SettingsState>((set) => ({
+    aslDataset: '',
     // Initialize with empty defaults to avoid SSR hydration mismatch
-    huggingfaceExcerptDataset: '',
+    excerptsDataset: '',
     huggingfaceToken: '',
 
     hydrate: () =>
@@ -28,10 +30,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
             const quickSubs = localStorage.getItem(STORAGE_KEYS.quickSubs);
             const shamelaDataset = localStorage.getItem(STORAGE_KEYS.shamelaDataset);
             const encryptedHuggingfaceToken = localStorage.getItem(STORAGE_KEYS.huggingfaceToken);
-            const huggingfaceExcerptDataset = localStorage.getItem(STORAGE_KEYS.huggingfaceExcerptDataset);
+            const huggingfaceExcerptDataset = localStorage.getItem(STORAGE_KEYS.excerptsDataset);
 
             return {
-                huggingfaceExcerptDataset: huggingfaceExcerptDataset || '',
+                aslDataset: localStorage.getItem(STORAGE_KEYS.aslDataset) || '',
+                excerptsDataset: huggingfaceExcerptDataset || '',
                 huggingfaceToken: encryptedHuggingfaceToken ? atob(encryptedHuggingfaceToken) : '',
                 quickSubs: quickSubs ? quickSubs.split('\n') : [],
                 shamelaDataset: shamelaDataset || '',
@@ -40,10 +43,16 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     quickSubs: [],
     shamelaDataset: '',
 
-    updateHuggingfaceExcerptDataset: (huggingfaceExcerptDataset) =>
+    updateAslDataset: (endpoint) =>
         set(() => {
-            localStorage.setItem(STORAGE_KEYS.huggingfaceExcerptDataset, huggingfaceExcerptDataset);
-            return { huggingfaceExcerptDataset };
+            localStorage.setItem(STORAGE_KEYS.aslDataset, endpoint);
+            return { aslDataset: endpoint };
+        }),
+
+    updateExcerptsDataset: (huggingfaceExcerptDataset) =>
+        set(() => {
+            localStorage.setItem(STORAGE_KEYS.excerptsDataset, huggingfaceExcerptDataset);
+            return { excerptsDataset: huggingfaceExcerptDataset };
         }),
 
     updateHuggingfaceToken: (token) =>

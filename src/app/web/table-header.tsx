@@ -1,9 +1,10 @@
 'use client';
 
+import type { Page } from 'flappa-doormal';
 import { record } from 'nanolytics';
 import React from 'react';
 import SubmittableInput from '@/components/submittable-input';
-import type { WebPage, WebTitle } from '@/stores/webStore/types';
+import type { WebPage } from '@/stores/webStore/types';
 import type { FilterField } from './use-web-filters';
 
 type TableHeaderProps = {
@@ -11,7 +12,7 @@ type TableHeaderProps = {
     filters: { content: string; id: string };
     onFilterChange: (field: FilterField, value: string) => void;
     pages: WebPage[];
-    titles: WebTitle[];
+    titles: Page[];
 };
 
 function PagesTableHeader({
