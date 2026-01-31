@@ -33,7 +33,7 @@ Tahqiq is a Next.js-based application for managing and translating Islamic manus
 src/
 ├── app/                    # Next.js App Router pages and components
 │   ├── ajza/               # Manage groups of Juz for manuscript workflow
-│   ├── api/                # API routes (translate, shamela, analytics, rules)
+│   ├── api/                # API routes (huggingface, analytics, rules)
 │   ├── book/               # Book browser and management
 │   ├── excerpts/           # Excerpts, headings, footnotes management
 │   ├── ketab/              # Ketab-online book editor
@@ -41,9 +41,9 @@ src/
 │   ├── settings/           # API key and configuration management
 │   ├── shamela/            # Shamela book editor
 │   ├── transcript/         # Audio transcript editing
-│   └── web/                # Web content editor (scraped scholar content)
+│   └── web/                # Web content editor (scraped scholar content + ASL books)
 ├── components/             # Shared React components
-│   ├── segmentation/       # Shared segmentation panel components
+│   ├── segmentation/       # Shared segmentation panel components (rules, patterns, replacements)
 │   ├── hooks/              # Custom React hooks
 │   └── ui/                 # UI primitives (shadcn/ui style)
 ├── lib/                    # Utility functions and helpers
@@ -110,7 +110,7 @@ The settings store (`src/stores/settingsStore/`) manages persisted configuration
 
 -   **Hydration pattern**: Initialize with empty defaults, call `hydrate()` in `useEffect` to avoid SSR mismatch
 -   **Encryption**: API keys are base64-encoded before storing in localStorage
--   **Settings**: Gemini API keys, Shamela API key/endpoint, quick substitutions
+-   **Settings**: Gemini API keys, HuggingFace Access Token, ASL Dataset, Shamela Dataset, quick substitutions
 
 ---
 
@@ -363,6 +363,7 @@ type FilterState = {
 | `zustand` + `immer` | State management with immutable updates |
 | `@tanstack/react-virtual` | Virtualized lists |
 | `@radix-ui/*` | Accessible UI primitives |
+| `@huggingface/hub` | HuggingFace dataset downloads |
 | `shamela` | Shamela library book downloading and parsing |
 | `sonner` | Toast notifications |
 | `nanolytics` | Event analytics |
@@ -375,8 +376,7 @@ type FilterState = {
 
 | Route | Method | Purpose |
 |-------|--------|--------|
-| `/api/shamela` | GET | Download book from Shamela (requires auth header) |
-| `/api/translate` | POST | Translate text via Google Gemini |
+| `/api/huggingface` | GET | Download dataset files from HuggingFace (requires auth header) |
 | `/api/analytics` | POST | Record analytics events |
 | `/api/rules` | GET | Fetch manuscript correction rules |
 
@@ -486,6 +486,7 @@ type ReplaceRule = {
 - `RulesTab`: Rule configuration with drag & drop, merge, and specificity sorting
 - `ReplacementsTab`: Pre-processing regex replacements with live match counts
 - `PreviewTab`: Live virtualized preview of segmentation results
+- `ErrorsTab`: Validation report showing issues like page info mismatch or max pages violations
 - `JsonTab`: Raw JSON options editor with validation reporting
 
 **Key patterns**:

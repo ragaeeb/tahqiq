@@ -64,6 +64,7 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 
 ### Web Editor (`/web`)
 - **JSON Import**: Drag and drop scraped web content JSON files
+- **ASL Book Loading**: Download books directly from the defined ASL Dataset by ID
 - **External Links**: Click page IDs to open original source URLs (via `urlPattern` substitution)
 - **Page Editing**: Edit page body content with line break preservation
 - **Title Management**: View and edit titles derived from page data
@@ -94,11 +95,14 @@ Powerful pattern-based page segmentation powered by [flappa-doormal](https://git
   - Invalid regex detection with error highlighting
 - **Token Mappings**: Auto-apply named capture groups (e.g., `{{raqms}}` → `{{raqms:num}}`)
 - **Preview Tab**: Live virtualized preview of segmentation results
+- **Errors Tab**: Validation report showing issues like page info mismatch or max pages violations
 - **Json Tab**: View and edit raw segmentation options JSON with validation reporting
 
 ### Settings (`/settings`)
 - **Gemini API Keys**: Configure multiple API keys for AI translation
-- **Shamela Configuration**: Set up API key and endpoint for book downloads
+- **HuggingFace Access Token**: Configure access to private datasets
+- **ASL Dataset**: ID of the HuggingFace dataset for ASL books
+- **Shamela Dataset**: ID of the HuggingFace dataset for Shamela books
 - **Quick Substitutions**: Configure common text replacements
 
 ### Manuscript Processing
@@ -127,6 +131,7 @@ Powerful pattern-based page segmentation powered by [flappa-doormal](https://git
 - [Radix UI](https://www.radix-ui.com/) for accessible UI components
 - [@tanstack/react-virtual](https://tanstack.com/virtual) for virtualized lists
 - [Google Generative AI](https://ai.google.dev/) for translation capabilities
+- [@huggingface/hub](https://huggingface.co/docs/hub/js) for dataset integration
 - [Shamela](https://www.npmjs.com/package/shamela) for Shamela library integration
 - [Paragrafs](https://www.npmjs.com/package/paragrafs) for transcript segment handling
 - [Baburchi](https://www.npmjs.com/package/baburchi) for Arabic text processing
@@ -343,7 +348,7 @@ tahqiq/
 ├── src/
 │   ├── app/                # Next.js App Router pages
 │   │   ├── ajza/           # Manage groups of Juz for manuscript workflow
-│   │   ├── api/            # API routes (shamela, translate, analytics, rules)
+│   │   ├── api/            # API routes (huggingface, analytics, rules)
 │   │   ├── book/           # Book browser and management
 │   │   ├── excerpts/       # Excerpts management with virtualized lists
 │   │   ├── ketab/          # Ketab-online book editor
