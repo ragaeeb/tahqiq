@@ -1,6 +1,6 @@
 import type { PostProcessingApp } from '../commonTypes';
 
-type PageMetadata = Record<string, any> & {
+type PageMetadata = Record<string, unknown> & {
     book?: string;
     chapter?: string;
 

@@ -113,8 +113,10 @@ function ShamelaPageContent() {
 
                             // Validate basic structure before casting
                             if (typeof data === 'object' && 'pages' in data) {
+                                const book = data as unknown as ShamelaBook;
                                 record('LoadShamela', keys[0]);
-                                init(data as unknown as ShamelaBook, keys[0]);
+                                setBookId(book.id);
+                                init(book, keys[0]);
                             } else {
                                 toast.error('Invalid Shamela book format');
                             }

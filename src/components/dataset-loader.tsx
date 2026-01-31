@@ -73,8 +73,15 @@ export function DatasetLoader<T>({
                 );
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to download data');
+                    let errorMessage = 'Failed to download data';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error || errorMessage;
+                    } catch {
+                        // Response was not JSON, use status text
+                        errorMessage = response.statusText || errorMessage;
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const data = await readStreamedJson<T>(response);

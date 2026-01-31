@@ -27,7 +27,7 @@ function PageRow({ data, urlPattern }: PageRowProps) {
                 <Textarea
                     className="web-content min-h-[60px] w-full resize-none overflow-hidden whitespace-pre-wrap border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"
                     dir="rtl"
-                    key={data.id.toString()}
+                    key={`content-${data.id}`}
                     defaultValue={data.content}
                 />
                 {data.metadata?.footnotes && (
@@ -36,7 +36,7 @@ function PageRow({ data, urlPattern }: PageRowProps) {
                         <Textarea
                             className="min-h-[40px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-600 text-sm leading-relaxed shadow-none focus:outline-none focus:ring-0"
                             defaultValue={data.metadata.footnotes}
-                            key={data.id.toString()}
+                            key={`footnote-${data.id}`}
                             placeholder="الحاشية..."
                             ref={autoResizeTextarea}
                         />

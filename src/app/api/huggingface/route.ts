@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const token = authHeader.slice(7); // Remove 'Bearer ' prefix
 
     try {
-        const blob = await downloadFromHuggingFace({ pathInRepo: file, repoId: dataset, token });
+        const blob = await downloadFromHuggingFace({ pathInRepo: file, repoId: dataset, signal: req.signal, token });
 
         let data: unknown;
         const buffer = await blob.arrayBuffer();

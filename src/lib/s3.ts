@@ -1,4 +1,4 @@
-import { S3Client } from 'bun';
+import { S3Client } from '@/lib/bun-s3';
 
 type S3Config = { awsAccessKey: string; awsBucket: string; awsRegion: string; awsSecretKey: string };
 

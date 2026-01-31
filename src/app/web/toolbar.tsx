@@ -1,6 +1,6 @@
 import { DownloadIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
@@ -55,6 +55,10 @@ export const Toolbar = () => {
         toast.success('Removed footnotes from all pages');
     }, [removeFootnotes]);
 
+    const segmentationPages = useMemo(() => {
+        return pages.map(({ id, content }) => ({ content, id }));
+    }, [pages]);
+
     return (
         <div className="space-x-2">
             <Button onClick={handleRemoveFootnotes} title="Remove footnotes from all pages" variant="outline">
@@ -73,7 +77,7 @@ export const Toolbar = () => {
             {isSegmentationPanelOpen && (
                 <SegmentationPanel
                     onClose={() => setIsSegmentationPanelOpen(false)}
-                    pages={pages as any}
+                    pages={segmentationPages}
                     headings={titles}
                 />
             )}

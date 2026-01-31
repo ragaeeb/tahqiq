@@ -43,7 +43,7 @@ export const useWebStore = create<WebState>()(
             set((state) => {
                 for (const page of state.pages) {
                     if (page.metadata?.footnotes) {
-                        page.metadata.footnote = undefined;
+                        page.metadata.footnotes = undefined;
                     }
                 }
             }),
