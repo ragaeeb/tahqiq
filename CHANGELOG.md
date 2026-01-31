@@ -1,3 +1,10 @@
+# [1.52.0](https://github.com/ragaeeb/tahqiq/compare/v1.51.0...v1.52.0) (2026-01-31)
+
+
+### Features
+
+* **asl:** Implement loading asl from HuggingFace dataset ([#112](https://github.com/ragaeeb/tahqiq/issues/112)) ([00af61a](https://github.com/ragaeeb/tahqiq/commit/00af61a0bea065e4a96ee0654c7cec7a635104dc))
+
 # [1.51.0](https://github.com/ragaeeb/tahqiq/compare/v1.50.1...v1.51.0) (2026-01-29)
 
 
