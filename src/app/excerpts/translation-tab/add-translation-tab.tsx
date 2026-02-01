@@ -1,7 +1,7 @@
 'use client';
 
 import { DyeLight } from 'dyelight';
-import { SaveIcon } from 'lucide-react';
+import { BugIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { fixAll, type ValidationErrorType } from 'wobble-bibble';
@@ -9,6 +9,7 @@ import { fixAll, type ValidationErrorType } from 'wobble-bibble';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import type { TranslationModel } from '@/lib/constants';
+import { downloadFile } from '@/lib/domUtils';
 import { buildCorpusSnapshot } from '@/lib/segmentation';
 import { cn } from '@/lib/utils';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
@@ -36,6 +37,7 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
 
     // Shared state for pending overwrites
     const [pendingOverwrites, setPendingOverwrites] = useState<PendingOverwrites | null>(null);
+    const [isDebugMode, setIsDebugMode] = useState(false);
 
     const { textValue, setTextValue, validationErrors, setValidationErrors, highlights, handlePaste, handleChange } =
         useTranslationForm({ setPendingOverwrites, translatedIds, untranslated });
@@ -88,7 +90,42 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
             {/* Model select moved to parent */}
 
             <div className="flex min-h-0 flex-1 flex-col gap-2">
-                <Label htmlFor="translations">Translations:</Label>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="translations">Translations:</Label>
+                    <div className="flex items-center gap-2">
+                        {isDebugMode && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    const report = dyeLightRef.current?.exportForAI();
+                                    if (report) {
+                                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                                        downloadFile(`dyelight-debug-${timestamp}.json`, report);
+                                        toast.success('Debug report downloaded');
+                                    } else {
+                                        toast.info('No debug data available yet');
+                                    }
+                                }}
+                                title="Download debug report for AI analysis"
+                            >
+                                <DownloadIcon className="mr-1 h-3 w-3" />
+                                Export Debug
+                            </Button>
+                        )}
+                        <Button
+                            type="button"
+                            variant={isDebugMode ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setIsDebugMode(!isDebugMode)}
+                            title={isDebugMode ? 'Disable debug mode' : 'Enable debug mode for troubleshooting'}
+                            className={isDebugMode ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                        >
+                            <BugIcon className="h-3 w-3" />
+                        </Button>
+                    </div>
+                </div>
                 <DyeLight
                     containerClassName={cn(
                         'min-h-0 flex-1 rounded-md border border-input bg-background shadow-xs transition-[color,box-shadow]',
@@ -97,6 +134,7 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
                         hasErrors && 'border-destructive ring-destructive/20',
                     )}
                     className="h-full min-h-0 flex-1 resize-none bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground"
+                    debug={isDebugMode}
                     enableAutoResize={false}
                     highlights={highlights}
                     id="translations"

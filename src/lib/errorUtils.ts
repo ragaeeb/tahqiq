@@ -1,4 +1,4 @@
-import { VALIDATION_ERROR_TYPE_INFO, type ValidationError, type ValidationErrorType } from 'wobble-bibble';
+import type { ValidationError, ValidationErrorType } from 'wobble-bibble';
 
 type GroupedError = {
     message: string;
@@ -23,8 +23,7 @@ export const groupErrorMessages = (errors: ValidationError[]) => {
             description = 'IDs have already been translated';
         } else {
             key = type;
-            const info = VALIDATION_ERROR_TYPE_INFO[type];
-            description = info?.description || err.message.replace(/ in "[^"]+"/, '').trim();
+            description = err.message.replace(/ in "[^"]+"/, '').trim();
         }
 
         const existing = groups.get(key) || {

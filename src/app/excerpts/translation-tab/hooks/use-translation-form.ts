@@ -1,3 +1,4 @@
+import { cleanMultilines } from 'bitaboom';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { normalizeTranslationText, type ValidationError, validateTranslationResponse } from 'wobble-bibble';
 import { filterNoisyError } from '@/lib/errorUtils';
@@ -38,7 +39,7 @@ export function useTranslationForm({ untranslated, translatedIds, setPendingOver
             const start = target.selectionStart;
             const end = target.selectionEnd;
 
-            const normalizedPaste = normalizeTranslationText(pastedText);
+            const normalizedPaste = cleanMultilines(normalizeTranslationText(pastedText));
             const fullContentAfterPaste = textValue.slice(0, start) + normalizedPaste + textValue.slice(end);
 
             const result = validateTranslationResponse(untranslated, fullContentAfterPaste);
