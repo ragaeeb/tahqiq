@@ -1,3 +1,10 @@
+## [1.52.2](https://github.com/ragaeeb/tahqiq/compare/v1.52.1...v1.52.2) (2026-02-01)
+
+
+### Bug Fixes
+
+* **errors:** Fix speaker labels not showing message, ([514e632](https://github.com/ragaeeb/tahqiq/commit/514e6323634ed3e73183a357c3e7a40f69ec6301))
+
 ## [1.52.1](https://github.com/ragaeeb/tahqiq/compare/v1.52.0...v1.52.1) (2026-01-31)
 
 
