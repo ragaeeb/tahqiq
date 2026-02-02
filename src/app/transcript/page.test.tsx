@@ -37,6 +37,7 @@ mock.module('./url-field', () => ({ default: () => <div>url-field</div> }));
 mock.module('@/lib/io', () => ({ loadFiles: async () => ({}), loadFromOPFS: () => Promise.resolve(undefined) }));
 
 mock.module('@/lib/legacy', () => ({ adaptLegacyTranscripts: (value: any) => value }));
+mock.module('next/navigation', () => ({ usePathname: () => '/test-path', useRouter: () => ({ replace: jest.fn() }) }));
 
 import TranscriptPage from './page';
 

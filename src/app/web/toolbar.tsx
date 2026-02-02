@@ -1,10 +1,10 @@
-import { DownloadIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
+import { DownloadIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
+import { ResetButton } from '@/components/reset-button';
 import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { STORAGE_KEYS } from '@/lib/constants';
@@ -45,7 +45,7 @@ export const Toolbar = () => {
         } satisfies ScrapeResult;
     }, []);
 
-    const { handleSave, handleDownload, handleReset } = useStorageActions({
+    const { handleSave, handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadWeb', reset: 'ResetWeb', save: 'SaveWeb' },
         getExportData,
         reset,
@@ -91,9 +91,7 @@ export const Toolbar = () => {
             <Button onClick={handleDownload}>
                 <DownloadIcon />
             </Button>
-            <ConfirmButton onClick={handleReset}>
-                <RefreshCwIcon />
-            </ConfirmButton>
+            <ResetButton onReset={handleReset} onResetAll={handleResetAll} />
         </div>
     );
 };

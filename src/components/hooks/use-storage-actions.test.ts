@@ -20,6 +20,11 @@ mock.module('sonner', () => ({ toast: mockToast }));
 // Mock prompt
 const originalPrompt = globalThis.prompt;
 
+// Mock next/navigation
+const mockRouter = { replace: jest.fn() };
+const mockPathname = '/test-path';
+mock.module('next/navigation', () => ({ usePathname: () => mockPathname, useRouter: () => mockRouter }));
+
 import { STORAGE_KEYS } from '@/lib/constants';
 // Import after mocking
 import { useStorageActions } from './use-storage-actions';
@@ -32,11 +37,14 @@ describe('useStorageActions', () => {
         mockRecord.mockReset();
         mockToast.success.mockReset();
         mockToast.error.mockReset();
+        mockRouter.replace.mockReset();
         globalThis.prompt = jest.fn();
+        jest.useFakeTimers();
     });
 
     afterEach(() => {
         globalThis.prompt = originalPrompt;
+        jest.useRealTimers();
     });
 
     const createOptions = (overrides = {}) => ({
@@ -139,18 +147,52 @@ describe('useStorageActions', () => {
     });
 
     describe('handleReset', () => {
-        it('should record analytics, reset, and clear storage', async () => {
+        it('should record analytics, replace route, and reset state', () => {
             const options = createOptions();
-
             const { result } = renderHook(() => useStorageActions(options));
 
-            await act(async () => {
-                await result.current.handleReset();
+            act(() => {
+                result.current.handleReset();
             });
 
             expect(mockRecord).toHaveBeenCalledWith('ResetExcerpts');
+            expect(mockRouter.replace).toHaveBeenCalledWith(mockPathname, { scroll: false });
+
+            // Should NOT call reset immediately due to setTimeout
+            expect(options.reset).not.toHaveBeenCalled();
+            expect(mockClearStorage).not.toHaveBeenCalled();
+
+            // Fast forward time
+            act(() => {
+                jest.runAllTimers();
+            });
+
             expect(options.reset).toHaveBeenCalled();
+        });
+    });
+
+    describe('handleResetAll', () => {
+        it('should record analytics, replace route, clear storage and reset state', async () => {
+            const options = createOptions();
+            const { result } = renderHook(() => useStorageActions(options));
+
+            await act(async () => {
+                await result.current.handleResetAll();
+            });
+
+            expect(mockRecord).toHaveBeenCalledWith('ResetExcerpts');
+            expect(mockRouter.replace).toHaveBeenCalledWith(mockPathname, { scroll: false });
             expect(mockClearStorage).toHaveBeenCalledWith('excerpts');
+
+            // Should NOT call reset immediately due to setTimeout
+            expect(options.reset).not.toHaveBeenCalled();
+
+            // Fast forward time
+            act(() => {
+                jest.runAllTimers();
+            });
+
+            expect(options.reset).toHaveBeenCalled();
         });
 
         it('should work with different storage keys', async () => {
@@ -162,11 +204,16 @@ describe('useStorageActions', () => {
             const { result } = renderHook(() => useStorageActions(options));
 
             await act(async () => {
-                await result.current.handleReset();
+                await result.current.handleResetAll();
             });
 
             expect(mockRecord).toHaveBeenCalledWith('ResetShamela');
             expect(mockClearStorage).toHaveBeenCalledWith('shamela');
+
+            act(() => {
+                jest.runAllTimers();
+            });
+            expect(options.reset).toHaveBeenCalled();
         });
     });
 

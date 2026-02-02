@@ -1,15 +1,15 @@
 'use client';
 
-import { BoxIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { BoxIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import RowToolbar from '@/app/manuscript/row-toolbar';
-import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import { useSessionRestore } from '@/components/hooks/use-session-restore';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
+import { ResetButton } from '@/components/reset-button';
 import { Button } from '@/components/ui/button';
 import { STORAGE_KEYS } from '@/lib/constants';
 import type { Juz, RawInputFiles, SheetLine } from '@/stores/manuscriptStore/types';
@@ -82,7 +82,7 @@ export default function Manuscript() {
     // Storage actions hook
     const getExportData = useCallback(() => mapManuscriptToJuz(useManuscriptStore.getState()), []);
 
-    const { handleDownload, handleReset } = useStorageActions({
+    const { handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadManuscriptJuz', reset: 'ResetManuscript', save: 'SaveManuscriptJuz' },
         getExportData,
         reset,
@@ -144,9 +144,7 @@ export default function Manuscript() {
                             <Button onClick={handleDownload}>
                                 <DownloadIcon />
                             </Button>
-                            <ConfirmButton onClick={handleReset}>
-                                <RefreshCwIcon />
-                            </ConfirmButton>
+                            <ResetButton onReset={handleReset} onResetAll={handleResetAll} />
                             <Link href="/book">
                                 <Button
                                     className="bg-blue-500"

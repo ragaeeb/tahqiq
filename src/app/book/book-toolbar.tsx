@@ -4,22 +4,22 @@ import {
     DownloadIcon,
     HighlighterIcon,
     MergeIcon,
-    RefreshCwIcon,
     SaveIcon,
     SquareDashedIcon,
     TextCursorInputIcon,
     TrashIcon,
 } from 'lucide-react';
 import { record } from 'nanolytics';
+import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
 import { toast } from 'sonner';
-
-import { ConfirmButton } from '@/components/confirm-button';
 import { JsonBrowseButton } from '@/components/json-browse-button';
+import { ResetButton } from '@/components/reset-button';
 import { Button } from '@/components/ui/button';
 import { mapBookStateToKitab, mapKitabToLegacyFormat } from '@/lib/bookFormats';
+import { STORAGE_KEYS } from '@/lib/constants';
 import { downloadFile } from '@/lib/domUtils';
-import { loadFiles } from '@/lib/io';
+import { clearStorage, loadFiles } from '@/lib/io';
 import { useBookStore } from '@/stores/bookStore/useBookStore';
 
 import TocMenu from './toc-menu';
@@ -46,6 +46,8 @@ function BookToolbar({
     const isHighlighterEnabled = useBookStore((state) => state.isHighlighterEnabled);
     const addAjza = useBookStore((state) => state.addAjza);
     const reset = useBookStore((state) => state.reset);
+    const pathname = usePathname();
+    const router = useRouter();
 
     return (
         <div className="flex space-x-2">
@@ -97,14 +99,33 @@ function BookToolbar({
             >
                 <DownloadIcon /> Legacy
             </Button>
-            <ConfirmButton
-                onClick={() => {
+            <ResetButton
+                onReset={() => {
                     record('ResetBook');
-                    reset();
+                    if (typeof window !== 'undefined') {
+                        window.history.replaceState(null, '', pathname);
+                    }
+                    router.replace(pathname, { scroll: false });
+                    setTimeout(() => {
+                        reset();
+                    }, 100);
                 }}
-            >
-                <RefreshCwIcon />
-            </ConfirmButton>
+                onResetAll={async () => {
+                    record('ResetBookAll');
+                    if (typeof window !== 'undefined') {
+                        window.history.replaceState(null, '', pathname);
+                    }
+                    router.replace(pathname, { scroll: false });
+                    try {
+                        await clearStorage(STORAGE_KEYS.ketab);
+                    } catch (err) {
+                        console.error('Failed to clear storage for ketab', err);
+                    }
+                    setTimeout(() => {
+                        reset();
+                    }, 100);
+                }}
+            />
             <TocMenu
                 onBookmarkClicked={() => {
                     record('BookmarkClicked');

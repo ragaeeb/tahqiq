@@ -1,11 +1,11 @@
 import type { Page } from 'flappa-doormal';
 import { htmlToMarkdown } from 'ketab-online-sdk';
-import { DownloadIcon, FileTextIcon, FootprintsIcon, RefreshCwIcon, SaveIcon, SplitIcon } from 'lucide-react';
+import { DownloadIcon, FileTextIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
+import { ResetButton } from '@/components/reset-button';
 import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
@@ -49,7 +49,7 @@ export const Toolbar = () => {
         } as Partial<KetabBook>;
     }, []);
 
-    const { handleSave, handleDownload, handleReset } = useStorageActions({
+    const { handleSave, handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadKetab', reset: 'ResetKetab', save: 'SaveKetab' },
         getExportData,
         reset,
@@ -107,9 +107,7 @@ export const Toolbar = () => {
             <Button onClick={handleDownload}>
                 <DownloadIcon />
             </Button>
-            <ConfirmButton onClick={handleReset}>
-                <RefreshCwIcon />
-            </ConfirmButton>
+            <ResetButton onReset={handleReset} onResetAll={handleResetAll} />
         </div>
     );
 };

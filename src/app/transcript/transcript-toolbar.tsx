@@ -1,13 +1,12 @@
 'use client';
 
-import { BotIcon, DownloadIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { BotIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-
-import { ConfirmButton } from '@/components/confirm-button';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
+import { ResetButton } from '@/components/reset-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
@@ -39,7 +38,7 @@ export default function TranscriptToolbar() {
     // Storage actions hook
     const getExportData = useCallback(() => mapTranscriptsToLatestContract(useTranscriptStore.getState()), []);
 
-    const { handleDownload, handleReset } = useStorageActions({
+    const { handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadTranscript', reset: 'ResetTranscript', save: 'SaveTranscript' },
         getExportData,
         reset,
@@ -181,9 +180,7 @@ export default function TranscriptToolbar() {
             <Button aria-label="Download transcript JSON" onClick={handleDownload}>
                 <DownloadIcon />
             </Button>
-            <ConfirmButton onClick={handleReset}>
-                <RefreshCwIcon />
-            </ConfirmButton>
+            <ResetButton onReset={handleReset} onResetAll={handleResetAll} />
         </div>
     );
 }

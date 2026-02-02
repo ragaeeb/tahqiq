@@ -23,6 +23,7 @@ mock.module('@/lib/io', () => ({ loadFromOPFS: () => Promise.resolve(undefined),
 mock.module('@/lib/manuscript', () => ({ mapManuscriptToJuz: () => ({}) }));
 
 mock.module('@/lib/domUtils', () => ({ downloadFile: jest.fn() }));
+mock.module('next/navigation', () => ({ usePathname: () => '/test-path', useRouter: () => ({ replace: jest.fn() }) }));
 
 const storeState: any = { init: jest.fn(), initFromJuz: jest.fn(), isInitialized: false, reset: jest.fn(), rows: [] };
 

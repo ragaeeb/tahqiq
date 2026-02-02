@@ -1,15 +1,6 @@
 'use client';
 
-import {
-    DownloadIcon,
-    LanguagesIcon,
-    Merge,
-    PackageIcon,
-    RefreshCwIcon,
-    SaveIcon,
-    SearchIcon,
-    TypeIcon,
-} from 'lucide-react';
+import { DownloadIcon, LanguagesIcon, Merge, PackageIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -20,12 +11,12 @@ import packageJson from '@/../package.json';
 
 import '@/lib/analytics';
 import '@/stores/dev';
-import { ConfirmButton } from '@/components/confirm-button';
 import { DataGate } from '@/components/data-gate';
 import { DatasetLoader } from '@/components/dataset-loader';
 import { useSessionRestore } from '@/components/hooks/use-session-restore';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import JsonDropZone from '@/components/json-drop-zone';
+import { ResetButton } from '@/components/reset-button';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -263,7 +254,7 @@ function ExcerptsPageContent() {
         setActiveTab('excerpts');
     }, [reset, setActiveTab]);
 
-    const { handleSave, handleDownload, handleReset } = useStorageActions({
+    const { handleSave, handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadExcerpts', reset: 'ResetExcerpts', save: 'SaveExcerpts' },
         defaultOutputName: 'excerpts.json',
         getExportData,
@@ -459,9 +450,7 @@ function ExcerptsPageContent() {
                             >
                                 <TypeIcon />
                             </Button>
-                            <ConfirmButton onClick={handleReset}>
-                                <RefreshCwIcon />
-                            </ConfirmButton>
+                            <ResetButton onReset={handleReset} onResetAll={handleResetAll} />
                         </div>
                     </div>
 

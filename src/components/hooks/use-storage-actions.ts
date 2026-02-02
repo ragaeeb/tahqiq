@@ -1,4 +1,5 @@
 import { record } from 'nanolytics';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -60,16 +61,50 @@ export function useStorageActions<T>({
         }
     }, [analytics.download, getExportData, defaultOutputName]);
 
-    const handleReset = useCallback(async () => {
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const handleReset = useCallback(() => {
         record(analytics.reset);
-        reset();
+
+        // Immediate URL update to prevent race conditions
+        if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', pathname);
+        }
+
+        router.replace(pathname, { scroll: false });
+
+        // Give the router a tick to update searchParams before remounting DatasetLoader via reset()
+        setTimeout(() => {
+            reset();
+        }, 100);
+    }, [analytics.reset, pathname, reset, router]);
+
+    const handleResetAll = useCallback(async () => {
+        record(analytics.reset);
+
+        // Immediate URL update
+        if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', pathname);
+        }
+
+        router.replace(pathname, { scroll: false });
+
         try {
             await clearStorage(storageKey);
         } catch (err) {
             console.error(`Failed to clear storage for ${storageKey}`, err);
         }
-    }, [analytics.reset, reset, storageKey]);
+
+        // Give the router a tick to update searchParams before remounting DatasetLoader via reset()
+        setTimeout(() => {
+            reset();
+        }, 100);
+    }, [analytics.reset, pathname, reset, router, storageKey]);
 
     // Return memoized object to ensure stable references
-    return useMemo(() => ({ handleDownload, handleReset, handleSave }), [handleSave, handleDownload, handleReset]);
+    return useMemo(
+        () => ({ handleDownload, handleReset, handleResetAll, handleSave }),
+        [handleSave, handleDownload, handleReset, handleResetAll],
+    );
 }

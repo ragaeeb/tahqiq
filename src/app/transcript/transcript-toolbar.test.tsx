@@ -40,6 +40,7 @@ mock.module('@/lib/legacy', () => ({ mapTranscriptsToLatestContract: () => ({ da
 mock.module('@/lib/io', () => ({ saveToOPFS }));
 
 mock.module('@/lib/domUtils', () => ({ downloadFile }));
+mock.module('next/navigation', () => ({ usePathname: () => '/test-path', useRouter: () => ({ replace: jest.fn() }) }));
 
 import TranscriptToolbar from './transcript-toolbar';
 
