@@ -1,3 +1,10 @@
+## [1.52.3](https://github.com/ragaeeb/tahqiq/compare/v1.52.2...v1.52.3) (2026-02-02)
+
+
+### Bug Fixes
+
+* **loading:** Add loading states ([cf4df7c](https://github.com/ragaeeb/tahqiq/commit/cf4df7c1e3a067363a61f012e0c32dc3256d436a))
+
 ## [1.52.2](https://github.com/ragaeeb/tahqiq/compare/v1.52.1...v1.52.2) (2026-02-01)
 
 
