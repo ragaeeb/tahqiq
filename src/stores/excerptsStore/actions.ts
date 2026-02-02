@@ -2,7 +2,7 @@ import { Token } from 'flappa-doormal';
 import { LatestContractVersion, SHORT_SEGMENT_WORD_THRESHOLD } from '@/lib/constants';
 import { applyBulkFieldFormatting, buildIdIndexMap, deleteItemsByIds, updateItemById } from '@/lib/store-utils';
 import { nowInSeconds } from '@/lib/time';
-import type { Excerpt, Excerpts, ExcerptsStateCore, Heading } from './types';
+import type { Compilation, Excerpt, ExcerptsStateCore, Heading } from './types';
 
 /**
  * Initial state for the excerpts store.
@@ -36,7 +36,7 @@ export const INITIAL_STATE: ExcerptsStateCore = {
 /**
  * Initializes the store from Excerpts data, migrating if necessary
  */
-export const initStore = (migrated: Excerpts, fileName?: string): ExcerptsStateCore => {
+export const initStore = (migrated: Compilation, fileName?: string): ExcerptsStateCore => {
     // Migration: move top-level replace to options.replace
     const options = migrated.options || {};
 

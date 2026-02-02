@@ -1,3 +1,4 @@
+import { timeToSeconds } from 'bitaboom';
 import { autoResize } from 'dyelight';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp, getFirstTokenForSelection } from 'paragrafs';
@@ -7,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { pasteText } from '@/lib/domUtils';
 import { findFirstTokenForText, preformatArabicText } from '@/lib/textUtils';
-import { timeToSeconds } from '@/lib/time';
 import type { Segment } from '@/stores/transcriptStore/types';
 import { useTranscriptStore } from '@/stores/transcriptStore/useTranscriptStore';
 

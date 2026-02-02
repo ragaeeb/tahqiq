@@ -146,7 +146,6 @@ export default function ExcerptsTableHeader({
                         placeholder="From"
                     />
                 </th>
-                <th className="w-24 px-1 py-1 text-center font-semibold text-gray-700 text-sm">Parent</th>
                 <th className="px-2 py-1 text-right font-semibold text-gray-700 text-sm" dir="rtl">
                     <SubmittableInput
                         className="w-full border-none bg-transparent px-0 py-1 text-right font-arabic text-gray-800 text-lg leading-relaxed outline-none transition-colors duration-150 focus:rounded focus:bg-gray-50"

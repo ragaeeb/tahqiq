@@ -29,7 +29,7 @@ import JsonDropZone from '@/components/json-drop-zone';
 import { Button } from '@/components/ui/button';
 import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { compressOnClient } from '@/lib/compression';
+import { compressOnClient } from '@/lib/compression.client';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { getNeighbors } from '@/lib/grouping';
 import { uploadToHuggingFace } from '@/lib/network';
@@ -43,7 +43,7 @@ import {
     selectFootnoteCount,
     selectHeadingCount,
 } from '@/stores/excerptsStore/selectors';
-import type { Excerpt, Excerpts } from '@/stores/excerptsStore/types';
+import type { Compilation, Excerpt } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import ExcerptRow from './excerpt-row';
@@ -222,7 +222,7 @@ function ExcerptsPageContent() {
 
     // Callback for DatasetLoader
     const onExcerptsLoaded = useCallback(
-        (data: Excerpts, fileName?: string) => {
+        (data: Compilation, fileName?: string) => {
             // Extract book ID from fileName (e.g., "1234.json" -> "1234")
             // and set it as collection.id for HuggingFace upload default
             if (fileName) {
@@ -235,10 +235,10 @@ function ExcerptsPageContent() {
     );
 
     // Session restore hook
-    useSessionRestore<Excerpts>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
+    useSessionRestore<Compilation>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
 
     // Storage actions hook
-    const getExportData = useCallback((): Excerpts => {
+    const getExportData = useCallback((): Compilation => {
         const state = useExcerptsStore.getState();
         return {
             collection: state.collection,
@@ -353,13 +353,15 @@ function ExcerptsPageContent() {
             return; // User cancelled
         }
 
-        const id = toast.info('Uploading excerpts...');
+        const toastId = toast.loading('Compressing excerpts...');
 
         setIsUploadingToHf(true);
         record('UploadToHuggingFace');
 
         try {
             const { blob: fileBlob } = await compressOnClient(getExportData());
+
+            toast.loading('Uploading to HuggingFace...', { id: toastId });
 
             const result = await uploadToHuggingFace({
                 fileBlob,
@@ -368,13 +370,12 @@ function ExcerptsPageContent() {
                 token: huggingfaceToken,
             });
 
-            toast.success(`Uploaded to HuggingFace! ${result}`);
+            toast.success(`Uploaded to HuggingFace! ${result}`, { id: toastId });
         } catch (error) {
             console.error('HuggingFace upload error:', error);
-            toast.error(error instanceof Error ? error.message : 'Failed to upload to HuggingFace');
+            toast.error(error instanceof Error ? error.message : 'Failed to upload to HuggingFace', { id: toastId });
         } finally {
             setIsUploadingToHf(false);
-            toast.dismiss(id);
         }
     }, [collectionId, huggingfaceToken, huggingfaceExcerptDataset, getExportData]);
 
@@ -382,7 +383,7 @@ function ExcerptsPageContent() {
         <DataGate
             dropZone={
                 <div className="flex flex-col gap-6">
-                    <DatasetLoader<Excerpts>
+                    <DatasetLoader<Compilation>
                         datasetKey="excerptsDataset"
                         description="Download from Excerpts Dataset"
                         onDataLoaded={onExcerptsLoaded}
@@ -406,7 +407,7 @@ function ExcerptsPageContent() {
                                 'footnotes' in data
                             ) {
                                 record('LoadExcerpts', keys[0]);
-                                init(data as unknown as Excerpts, keys[0]);
+                                init(data as unknown as Compilation, keys[0]);
                             } else {
                                 toast.error('Invalid Excerpts file format');
                             }

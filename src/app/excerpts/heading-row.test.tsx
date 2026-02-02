@@ -24,7 +24,7 @@ mock.module('@/components/ui/textarea', () => ({
 import HeadingRow from './heading-row';
 
 describe('HeadingRow', () => {
-    const mockData = { from: 5, id: 'H1', nass: 'عنوان الباب', parent: 'H0', text: 'Chapter title' } as any;
+    const mockData = { from: 5, id: 'H1', nass: 'عنوان الباب', text: 'Chapter title' } as any;
 
     it('renders heading data correctly', () => {
         render(
@@ -36,7 +36,6 @@ describe('HeadingRow', () => {
         );
 
         expect(screen.getByDisplayValue('5')).toBeDefined();
-        expect(screen.getByDisplayValue('H0')).toBeDefined();
         expect(screen.getByDisplayValue('عنوان الباب')).toBeDefined();
         expect(screen.getByDisplayValue('Chapter title')).toBeDefined();
     });
@@ -93,24 +92,6 @@ describe('HeadingRow', () => {
         expect(onUpdate).toHaveBeenCalledWith('H1', { nass: 'عنوان جديد' });
     });
 
-    it('calls onUpdate when parent field loses focus with changed value', () => {
-        const onUpdate = jest.fn();
-
-        render(
-            <table>
-                <tbody>
-                    <HeadingRow data={mockData} onDelete={jest.fn()} onUpdate={onUpdate} />
-                </tbody>
-            </table>,
-        );
-
-        const parentInput = screen.getByDisplayValue('H0');
-        fireEvent.change(parentInput, { target: { value: 'H2' } });
-        fireEvent.blur(parentInput);
-
-        expect(onUpdate).toHaveBeenCalledWith('H1', { parent: 'H2' });
-    });
-
     it('calls onUpdate when translation field loses focus with changed value', () => {
         const onUpdate = jest.fn();
 
@@ -127,19 +108,5 @@ describe('HeadingRow', () => {
         fireEvent.blur(textTextarea);
 
         expect(onUpdate).toHaveBeenCalledWith('H1', { text: 'New chapter title' });
-    });
-
-    it('renders without parent when not provided', () => {
-        const dataWithoutParent = { ...mockData, parent: undefined };
-
-        render(
-            <table>
-                <tbody>
-                    <HeadingRow data={dataWithoutParent} onDelete={jest.fn()} onUpdate={jest.fn()} />
-                </tbody>
-            </table>,
-        );
-
-        expect(screen.getByPlaceholderText('Parent ID')).toBeDefined();
     });
 });

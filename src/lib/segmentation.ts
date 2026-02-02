@@ -13,7 +13,7 @@ import {
 } from '@/lib/constants';
 import { applyReplacements } from '@/lib/replace';
 import { nowInSeconds } from '@/lib/time';
-import type { Excerpt, Excerpts, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
+import type { Compilation, Excerpt, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
 import type { BookSegmentationOptions } from '@/stores/segmentationStore/types';
 
 const MAX_LETTERS = 26;
@@ -86,7 +86,7 @@ export const mapPagesToExcerpts = (
     pages: Page[],
     headings: Page[],
     options: BookSegmentationOptions,
-): Excerpts & { report: SegmentValidationReport } => {
+): Compilation & { report: SegmentValidationReport } => {
     const {
         replace: replaceRules,
         minWordsPerSegment = SHORT_SEGMENT_WORD_THRESHOLD,

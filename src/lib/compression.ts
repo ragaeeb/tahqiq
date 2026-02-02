@@ -1,20 +1,5 @@
+import { Readable } from 'node:stream';
 import { brotliCompressSync, brotliDecompressSync, constants as zc } from 'node:zlib';
-import brotliPromise from 'brotli-wasm';
-
-export const compressOnClient = async (data: unknown) => {
-    const brotli = await brotliPromise;
-
-    const jsonString = typeof data === 'string' ? data : JSON.stringify(data);
-    const originalSize = new Blob([jsonString]).size;
-    const input = new TextEncoder().encode(jsonString);
-
-    // Use named import directly
-    const compressed = brotli.compress(input, { quality: 11 });
-    // Create a new Uint8Array to ensure it has the correct ArrayBuffer type
-    const compressedBlob = new Blob([new Uint8Array(compressed)], { type: 'application/octet-stream' });
-
-    return { blob: compressedBlob, originalSize };
-};
 
 type CompressOpts = {
     /** Sort object keys recursively before stringify for slightly better compression (default: true). */
@@ -83,4 +68,41 @@ export const decompressString = (buf: ArrayBuffer | Uint8Array) => {
  */
 export const decompressJson = <T = unknown>(buf: ArrayBuffer | Uint8Array) => {
     return JSON.parse(decompressString(buf)) as T;
+};
+
+/**
+ * Decompresses a gzipped stream and saves it to a file
+ *
+ * @param sourceStream - The source stream containing compressed data
+ * @param outputFilePath - The path where the decompressed file will be saved
+ * @returns Promise resolving to the output file path
+ * @throws {Error} When decompression fails
+ *
+ * @example
+ * ```typescript
+ * import { createReadStream } from 'fs';
+ *
+ * const sourceStream = createReadStream('compressed.gz');
+ * const outputPath = await decompressFromStream(sourceStream, './output.txt');
+ * console.log(`File decompressed to: ${outputPath}`);
+ * ```
+ */
+export const decompressFromStream = async (
+    sourceStream: Readable | ReadableStream,
+    outputFilePath: string,
+): Promise<string> => {
+    try {
+        const webStream: any = sourceStream instanceof ReadableStream ? sourceStream : Readable.toWeb(sourceStream);
+
+        const decompressedData = await new Response(
+            webStream.pipeThrough(new DecompressionStream('gzip')),
+        ).arrayBuffer();
+
+        await Bun.write(outputFilePath, decompressedData);
+
+        return outputFilePath;
+    } catch (error: any) {
+        console.error(error.stack);
+        throw new Error(`Failed to decompress stream to ${outputFilePath}: ${error}`);
+    }
 };

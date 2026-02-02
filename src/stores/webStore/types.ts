@@ -6,6 +6,9 @@ type PageMetadata = Record<string, unknown> & {
 
     footnotes?: string;
 
+    /** To group multiple pages under the same title. */
+    group?: number;
+
     index?: string;
     /** 16-08-2004 */
     publishDate?: string;
@@ -40,11 +43,13 @@ export type WebPage = {
     title?: string;
 };
 
+export type ScrapingEngine = { name: string; version: string };
+
 export type ScrapeResult = {
     contractVersion: string;
     pages: WebPage[];
     type: 'web';
-    scrapingEngine?: { name: string; version: string };
+    scrapingEngine?: ScrapingEngine;
     createdAt: number;
     urlPattern: string;
     lastUpdatedAt: number;

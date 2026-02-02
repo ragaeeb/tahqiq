@@ -70,20 +70,6 @@ function HeadingRow({ data, onDelete, onUpdate, prevId, nextId, onAddNeighbor, i
                     type="number"
                 />
             </td>
-            <td className="w-24 px-1 py-1 text-center align-middle text-gray-700 text-sm">
-                <Input
-                    className="border-none bg-transparent text-center shadow-none focus:outline-none focus:ring-0"
-                    defaultValue={data.parent ?? ''}
-                    key={`${data.id}/${data.lastUpdatedAt}/parent`}
-                    onBlur={(e) => {
-                        const value = e.target.value || undefined;
-                        if (value !== data.parent) {
-                            onUpdate(data.id, { parent: value });
-                        }
-                    }}
-                    placeholder="Parent ID"
-                />
-            </td>
             <td className="px-2 py-1 align-top" dir="rtl">
                 <Textarea
                     className="min-h-[60px] w-full resize-none overflow-hidden border-none bg-transparent p-2 text-right font-arabic text-gray-800 text-lg leading-relaxed shadow-none focus:outline-none focus:ring-0"

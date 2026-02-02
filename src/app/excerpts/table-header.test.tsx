@@ -127,7 +127,6 @@ describe('ExcerptsTableHeader', () => {
             );
 
             expect(screen.getByPlaceholderText(/Arabic \(2\)/)).toBeDefined();
-            expect(screen.getByText('Parent')).toBeDefined();
         });
     });
 

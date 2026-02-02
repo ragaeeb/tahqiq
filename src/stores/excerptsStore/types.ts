@@ -132,7 +132,7 @@ type PostProcessingApp = { id: string; timestamp?: number; version: string };
 /**
  * Complete excerpts data structure
  */
-export type Excerpts = {
+export type Compilation = {
     /** Optional collection metadata */
     collection?: Collection;
     /** Contract version for format compatibility */
@@ -153,7 +153,7 @@ export type Excerpts = {
     postProcessingApps: PostProcessingApp[];
 
     /** The prompt used to translate the excerpts. */
-    promptForTranslation: string;
+    promptForTranslation?: string;
 
     /** The ID of the prompt template used. */
     promptId?: string;
@@ -162,7 +162,7 @@ export type Excerpts = {
 /**
  * Core state for excerpts management
  */
-export type ExcerptsStateCore = Excerpts & {
+export type ExcerptsStateCore = Compilation & {
     /** Input filename */
     inputFileName?: string;
     /** Filtered excerpt IDs (undefined = show all) */
@@ -197,7 +197,7 @@ export type ExcerptsActions = {
     /**
      * Initializes the store from Excerpts data
      */
-    init: (data: Excerpts, fileName?: string) => void;
+    init: (data: Compilation, fileName?: string) => void;
 
     /**
      * Resets the store to initial empty state
