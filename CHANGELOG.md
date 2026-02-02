@@ -1,3 +1,10 @@
+## [1.52.4](https://github.com/ragaeeb/tahqiq/compare/v1.52.3...v1.52.4) (2026-02-02)
+
+
+### Bug Fixes
+
+* **flappa:** Update flappa for getting equals character support ([16fd1cd](https://github.com/ragaeeb/tahqiq/commit/16fd1cd0befd4ca967b929da1fbbd60a1a1a84e7))
+
 ## [1.52.3](https://github.com/ragaeeb/tahqiq/compare/v1.52.2...v1.52.3) (2026-02-02)
 
 
