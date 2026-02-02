@@ -543,7 +543,7 @@
 
     "find-versions": ["find-versions@6.0.0", "", { "dependencies": { "semver-regex": "^4.0.5", "super-regex": "^1.0.0" } }, "sha512-2kCCtc+JvcZ86IGAz3Z2Y0A1baIz9fL31pH/0S1IqZr9Iwnjq8izfPtrCyQKO6TLMPELLsQMre7VDqeIKCsHkA=="],
 
-    "flappa-doormal": ["flappa-doormal@2.16.1", "", {}, "sha512-vEvQBDlz65133nDy118SPupZqhreP54Ua7a+Mi530TBAbWYPvMKNUSYMfOmJ2vIXJZ4Tpx5GdEU2n5SWZ/eXSw=="],
+    "flappa-doormal": ["flappa-doormal@2.16.2", "", {}, "sha512-4RwZ76a+HtOQjFXph3g9T8tzBW+QcKYzJvLyJ5jbl8rOuq4FlnYAZHGCCoZSvYzQWe0KdUTu4PcKEQhQ/ZW33w=="],
 
     "from2": ["from2@2.3.0", "", { "dependencies": { "inherits": "^2.0.1", "readable-stream": "^2.0.0" } }, "sha512-OMcX/4IC/uqEPVgGeyfN22LJk6AZrMkRZHxcHBMBvHScDGgwTm2GT2Wkgtocyd3JfZffjj2kYUDXXII0Fk9W0g=="],
 
