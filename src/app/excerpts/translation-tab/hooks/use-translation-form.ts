@@ -1,5 +1,5 @@
 import { cleanMultilines } from 'bitaboom';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { normalizeTranslationText, type ValidationError, validateTranslationResponse } from 'wobble-bibble';
 import { filterNoisyError } from '@/lib/errorUtils';
 import { errorsToHighlights } from '@/lib/segmentation';
@@ -18,8 +18,6 @@ export function useTranslationForm({ untranslated, translatedIds, setPendingOver
     const [textValue, setTextValue] = useState('');
     const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
-    const justPastedRef = useRef(false);
-
     const highlights = useMemo(() => errorsToHighlights(validationErrors), [validationErrors]);
 
     const handlePaste = useCallback(
@@ -29,11 +27,6 @@ export function useTranslationForm({ untranslated, translatedIds, setPendingOver
             if (!pastedText.trim()) {
                 return;
             }
-
-            justPastedRef.current = true;
-            setTimeout(() => {
-                justPastedRef.current = false;
-            }, 100);
 
             const target = e.target as HTMLTextAreaElement;
             const start = target.selectionStart;
@@ -62,11 +55,6 @@ export function useTranslationForm({ untranslated, translatedIds, setPendingOver
 
     const handleChange = useCallback(
         (newValue: string) => {
-            // Don't clear error if we just pasted (paste also triggers onChange)
-            if (justPastedRef.current) {
-                return;
-            }
-
             setTextValue(newValue);
 
             if (validationErrors.length) {

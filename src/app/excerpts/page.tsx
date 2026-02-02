@@ -1,6 +1,15 @@
 'use client';
 
-import { DownloadIcon, LanguagesIcon, Merge, PackageIcon, SaveIcon, SearchIcon, TypeIcon } from 'lucide-react';
+import {
+    DownloadIcon,
+    LanguagesIcon,
+    Merge,
+    PackageIcon,
+    SaveIcon,
+    SearchIcon,
+    SettingsIcon,
+    TypeIcon,
+} from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -40,6 +49,7 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import ExcerptRow from './excerpt-row';
 import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
+import { SegmentationOptionsContent } from './options-dialog';
 import ExcerptsTableHeader from './table-header';
 import { TranslationDialogContent } from './translation-dialog';
 import { useExcerptFilters } from './use-excerpt-filters';
@@ -450,6 +460,16 @@ function ExcerptsPageContent() {
                             >
                                 <TypeIcon />
                             </Button>
+                            <DialogTriggerButton
+                                className="bg-gray-500 hover:bg-gray-600"
+                                renderContent={() => {
+                                    const options = useExcerptsStore.getState().options;
+                                    return <SegmentationOptionsContent options={options} />;
+                                }}
+                                title="Show original segmentation options"
+                            >
+                                <SettingsIcon />
+                            </DialogTriggerButton>
                             <ResetButton onReset={handleReset} onResetAll={handleResetAll} />
                         </div>
                     </div>

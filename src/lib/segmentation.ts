@@ -20,9 +20,15 @@ const MAX_LETTERS = 26;
 
 const getSegmentId = (s: Segment, totalExcerptsInPage: number) => {
     const type = s.meta?.type as ExcerptType;
-    let prefix: Markers = totalExcerptsInPage > MAX_LETTERS ? Markers.Note : Markers.Plain;
+    let prefix: Markers = Markers.Plain;
+
+    if (totalExcerptsInPage > MAX_LETTERS * 2) {
+        prefix = Markers.Footnote;
+        totalExcerptsInPage -= MAX_LETTERS * 2;
+    }
 
     if (totalExcerptsInPage > MAX_LETTERS) {
+        prefix = Markers.Note;
         totalExcerptsInPage -= MAX_LETTERS;
     }
 
