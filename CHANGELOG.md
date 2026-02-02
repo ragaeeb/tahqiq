@@ -1,3 +1,11 @@
+## [1.52.5](https://github.com/ragaeeb/tahqiq/compare/v1.52.4...v1.52.5) (2026-02-02)
+
+
+### Bug Fixes
+
+* **overflow:** Fix overflow for long pages ([4a87035](https://github.com/ragaeeb/tahqiq/commit/4a87035adeb4037cbef84f384cbe3914b138605a))
+* **reset:** Fix reset button not resetting route ([d513d86](https://github.com/ragaeeb/tahqiq/commit/d513d8691d2f4d6c2772ed9bbe2a97a7bf3a4f9b))
+
 ## [1.52.4](https://github.com/ragaeeb/tahqiq/compare/v1.52.3...v1.52.4) (2026-02-02)
 
 
