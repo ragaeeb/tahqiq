@@ -5,10 +5,7 @@ import { LatestContractVersion, Markers } from '@/lib/constants';
 const segmentPagesMock = mock(() => []);
 const validateSegmentsMock = mock(() => ({ issues: [] }));
 
-mock.module('flappa-doormal', () => ({
-    segmentPages: segmentPagesMock,
-    validateSegments: validateSegmentsMock,
-}));
+mock.module('flappa-doormal', () => ({ segmentPages: segmentPagesMock, validateSegments: validateSegmentsMock }));
 
 type DebugMeta = import('./segmentation').DebugMeta;
 
@@ -204,7 +201,7 @@ describe('errorsToHighlights', () => {
 
     it('should preserve exact range boundaries', () => {
         const errors: ValidationError[] = [
-            { matchText: 'exact', message: 'Test', range: { end: 15, start: 5 }, type: 'test' },
+            { matchText: 'exact', message: 'Test', range: { end: 15, start: 5 }, type: 'test' as any },
         ];
         const [highlight] = segmentation.errorsToHighlights(errors);
 
@@ -385,27 +382,23 @@ describe('findExcerptIssues', () => {
 
 describe('mapPagesToExcerpts', () => {
     it('should generate note and footnote IDs once segments exceed letter limits', () => {
-        const segments = Array.from({ length: 54 }, () => ({
-            content: 'السلام عليكم ورحمة الله وبركاته',
-            from: 1,
-        }));
+        const segments = Array.from({ length: 54 }, () => ({ content: 'السلام عليكم ورحمة الله وبركاته', from: 1 }));
         const report = { issues: ['ok'] };
         const before = Math.floor(Date.now() / 1000);
 
         segmentPagesMock.mockReturnValueOnce(segments as any);
         validateSegmentsMock.mockReturnValueOnce(report as any);
 
-        const result = segmentation.mapPagesToExcerpts(
-            [{ id: 1, content: 'page 1' }] as any,
-            [],
-            { minWordsPerSegment: 0, replace: [] } as any,
-        );
+        const result = segmentation.mapPagesToExcerpts([{ content: 'page 1', id: 1 }] as any, [], {
+            minWordsPerSegment: 0,
+            replace: [],
+        } as any);
 
         expect(result.excerpts).toHaveLength(54);
         expect(result.excerpts[0].id).toBe('P1');
         expect(result.excerpts[27].id).toBe('N1a');
         expect(result.excerpts[53].id).toBe('F1a');
-        expect(result.report).toEqual(report);
+        expect(result.report).toEqual(report as any);
         const after = Math.floor(Date.now() / 1000);
         expect(result.createdAt).toBeGreaterThanOrEqual(before);
         expect(result.createdAt).toBeLessThanOrEqual(after);
@@ -417,7 +410,7 @@ describe('mapPagesToExcerpts', () => {
         const segments = [
             { content: 'بسم الله', from: 1, meta: { type: Markers.Book } },
             { content: 'ا', from: 1 },
-            { content: 'الحمد لله', from: 2, to: 3, meta: { custom: true } },
+            { content: 'الحمد لله', from: 2, meta: { custom: true }, to: 3 },
         ];
         const report = { issues: [] };
         const before = Math.floor(Date.now() / 1000);
@@ -426,10 +419,10 @@ describe('mapPagesToExcerpts', () => {
         validateSegmentsMock.mockReturnValueOnce(report as any);
 
         const result = segmentation.mapPagesToExcerpts(
-            [{ id: 1, content: 'page 1' }] as any,
+            [{ content: 'page 1', id: 1 }] as any,
             [
-                { id: 10, content: 'Heading 1' },
-                { id: 12, content: 'Heading 2' },
+                { content: 'Heading 1', id: 10 },
+                { content: 'Heading 2', id: 12 },
             ] as any,
             { minWordsPerSegment: 0, replace: [] } as any,
         );
@@ -439,11 +432,11 @@ describe('mapPagesToExcerpts', () => {
         expect(result.excerpts[0].id).toBe('B1');
         expect(result.excerpts[1].id).toBe('P2');
         expect(result.excerpts[1].to).toBe(3);
-        expect(result.excerpts[1].meta).toEqual({ custom: true });
+        expect(result.excerpts[1].meta).toEqual({ custom: true } as any);
         expect(result.headings).toEqual([
             { from: 10, id: 'T10', nass: 'Heading 1' },
             { from: 12, id: 'T12', nass: 'Heading 2' },
-        ]);
+        ] as any);
         const after = Math.floor(Date.now() / 1000);
         expect(result.createdAt).toBeGreaterThanOrEqual(before);
         expect(result.createdAt).toBeLessThanOrEqual(after);
