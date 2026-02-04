@@ -219,6 +219,49 @@ export const migrateLegacyCompilation = async (id: string) => {
     await Bun.write('excerpts.json', JSON.stringify(compilation, null, 2));
 };
 
+type Atharnet = {
+    timestamp: string;
+    scrapingEngine: ScrapingEngine;
+    urlPattern: string;
+    pages: Array<{
+        accessed: string;
+        body?: string;
+        page: number;
+        title: string;
+        url?: string;
+        publishDate: string;
+        metadata: { book?: string; chapter?: string };
+    }>;
+};
+
+export const migrateAtharnet = async (id: string) => {
+    const json: Atharnet = await Bun.file(`${id}.orig.json`).json();
+
+    const pages = json.pages.map((p) => ({
+        accessedAt: mapDateToSeconds(new Date(p.accessed)),
+        ...(p.body && { content: cleanMultilines(normalizeSpaces(p.body)) }),
+        id: p.page,
+        metadata: { book: p.metadata.book, chapter: p.metadata.chapter, publishDate: p.publishDate },
+        ...(p.title && { title: p.title }),
+    })) satisfies WebPage[];
+
+    const result = {
+        contractVersion: LatestContractVersion.Web,
+        createdAt: mapDateToSeconds(new Date(json.timestamp)),
+        lastUpdatedAt: nowInSeconds(),
+        pages,
+        postProcessingApps: [{ id: packageJson.name, timestamp: new Date(), version: packageJson.version }],
+        type: 'web',
+        urlPattern: json.urlPattern,
+    } satisfies ScrapeResult;
+
+    console.log('Writing JSON');
+    await Bun.write(`${id}.json`, JSON.stringify(result, null, 2));
+
+    console.log('Writing brotli compressed JSON');
+    await Bun.write(`${id}.json.br`, compressJson(result));
+};
+
 export const upload = async (id: string) => {
     const fileBlob = new Blob([await Bun.file(`${id}.json.br`).arrayBuffer()]);
 
@@ -230,8 +273,11 @@ export const upload = async (id: string) => {
     });
 };
 
-//migrateGzipped('1383');
-//migrateWordpress('1383');
-//migrate('1951', 'https://al-albany.com/audios/content/{{page}}/1');
-upload('1383');
-//migrateLegacyCompilation('2578');
+const COLLECTION = '1119';
+
+//migrateGzipped(COLLECTION);
+//migrateAtharnet(COLLECTION);
+//migrateWordpress(COLLECTION);
+//migrate(COLLECTION, 'https://al-albany.com/audios/content/{{page}}/1');
+upload(COLLECTION);
+//migrateLegacyCompilation(COLLECTION);
