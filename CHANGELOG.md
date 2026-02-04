@@ -1,3 +1,10 @@
+## [1.52.6](https://github.com/ragaeeb/tahqiq/compare/v1.52.5...v1.52.6) (2026-02-04)
+
+
+### Bug Fixes
+
+* **segment:** Bump flappa-doormal to get segmentation fix ([6994649](https://github.com/ragaeeb/tahqiq/commit/6994649991f0936804336bf1c4f32404ae261df7))
+
 ## [1.52.5](https://github.com/ragaeeb/tahqiq/compare/v1.52.4...v1.52.5) (2026-02-02)
 
 
