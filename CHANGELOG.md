@@ -1,3 +1,10 @@
+## [1.52.7](https://github.com/ragaeeb/tahqiq/compare/v1.52.6...v1.52.7) (2026-02-05)
+
+
+### Bug Fixes
+
+* **segment:** Render better debug meta for segments ([a3cfe93](https://github.com/ragaeeb/tahqiq/commit/a3cfe930d45d766b5accf6d82b3dd7b750351fc3))
+
 ## [1.52.6](https://github.com/ragaeeb/tahqiq/compare/v1.52.5...v1.52.6) (2026-02-04)
 
 
