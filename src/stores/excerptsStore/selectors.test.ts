@@ -9,42 +9,54 @@ import {
 } from './selectors';
 import type { ExcerptsState } from './types';
 
-const createMockState = (overrides: Partial<ExcerptsState> = {}): ExcerptsState => ({
-    applyFootnoteFormatting: () => {},
-    applyHeadingFormatting: () => {},
-    applyTranslationFormatting: () => {},
-    collection: undefined,
-    contractVersion: undefined,
-    createdAt: new Date(),
-    createExcerptFromExisting: () => {},
-    deleteExcerpts: () => {},
-    deleteFootnotes: () => {},
-    deleteHeadings: () => {},
-    excerpts: [],
-    filterExcerptsByIds: () => {},
-    filterFootnotesByIds: () => {},
-    filterHeadingsByIds: () => {},
-    footnotes: [],
-    headings: [],
-    init: () => {},
-    inputFileName: undefined,
-    lastUpdatedAt: undefined,
-    options: undefined,
-    postProcessingApps: [],
-    prompt: undefined,
-    reset: () => {},
-    updateExcerpt: () => {},
-    updateFootnote: () => {},
-    updateHeading: () => {},
-    ...overrides,
-});
+const createMockState = (overrides: Partial<ExcerptsState> = {}): ExcerptsState =>
+    ({
+        applyBulkTranslations: () => {
+            return { total: 0, updated: 0 };
+        },
+        applyExcerptNassFormatting: () => {},
+        applyFootnoteFormatting: () => {},
+        applyFootnoteNassFormatting: () => {},
+        applyHeadingFormatting: () => {},
+        applyHeadingNassFormatting: () => {},
+        applyTranslationFormatting: () => {},
+        collection: undefined,
+        contractVersion: 'v1.0',
+        createdAt: Date.now(),
+        createExcerptFromExisting: () => {},
+        deleteExcerpts: () => {},
+        deleteFootnotes: () => {},
+        deleteHeadings: () => {},
+        excerpts: [],
+        filterExcerptsByIds: () => {},
+        filterFootnotesByIds: () => {},
+        filterHeadingsByIds: () => {},
+        footnotes: [],
+        headings: [],
+        init: () => {},
+        inputFileName: undefined,
+        lastUpdatedAt: Date.now(),
+        markAsSentToLlm: () => {},
+        mergeExcerpts: () => false,
+        options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+        postProcessingApps: [],
+        promptForTranslation: undefined,
+        promptId: undefined,
+        reset: () => {},
+        resetSentToLlm: () => {},
+        save: async () => true,
+        updateExcerpt: () => {},
+        updateFootnote: () => {},
+        updateHeading: () => {},
+        ...overrides,
+    }) as unknown as ExcerptsState;
 
 describe('excerptsStore selectors', () => {
     describe('selectAllExcerpts', () => {
         it('should return all excerpts when no filter is active', () => {
             const excerpts = [
-                { from: 1, id: 'E1', nass: 'نص 1', text: 'text 1' },
-                { from: 2, id: 'E2', nass: 'نص 2', text: 'text 2' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص 1', text: 'text 1', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص 2', text: 'text 2', translator: 890 },
             ];
             const state = createMockState({ excerpts });
 
@@ -55,9 +67,9 @@ describe('excerptsStore selectors', () => {
 
         it('should return filtered excerpts when filter is active', () => {
             const excerpts = [
-                { from: 1, id: 'E1', nass: 'نص 1', text: 'text 1' },
-                { from: 2, id: 'E2', nass: 'نص 2', text: 'text 2' },
-                { from: 3, id: 'E3', nass: 'نص 3', text: 'text 3' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص 1', text: 'text 1', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص 2', text: 'text 2', translator: 890 },
+                { from: 3, id: 'E3', lastUpdatedAt: 12345, nass: 'نص 3', text: 'text 3', translator: 890 },
             ];
             const state = createMockState({ excerpts, filteredExcerptIds: ['E1', 'E3'] });
 
@@ -69,7 +81,9 @@ describe('excerptsStore selectors', () => {
         });
 
         it('should return empty array when filter matches no excerpts', () => {
-            const excerpts = [{ from: 1, id: 'E1', nass: 'نص 1', text: 'text 1' }];
+            const excerpts = [
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص 1', text: 'text 1', translator: 890 },
+            ];
             const state = createMockState({ excerpts, filteredExcerptIds: ['nonexistent'] });
 
             const result = selectAllExcerpts(state);
@@ -78,7 +92,9 @@ describe('excerptsStore selectors', () => {
         });
 
         it('should memoize results for same state reference', () => {
-            const excerpts = [{ from: 1, id: 'E1', nass: 'نص 1', text: 'text 1' }];
+            const excerpts = [
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص 1', text: 'text 1', translator: 890 },
+            ];
             const state = createMockState({ excerpts });
 
             const result1 = selectAllExcerpts(state);
@@ -91,8 +107,8 @@ describe('excerptsStore selectors', () => {
     describe('selectAllHeadings', () => {
         it('should return all headings when no filter is active', () => {
             const headings = [
-                { from: 1, id: 'H1', nass: 'عنوان 1', text: 'heading 1' },
-                { from: 2, id: 'H2', nass: 'عنوان 2', text: 'heading 2' },
+                { from: 1, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان 1', text: 'heading 1', translator: 890 },
+                { from: 2, id: 'H2', lastUpdatedAt: 12345, nass: 'عنوان 2', text: 'heading 2', translator: 890 },
             ];
             const state = createMockState({ headings });
 
@@ -103,8 +119,8 @@ describe('excerptsStore selectors', () => {
 
         it('should return filtered headings when filter is active', () => {
             const headings = [
-                { from: 1, id: 'H1', nass: 'عنوان 1', text: 'heading 1' },
-                { from: 2, id: 'H2', nass: 'عنوان 2', text: 'heading 2' },
+                { from: 1, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان 1', text: 'heading 1', translator: 890 },
+                { from: 2, id: 'H2', lastUpdatedAt: 12345, nass: 'عنوان 2', text: 'heading 2', translator: 890 },
             ];
             const state = createMockState({ filteredHeadingIds: ['H2'], headings });
 
@@ -118,8 +134,8 @@ describe('excerptsStore selectors', () => {
     describe('selectAllFootnotes', () => {
         it('should return all footnotes when no filter is active', () => {
             const footnotes = [
-                { from: 1, id: 'F1', nass: 'حاشية 1', text: 'footnote 1' },
-                { from: 2, id: 'F2', nass: 'حاشية 2', text: 'footnote 2' },
+                { from: 1, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية 1', text: 'footnote 1', translator: 890 },
+                { from: 2, id: 'F2', lastUpdatedAt: 12345, nass: 'حاشية 2', text: 'footnote 2', translator: 890 },
             ];
             const state = createMockState({ footnotes });
 
@@ -130,8 +146,8 @@ describe('excerptsStore selectors', () => {
 
         it('should return filtered footnotes when filter is active', () => {
             const footnotes = [
-                { from: 1, id: 'F1', nass: 'حاشية 1', text: 'footnote 1' },
-                { from: 2, id: 'F2', nass: 'حاشية 2', text: 'footnote 2' },
+                { from: 1, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية 1', text: 'footnote 1', translator: 890 },
+                { from: 2, id: 'F2', lastUpdatedAt: 12345, nass: 'حاشية 2', text: 'footnote 2', translator: 890 },
             ];
             const state = createMockState({ filteredFootnoteIds: ['F1'], footnotes });
 
@@ -145,8 +161,8 @@ describe('excerptsStore selectors', () => {
     describe('selectExcerptCount', () => {
         it('should return total excerpt count (unfiltered)', () => {
             const excerpts = [
-                { from: 1, id: 'E1', nass: 'نص 1', text: 'text 1' },
-                { from: 2, id: 'E2', nass: 'نص 2', text: 'text 2' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص 1', text: 'text 1', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص 2', text: 'text 2', translator: 890 },
             ];
             const state = createMockState({
                 excerpts,
@@ -162,9 +178,9 @@ describe('excerptsStore selectors', () => {
     describe('selectHeadingCount', () => {
         it('should return total heading count (unfiltered)', () => {
             const headings = [
-                { from: 1, id: 'H1', nass: 'عنوان 1', text: 'heading 1' },
-                { from: 2, id: 'H2', nass: 'عنوان 2', text: 'heading 2' },
-                { from: 3, id: 'H3', nass: 'عنوان 3', text: 'heading 3' },
+                { from: 1, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان 1', text: 'heading 1', translator: 890 },
+                { from: 2, id: 'H2', lastUpdatedAt: 12345, nass: 'عنوان 2', text: 'heading 2', translator: 890 },
+                { from: 3, id: 'H3', lastUpdatedAt: 12345, nass: 'عنوان 3', text: 'heading 3', translator: 890 },
             ];
             const state = createMockState({ headings });
 
@@ -176,7 +192,9 @@ describe('excerptsStore selectors', () => {
 
     describe('selectFootnoteCount', () => {
         it('should return total footnote count (unfiltered)', () => {
-            const footnotes = [{ from: 1, id: 'F1', nass: 'حاشية 1', text: 'footnote 1' }];
+            const footnotes = [
+                { from: 1, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية 1', text: 'footnote 1', translator: 890 },
+            ];
             const state = createMockState({ footnotes });
 
             const result = selectFootnoteCount(state);

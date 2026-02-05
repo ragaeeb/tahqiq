@@ -27,11 +27,13 @@ describe('useShamelaStore', () => {
     describe('init', () => {
         it('should initialize store with book data', () => {
             const book: ShamelaBook = {
+                bibliography: 'Test bibliography',
                 id: 9999,
+                name: 'Test Book',
                 pages: [{ content: 'Body text', id: 1 }],
                 titles: [{ content: 'Intro', id: 1, page: 1 }],
                 version: '5',
-            };
+            } as any;
 
             useShamelaStore.getState().init(book, 'book.json');
 

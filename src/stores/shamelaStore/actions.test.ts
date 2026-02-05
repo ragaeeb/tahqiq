@@ -18,14 +18,16 @@ describe('shamelaStore/actions', () => {
     describe('initStore', () => {
         it('should initialize store from Shamela book data', () => {
             const book: ShamelaBook = {
+                bibliography: 'Test bibliography',
                 id: 12345,
+                name: 'Test Book',
                 pages: [
                     { content: 'Page body', id: 1 },
                     { content: 'Second page', id: 2 },
                 ],
                 titles: [{ content: 'Chapter 1', id: 1, page: 1 }],
                 version: '2',
-            };
+            } as any;
 
             const result = initStore(book, 'test-book.json');
 
@@ -40,11 +42,13 @@ describe('shamelaStore/actions', () => {
 
         it('should handle pages with footnote separator', () => {
             const book: ShamelaBook = {
+                bibliography: 'Bibliyo',
                 id: 1,
+                name: 'BookName',
                 pages: [{ content: 'Body\n___\nFootnote', id: 1 }],
                 titles: [],
                 version: '1',
-            };
+            } as any;
 
             const result = initStore(book);
 
@@ -177,7 +181,7 @@ describe('shamelaStore/actions', () => {
 
     describe('removePageMarkers', () => {
         it('should set lastUpdatedAt after processing pages', () => {
-            const state: ShamelaStateCore = { pages: [{ body: 'Some text', id: 1 }], titles: [], version: 1 };
+            const state: ShamelaStateCore = { pages: [{ body: 'Some text', id: 1 }], titles: [], version: '1' };
 
             removePageMarkers(state);
 

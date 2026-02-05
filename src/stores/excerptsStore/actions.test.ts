@@ -4,33 +4,45 @@ import type { ExcerptsStateCore } from './types';
 
 const createBaseState = (): ExcerptsStateCore => ({
     collection: undefined,
-    contractVersion: undefined,
-    createdAt: new Date(),
+    contractVersion: 'v1.0',
+    createdAt: Date.now(),
     excerpts: [],
+    filteredExcerptIds: undefined,
+    filteredFootnoteIds: undefined,
+    filteredHeadingIds: undefined,
     footnotes: [],
     headings: [],
     inputFileName: undefined,
-    lastUpdatedAt: undefined,
-    options: { breakpoints: [], maxPages: 0, replace: [], rules: [] },
+    lastUpdatedAt: Date.now(),
+    options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
     postProcessingApps: [],
-    prompt: undefined,
+    promptForTranslation: undefined,
+    promptId: undefined,
+    sentToLlmIds: new Set(),
 });
 
 describe('excerptsStore actions', () => {
     describe('initStore', () => {
         it('should initialize store from Excerpts data', () => {
             const data = {
-                collection: 'test-collection',
+                collection: { id: 'test-collection', title: 'Test' },
                 contractVersion: 'v1.0' as const,
-                createdAt: new Date().toISOString(),
-                excerpts: [{ from: 1, id: 'E1', nass: 'نص', text: 'text' }],
-                footnotes: [{ from: 2, id: 'F1', nass: 'حاشية', text: 'footnote' }],
-                headings: [{ from: 3, id: 'H1', nass: 'عنوان', text: 'heading' }],
+                createdAt: Date.now(),
+                excerpts: [{ from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: 'text', translator: 890 }],
+                footnotes: [
+                    { from: 2, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية', text: 'footnote', translator: 890 },
+                ],
+                headings: [
+                    { from: 3, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان', text: 'heading', translator: 890 },
+                ],
+                lastUpdatedAt: Date.now(),
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
             };
 
             const result = actions.initStore(data);
 
-            expect(result.collection).toBe('test-collection');
+            expect(result.collection?.id).toBe('test-collection');
             expect(result.excerpts).toHaveLength(1);
             expect(result.footnotes).toHaveLength(1);
             expect(result.headings).toHaveLength(1);
@@ -38,7 +50,16 @@ describe('excerptsStore actions', () => {
         });
 
         it('should set inputFileName if provided', () => {
-            const data = { excerpts: [], footnotes: [], headings: [] };
+            const data = {
+                contractVersion: 'v1.0',
+                createdAt: Date.now(),
+                excerpts: [],
+                footnotes: [],
+                headings: [],
+                lastUpdatedAt: Date.now(),
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
+            } as any;
 
             const result = actions.initStore(data, 'test-file.json');
 
@@ -50,11 +71,11 @@ describe('excerptsStore actions', () => {
         it('should update an existing excerpt', () => {
             const state = createBaseState();
             state.excerpts = [
-                { from: 1, id: 'E1', nass: 'نص', text: 'old' },
-                { from: 2, id: 'E2', nass: 'نص 2', text: 'text 2' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: 'old', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص 2', text: 'text 2', translator: 890 },
             ];
 
-            actions.updateExcerpt(state, 'E1', { text: 'new' });
+            actions.updateExcerpt(state, 'E1', { lastUpdatedAt: 12345, text: 'new', translator: 890 });
 
             expect(state.excerpts[0]?.text).toBe('new');
             expect(state.excerpts[0]?.lastUpdatedAt).toBeDefined();
@@ -62,10 +83,10 @@ describe('excerptsStore actions', () => {
 
         it('should not modify state if ID not found', () => {
             const state = createBaseState();
-            state.excerpts = [{ from: 1, id: 'E1', nass: 'نص', text: 'old' }];
+            state.excerpts = [{ from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: 'old', translator: 890 }];
             const originalLastUpdated = state.lastUpdatedAt;
 
-            actions.updateExcerpt(state, 'nonexistent', { text: 'new' });
+            actions.updateExcerpt(state, 'nonexistent', { lastUpdatedAt: 12345, text: 'new', translator: 890 });
 
             expect(state.excerpts[0]?.text).toBe('old');
             expect(state.lastUpdatedAt).toBe(originalLastUpdated);
@@ -75,7 +96,16 @@ describe('excerptsStore actions', () => {
     describe('createExcerptFromExisting', () => {
         it('should create a new excerpt from existing one', () => {
             const state = createBaseState();
-            state.excerpts = [{ from: 1, id: 'E1', nass: 'الكلمة الأولى الكلمة الثانية', text: 'translation' }];
+            state.excerpts = [
+                {
+                    from: 1,
+                    id: 'E1',
+                    lastUpdatedAt: 12345,
+                    nass: 'الكلمة الأولى الكلمة الثانية',
+                    text: 'translation',
+                    translator: 890,
+                },
+            ];
 
             actions.createExcerptFromExisting(state, 'E1', 'الكلمة الثانية');
 
@@ -93,7 +123,7 @@ describe('excerptsStore actions', () => {
 
         it('should add new excerpt ID to filter if filter is active', () => {
             const state = createBaseState();
-            state.excerpts = [{ from: 1, id: 'E1', nass: 'نص', text: 'text' }];
+            state.excerpts = [{ from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: 'text', translator: 890 }];
             state.filteredExcerptIds = ['E1'];
 
             actions.createExcerptFromExisting(state, 'E1', 'نص');
@@ -104,7 +134,7 @@ describe('excerptsStore actions', () => {
 
         it('should not modify state if source ID not found', () => {
             const state = createBaseState();
-            state.excerpts = [{ from: 1, id: 'E1', nass: 'نص', text: 'text' }];
+            state.excerpts = [{ from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: 'text', translator: 890 }];
 
             actions.createExcerptFromExisting(state, 'nonexistent', 'نص');
 
@@ -115,9 +145,9 @@ describe('excerptsStore actions', () => {
     describe('updateHeading', () => {
         it('should update an existing heading', () => {
             const state = createBaseState();
-            state.headings = [{ from: 1, id: 'H1', nass: 'عنوان', text: 'old' }];
+            state.headings = [{ from: 1, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان', text: 'old', translator: 890 }];
 
-            actions.updateHeading(state, 'H1', { text: 'new' });
+            actions.updateHeading(state, 'H1', { lastUpdatedAt: 12345, text: 'new', translator: 890 });
 
             expect(state.headings[0]?.text).toBe('new');
         });
@@ -126,9 +156,11 @@ describe('excerptsStore actions', () => {
     describe('updateFootnote', () => {
         it('should update an existing footnote', () => {
             const state = createBaseState();
-            state.footnotes = [{ from: 1, id: 'F1', nass: 'حاشية', text: 'old' }];
+            state.footnotes = [
+                { from: 1, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية', text: 'old', translator: 890 },
+            ];
 
-            actions.updateFootnote(state, 'F1', { text: 'new' });
+            actions.updateFootnote(state, 'F1', { lastUpdatedAt: 12345, text: 'new', translator: 890 });
 
             expect(state.footnotes[0]?.text).toBe('new');
         });
@@ -138,9 +170,9 @@ describe('excerptsStore actions', () => {
         it('should delete excerpts by IDs', () => {
             const state = createBaseState();
             state.excerpts = [
-                { from: 1, id: 'E1', nass: 'نص 1', text: 'text 1' },
-                { from: 2, id: 'E2', nass: 'نص 2', text: 'text 2' },
-                { from: 3, id: 'E3', nass: 'نص 3', text: 'text 3' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص 1', text: 'text 1', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص 2', text: 'text 2', translator: 890 },
+                { from: 3, id: 'E3', lastUpdatedAt: 12345, nass: 'نص 3', text: 'text 3', translator: 890 },
             ];
 
             actions.deleteExcerpts(state, ['E1', 'E3']);
@@ -154,8 +186,8 @@ describe('excerptsStore actions', () => {
         it('should delete headings by IDs', () => {
             const state = createBaseState();
             state.headings = [
-                { from: 1, id: 'H1', nass: 'عنوان 1', text: 'heading 1' },
-                { from: 2, id: 'H2', nass: 'عنوان 2', text: 'heading 2' },
+                { from: 1, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان 1', text: 'heading 1', translator: 890 },
+                { from: 2, id: 'H2', lastUpdatedAt: 12345, nass: 'عنوان 2', text: 'heading 2', translator: 890 },
             ];
 
             actions.deleteHeadings(state, ['H1']);
@@ -169,8 +201,8 @@ describe('excerptsStore actions', () => {
         it('should delete footnotes by IDs', () => {
             const state = createBaseState();
             state.footnotes = [
-                { from: 1, id: 'F1', nass: 'حاشية 1', text: 'footnote 1' },
-                { from: 2, id: 'F2', nass: 'حاشية 2', text: 'footnote 2' },
+                { from: 1, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية 1', text: 'footnote 1', translator: 890 },
+                { from: 2, id: 'F2', lastUpdatedAt: 12345, nass: 'حاشية 2', text: 'footnote 2', translator: 890 },
             ];
 
             actions.deleteFootnotes(state, ['F2']);
@@ -184,8 +216,8 @@ describe('excerptsStore actions', () => {
         it('should apply formatting function to all excerpt translations', () => {
             const state = createBaseState();
             state.excerpts = [
-                { from: 1, id: 'E1', nass: 'نص', text: 'hello' },
-                { from: 2, id: 'E2', nass: 'نص', text: 'world' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: 'hello', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص', text: 'world', translator: 890 },
             ];
 
             actions.applyTranslationFormatting(state, (text) => text.toUpperCase());
@@ -197,8 +229,8 @@ describe('excerptsStore actions', () => {
         it('should skip excerpts without text', () => {
             const state = createBaseState();
             state.excerpts = [
-                { from: 1, id: 'E1', nass: 'نص', text: '' },
-                { from: 2, id: 'E2', nass: 'نص', text: 'world' },
+                { from: 1, id: 'E1', lastUpdatedAt: 12345, nass: 'نص', text: '', translator: 890 },
+                { from: 2, id: 'E2', lastUpdatedAt: 12345, nass: 'نص', text: 'world', translator: 890 },
             ];
 
             actions.applyTranslationFormatting(state, (text) => text.toUpperCase());
@@ -212,8 +244,8 @@ describe('excerptsStore actions', () => {
         it('should apply formatting function to all heading translations', () => {
             const state = createBaseState();
             state.headings = [
-                { from: 1, id: 'H1', nass: 'عنوان', text: 'chapter one' },
-                { from: 2, id: 'H2', nass: 'عنوان', text: 'chapter two' },
+                { from: 1, id: 'H1', lastUpdatedAt: 12345, nass: 'عنوان', text: 'chapter one', translator: 890 },
+                { from: 2, id: 'H2', lastUpdatedAt: 12345, nass: 'عنوان', text: 'chapter two', translator: 890 },
             ];
 
             actions.applyHeadingFormatting(state, (text) => text.toUpperCase());
@@ -227,8 +259,8 @@ describe('excerptsStore actions', () => {
         it('should apply formatting function to all footnote translations', () => {
             const state = createBaseState();
             state.footnotes = [
-                { from: 1, id: 'F1', nass: 'حاشية', text: 'note one' },
-                { from: 2, id: 'F2', nass: 'حاشية', text: 'note two' },
+                { from: 1, id: 'F1', lastUpdatedAt: 12345, nass: 'حاشية', text: 'note one', translator: 890 },
+                { from: 2, id: 'F2', lastUpdatedAt: 12345, nass: 'حاشية', text: 'note two', translator: 890 },
             ];
 
             actions.applyFootnoteFormatting(state, (text) => text.toUpperCase());

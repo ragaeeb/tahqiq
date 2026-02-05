@@ -33,13 +33,13 @@ describe('useSegmentationStore', () => {
             });
 
             useSegmentationStore.getState().setAllLineStarts([
-                { count: 5, pattern: 'new1' },
-                { count: 3, pattern: 'new2' },
+                { count: 5, examples: [], pattern: 'new1' },
+                { count: 3, examples: [], pattern: 'new2' },
             ]);
 
             const state = useSegmentationStore.getState();
             expect(state.allLineStarts).toHaveLength(2);
-            expect(state.allLineStarts[0]).toEqual({ count: 5, pattern: 'new1' });
+            expect(state.allLineStarts[0]).toEqual({ count: 5, examples: [], pattern: 'new1' });
             expect(state.ruleConfigs).toHaveLength(0);
         });
     });
@@ -57,7 +57,7 @@ describe('useSegmentationStore', () => {
     describe('reset', () => {
         it('should reset store to initial state', () => {
             useSegmentationStore.setState({
-                allLineStarts: [{ count: 1, pattern: 'test' }],
+                allLineStarts: [{ count: 1, examples: [], pattern: 'test' }],
                 ruleConfigs: [
                     {
                         fuzzy: true,

@@ -7,7 +7,7 @@ import * as TextRowModule from './text-row';
 const textRowCalls: any[] = [];
 
 const textRowSpy = jest.spyOn(TextRowModule, 'default');
-textRowSpy.mockImplementation(({ data, isNewPage, isSelected }: any) => {
+textRowSpy.mockImplementation((({ data, isNewPage, isSelected }: any) => {
     textRowCalls.push({ data, isNewPage, isSelected });
 
     return (
@@ -15,7 +15,7 @@ textRowSpy.mockImplementation(({ data, isNewPage, isSelected }: any) => {
             <td>{data.text}</td>
         </tr>
     );
-});
+}) as any);
 
 const createLine = (overrides: Partial<SheetLine>): SheetLine =>
     ({

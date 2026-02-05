@@ -118,9 +118,9 @@ describe('use-shamela-filters', () => {
     describe('filterTitles', () => {
         it('should filter titles by content', () => {
             const titles: ShamelaTitle[] = [
-                { content: 'باب الصلاة', id: 1, level: 1, page: 1 },
-                { content: 'باب الزكاة', id: 2, level: 1, page: 2 },
-                { content: 'كتاب الصيام', id: 3, level: 1, page: 3 },
+                { content: 'باب الصلاة', id: 1, page: 1 },
+                { content: 'باب الزكاة', id: 2, page: 2 },
+                { content: 'كتاب الصيام', id: 3, page: 3 },
             ];
 
             const result = filterTitles(titles, { content: 'باب', id: '' });
@@ -132,8 +132,8 @@ describe('use-shamela-filters', () => {
 
         it('should filter titles by id', () => {
             const titles: ShamelaTitle[] = [
-                { content: 'Title 1', id: 100, level: 1, page: 1 },
-                { content: 'Title 2', id: 200, level: 1, page: 2 },
+                { content: 'Title 1', id: 100, page: 1 },
+                { content: 'Title 2', id: 200, page: 2 },
             ];
 
             const result = filterTitles(titles, { content: '', id: '100' });

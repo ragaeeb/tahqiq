@@ -61,7 +61,11 @@ describe('Transcript page', () => {
             useTranscriptStore.setState({
                 selectedPart: 1,
                 transcripts: {
-                    1: { segments: [{ end: 5, start: 0, text: 'Segment text' }], timestamp: new Date(), volume: 1 },
+                    1: {
+                        segments: [{ end: 5, start: 0, text: 'Segment text', tokens: [] }],
+                        timestamp: new Date(),
+                        volume: 1,
+                    },
                 },
             });
         });

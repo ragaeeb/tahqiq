@@ -123,7 +123,7 @@ describe('useBookStore', () => {
             useBookStore.setState({
                 inputFileName: 'test.json',
                 isHighlighterEnabled: true,
-                postProcessingApps: ['app'],
+                postProcessingApps: [{ id: 'app', version: '1.0' }],
                 selectedVolume: 5,
                 volumeToPages: { 5: [] },
             });

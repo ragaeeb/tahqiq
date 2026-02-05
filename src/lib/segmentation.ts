@@ -2,6 +2,12 @@ import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
 import type { CharacterRange } from 'dyelight';
 import { type Page, type Segment, type SegmentValidationReport, segmentPages, validateSegments } from 'flappa-doormal';
+export type DebugMeta = {
+    contentLengthSplit?: { splitReason: string; maxContentLength?: number };
+    metaKey?: string;
+    [key: string]: any;
+};
+
 import type { Segment as TextSegment, ValidationError } from 'wobble-bibble';
 import {
     LatestContractVersion,
@@ -293,15 +299,6 @@ export const findExcerptIssues = (items: ExcerptIssueItem[]): string[] => {
     return Array.from(issueIds);
 };
 
-export type DebugMeta = {
-    rule?: { index: number; patternType: string };
-    breakpoint?: { index: number; pattern: string; kind: string };
-    contentLengthSplit?: {
-        maxContentLength: number;
-        splitReason: 'whitespace' | 'unicode_boundary' | 'grapheme_cluster';
-    };
-};
-
 export const canMergeSegments = <T extends { id: string }>(selectedIds: Set<string>, excerpts: T[]) => {
     if (selectedIds.size < 2) {
         return false;
@@ -336,37 +333,41 @@ export const getMetaKey = (debug: unknown): string => {
     return '_flappa';
 };
 
-function summarizeArray(arr: any[]): string {
-    if (arr.length === 0) {
-        return '';
-    }
-    return arr.length > 1 ? `${arr[0]} (+${arr.length - 1})` : (arr[0] ?? '');
-}
-
-export const summarizeRulePattern = (rule: any) => {
-    if (!rule || typeof rule !== 'object') {
-        return '';
-    }
-    if (Array.isArray(rule.lineStartsWith)) {
-        return summarizeArray(rule.lineStartsWith);
-    }
-    if (Array.isArray(rule.lineStartsAfter)) {
-        return summarizeArray(rule.lineStartsAfter);
-    }
-    if (Array.isArray(rule.lineEndsWith)) {
-        return summarizeArray(rule.lineEndsWith);
-    }
-    return (rule.template as string) || (rule.regex as string) || '';
-};
-
 export const getSegmentFilterKey = (dbg: DebugMeta | undefined): string => {
-    if (dbg?.contentLengthSplit) {
+    if (!dbg) {
+        return 'none'; // Or 'unknown'
+    }
+
+    // 1. Safety Splits (Max Content Length)
+    if (dbg.contentLengthSplit) {
         return `contentLengthSplit:${dbg.contentLengthSplit.splitReason}`;
     }
-    if (dbg?.breakpoint) {
-        return `breakpoint:${dbg.breakpoint.pattern}`;
+
+    // 2. Rule-based Splits
+    if (dbg.rule) {
+        // You can return just 'rule-only' or group by pattern type
+        return 'rule-only';
     }
-    return 'rule-only';
+
+    // 3. Breakpoint Splits
+    if (dbg.breakpoint) {
+        const { kind, pattern, word } = dbg.breakpoint;
+
+        // Handle Page Boundary fallback
+        if (kind === 'pageBoundary' || (!pattern && !word)) {
+            return 'breakpoint:page-boundary';
+        }
+
+        // Handle Word List matches (pattern is usually undefined here)
+        if (word) {
+            return `breakpoint:word:${word}`;
+        }
+
+        // Handle Regex/Pattern matches
+        return `breakpoint:${pattern}`;
+    }
+
+    return 'unknown';
 };
 
 type FilterOption = {

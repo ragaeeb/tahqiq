@@ -68,7 +68,8 @@ describe('bulk search-replace behavior', () => {
                 footnotes: [],
                 headings: [],
                 lastUpdatedAt: 1000,
-                options: {},
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
                 promptForTranslation: '',
             });
 
@@ -98,14 +99,15 @@ describe('bulk search-replace behavior', () => {
                         nass: 'test pattern',
                         text: 'translation',
                         translator: 1,
-                        vol: 1,
-                        vp: 1,
+                        volume: 1,
+                        volumePage: 1,
                     },
                 ] as any,
                 footnotes: [],
                 headings: [],
                 lastUpdatedAt: 1000,
-                options: {},
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
                 promptForTranslation: '',
             });
 
@@ -136,8 +138,8 @@ describe('bulk search-replace behavior', () => {
                 nass: `test pattern ${i}`,
                 text: `translation ${i}`,
                 translator: 1,
-                vol: 1,
-                vp: i,
+                volume: 1,
+                volumePage: i,
             }));
 
             store.init({
@@ -147,7 +149,8 @@ describe('bulk search-replace behavior', () => {
                 footnotes: [],
                 headings: [],
                 lastUpdatedAt: 1000,
-                options: {},
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
                 promptForTranslation: '',
             });
 
@@ -189,7 +192,8 @@ describe('bulk search-replace behavior', () => {
                 footnotes: [],
                 headings: headings as any,
                 lastUpdatedAt: 1000,
-                options: {},
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
                 promptForTranslation: '',
             });
 
@@ -217,8 +221,8 @@ describe('bulk search-replace behavior', () => {
                 nass: `footnote pattern ${i}`,
                 text: `fn translation ${i}`,
                 translator: 1,
-                vol: 1,
-                vp: i,
+                volume: 1,
+                volumePage: i,
             }));
 
             store.init({
@@ -228,7 +232,8 @@ describe('bulk search-replace behavior', () => {
                 footnotes: footnotes as any,
                 headings: [],
                 lastUpdatedAt: 1000,
-                options: {},
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
                 promptForTranslation: '',
             });
 
@@ -257,8 +262,8 @@ describe('bulk search-replace behavior', () => {
                     nass: 'has pattern here',
                     text: 't1',
                     translator: 1,
-                    vol: 1,
-                    vp: 1,
+                    volume: 1,
+                    volumePage: 1,
                 },
                 {
                     from: 2,
@@ -267,8 +272,8 @@ describe('bulk search-replace behavior', () => {
                     nass: 'no match in this',
                     text: 't2',
                     translator: 1,
-                    vol: 1,
-                    vp: 2,
+                    volume: 1,
+                    volumePage: 2,
                 },
                 {
                     from: 3,
@@ -277,8 +282,8 @@ describe('bulk search-replace behavior', () => {
                     nass: 'another pattern',
                     text: 't3',
                     translator: 1,
-                    vol: 1,
-                    vp: 3,
+                    volume: 1,
+                    volumePage: 3,
                 },
             ];
 
@@ -289,7 +294,8 @@ describe('bulk search-replace behavior', () => {
                 footnotes: [],
                 headings: [],
                 lastUpdatedAt: 1000,
-                options: {},
+                options: { breakpoints: [], maxPages: 0, minWordsPerSegment: 5, replace: [], rules: [] },
+                postProcessingApps: [],
                 promptForTranslation: '',
             });
 

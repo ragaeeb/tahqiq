@@ -123,7 +123,7 @@ describe('pattern-detection', () => {
         it('should suggest chapter metaType for bab', () => {
             const detected = detectTokenPatterns('باب');
             const config = suggestPatternConfig(detected);
-            expect(['bab', 'chapter']).toContain(config.metaType);
+            expect(['bab', 'chapter']).toContain(config.metaType as string);
         });
 
         it('should default to lineStartsAfter without fuzzy for unknown patterns', () => {

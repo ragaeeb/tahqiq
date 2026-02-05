@@ -24,8 +24,16 @@ describe('SearchDialog', () => {
         act(() => {
             useTranscriptStore.setState({
                 transcripts: {
-                    1: { segments: [{ start: 10, text: 'match me' }], timestamp: new Date(), volume: 1 },
-                    2: { segments: [{ start: 20, text: 'nothing here' }], timestamp: new Date(), volume: 2 },
+                    1: {
+                        segments: [{ end: 0, start: 10, text: 'match me', tokens: [] }],
+                        timestamp: new Date(),
+                        volume: 1,
+                    },
+                    2: {
+                        segments: [{ end: 0, start: 20, text: 'nothing here', tokens: [] }],
+                        timestamp: new Date(),
+                        volume: 2,
+                    },
                 },
             });
         });

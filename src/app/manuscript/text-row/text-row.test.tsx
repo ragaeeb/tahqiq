@@ -112,7 +112,7 @@ describe('Text Row suite', () => {
     beforeEach(() => {
         Object.values(storeState).forEach((value) => {
             if (typeof value === 'function' && 'mockReset' in value) {
-                value.mockReset();
+                (value as any).mockReset();
             }
         });
         record.mockReset();

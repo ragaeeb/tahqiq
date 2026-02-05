@@ -82,37 +82,6 @@ describe('Debug Metadata Utilities', () => {
         });
     });
 
-    describe('summarizeRulePattern', () => {
-        it('should return empty string for null/invalid rule', () => {
-            expect(segmentation.summarizeRulePattern(null)).toBe('');
-            expect(segmentation.summarizeRulePattern(undefined)).toBe('');
-            expect(segmentation.summarizeRulePattern('not-obj')).toBe('');
-        });
-
-        it('should summarize lineStartsWith array', () => {
-            expect(segmentation.summarizeRulePattern({ lineStartsWith: ['### '] })).toBe('### ');
-            expect(segmentation.summarizeRulePattern({ lineStartsWith: ['-', '*'] })).toBe('- (+1)');
-        });
-
-        it('should summarize lineStartsAfter array', () => {
-            expect(segmentation.summarizeRulePattern({ lineStartsAfter: ['.'] })).toBe('.');
-            expect(segmentation.summarizeRulePattern({ lineStartsAfter: ['.', '?', '!'] })).toBe('. (+2)');
-        });
-
-        it('should summarize lineEndsWith array', () => {
-            expect(segmentation.summarizeRulePattern({ lineEndsWith: [':'] })).toBe(':');
-            expect(segmentation.summarizeRulePattern({ lineEndsWith: [':', ';'] })).toBe(': (+1)');
-        });
-
-        it('should return template string', () => {
-            expect(segmentation.summarizeRulePattern({ template: '{{char}}' })).toBe('{{char}}');
-        });
-
-        it('should return regex string', () => {
-            expect(segmentation.summarizeRulePattern({ regex: '\\d+' })).toBe('\\d+');
-        });
-    });
-
     describe('getSegmentFilterKey', () => {
         it('should return contentLengthSplit reason', () => {
             const meta: DebugMeta = { contentLengthSplit: { maxContentLength: 5000, splitReason: 'whitespace' } };
@@ -129,8 +98,23 @@ describe('Debug Metadata Utilities', () => {
             expect(segmentation.getSegmentFilterKey(meta)).toBe('rule-only');
         });
 
-        it('should return rule-only when meta is undefined', () => {
-            expect(segmentation.getSegmentFilterKey(undefined)).toBe('rule-only');
+        it('should return none when meta is undefined', () => {
+            expect(segmentation.getSegmentFilterKey(undefined)).toBe('none');
+        });
+
+        it('should return breakpoint:page-boundary for pageBoundary kind', () => {
+            const meta: DebugMeta = { breakpoint: { index: 0, kind: 'pageBoundary', pattern: '' } };
+            expect(segmentation.getSegmentFilterKey(meta)).toBe('breakpoint:page-boundary');
+        });
+
+        it('should return breakpoint:page-boundary fallback when pattern/word missing', () => {
+            const meta: DebugMeta = { breakpoint: { index: 0, kind: 'unknown', pattern: '' } };
+            expect(segmentation.getSegmentFilterKey(meta)).toBe('breakpoint:page-boundary');
+        });
+
+        it('should return breakpoint:word:xyz for word matches', () => {
+            const meta: DebugMeta = { breakpoint: { index: 0, kind: 'word', pattern: '', word: 'xyz' } };
+            expect(segmentation.getSegmentFilterKey(meta)).toBe('breakpoint:word:xyz');
         });
 
         it('should prioritize contentLengthSplit over breakpoint if both exist (rare)', () => {
@@ -442,5 +426,115 @@ describe('mapPagesToExcerpts', () => {
         expect(result.createdAt).toBeLessThanOrEqual(after);
         expect(result.lastUpdatedAt).toBeGreaterThanOrEqual(before);
         expect(result.lastUpdatedAt).toBeLessThanOrEqual(after);
+    });
+});
+describe('mergeShortSegments', () => {
+    const minWords = 5;
+
+    it('should return original segments if length < 2', () => {
+        expect(segmentation.mergeShortSegments([], minWords)).toEqual([]);
+        const single = [{ content: 'short', from: 1 }];
+        expect(segmentation.mergeShortSegments(single as any, minWords)).toEqual(single as any);
+    });
+
+    it('should merge short segment with next if matching pages', () => {
+        const input = [
+            { content: 'one two', from: 1, to: 1 }, // Short (<5)
+            { content: 'three four five six seven', from: 1, to: 1 }, // Long
+        ];
+        const result = segmentation.mergeShortSegments(input as any, minWords);
+        expect(result).toHaveLength(1);
+        expect(result[0].content).toBe('one two\nthree four five six seven');
+        expect(result[0].from).toBe(1);
+    });
+
+    it('should merge segment with next short segment if matching pages', () => {
+        const input = [
+            { content: 'one two three four five six', from: 1, to: 1 }, // Long
+            { content: 'seven eight', from: 1, to: 1 }, // Short (<5)
+        ];
+        const result = segmentation.mergeShortSegments(input as any, minWords);
+        expect(result).toHaveLength(1);
+        expect(result[0].content).toBe('one two three four five six\nseven eight');
+    });
+
+    it('should merge two consecutive short segments', () => {
+        const input = [
+            { content: 'one', from: 1, to: 1 },
+            { content: 'two', from: 1, to: 1 },
+        ];
+        const result = segmentation.mergeShortSegments(input as any, minWords);
+        expect(result).toHaveLength(1);
+        expect(result[0].content).toBe('one\ntwo');
+    });
+
+    it('should NOT merge if pages differ (from mismatch)', () => {
+        const input = [
+            { content: 'one', from: 1, to: 1 },
+            { content: 'two', from: 2, to: 2 },
+        ];
+        const result = segmentation.mergeShortSegments(input as any, minWords);
+        expect(result).toHaveLength(2);
+    });
+
+    it('should NOT merge if pages differ (to mismatch)', () => {
+        const input = [
+            { content: 'one', from: 1, to: 1 },
+            { content: 'two', from: 1, to: 2 },
+        ];
+        const result = segmentation.mergeShortSegments(input as any, minWords);
+        expect(result).toHaveLength(2);
+    });
+
+    it('should NOT merge if both segments satisfy min word count', () => {
+        const input = [
+            { content: 'one two three four five', from: 1, to: 1 }, // 5 words
+            { content: 'six seven eight nine ten', from: 1, to: 1 }, // 5 words
+        ];
+        const result = segmentation.mergeShortSegments(input as any, 5);
+        expect(result).toHaveLength(2);
+    });
+
+    it('should handle undefined/null content gracefully', () => {
+        const input = [
+            { content: undefined, from: 1, to: 1 },
+            { content: 'word', from: 1, to: 1 },
+        ];
+        const result = segmentation.mergeShortSegments(input as any, 5);
+        expect(result).toHaveLength(1);
+        // undefined content becomes empty string, so "\nword"
+        expect(result[0].content).toBe('\nword');
+    });
+
+    it('should accumulate multiple merges correctly', () => {
+        const input = [
+            { content: '1', from: 1, to: 1 },
+            { content: '2', from: 1, to: 1 },
+            { content: '3', from: 1, to: 1 },
+            { content: 'long phrase here to stop merge', from: 1, to: 1 },
+        ];
+        // 1+2 merge -> "1\n2" (length 2 < 5)
+        // (1+2)+3 merge -> "1\n2\n3" (length 3 < 5)
+        // (1+2+3)+long -> "1\n2\n3\nlong..." (because prev is short? No wait)
+        // Logic: isMergable if CURRENT (accumulated) is short OR NEXT is short.
+        // Iter 1: current='1', next='2'. Both short. Merge. current='1\n2'
+        // Iter 2: current='1\n2', next='3'. Both short. Merge. current='1\n2\n3'
+        // Iter 3: current='1\n2\n3', next='long...'. current is short! So it should merge even if next is long.
+
+        const result = segmentation.mergeShortSegments(input as any, 5);
+        expect(result).toHaveLength(1);
+        expect(result[0].content).toContain('1\n2\n3\nlong');
+    });
+
+    it('should stop merging when accumulated content becomes long enough and next is long enough', () => {
+        const input = [
+            { content: 'one two three', from: 1, to: 1 }, // 3
+            { content: 'four five', from: 1, to: 1 }, // 2. Merge -> 5 words. Now current is long.
+            { content: 'six seven eight nine ten', from: 1, to: 1 }, // 5 words. Next is long.
+        ];
+        const result = segmentation.mergeShortSegments(input as any, 5);
+        expect(result).toHaveLength(2);
+        expect(result[0].content).toBe('one two three\nfour five');
+        expect(result[1].content).toBe('six seven eight nine ten');
     });
 });

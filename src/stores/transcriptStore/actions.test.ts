@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { LatestContractVersion } from '@/lib/constants';
 import {
     addTranscriptsFromFiles,
     applySelection,
@@ -12,49 +13,51 @@ import {
 } from './actions';
 import type { Segment, TranscriptState } from './types';
 
-const createMockState = (overrides: Partial<TranscriptState> = {}): TranscriptState => ({
-    formatOptions: {
-        fillers: [],
-        flipPunctuation: false,
-        hints: [],
-        maxSecondsPerLine: 10,
-        maxSecondsPerSegment: 60,
-        minWordsPerSegment: 5,
-        silenceGapThreshold: 2,
-    },
-    selectedPart: '1',
-    selectedSegments: [],
-    selectedToken: null,
-    transcripts: {
-        '1': {
-            segments: [
-                { end: 5, start: 0, text: 'First segment', tokens: [] },
-                { end: 10, start: 5, text: 'Second segment', tokens: [] },
-                { end: 15, start: 10, text: 'Third segment', tokens: [] },
-            ],
-            timestamp: '2024-01-01T00:00:00Z',
-            volume: '1',
+const createMockState = (overrides: Partial<TranscriptState> = {}): TranscriptState =>
+    ({
+        formatOptions: {
+            fillers: [],
+            flipPunctuation: false,
+            hints: [],
+            maxSecondsPerLine: 10,
+            maxSecondsPerSegment: 60,
+            minWordsPerSegment: 5,
+            silenceGapThreshold: 2,
         },
-    },
-    ...overrides,
-});
+        selectedPart: 1,
+        selectedSegments: [],
+        selectedToken: null,
+        transcripts: {
+            1: {
+                segments: [
+                    { end: 5, start: 0, text: 'First segment', tokens: [] },
+                    { end: 10, start: 5, text: 'Second segment', tokens: [] },
+                    { end: 15, start: 10, text: 'Third segment', tokens: [] },
+                ],
+                timestamp: new Date('2024-01-01T00:00:00Z'),
+                volume: 1,
+            },
+        },
+        ...overrides,
+    }) as unknown as TranscriptState;
 
 describe('transcriptStore/actions', () => {
     describe('initStore', () => {
         it('should initialize store from transcript series data', () => {
             const result = initStore({
-                contractVersion: 'v1',
-                createdAt: '2024-01-01T00:00:00Z',
-                groundTruth: 'https://example.com',
+                contractVersion: LatestContractVersion.Transcript,
+                createdAt: new Date('2024-01-01T00:00:00Z'),
+                groundTruth: undefined,
+                lastUpdatedAt: new Date('2024-01-01T00:00:00Z'),
                 transcripts: [
-                    { segments: [], timestamp: '2024-01-01T00:00:00Z', volume: '1' },
-                    { segments: [], timestamp: '2024-01-01T00:00:00Z', volume: '2' },
+                    { segments: [], timestamp: new Date('2024-01-01T00:00:00Z'), volume: 1 },
+                    { segments: [], timestamp: new Date('2024-01-01T00:00:00Z'), volume: 2 },
                 ],
                 urls: ['url1', 'url2'],
             });
 
-            expect(result.selectedPart).toBe('1');
-            expect(result.groundTruth).toBe('https://example.com');
+            expect(result.selectedPart).toBe(1);
+            expect(result.groundTruth).toBeUndefined();
             expect(result.urls).toEqual(['url1', 'url2']);
             expect(Object.keys(result.transcripts)).toHaveLength(2);
             expect(result.transcripts['1']).toBeDefined();
@@ -65,7 +68,7 @@ describe('transcriptStore/actions', () => {
     describe('addTranscriptsFromFiles', () => {
         it('should add transcripts from file data', () => {
             const state = createMockState();
-            const files = { 'vol2.json': { segments: [], timestamp: '2024-01-01T00:00:00Z', volume: '2' } };
+            const files = { 'vol2.json': { segments: [], timestamp: new Date('2024-01-01T00:00:00Z'), volume: 2 } };
 
             const result = addTranscriptsFromFiles(state, files);
 

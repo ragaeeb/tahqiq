@@ -1,21 +1,12 @@
-'use client';
-
-import type { Page } from 'flappa-doormal';
-import { ChevronDown, ChevronUp, Eye, Scissors, Search } from 'lucide-react';
+import { getSegmentDebugReason, type Page } from 'flappa-doormal';
+import { ChevronDown, ChevronUp, Eye, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import VirtualizedList from '@/app/excerpts/virtualized-list';
 import SubmittableInput from '@/components/submittable-input';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-    buildSegmentFilterOptions,
-    type DebugMeta,
-    getMetaKey,
-    mapPagesToExcerpts,
-    summarizeRulePattern,
-} from '@/lib/segmentation';
+import { buildSegmentFilterOptions, getMetaKey, mapPagesToExcerpts } from '@/lib/segmentation';
 import type { IndexedExcerpt } from '@/stores/excerptsStore/types';
 import { useSegmentationStore } from '@/stores/segmentationStore/useSegmentationStore';
 
@@ -26,8 +17,6 @@ const pagesLabel = (seg: IndexedExcerpt) => (seg.to ? `${seg.from}-${seg.to}` : 
 const PreviewRow = ({
     seg,
     index,
-    metaKey,
-    options,
     filterKey,
     setFilterKey,
     setJumpToPage,
@@ -36,71 +25,13 @@ const PreviewRow = ({
 }: {
     seg: IndexedExcerpt;
     index: number;
-    metaKey: string;
-    options: any;
     filterKey: string;
     setFilterKey: (v: string) => void;
     setJumpToPage: (v: string | null) => void;
     expandedIds: Set<string>;
     toggleExpand: (id: string) => void;
 }) => {
-    const dbg = (seg.meta as any)?.[metaKey] as DebugMeta | undefined;
-    const referencedRule = dbg?.rule ? options.rules?.[dbg.rule.index] : undefined;
-    const ruleText =
-        dbg?.rule && referencedRule
-            ? `${dbg.rule.patternType}: ${summarizeRulePattern(referencedRule)}`
-            : dbg?.rule
-              ? `${dbg.rule.index}:${dbg.rule.patternType}`
-              : '';
-
-    const bpPattern = dbg?.breakpoint?.pattern;
-    const bpText = typeof bpPattern === 'string' ? (bpPattern === '' ? '<page-boundary>' : bpPattern) : '';
-    const contentSplit = dbg?.contentLengthSplit;
-
-    const renderRuleBadge = () => {
-        if (!ruleText) {
-            return <span className="text-muted-foreground text-xs">—</span>;
-        }
-        return (
-            <Badge
-                className="max-w-full justify-start truncate font-mono text-[11px] leading-tight"
-                title={ruleText}
-                variant="outline"
-            >
-                {ruleText}
-            </Badge>
-        );
-    };
-
-    const renderBreakpointBadges = () => {
-        if (!bpText && !contentSplit) {
-            return <span className="text-muted-foreground text-xs">—</span>;
-        }
-        return (
-            <div className="flex flex-col gap-1">
-                {bpText && (
-                    <Badge
-                        className="max-w-full justify-start truncate font-mono text-[10px] leading-tight"
-                        title={bpText}
-                        variant="secondary"
-                    >
-                        {bpText}
-                    </Badge>
-                )}
-                {contentSplit && (
-                    <Badge
-                        className="max-w-full justify-start gap-1 truncate font-mono text-[10px] leading-tight"
-                        title={`Safety split at ${contentSplit.maxContentLength} chars (${contentSplit.splitReason})`}
-                        variant="destructive"
-                    >
-                        <Scissors className="h-3 w-3" />
-                        <span>maxLength: {contentSplit.maxContentLength}</span>
-                        <span className="text-destructive-foreground/70">({contentSplit.splitReason})</span>
-                    </Badge>
-                )}
-            </div>
-        );
-    };
+    const debugReason = getSegmentDebugReason({ ...seg, content: seg.nass } as any, { concise: true });
 
     return (
         <tr className="border-b" key={`${seg.from}-${seg.to ?? seg.from}-${index}`}>
@@ -123,8 +54,9 @@ const PreviewRow = ({
                     )}
                 </div>
             </td>
-            <td className="w-64 px-2 py-2 align-top">{renderRuleBadge()}</td>
-            <td className="w-56 px-2 py-2 align-top">{renderBreakpointBadges()}</td>
+            <td className="w-[300px] px-2 py-2 align-top font-mono text-[10px] text-blue-600 leading-tight">
+                {debugReason || <span className="text-[10px] text-muted-foreground">—</span>}
+            </td>
             <td className="relative px-2 py-2 text-right" dir="rtl">
                 <div className="flex gap-2">
                     <div
@@ -254,8 +186,7 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                                     )}
                                 </div>
                             </th>
-                            <th className="w-64 px-2 py-2 text-left font-medium">Rule</th>
-                            <th className="w-56 px-2 py-2 text-left font-medium">Breakpoint</th>
+                            <th className="w-[300px] px-2 py-2 text-left font-medium">Debug Reason</th>
                             <th className="px-2 py-2 text-right font-medium" dir="rtl">
                                 Content
                             </th>
@@ -266,8 +197,6 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
                         <PreviewRow
                             seg={seg}
                             index={i}
-                            metaKey={metaKey}
-                            options={options}
                             filterKey={filterKey}
                             setFilterKey={setFilterKey}
                             setJumpToPage={setJumpToPage}

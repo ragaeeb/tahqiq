@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { Page } from '@/types/index.js';
+import type { Page } from 'flappa-doormal';
 import { applyReplacements } from './replace.js';
 
 describe('Replacements', () => {

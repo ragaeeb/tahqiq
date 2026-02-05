@@ -62,8 +62,8 @@ describe('TranscriptToolbar', () => {
     it('provides merge and split actions when multiple segments are selected', () => {
         useTranscriptStore.setState({
             selectedSegments: [
-                { end: 5, start: 0, text: 'a' },
-                { end: 15, start: 10, text: 'b' },
+                { end: 5, start: 0, text: 'a', tokens: [] },
+                { end: 15, start: 10, text: 'b', tokens: [] },
             ],
             selectedToken: { start: 2 } as any,
         });
@@ -82,7 +82,7 @@ describe('TranscriptToolbar', () => {
     });
 
     it('shows ground truth dialog trigger for a single selection', () => {
-        useTranscriptStore.setState({ selectedSegments: [{ end: 5, start: 0, text: 'a' }] });
+        useTranscriptStore.setState({ selectedSegments: [{ end: 5, start: 0, text: 'a', tokens: [] }] });
 
         render(<TranscriptToolbar />);
 
@@ -91,7 +91,7 @@ describe('TranscriptToolbar', () => {
     });
 
     it('handles destructive and completion actions', () => {
-        useTranscriptStore.setState({ selectedSegments: [{ end: 5, start: 0, text: 'a' }] });
+        useTranscriptStore.setState({ selectedSegments: [{ end: 5, start: 0, text: 'a', tokens: [] }] });
         const deleteSegmentsSpy = jest
             .spyOn(useTranscriptStore.getState(), 'deleteSelectedSegments')
             .mockImplementation(() => {});

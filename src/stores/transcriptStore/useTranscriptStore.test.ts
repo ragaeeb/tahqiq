@@ -184,7 +184,8 @@ describe('useTranscriptStore', () => {
                 ],
             };
 
-            useTranscriptStore.getState().init(testData);
+            const data = { ...testData, contractVersion: 'v1.1' as const };
+            useTranscriptStore.getState().init(data);
 
             const state = useTranscriptStore.getState();
             expect(state.createdAt.toString()).toBe(now.toString());

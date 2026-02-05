@@ -35,6 +35,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                isHighlighterEnabled: false,
                 postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {
@@ -90,6 +91,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                isHighlighterEnabled: false,
                 postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {
@@ -127,6 +129,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                isHighlighterEnabled: false,
                 postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {},
@@ -150,6 +153,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                isHighlighterEnabled: false,
                 postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {
@@ -175,6 +179,7 @@ describe('bookFormats', () => {
             const createdAt = new Date('2023-01-01T00:00:00Z');
             const bookState: BookStateCore = {
                 createdAt,
+                isHighlighterEnabled: false,
                 postProcessingApps: [],
                 selectedVolume: 1,
                 volumeToIndex: {},

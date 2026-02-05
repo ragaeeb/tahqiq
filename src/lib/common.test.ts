@@ -139,7 +139,7 @@ describe('createObjectDiff', () => {
     });
 
     it('should handle undefined original value changing to new value', () => {
-        const original = { name: 'test', text: undefined };
+        const original: { name: string; text?: string } = { name: 'test', text: undefined };
         const updated = { name: 'test', text: 'new text' };
 
         const diff = createObjectDiff(original, updated);
@@ -157,7 +157,7 @@ describe('createObjectDiff', () => {
     });
 
     it('should detect new keys in updated that do not exist in original', () => {
-        const original = { name: 'test' };
+        const original: Record<string, any> = { name: 'test' };
         const updated = { meta: { type: 'chapter' }, name: 'test', to: 10 };
 
         const diff = createObjectDiff(original, updated);
@@ -166,7 +166,7 @@ describe('createObjectDiff', () => {
     });
 
     it('should handle adding meta when original has no meta property', () => {
-        const original = { from: 1, nass: 'text' };
+        const original: Record<string, any> = { from: 1, nass: 'text' };
         const updated = { from: 1, meta: { type: 'book' }, nass: 'text' };
 
         const diff = createObjectDiff(original, updated);

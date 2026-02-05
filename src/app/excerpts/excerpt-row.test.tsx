@@ -52,8 +52,8 @@ describe('ExcerptRow', () => {
         text: 'Translation text',
         to: 2,
         translator: 879,
-        vol: 1,
-        vp: 10,
+        volume: 1,
+        volumePage: 10,
     } as any;
 
     it('renders excerpt data correctly', () => {
@@ -65,6 +65,7 @@ describe('ExcerptRow', () => {
                         onCreateFromSelection={jest.fn()}
                         onDelete={jest.fn()}
                         onUpdate={jest.fn()}
+                        onCopyDown={jest.fn()}
                     />
                 </tbody>
             </table>,
@@ -86,6 +87,7 @@ describe('ExcerptRow', () => {
                         onCreateFromSelection={jest.fn()}
                         onDelete={onDelete}
                         onUpdate={jest.fn()}
+                        onCopyDown={jest.fn()}
                     />
                 </tbody>
             </table>,
@@ -107,6 +109,7 @@ describe('ExcerptRow', () => {
                         onCreateFromSelection={jest.fn()}
                         onDelete={jest.fn()}
                         onUpdate={onUpdate}
+                        onCopyDown={jest.fn()}
                     />
                 </tbody>
             </table>,
@@ -130,6 +133,7 @@ describe('ExcerptRow', () => {
                         onCreateFromSelection={jest.fn()}
                         onDelete={jest.fn()}
                         onUpdate={onUpdate}
+                        onCopyDown={jest.fn()}
                     />
                 </tbody>
             </table>,
@@ -153,6 +157,7 @@ describe('ExcerptRow', () => {
                         onCreateFromSelection={jest.fn()}
                         onDelete={jest.fn()}
                         onUpdate={jest.fn()}
+                        onCopyDown={jest.fn()}
                     />
                 </tbody>
             </table>,

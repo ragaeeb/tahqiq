@@ -62,10 +62,13 @@ const ErrorRow = ({ issue, index }: { issue: SegmentValidationIssue; index: numb
 export const ErrorsTab = ({ pages }: ErrorsTabProps) => {
     const options = useSegmentationStore((s) => s.options);
 
+    const now = performance.now();
+    console.log('running memo');
     const report: SegmentValidationReport = useMemo(() => {
         const result = mapPagesToExcerpts(pages, [], options);
         return result.report;
     }, [pages, options]);
+    console.log('finished', performance.now() - now);
 
     const { issues } = report;
     const errorCount = report.summary.errors;
