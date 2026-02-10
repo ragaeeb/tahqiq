@@ -1,3 +1,10 @@
+## [1.52.9](https://github.com/ragaeeb/tahqiq/compare/v1.52.8...v1.52.9) (2026-02-10)
+
+
+### Bug Fixes
+
+* **bump:** Bump dependencies to get new fixes ([60ce7ea](https://github.com/ragaeeb/tahqiq/commit/60ce7eaf73cd9ac772390a596a74b49d0f1d5e8e))
+
 ## [1.52.8](https://github.com/ragaeeb/tahqiq/compare/v1.52.7...v1.52.8) (2026-02-10)
 
 
