@@ -1,3 +1,10 @@
+## [1.52.8](https://github.com/ragaeeb/tahqiq/compare/v1.52.7...v1.52.8) (2026-02-10)
+
+
+### Bug Fixes
+
+* **bump:** Bump dependencies and bring back GPT 5.2 ([c3df41c](https://github.com/ragaeeb/tahqiq/commit/c3df41ca97bee9584fe32f1ce09aad1f9dbf9b94))
+
 ## [1.52.7](https://github.com/ragaeeb/tahqiq/compare/v1.52.6...v1.52.7) (2026-02-05)
 
 
