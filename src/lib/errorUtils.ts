@@ -6,7 +6,7 @@ type GroupedError = {
     type?: ValidationErrorType;
 };
 
-export const filterNoisyError = (e: ValidationError) => e.type !== 'archaic_register' && e.type !== 'missing_id_gap';
+export const filterNoisyError = (e: ValidationError) => e.type !== 'missing_id_gap';
 
 export const groupErrorMessages = (errors: ValidationError[]) => {
     const groups = new Map<string, GroupedError>();

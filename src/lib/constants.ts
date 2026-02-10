@@ -21,6 +21,7 @@ export type TranslationModel = { label: string; value: string; color: string; pr
 export const TRANSLATION_MODELS = [
     { color: 'emerald', label: 'GPT 5o', provider: 'openai', value: '879' },
     { color: 'blue', label: 'Gemini 3.0 Pro', provider: 'gemini', value: '890' },
+    { color: 'purple', label: 'OpenAI GPT 5.2 Thinking', provider: 'openai', value: '893' },
     { color: 'orange', label: 'Grok 4 Expert', provider: 'grok', value: '895' },
 ].sort((a, b) => Number(a.value) - Number(b.value)) as readonly TranslationModel[];
 
