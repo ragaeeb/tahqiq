@@ -1,3 +1,10 @@
+## [1.52.10](https://github.com/ragaeeb/tahqiq/compare/v1.52.9...v1.52.10) (2026-02-12)
+
+
+### Bug Fixes
+
+* **cleanup:** Clean up descoped routes and components ([78bcb34](https://github.com/ragaeeb/tahqiq/commit/78bcb3468413878dce510c2f7e5baa2217e40bf2))
+
 ## [1.52.9](https://github.com/ragaeeb/tahqiq/compare/v1.52.8...v1.52.9) (2026-02-10)
 
 
