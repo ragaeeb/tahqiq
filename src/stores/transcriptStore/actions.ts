@@ -266,7 +266,6 @@ export const initStore = (data: TranscriptSeries) => {
 
     return {
         createdAt: new Date(data.createdAt),
-        groundTruth: data.groundTruth,
         postProcessingApps: data.postProcessingApps || [],
         selectedPart: data.transcripts[0]!.volume,
         transcripts,

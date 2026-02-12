@@ -2,9 +2,7 @@ import type { Segment as ParagrafsSegment, Token } from 'paragrafs';
 
 import type { LatestContractVersion } from '@/lib/constants';
 
-import type { Kitab } from '../bookStore/types';
 import type { PostProcessingApp } from '../commonTypes';
-import type { Juz } from '../manuscriptStore/types';
 
 /**
  * Configuration options for formatting transcript segments
@@ -64,9 +62,6 @@ export type TranscriptSeries = {
     /** When this transcript series was initially created */
     createdAt: Date;
 
-    /** Optional ground truth for this transcription. */
-    groundTruth?: Juz | Kitab;
-
     /** When this transcript series was last modified */
     lastUpdatedAt: Date;
 
@@ -88,7 +83,7 @@ export type TranscriptState = TranscriptActions & TranscriptStateCore;
 /**
  * Core state properties for transcript management
  */
-export type TranscriptStateCore = Pick<TranscriptSeries, 'createdAt' | 'groundTruth'> &
+export type TranscriptStateCore = Pick<TranscriptSeries, 'createdAt'> &
     Required<Pick<TranscriptSeries, 'postProcessingApps' | 'urls'>> & {
         /** Current formatting options for displaying and processing transcripts */
         readonly formatOptions: FormatOptions;
@@ -157,12 +152,6 @@ type TranscriptActions = {
      * @param options New formatting options to apply
      */
     setFormattingOptions: (options: FormatOptions) => void;
-
-    /**
-     * Sets the ground truth.
-     * @param groundTruth The ground truth data.
-     */
-    setGroundTruth: (groundTruth?: Juz | Kitab) => void;
 
     /**
      * Changes the currently selected transcript volume

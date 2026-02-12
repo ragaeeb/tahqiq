@@ -10,7 +10,6 @@ import { DatasetLoader } from '@/components/dataset-loader';
 import JsonDropZone from '@/components/json-drop-zone';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { loadFromOPFS } from '@/lib/io';
-import { usePatchStore } from '@/stores/patchStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import { selectAllPages, selectAllTitles, selectPageCount, selectTitleCount } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
@@ -38,8 +37,6 @@ function ShamelaPageContent() {
     const updatePage = useShamelaStore((state) => state.updatePage);
     const updateTitle = useShamelaStore((state) => state.updateTitle);
 
-    const setBookId = usePatchStore((state) => state.setBookId);
-
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
 
     const { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter } =
@@ -51,11 +48,10 @@ function ShamelaPageContent() {
         loadFromOPFS('shamela').then((data) => {
             if (data) {
                 record('RestoreShamelaFromSession');
-                setBookId((data as ShamelaBook).id);
                 init(data as ShamelaBook);
             }
         });
-    }, [init, hydrateSettings, setBookId]);
+    }, [init, hydrateSettings]);
 
     const handleTabChange = useCallback(
         (tab: string) => {
@@ -77,10 +73,9 @@ function ShamelaPageContent() {
 
     const onShamelaLoaded = useCallback(
         (book: ShamelaBook, fileName?: string) => {
-            setBookId(book.id);
             init(book, fileName || `shamela-${book.id}.json`);
         },
-        [init, setBookId],
+        [init],
     );
 
     const parseShamelaUrl = useCallback((url: string) => {
@@ -115,7 +110,6 @@ function ShamelaPageContent() {
                             if (typeof data === 'object' && 'pages' in data) {
                                 const book = data as unknown as ShamelaBook;
                                 record('LoadShamela', keys[0]);
-                                setBookId(book.id);
                                 init(book, keys[0]);
                             } else {
                                 toast.error('Invalid Shamela book format');

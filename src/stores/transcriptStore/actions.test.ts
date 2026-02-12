@@ -47,7 +47,6 @@ describe('transcriptStore/actions', () => {
             const result = initStore({
                 contractVersion: LatestContractVersion.Transcript,
                 createdAt: new Date('2024-01-01T00:00:00Z'),
-                groundTruth: undefined,
                 lastUpdatedAt: new Date('2024-01-01T00:00:00Z'),
                 transcripts: [
                     { segments: [], timestamp: new Date('2024-01-01T00:00:00Z'), volume: 1 },
@@ -57,7 +56,6 @@ describe('transcriptStore/actions', () => {
             });
 
             expect(result.selectedPart).toBe(1);
-            expect(result.groundTruth).toBeUndefined();
             expect(result.urls).toEqual(['url1', 'url2']);
             expect(Object.keys(result.transcripts)).toHaveLength(2);
             expect(result.transcripts['1']).toBeDefined();

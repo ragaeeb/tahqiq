@@ -8,7 +8,7 @@
 ![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
 ![GitHub License](https://img.shields.io/github/license/ragaeeb/tahqiq)
 
-Tahqiq is a comprehensive web application for managing Islamic texts, manuscripts, and audio transcripts. It provides specialized tools for Arabic text editing, translation management, and browsable content generation for Qur'an and Hadith collections.
+Tahqiq is a comprehensive web application for managing Islamic texts, audio transcripts. It provides specialized tools for Arabic text editing, translation management, and browsable content generation for Qur'an and Hadith collections.
 
 ## Features
 
@@ -59,7 +59,6 @@ Tahqiq is a comprehensive web application for managing Islamic texts, manuscript
 - **Title-to-Page Navigation**: Click page/parent links in Titles tab to scroll to associated page
 - **Hash-Based Scroll**: Navigate to specific pages via URL hash (e.g., `/shamela?tab=pages#123`)
 - **Page Marker Cleanup**: Remove Arabic numeric page markers in batch
-- **Patches System**: Track and export page edits as diffs for version control
 - **Export**: Download edited books as JSON
 
 ### Web Editor (`/web`)
@@ -104,12 +103,6 @@ Powerful pattern-based page segmentation powered by [flappa-doormal](https://git
 - **ASL Dataset**: ID of the HuggingFace dataset for ASL books
 - **Shamela Dataset**: ID of the HuggingFace dataset for Shamela books
 - **Quick Substitutions**: Configure common text replacements
-
-### Manuscript Processing
-- **OCR Correction**: Edit and correct Arabic manuscript scans
-- **Poetry Alignment**: Specialized handling for poetic text alignment
-- **Heading Detection**: Mark rows as headings with hierarchy support
-- **Similar Line Finding**: Find similar lines using configurable thresholds
 
 ### Book Browsing
 - **Static Generation**: Pre-rendered browsable pages for Islamic texts
@@ -208,14 +201,6 @@ RULES_ENDPOINT=your_rules_endpoint_url
 8. **Extract Text**: Select Arabic text and click "Extract as New Excerpt" to create a new entry
 9. **URL Navigation**: Use `#P123` to scroll to ID, or `#123` to scroll to page number
 
-### Manuscript Editor (`/manuscript`)
-
-1. **Upload Manuscript**: Load manuscript JSON data
-2. **Correct OCR**: Edit the "alt" column to correct OCR errors
-3. **Mark Headings**: Use the menu to mark rows as headings
-4. **Merge Rows**: Combine multiple rows into one
-5. **Find Similar**: Search for similar lines in the manuscript
-
 ### Shamela Editor (`/shamela`)
 
 1. **Import Book**: Either paste a shamela.ws URL or drag and drop a JSON file
@@ -224,8 +209,7 @@ RULES_ENDPOINT=your_rules_endpoint_url
 4. **Navigate from Titles**: Click page numbers in Titles tab to jump to that page in Pages tab
 5. **URL Hash Navigation**: Use `#123` in URL to scroll to specific page (e.g., `/shamela?tab=pages#123`)
 6. **Clean Page Markers**: Click the eraser button to remove Arabic page markers
-7. **Track Patches**: View and export page edit diffs via the patches dialog
-8. **Save/Download**: Save to session storage or download as JSON
+7. **Save/Download**: Save to session storage or download as JSON
 
 #### Segmentation Workflow
 
@@ -258,7 +242,6 @@ RULES_ENDPOINT=your_rules_endpoint_url
 
 1. **Gemini API Keys**: Click to reveal and edit API keys (one per line)
 2. **Shamela Config**: Set your Shamela API key and books endpoint URL
-3. **Quick Subs**: Add common text substitutions for the manuscript editor
 
 ## JSON Formats
 
@@ -347,12 +330,10 @@ RULES_ENDPOINT=your_rules_endpoint_url
 tahqiq/
 ├── src/
 │   ├── app/                # Next.js App Router pages
-│   │   ├── ajza/           # Manage groups of Juz for manuscript workflow
 │   │   ├── api/            # API routes (huggingface, analytics, rules)
 │   │   ├── book/           # Book browser and management
 │   │   ├── excerpts/       # Excerpts management with virtualized lists
 │   │   ├── ketab/          # Ketab-online book editor
-│   │   ├── manuscript/     # Manuscript editing
 │   │   ├── settings/       # Configuration UI
 │   │   ├── shamela/        # Shamela book editor
 │   │   ├── transcript/     # Audio transcript editing
@@ -363,11 +344,8 @@ tahqiq/
 │   │   └── ui/             # UI primitives (shadcn/ui style)
 │   ├── lib/                # Utility functions
 │   ├── stores/             # Zustand state management
-│   │   ├── bookStore/      # Book compilation state
 │   │   ├── excerptsStore/  # Excerpts state
 │   │   ├── ketabStore/     # Ketab Online book state
-│   │   ├── manuscriptStore/# Manuscript state
-│   │   ├── patchStore/     # Page edit patches state
 │   │   ├── segmentationStore/ # Segmentation panel state
 │   │   ├── settingsStore/  # Settings and API keys
 │   │   ├── shamelaStore/   # Shamela book state

@@ -1,13 +1,4 @@
-import {
-    BookMarkedIcon,
-    BookOpenIcon,
-    FileTextIcon,
-    GlobeIcon,
-    LayoutListIcon,
-    LibraryIcon,
-    MicIcon,
-    SettingsIcon,
-} from 'lucide-react';
+import { BookMarkedIcon, GlobeIcon, LayoutListIcon, LibraryIcon, MicIcon, SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import VersionFooter from '@/components/version-footer';
@@ -15,12 +6,6 @@ import VersionFooter from '@/components/version-footer';
 type NavigationCard = { description: string; href: string; icon: React.ReactNode; title: string };
 
 const navigationCards: NavigationCard[] = [
-    {
-        description: 'Browse and explore Islamic texts organized by books and chapters',
-        href: '/book',
-        icon: <BookOpenIcon className="h-8 w-8" />,
-        title: 'Book Browser',
-    },
     {
         description: 'View and manage text excerpts from Islamic scholarly works',
         href: '/excerpts',
@@ -50,12 +35,6 @@ const navigationCards: NavigationCard[] = [
         href: '/transcript',
         icon: <MicIcon className="h-8 w-8" />,
         title: 'Transcript Editor',
-    },
-    {
-        description: 'Work with manuscript pages and manage transcriptions',
-        href: '/manuscript',
-        icon: <FileTextIcon className="h-8 w-8" />,
-        title: 'Manuscript',
     },
     {
         description: 'Configure application preferences and customize your experience',
@@ -123,17 +102,6 @@ export default function Home() {
                                 </div>
                             </Link>
                         ))}
-                    </div>
-
-                    {/* Additional Navigation */}
-                    <div className="mt-12 text-center">
-                        <Link
-                            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 font-medium text-gray-700 text-sm shadow-md ring-1 ring-gray-900/5 transition-all duration-300 hover:bg-gray-50 hover:shadow-lg"
-                            href="/ajza"
-                        >
-                            <LayoutListIcon className="h-4 w-4" />
-                            Browse Ajza
-                        </Link>
                     </div>
                 </div>
             </div>

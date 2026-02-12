@@ -1,7 +1,6 @@
 export type SettingsState = SettingsActions & SettingsStateCore;
 
 export type SettingsStateCore = {
-    readonly quickSubs: string[];
     readonly shamelaDataset: string;
     readonly huggingfaceToken: string;
     readonly excerptsDataset: string;
@@ -16,7 +15,6 @@ type SettingsActions = {
     hydrate: () => void;
     updateHuggingfaceToken: (token: string) => void;
     updateExcerptsDataset: (value: string) => void;
-    updateQuickSubs: (values: string[]) => void;
     updateShamelaDataset: (endpoint: string) => void;
     updateAslDataset: (endpoint: string) => void;
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { pageNumberToColor, pageNumberToHoverColor } from './colorUtils';
+import { pageNumberToColor } from './colorUtils';
 
 describe('pageNumberToColor', () => {
     it('should return valid HSL color string', () => {
@@ -50,32 +50,5 @@ describe('pageNumberToColor', () => {
             const minDiff = Math.min(diff, 360 - diff);
             expect(minDiff).toBeGreaterThanOrEqual(30);
         }
-    });
-});
-
-describe('pageNumberToHoverColor', () => {
-    it('should return valid HSL color string', () => {
-        const color = pageNumberToHoverColor(1);
-        expect(color).toMatch(/^hsl\(\d+, \d+%, \d+%\)$/);
-    });
-
-    it('should have same hue as base color', () => {
-        const baseColor = pageNumberToColor(10);
-        const hoverColor = pageNumberToHoverColor(10);
-
-        const baseHue = baseColor.match(/hsl\((\d+),/)?.[1];
-        const hoverHue = hoverColor.match(/hsl\((\d+),/)?.[1];
-
-        expect(baseHue).toBe(hoverHue);
-    });
-
-    it('should have lower lightness than base color', () => {
-        const baseColor = pageNumberToColor(10);
-        const hoverColor = pageNumberToHoverColor(10);
-
-        const baseLightness = parseInt(baseColor.match(/(\d+)%\)$/)?.[1] || '0', 10);
-        const hoverLightness = parseInt(hoverColor.match(/(\d+)%\)$/)?.[1] || '0', 10);
-
-        expect(hoverLightness).toBeLessThan(baseLightness);
     });
 });

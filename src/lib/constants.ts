@@ -1,5 +1,4 @@
 import type { LLMProvider } from 'bitaboom';
-import type { RawInputFiles } from '@/stores/manuscriptStore/types';
 
 export const DEFAULT_HINTS = [
     'احسن الله اليكم',
@@ -61,12 +60,6 @@ export const DEFAULT_MAX_SECONDS_PER_LINE = 30;
 export const DEFAULT_MIN_WORDS_PER_SEGMENT = 10;
 
 export const DEFAULT_SILENCE_GAP_THRESHOLD = 2;
-
-export const REQUIRED_RAW_INPUT_FILES = [
-    'mac.json',
-    'structures.json',
-    'surya.json',
-] as const satisfies readonly (keyof RawInputFiles)[];
 
 /**
  * Honorific symbols frequently encountered in Arabic texts.

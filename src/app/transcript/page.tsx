@@ -1,6 +1,5 @@
 'use client';
 
-import { PaperclipIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useMemo } from 'react';
 
@@ -27,8 +26,6 @@ import UrlField from './url-field';
 export default function Transcript() {
     const isInitialized = useTranscriptStore((state) => state.selectedPart > 0);
     const initTranscripts = useTranscriptStore((state) => state.init);
-    const hasGroundTruth = useTranscriptStore((state) => Boolean(state.groundTruth));
-    const setGroundTruth = useTranscriptStore((state) => state.setGroundTruth);
     const selectAllSegments = useTranscriptStore((state) => state.selectAllSegments);
     const addTranscripts = useTranscriptStore((state) => state.addTranscripts);
     const segments = useTranscriptStore(selectCurrentSegments);
@@ -69,17 +66,6 @@ export default function Transcript() {
                         >
                             + Parts
                         </JsonBrowseButton>
-                        {!hasGroundTruth && (
-                            <JsonBrowseButton
-                                aria-label="Set Ground Truth"
-                                onFilesSelected={async (files) => {
-                                    const result = await loadFiles(files);
-                                    setGroundTruth(Object.values(result) as any);
-                                }}
-                            >
-                                <PaperclipIcon />
-                            </JsonBrowseButton>
-                        )}
                         <TranscriptToolbar />
                     </div>
 

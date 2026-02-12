@@ -28,7 +28,6 @@ describe('transcriptUtils', () => {
                 minWordsPerSegment: 4,
                 silenceGapThreshold: 1,
             },
-            groundTruth: undefined,
             postProcessingApps: [],
             selectedPart: 1,
             selectedSegments: [],

@@ -7,7 +7,6 @@ import { normalizeHtml } from 'shamela/content';
 import EditableHTML from '@/components/editable-html';
 import { Textarea } from '@/components/ui/textarea';
 import { autoResizeTextarea } from '@/lib/domUtils';
-import { createPatch, usePatchStore } from '@/stores/patchStore';
 import type { ShamelaPage } from '@/stores/shamelaStore/types';
 
 type PageRowProps = {
@@ -27,7 +26,6 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
     const bodyRef = useRef<string>(data.body);
     const originalBodyRef = useRef<string>(data.body);
     const originalFootnoteRef = useRef<string | undefined>(data.footnote);
-    const addPatch = usePatchStore((state) => state.addPatch);
 
     useEffect(() => {
         bodyRef.current = data.body;
@@ -41,16 +39,11 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
 
     const handleBodyBlur = useCallback(() => {
         if (bodyRef.current !== data.body) {
-            // Create patch from original to new value
-            const diff = createPatch(originalBodyRef.current, bodyRef.current);
-            if (diff) {
-                addPatch({ diff, field: 'body', pageId: data.id });
-            }
             // Update the original ref for future patches
             originalBodyRef.current = bodyRef.current;
             onUpdate(data.id, { body: bodyRef.current });
         }
-    }, [data.body, data.id, onUpdate, addPatch]);
+    }, [data.body, data.id, onUpdate]);
 
     // Check if this page contains any title spans using regex for robustness
     const hasTitles = TITLE_MARKER_PATTERN.test(data.body);
@@ -104,11 +97,6 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
                                 // Always resize on blur for consistency
                                 autoResizeTextarea(e.currentTarget);
                                 if (e.target.value !== (data.footnote ?? '')) {
-                                    // Create patch from original to new value
-                                    const diff = createPatch(originalFootnoteRef.current ?? '', e.target.value);
-                                    if (diff) {
-                                        addPatch({ diff, field: 'footnote', pageId: data.id });
-                                    }
                                     // Update the original ref for future patches
                                     originalFootnoteRef.current = e.target.value;
                                     onUpdate(data.id, { footnote: e.target.value });

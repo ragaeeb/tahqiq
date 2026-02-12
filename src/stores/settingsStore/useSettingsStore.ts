@@ -6,7 +6,6 @@ const STORAGE_KEYS = {
     aslDataset: 'aslDataset',
     excerptsDataset: 'huggingfaceExcerptDataset',
     huggingfaceToken: 'huggingfaceToken',
-    quickSubs: 'quickSubs',
     shamelaDataset: 'shamelaBookEndpoint',
 } as const;
 
@@ -27,7 +26,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
     hydrate: () =>
         set(() => {
-            const quickSubs = localStorage.getItem(STORAGE_KEYS.quickSubs);
             const shamelaDataset = localStorage.getItem(STORAGE_KEYS.shamelaDataset);
             const encryptedHuggingfaceToken = localStorage.getItem(STORAGE_KEYS.huggingfaceToken);
             const huggingfaceExcerptDataset = localStorage.getItem(STORAGE_KEYS.excerptsDataset);
@@ -36,11 +34,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
                 aslDataset: localStorage.getItem(STORAGE_KEYS.aslDataset) || '',
                 excerptsDataset: huggingfaceExcerptDataset || '',
                 huggingfaceToken: encryptedHuggingfaceToken ? atob(encryptedHuggingfaceToken) : '',
-                quickSubs: quickSubs ? quickSubs.split('\n') : [],
                 shamelaDataset: shamelaDataset || '',
             };
         }),
-    quickSubs: [],
     shamelaDataset: '',
 
     updateAslDataset: (endpoint) =>
@@ -59,12 +55,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         set(() => {
             localStorage.setItem(STORAGE_KEYS.huggingfaceToken, btoa(token));
             return { huggingfaceToken: token };
-        }),
-
-    updateQuickSubs: (values) =>
-        set(() => {
-            localStorage.setItem(STORAGE_KEYS.quickSubs, values.join('\n'));
-            return { quickSubs: values };
         }),
 
     updateShamelaDataset: (endpoint) =>

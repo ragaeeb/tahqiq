@@ -168,7 +168,6 @@ export const mapTranscriptsToLatestContract = (state: TranscriptStateCore): Tran
     return {
         contractVersion: LatestContractVersion.Transcript,
         createdAt,
-        groundTruth: state.groundTruth,
         lastUpdatedAt: new Date(),
         postProcessingApps: state.postProcessingApps.concat({
             id: packageJson.name,

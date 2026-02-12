@@ -1,13 +1,11 @@
 'use client';
 
-import { record } from 'nanolytics';
 import { useEffect } from 'react';
 
 import { ClickToReveal } from '@/components/click-to-reveal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { TagInput } from '@/components/ui/tag-input';
 import '@/lib/analytics';
 import VersionFooter from '@/components/version-footer';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
@@ -20,8 +18,6 @@ import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
  */
 export default function Settings() {
     const hydrate = useSettingsStore((state) => state.hydrate);
-    const quickSubs = useSettingsStore((state) => state.quickSubs);
-    const updateQuickSubs = useSettingsStore((state) => state.updateQuickSubs);
     const shamelaDataset = useSettingsStore((state) => state.shamelaDataset);
     const updateShamelaDataset = useSettingsStore((state) => state.updateShamelaDataset);
     const huggingfaceToken = useSettingsStore((state) => state.huggingfaceToken);
@@ -96,25 +92,6 @@ export default function Settings() {
                                     placeholder="username/dataset-name (for https://huggingface.co/datasets/username/dataset-name)"
                                 />
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Quick Substitutions</CardTitle>
-                            <CardDescription>
-                                Common text substitutions for the manuscript editor. Press Enter to add.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <TagInput
-                                dir="rtl"
-                                onChange={(value) => {
-                                    record('QuickSubs', value.toString());
-                                    updateQuickSubs(value);
-                                }}
-                                value={quickSubs}
-                            />
                         </CardContent>
                     </Card>
                 </div>

@@ -1,23 +1,6 @@
 import { sanitizeArabic, standardizeHijriSymbol, standardizeIntahaSymbol } from 'baburchi';
-import {
-    estimateTokenCount,
-    fixBracketTypos,
-    fixCurlyBraces,
-    fixMismatchedQuotationMarks,
-    preformatArabicText as preformatBitaboom,
-} from 'bitaboom';
+import { estimateTokenCount, preformatArabicText as preformatBitaboom } from 'bitaboom';
 import { isEndingWithPunctuation, type Token } from 'paragrafs';
-import type { TextLine } from '@/stores/manuscriptStore/types';
-
-export const fixUnbalanced = (text: string) => {
-    let result = text;
-
-    for (const f of [fixBracketTypos, fixMismatchedQuotationMarks, fixCurlyBraces]) {
-        result = f(result);
-    }
-
-    return result;
-};
 
 const autoCorrectPipeline = [standardizeHijriSymbol, standardizeIntahaSymbol];
 
@@ -157,8 +140,4 @@ export const extractKetabBookIdFromUrl = (url: string) => {
     }
 
     return null;
-};
-export const mapTextLineToMarkdown = (o: TextLine): TextLine => {
-    const text = o.isHeading ? `#${o.text}` : o.text;
-    return { ...o, text };
 };

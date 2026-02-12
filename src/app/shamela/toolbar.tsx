@@ -1,4 +1,4 @@
-import { DownloadIcon, EraserIcon, FileTextIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
+import { DownloadIcon, EraserIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -6,16 +6,12 @@ import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { ResetButton } from '@/components/reset-button';
 import { SegmentationPanel } from '@/components/segmentation/SegmentationPanel';
 import { Button } from '@/components/ui/button';
-import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { STORAGE_KEYS } from '@/lib/constants';
-import { usePatchStore } from '@/stores/patchStore';
 import { selectAllPages, selectAllTitles } from '@/stores/shamelaStore/selectors';
 import type { ShamelaBook } from '@/stores/shamelaStore/types';
 import { useShamelaStore } from '@/stores/shamelaStore/useShamelaStore';
-import { PatchesDialogContent } from './patches-dialog';
 
 export const Toolbar = () => {
-    const patchCount = usePatchStore((state) => state.patches.length);
     const allPages = useShamelaStore(selectAllPages);
     const titles = useShamelaStore(selectAllTitles);
     const removePageMarkers = useShamelaStore((state) => state.removePageMarkers);
@@ -103,19 +99,6 @@ export const Toolbar = () => {
             </Button>
             {isSegmentationPanelOpen && (
                 <SegmentationPanel onClose={() => setIsSegmentationPanelOpen(false)} pages={pages} headings={titles} />
-            )}
-            {patchCount > 0 && (
-                <DialogTriggerButton
-                    onClick={() => record('OpenPatchesDialog')}
-                    renderContent={() => <PatchesDialogContent />}
-                    title="View tracked patches"
-                    variant="outline"
-                >
-                    <FileTextIcon />
-                    <span className="ml-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-orange-700 text-xs">
-                        {patchCount}
-                    </span>
-                </DialogTriggerButton>
             )}
             <Button className="bg-emerald-500" onClick={handleSave}>
                 <SaveIcon />

@@ -35,15 +35,3 @@ export const pageNumberToColor = (pageNumber: number): string => {
 
     return `hsl(${Math.round(hue)}, ${saturation}%, ${lightness}%)`;
 };
-
-/**
- * Generates a slightly darker border/hover color for the same page number.
- * Useful for interactive states while maintaining color consistency.
- *
- * @param pageNumber - The page number to convert to a color
- * @returns HSL color string with lower lightness
- */
-export const pageNumberToHoverColor = (pageNumber: number): string => {
-    const hue = ((pageNumber + 17) * GOLDEN_RATIO_CONJUGATE * 360) % 360;
-    return `hsl(${Math.round(hue)}, 55%, 78%)`;
-};

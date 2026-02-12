@@ -88,7 +88,6 @@ export const useTranscriptStore = create<TranscriptState>()(
         reset: () =>
             set((state) => {
                 state.createdAt = new Date();
-                state.groundTruth = undefined;
                 state.postProcessingApps = [];
                 state.selectedPart = 0;
                 state.selectedSegments = [];
@@ -117,10 +116,6 @@ export const useTranscriptStore = create<TranscriptState>()(
         setFormattingOptions: (formatOptions: FormatOptions) =>
             set((state) => {
                 state.formatOptions = formatOptions;
-            }),
-        setGroundTruth: (groundTruth) =>
-            set((state) => {
-                state.groundTruth = groundTruth;
             }),
         setSelectedPart: (selectedPart) =>
             set((state) => {
