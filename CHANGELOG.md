@@ -1,3 +1,10 @@
+## [1.52.12](https://github.com/ragaeeb/tahqiq/compare/v1.52.11...v1.52.12) (2026-02-13)
+
+
+### Bug Fixes
+
+* **deps:** Bump dependencies ([12c3c92](https://github.com/ragaeeb/tahqiq/commit/12c3c92387901bfc65231fd8ff0f01352d322dec))
+
 ## [1.52.11](https://github.com/ragaeeb/tahqiq/compare/v1.52.10...v1.52.11) (2026-02-13)
 
 
