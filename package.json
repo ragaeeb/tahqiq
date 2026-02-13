@@ -19,7 +19,7 @@
         "brotli-wasm": "^3.0.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "dyelight": "1.2.4",
+        "dyelight": "1.2.5",
         "flappa-doormal": "^2.17.1",
         "immer": "^11.1.4",
         "ketab-online-sdk": "^1.3.2",
@@ -36,7 +36,7 @@
         "tailwind-merge": "^3.4.0",
         "trie-rules": "^3.3.0",
         "tw-animate-css": "^1.4.0",
-        "wobble-bibble": "^1.4.5",
+        "wobble-bibble": "^1.4.6",
         "zustand": "^5.0.11"
     },
     "devDependencies": {
