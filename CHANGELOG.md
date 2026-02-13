@@ -1,3 +1,10 @@
+## [1.52.11](https://github.com/ragaeeb/tahqiq/compare/v1.52.10...v1.52.11) (2026-02-13)
+
+
+### Bug Fixes
+
+* **deps:** Bump to get latest prompts ([53e2679](https://github.com/ragaeeb/tahqiq/commit/53e26790bc947850df5d2dc338e6362f2038f11d))
+
 ## [1.52.10](https://github.com/ragaeeb/tahqiq/compare/v1.52.9...v1.52.10) (2026-02-12)
 
 
