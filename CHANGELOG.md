@@ -1,3 +1,10 @@
+## [1.52.14](https://github.com/ragaeeb/tahqiq/compare/v1.52.13...v1.52.14) (2026-02-27)
+
+
+### Bug Fixes
+
+* **perf:** Enable react compiler and bump dependencies ([6e97138](https://github.com/ragaeeb/tahqiq/commit/6e971382724023d0905f8dc380eecfa4bd86701c))
+
 ## [1.52.13](https://github.com/ragaeeb/tahqiq/compare/v1.52.12...v1.52.13) (2026-02-17)
 
 
