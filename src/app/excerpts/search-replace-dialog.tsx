@@ -3,7 +3,7 @@
 import { getAvailableTokens, TOKEN_PATTERNS } from 'flappa-doormal';
 import { AlertCircle, CheckCircle2, SearchIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     DialogClose,
@@ -174,22 +174,11 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
 
     const scope: TargetScope = activeTab as TargetScope;
 
-    const currentData = useMemo(() => {
-        if (scope === 'headings') {
-            return headings;
-        }
-        if (scope === 'footnotes') {
-            return footnotes;
-        }
-        return excerpts;
-    }, [scope, excerpts, headings, footnotes]);
+    const currentData = scope === 'headings' ? headings : scope === 'footnotes' ? footnotes : excerpts;
 
-    const matches = useMemo(
-        () => findMatches(currentData, searchPattern, replacePattern, targetField),
-        [searchPattern, replacePattern, targetField, currentData],
-    );
+    const matches = findMatches(currentData, searchPattern, replacePattern, targetField);
 
-    const handleApply = useCallback(() => {
+    const handleApply = () => {
         if (!searchPattern || matches.length === 0) {
             return;
         }
@@ -224,23 +213,11 @@ export function SearchReplaceDialogContent({ activeTab, initialSearchPattern = '
         record('SearchReplace', `${scope}:${targetField}:${count}`);
         setAppliedCount(count);
         setTimeout(() => setAppliedCount(null), 3000);
-    }, [
-        searchPattern,
-        replacePattern,
-        targetField,
-        scope,
-        matches.length,
-        applyTranslationFormatting,
-        applyHeadingFormatting,
-        applyFootnoteFormatting,
-        applyExcerptNassFormatting,
-        applyHeadingNassFormatting,
-        applyFootnoteNassFormatting,
-    ]);
+    };
 
-    const handleInsertToken = useCallback((token: string) => {
+    const handleInsertToken = (token: string) => {
         setSearchPattern((prev) => `${prev}${token}`);
-    }, []);
+    };
 
     return (
         <DialogContent className="flex max-h-[85vh] w-[90vw] max-w-4xl flex-col">

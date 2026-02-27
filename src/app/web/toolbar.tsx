@@ -1,7 +1,7 @@
 import { DownloadIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { ResetButton } from '@/components/reset-button';
@@ -21,7 +21,7 @@ export const Toolbar = () => {
     const pages = useWebStore(selectAllPages);
     const titles = useWebStore(selectAllTitles);
 
-    const getExportData = useCallback(() => {
+    const getExportData = () => {
         const {
             contractVersion,
             urlPattern,
@@ -43,7 +43,7 @@ export const Toolbar = () => {
             type,
             urlPattern,
         } satisfies ScrapeResult;
-    }, []);
+    };
 
     const { handleSave, handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadWeb', reset: 'ResetWeb', save: 'SaveWeb' },
@@ -52,15 +52,13 @@ export const Toolbar = () => {
         storageKey: STORAGE_KEYS.web,
     });
 
-    const handleRemoveFootnotes = useCallback(() => {
+    const handleRemoveFootnotes = () => {
         record('RemoveWebFootnotes');
         removeFootnotes();
         toast.success('Removed footnotes from all pages');
-    }, [removeFootnotes]);
+    };
 
-    const segmentationPages = useMemo(() => {
-        return pages.map(({ id, content }) => ({ content, id }));
-    }, [pages]);
+    const segmentationPages = pages.map(({ id, content }) => ({ content, id }));
 
     return (
         <div className="space-x-2">

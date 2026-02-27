@@ -2,7 +2,7 @@
 
 import { PencilIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -39,49 +39,46 @@ const EXCLUDE_KEYS = ['id', 'lastUpdatedAt'];
 export function EditExcerptDialogContent({ excerpt, onClose, onUpdate }: EditExcerptDialogContentProps) {
     const [validationError, setValidationError] = useState('');
 
-    const handleSubmit = useCallback(
-        (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            setValidationError('');
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setValidationError('');
 
-            const formData = new FormData(e.currentTarget);
-            const str = (key: string) => (formData.get(key) as string) || undefined;
-            const num = (key: string) => {
-                const v = str(key)?.trim();
-                return v ? Number.parseInt(v, 10) || undefined : undefined;
-            };
+        const formData = new FormData(e.currentTarget);
+        const str = (key: string) => (formData.get(key) as string) || undefined;
+        const num = (key: string) => {
+            const v = str(key)?.trim();
+            return v ? Number.parseInt(v, 10) || undefined : undefined;
+        };
 
-            // Parse meta JSON
-            const metaJson = str('meta')?.trim();
-            let meta: Record<string, unknown> | undefined;
-            if (metaJson) {
-                try {
-                    meta = JSON.parse(metaJson);
-                } catch {
-                    return setValidationError('Invalid JSON syntax in Meta field');
-                }
+        // Parse meta JSON
+        const metaJson = str('meta')?.trim();
+        let meta: Record<string, unknown> | undefined;
+        if (metaJson) {
+            try {
+                meta = JSON.parse(metaJson);
+            } catch {
+                return setValidationError('Invalid JSON syntax in Meta field');
             }
+        }
 
-            const updated = {
-                from: num('from'),
-                meta,
-                nass: str('nass'),
-                text: str('text'),
-                to: num('to'),
-                translator: num('translator'),
-            };
+        const updated = {
+            from: num('from'),
+            meta,
+            nass: str('nass'),
+            text: str('text'),
+            to: num('to'),
+            translator: num('translator'),
+        };
 
-            const diff = createObjectDiff(excerpt, updated, { excludeKeys: EXCLUDE_KEYS });
+        const diff = createObjectDiff(excerpt, updated, { excludeKeys: EXCLUDE_KEYS });
 
-            if (Object.keys(diff).length > 0) {
-                record('EditExcerpt', excerpt.id);
-                onUpdate(excerpt.id, diff);
-            }
+        if (Object.keys(diff).length > 0) {
+            record('EditExcerpt', excerpt.id);
+            onUpdate(excerpt.id, diff);
+        }
 
-            onClose?.();
-        },
-        [excerpt, onUpdate, onClose],
-    );
+        onClose?.();
+    };
 
     return (
         <DialogContent className="!max-w-[90vw] flex h-[85vh] w-[90vw] flex-col overflow-y-auto">

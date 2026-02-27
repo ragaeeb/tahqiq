@@ -1,6 +1,6 @@
 import { record } from 'nanolytics';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import SubmittableInput from '@/components/submittable-input';
@@ -41,73 +41,58 @@ export function DatasetLoader<T>({
         hydrateSettings();
     }, [hydrateSettings]);
 
-    const handleUrlSubmit = useCallback(
-        async (input: string) => {
-            let id = input;
-            if (parseInput) {
-                const parsed = parseInput(input);
-                if (!parsed) {
-                    toast.error(`Invalid URL or ID format.`);
-                    return;
-                }
-                id = parsed;
-            }
+    const fetchDataset = async (id: string, toastId: string | number) => {
+        const file = `${id}.json.br`;
+        const response = await fetch(
+            `/api/huggingface?dataset=${encodeURIComponent(dataset)}&file=${encodeURIComponent(file)}`,
+            { headers: { Authorization: `Bearer ${huggingfaceToken}` } },
+        );
 
-            // Update URL query param
-            const params = new URLSearchParams(searchParams.toString());
-            params.set(urlParam, id);
-            router.replace(`?${params.toString()}`, { scroll: false });
-
-            setIsLoading(true);
-            record(recordEventName, id);
-
-            const toastId = toast.loading(`Downloading ${id}...`);
-
+        if (!response.ok) {
+            let errorMessage = 'Failed to download data';
             try {
-                // Use generic API for both ASL and Shamela
-                // We construct the "file" param based on ID and assume .json.br
-                const datasetId = dataset;
-                const file = `${id}.json.br`;
-
-                const response = await fetch(
-                    `/api/huggingface?dataset=${encodeURIComponent(datasetId)}&file=${encodeURIComponent(file)}`,
-                    { headers: { Authorization: `Bearer ${huggingfaceToken}` } },
-                );
-
-                if (!response.ok) {
-                    let errorMessage = 'Failed to download data';
-                    try {
-                        const error = await response.json();
-                        errorMessage = error.error || errorMessage;
-                    } catch {
-                        // Response was not JSON, use status text
-                        errorMessage = response.statusText || errorMessage;
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                const data = await readStreamedJson<T>(response);
-                onDataLoaded(data, `${id}.json`);
-                toast.success(`Downloaded ${id}`, { id: toastId });
-            } catch (error) {
-                console.error('Failed to download:', error);
-                toast.error(error instanceof Error ? error.message : 'Failed to download', { id: toastId });
-            } finally {
-                setIsLoading(false);
+                const error = await response.json();
+                errorMessage = error.error || errorMessage;
+            } catch {
+                errorMessage = response.statusText || errorMessage;
             }
-        },
-        [
-            dataset,
+            throw new Error(errorMessage);
+        }
 
-            huggingfaceToken,
-            onDataLoaded,
-            parseInput,
-            recordEventName,
-            router,
-            searchParams,
-            urlParam,
-        ],
-    );
+        const data = await readStreamedJson<T>(response);
+        onDataLoaded(data, `${id}.json`);
+        toast.success(`Downloaded ${id}`, { id: toastId });
+    };
+
+    const handleUrlSubmit = async (input: string) => {
+        let id = input;
+        if (parseInput) {
+            const parsed = parseInput(input);
+            if (!parsed) {
+                toast.error(`Invalid URL or ID format.`);
+                return;
+            }
+            id = parsed;
+        }
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.set(urlParam, id);
+        router.replace(`?${params.toString()}`, { scroll: false });
+
+        setIsLoading(true);
+        record(recordEventName, id);
+
+        const toastId = toast.loading(`Downloading ${id}...`);
+
+        try {
+            await fetchDataset(id, toastId);
+        } catch (error) {
+            console.error('Failed to download:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to download', { id: toastId });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Auto-load from URL param
     useEffect(() => {
@@ -116,7 +101,7 @@ export function DatasetLoader<T>({
             hasAutoLoaded.current = true;
             setTimeout(() => handleUrlSubmit(id), 0);
         }
-    }, [dataset, handleUrlSubmit, huggingfaceToken, searchParams, urlParam]);
+    });
 
     if (!huggingfaceToken || !dataset) {
         return null; // Or return a message asking to configure settings

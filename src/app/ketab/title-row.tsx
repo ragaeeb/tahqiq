@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { KetabTitle } from '@/stores/ketabStore/types';
@@ -14,19 +14,16 @@ type TitleRowProps = {
 };
 
 function TitleRow({ data, onUpdate, onNavigateToPage }: TitleRowProps) {
-    const handleTitleBlur = useCallback(
-        (e: React.FocusEvent<HTMLInputElement>) => {
-            const newTitle = e.target.value;
-            if (newTitle !== data.title) {
-                onUpdate(data.id, { title: newTitle });
-            }
-        },
-        [data.id, data.title, onUpdate],
-    );
+    const handleTitleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const newTitle = e.target.value;
+        if (newTitle !== data.title) {
+            onUpdate(data.id, { title: newTitle });
+        }
+    };
 
-    const handlePageClick = useCallback(() => {
+    const handlePageClick = () => {
         onNavigateToPage(data.page);
-    }, [data.page, onNavigateToPage]);
+    };
 
     // Indentation based on depth
     const indentPadding = data.depth * 20;

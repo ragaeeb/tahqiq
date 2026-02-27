@@ -1,15 +1,15 @@
 'use client';
 
 import type { Page } from 'flappa-doormal';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 
 type TitleRowProps = { data: Page; onNavigateToPage: (pageId: number) => void };
 
 function TitleRow({ data, onNavigateToPage }: TitleRowProps) {
-    const handlePageClick = useCallback(() => {
+    const handlePageClick = () => {
         onNavigateToPage(data.id);
-    }, [data.id, onNavigateToPage]);
+    };
 
     return (
         <tr className="border-gray-100 border-b transition-colors duration-150 ease-in-out hover:bg-gray-50">

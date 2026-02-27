@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { normalizeHtml } from 'shamela/content';
 
 import EditableHTML from '@/components/editable-html';
@@ -33,17 +33,17 @@ function PageRow({ data, onUpdate, shamelaId }: PageRowProps) {
         originalFootnoteRef.current = data.footnote;
     }, [data.body, data.footnote]);
 
-    const handleBodyChange = useCallback((evt: { target: { value: string } }) => {
+    const handleBodyChange = (evt: { target: { value: string } }) => {
         bodyRef.current = evt.target.value;
-    }, []);
+    };
 
-    const handleBodyBlur = useCallback(() => {
+    const handleBodyBlur = () => {
         if (bodyRef.current !== data.body) {
             // Update the original ref for future patches
             originalBodyRef.current = bodyRef.current;
             onUpdate(data.id, { body: bodyRef.current });
         }
-    }, [data.body, data.id, onUpdate]);
+    };
 
     // Check if this page contains any title spans using regex for robustness
     const hasTitles = TITLE_MARKER_PATTERN.test(data.body);

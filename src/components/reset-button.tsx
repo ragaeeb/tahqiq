@@ -1,5 +1,5 @@
 import { CheckIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -19,29 +19,29 @@ export function ResetButton({ onReset, onResetAll }: ResetButtonProps) {
     const [isConfirming, setIsConfirming] = useState(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const startConfirmation = useCallback(() => {
+    const startConfirmation = () => {
         setIsConfirming(true);
         // Auto-reset after 4 seconds if no action taken
         timeoutRef.current = setTimeout(() => {
             setIsConfirming(false);
         }, 4000);
-    }, []);
+    };
 
-    const handleReset = useCallback(() => {
+    const handleReset = () => {
         setIsConfirming(false);
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
         onReset();
-    }, [onReset]);
+    };
 
-    const handleResetAll = useCallback(() => {
+    const handleResetAll = () => {
         setIsConfirming(false);
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
         onResetAll();
-    }, [onResetAll]);
+    };
 
     // Cleanup timeout on unmount
     useEffect(() => {

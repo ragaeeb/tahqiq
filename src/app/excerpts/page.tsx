@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { record } from 'nanolytics';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
 import { buildTrie, searchAndReplace } from 'trie-rules';
@@ -104,9 +104,12 @@ function ExcerptsPageContent() {
         addIdsToFilter,
     } = useExcerptFilters();
 
-    const isAnyFilterActive = useMemo(() => {
-        return !!(filters.nass || filters.text || filters.page || (filters.ids && filters.ids.length > 0));
-    }, [filters]);
+    const isAnyFilterActive = !!(
+        filters.nass ||
+        filters.text ||
+        filters.page ||
+        (filters.ids && filters.ids.length > 0)
+    );
 
     const [isFormattingLoading, setIsFormattingLoading] = useState(false);
     const [isUploadingToHf, setIsUploadingToHf] = useState(false);
@@ -123,53 +126,41 @@ function ExcerptsPageContent() {
     }, [hydrateSettings]);
 
     // Sort excerpts by length if sortMode is 'length'
-    const sortedExcerpts = useMemo(() => {
-        if (sortMode !== 'length') {
-            return excerpts;
-        }
-        return [...excerpts].sort((a, b) => (b.nass?.length || 0) - (a.nass?.length || 0));
-    }, [excerpts, sortMode]);
+    const sortedExcerpts =
+        sortMode !== 'length' ? excerpts : [...excerpts].sort((a, b) => (b.nass?.length || 0) - (a.nass?.length || 0));
 
     // Compute original neighbor maps for navigation in filtered state
-    const neighborMaps = useMemo(() => {
-        return {
-            excerpts: getNeighbors(allExcerpts),
-            footnotes: getNeighbors(allFootnotes),
-            headings: getNeighbors(allHeadings),
-        };
-    }, [allExcerpts, allHeadings, allFootnotes]);
+    const neighborMaps = {
+        excerpts: getNeighbors(allExcerpts),
+        footnotes: getNeighbors(allFootnotes),
+        headings: getNeighbors(allHeadings),
+    };
 
     // Current set of visible IDs to avoid showing neighbors already in view
-    const visibleIds = useMemo(() => {
-        if (activeTab === 'excerpts') {
-            return new Set(excerpts.map((e) => e.id));
-        }
-        if (activeTab === 'headings') {
-            return new Set(headings.map((h) => h.id));
-        }
-        return new Set(footnotes.map((f) => f.id));
-    }, [activeTab, excerpts, headings, footnotes]);
+    const visibleIds =
+        activeTab === 'excerpts'
+            ? new Set(excerpts.map((e) => e.id))
+            : activeTab === 'headings'
+              ? new Set(headings.map((h) => h.id))
+              : new Set(footnotes.map((f) => f.id));
 
-    const handleCopyDown = useCallback(
-        (source: Excerpt) => {
-            const index = sortedExcerpts.findIndex((e) => e.id === source.id);
-            if (index !== -1 && index < sortedExcerpts.length - 1) {
-                const nextExcerpt = sortedExcerpts[index + 1];
-                updateExcerpt(nextExcerpt.id, {
-                    lastUpdatedAt: source.lastUpdatedAt,
-                    text: source.text,
-                    translator: source.translator,
-                });
-                toast.success(`Copied translation to ${nextExcerpt.id}`);
-            } else {
-                toast.warning('No row below to copy to');
-            }
-        },
-        [sortedExcerpts, updateExcerpt],
-    );
+    const handleCopyDown = (source: Excerpt) => {
+        const index = sortedExcerpts.findIndex((e) => e.id === source.id);
+        if (index !== -1 && index < sortedExcerpts.length - 1) {
+            const nextExcerpt = sortedExcerpts[index + 1];
+            updateExcerpt(nextExcerpt.id, {
+                lastUpdatedAt: source.lastUpdatedAt,
+                text: source.text,
+                translator: source.translator,
+            });
+            toast.success(`Copied translation to ${nextExcerpt.id}`);
+        } else {
+            toast.warning('No row below to copy to');
+        }
+    };
 
     // Toggle selection for an excerpt
-    const toggleSelection = useCallback((id: string) => {
+    const toggleSelection = (id: string) => {
         setSelectedIds((prev) => {
             const next = new Set(prev);
             if (next.has(id)) {
@@ -179,14 +170,12 @@ function ExcerptsPageContent() {
             }
             return next;
         });
-    }, []);
+    };
 
-    const canMerge = useMemo(() => {
-        return canMergeSegments(selectedIds, excerpts);
-    }, [selectedIds, excerpts]);
+    const canMerge = canMergeSegments(selectedIds, excerpts);
 
     // Handle merge of selected excerpts
-    const handleMerge = useCallback(() => {
+    const handleMerge = () => {
         // Get IDs in order
         const idsInOrder: string[] = [];
         for (const excerpt of excerpts) {
@@ -214,32 +203,29 @@ function ExcerptsPageContent() {
         } else {
             toast.error('Failed to merge excerpts');
         }
-    }, [excerpts, selectedIds, mergeExcerpts, clearScrollTo]);
+    };
 
     // Clear the scroll-after-change state once complete
-    const handleScrollAfterChangeComplete = useCallback(() => {
+    const handleScrollAfterChangeComplete = () => {
         setScrollToAfterChange(null);
-    }, []);
+    };
 
     // Callback for DatasetLoader
-    const onExcerptsLoaded = useCallback(
-        (data: Compilation, fileName?: string) => {
-            // Extract book ID from fileName (e.g., "1234.json" -> "1234")
-            // and set it as collection.id for HuggingFace upload default
-            if (fileName) {
-                const bookId = fileName.replace(/\.json$/, '');
-                data.collection = { ...data.collection, id: bookId, title: data.collection?.title || '' };
-            }
-            init(data, fileName);
-        },
-        [init],
-    );
+    const onExcerptsLoaded = (data: Compilation, fileName?: string) => {
+        // Extract book ID from fileName (e.g., "1234.json" -> "1234")
+        // and set it as collection.id for HuggingFace upload default
+        if (fileName) {
+            const bookId = fileName.replace(/\.json$/, '');
+            data.collection = { ...data.collection, id: bookId, title: data.collection?.title || '' };
+        }
+        init(data, fileName);
+    };
 
     // Session restore hook
     useSessionRestore<Compilation>(STORAGE_KEYS.excerpts, init, 'RestoreExcerptsFromSession');
 
     // Storage actions hook
-    const getExportData = useCallback((): Compilation => {
+    const getExportData = (): Compilation => {
         const state = useExcerptsStore.getState();
         return {
             collection: state.collection,
@@ -257,12 +243,12 @@ function ExcerptsPageContent() {
             }),
             promptForTranslation: state.promptForTranslation,
         };
-    }, []);
+    };
 
-    const handleResetWithTabClear = useCallback(() => {
+    const handleResetWithTabClear = () => {
         reset();
         setActiveTab('excerpts');
-    }, [reset, setActiveTab]);
+    };
 
     const { handleSave, handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadExcerpts', reset: 'ResetExcerpts', save: 'SaveExcerpts' },
@@ -273,7 +259,7 @@ function ExcerptsPageContent() {
     });
 
     // Find all issues: gaps (missing translations) and truncated translations
-    const handleFindGap = useCallback(() => {
+    const handleFindGap = () => {
         const issueIds = findExcerptIssues(allExcerpts);
 
         if (issueIds.length > 0) {
@@ -293,9 +279,9 @@ function ExcerptsPageContent() {
         } else {
             toast.info('No issues found');
         }
-    }, [allExcerpts, router, pathname, searchParams]);
+    };
 
-    const handleApplyFormatting = useCallback(async () => {
+    const handleApplyFormatting = async () => {
         setIsFormattingLoading(true);
         try {
             record('ApplyALALCFormatting', activeTab);
@@ -335,17 +321,9 @@ function ExcerptsPageContent() {
         } finally {
             setIsFormattingLoading(false);
         }
-    }, [
-        activeTab,
-        applyTranslationFormatting,
-        applyHeadingFormatting,
-        applyFootnoteFormatting,
-        excerptsCount,
-        headingsCount,
-        footnotesCount,
-    ]);
+    };
 
-    const handleUploadToHuggingFace = useCallback(async () => {
+    const handleUploadToHuggingFace = async () => {
         const defaultFilename = collectionId || '';
         const filename =
             prompt('Enter filename for compressed upload (without extension, ie: 1234):', defaultFilename) || '';
@@ -378,7 +356,7 @@ function ExcerptsPageContent() {
         } finally {
             setIsUploadingToHf(false);
         }
-    }, [collectionId, huggingfaceToken, huggingfaceExcerptDataset, getExportData]);
+    };
 
     return (
         <DataGate

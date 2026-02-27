@@ -2,7 +2,7 @@
 
 import { getBookContents } from 'ketab-online-sdk';
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import '@/lib/analytics';
 import { toast } from 'sonner';
@@ -58,23 +58,17 @@ function KetabPageContent() {
         });
     }, [init]);
 
-    const handleTabChange = useCallback(
-        (tab: string) => {
-            setActiveTab(tab as 'pages' | 'titles');
-        },
-        [setActiveTab],
-    );
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab as 'pages' | 'titles');
+    };
 
     /**
      * Navigate to a specific page in the Pages tab.
      * This is used when clicking Page links in the Titles tab.
      */
-    const handleNavigateToPage = useCallback(
-        (pageId: number) => {
-            navigateToItem('pages', pageId);
-        },
-        [navigateToItem],
-    );
+    const handleNavigateToPage = (pageId: number) => {
+        navigateToItem('pages', pageId);
+    };
 
     return (
         <DataGate

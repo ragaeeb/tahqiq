@@ -217,19 +217,16 @@ describe('useStorageActions', () => {
         });
     });
 
-    describe('memoization', () => {
-        it('should return stable function references', async () => {
+    describe('return values', () => {
+        it('should return all handler functions', async () => {
             const options = createOptions();
 
-            const { result, rerender } = renderHook(() => useStorageActions(options));
+            const { result } = renderHook(() => useStorageActions(options));
 
-            const { handleSave: save1, handleDownload: download1, handleReset: reset1 } = result.current;
-
-            rerender();
-
-            expect(result.current.handleSave).toBe(save1);
-            expect(result.current.handleDownload).toBe(download1);
-            expect(result.current.handleReset).toBe(reset1);
+            expect(typeof result.current.handleSave).toBe('function');
+            expect(typeof result.current.handleDownload).toBe('function');
+            expect(typeof result.current.handleReset).toBe('function');
+            expect(typeof result.current.handleResetAll).toBe('function');
         });
     });
 });

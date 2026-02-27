@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import EditableHTML from '@/components/editable-html';
 import type { KetabPage } from '@/stores/ketabStore/types';
@@ -20,25 +20,25 @@ function PageRow({ data, onUpdate }: PageRowProps) {
         footnoteRef.current = data.footnote || '';
     }, [data.body, data.footnote]);
 
-    const handleBodyChange = useCallback((evt: { target: { value: string } }) => {
+    const handleBodyChange = (evt: { target: { value: string } }) => {
         bodyRef.current = evt.target.value;
-    }, []);
+    };
 
-    const handleBodyBlur = useCallback(() => {
+    const handleBodyBlur = () => {
         if (bodyRef.current !== data.body) {
             onUpdate(data.id, { body: bodyRef.current });
         }
-    }, [data.body, data.id, onUpdate]);
+    };
 
-    const handleFootnoteChange = useCallback((evt: { target: { value: string } }) => {
+    const handleFootnoteChange = (evt: { target: { value: string } }) => {
         footnoteRef.current = evt.target.value;
-    }, []);
+    };
 
-    const handleFootnoteBlur = useCallback(() => {
+    const handleFootnoteBlur = () => {
         if (footnoteRef.current !== (data.footnote || '')) {
             onUpdate(data.id, { footnote: footnoteRef.current || undefined });
         }
-    }, [data.footnote, data.id, onUpdate]);
+    };
 
     const partName = data.part?.name || '';
 
