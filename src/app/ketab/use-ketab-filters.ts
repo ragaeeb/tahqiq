@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { createMatcher } from '@/lib/search';
 import type { KetabPage, KetabTitle } from '@/stores/ketabStore/types';
@@ -76,14 +76,11 @@ export function useKetabFilters() {
 
     // Read current tab and filter values from URL
     const activeTab = (searchParams.get('tab') as FilterScope) || 'pages';
-    const filters = useMemo(
-        () => ({
-            body: searchParams.get('body') || '',
-            page: searchParams.get('page') || '',
-            title: searchParams.get('title') || '',
-        }),
-        [searchParams],
-    );
+    const filters = {
+        body: searchParams.get('body') || '',
+        page: searchParams.get('page') || '',
+        title: searchParams.get('title') || '',
+    };
 
     // Read scroll target from URL hash (e.g., #123)
     const [scrollToId, setScrollToId] = useState<number | null>(null);
@@ -116,66 +113,57 @@ export function useKetabFilters() {
     const hasData = allPages.length > 0 || allTitles.length > 0;
 
     // Update URL with new tab
-    const setActiveTab = useCallback(
-        (tab: FilterScope) => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('tab', tab);
-            params.delete('body');
-            params.delete('page');
-            params.delete('title');
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+    const setActiveTab = (tab: FilterScope) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', tab);
+        params.delete('body');
+        params.delete('page');
+        params.delete('title');
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Update URL with new filter value
-    const setFilter = useCallback(
-        (field: FilterField, value: string) => {
-            const params = new URLSearchParams(searchParams.toString());
+    const setFilter = (field: FilterField, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
 
-            if (value) {
-                params.set(field, value);
-            } else {
-                params.delete(field);
-            }
+        if (value) {
+            params.set(field, value);
+        } else {
+            params.delete(field);
+        }
 
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     /**
      * Navigate to a specific tab and scroll to a particular item by ID.
      */
-    const navigateToItem = useCallback(
-        (tab: FilterScope, itemId: number) => {
-            setScrollToId(itemId);
+    const navigateToItem = (tab: FilterScope, itemId: number) => {
+        setScrollToId(itemId);
 
-            const params = new URLSearchParams();
-            params.set('tab', tab);
+        const params = new URLSearchParams();
+        params.set('tab', tab);
 
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
 
-            requestAnimationFrame(() => {
-                const currentUrl = new URL(window.location.href);
-                currentUrl.hash = itemId.toString();
-                window.history.replaceState(window.history.state, '', currentUrl.toString());
-            });
-        },
-        [pathname, router],
-    );
+        requestAnimationFrame(() => {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.hash = itemId.toString();
+            window.history.replaceState(window.history.state, '', currentUrl.toString());
+        });
+    };
 
     /**
      * Clear the scrollTo state after scrolling is complete.
      */
-    const clearScrollTo = useCallback(() => {
+    const clearScrollTo = () => {
         if (scrollToId) {
             setScrollToId(null);
         }
-    }, [scrollToId]);
+    };
 
     // Helper to apply filters to the active tab
-    const applyFiltersToTab = useCallback(() => {
+    const applyFiltersToTab = () => {
         if (activeTab === 'pages') {
             const filtered = filterPages(allPages, filters);
             filterPagesByIds(filtered.map((p) => p.id));
@@ -185,7 +173,7 @@ export function useKetabFilters() {
             filterTitlesByIds(filtered.map((t) => t.id));
             filterPagesByIds(undefined);
         }
-    }, [activeTab, allPages, allTitles, filters, filterPagesByIds, filterTitlesByIds]);
+    };
 
     // Apply filters when URL params change OR when data is first loaded
     useEffect(() => {
@@ -212,7 +200,7 @@ export function useKetabFilters() {
         if (hasData) {
             applyFiltersToTab();
         }
-    }, [filtersKey, hasData, filters, applyFiltersToTab, filterPagesByIds, filterTitlesByIds]);
+    });
 
     return { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter };
 }

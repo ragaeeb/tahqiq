@@ -3,7 +3,7 @@
 import type { Page } from 'flappa-doormal';
 import { record } from 'nanolytics';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+
 import { toast } from 'sonner';
 import { PanelContainer } from '@/components/PanelContainer';
 import { AnalysisTab } from '@/components/segmentation/AnalysisTab';
@@ -29,7 +29,7 @@ export function SegmentationPanel({ bookId, onClose, pages, headings }: Segmenta
     const rulesCount = options.rules?.length ?? 0;
     const router = useRouter();
 
-    const processedPages = useMemo(() => applyReplacements(pages, replaceRules), [pages, replaceRules]);
+    const processedPages = applyReplacements(pages, replaceRules);
 
     return (
         <PanelContainer onCloseClicked={onClose} title="Segmentation">

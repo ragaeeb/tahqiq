@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useCallback } from 'react';
+import { forwardRef } from 'react';
 
 type EditableHTMLProps = {
     className?: string;
@@ -25,12 +25,9 @@ type EditableHTMLProps = {
  */
 const EditableHTML = forwardRef<HTMLDivElement, EditableHTMLProps>(
     ({ className, dir, html, onBlur, onChange }, ref) => {
-        const handleInput = useCallback(
-            (e: React.FormEvent<HTMLDivElement>) => {
-                onChange?.({ target: { value: e.currentTarget.innerHTML } });
-            },
-            [onChange],
-        );
+        const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+            onChange?.({ target: { value: e.currentTarget.innerHTML } });
+        };
 
         return (
             // biome-ignore lint/a11y/useSemanticElements: contenteditable div is intentionally interactive for rich text editing

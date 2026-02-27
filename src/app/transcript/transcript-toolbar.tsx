@@ -3,7 +3,7 @@
 import { BotIcon, DownloadIcon, SaveIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { formatSecondsToTimestamp } from 'paragrafs';
-import { useCallback } from 'react';
+
 import { toast } from 'sonner';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { ResetButton } from '@/components/reset-button';
@@ -36,7 +36,7 @@ export default function TranscriptToolbar() {
     const sortedSegments = selectedSegments.toSorted((a, b) => a.start - b.start);
 
     // Storage actions hook
-    const getExportData = useCallback(() => mapTranscriptsToLatestContract(useTranscriptStore.getState()), []);
+    const getExportData = () => mapTranscriptsToLatestContract(useTranscriptStore.getState());
 
     const { handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadTranscript', reset: 'ResetTranscript', save: 'SaveTranscript' },
@@ -45,7 +45,7 @@ export default function TranscriptToolbar() {
         storageKey: STORAGE_KEYS.transcript,
     });
 
-    const handleSave = useCallback(async () => {
+    const handleSave = async () => {
         record('SaveTranscript');
         const success = await useTranscriptStore.getState().save();
         if (success) {
@@ -59,7 +59,7 @@ export default function TranscriptToolbar() {
             const { downloadFile } = await import('@/lib/domUtils');
             downloadFile(name, JSON.stringify(data, null, 2));
         }
-    }, [getExportData]);
+    };
 
     return (
         <div className="flex space-x-2">

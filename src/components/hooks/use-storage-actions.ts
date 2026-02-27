@@ -1,6 +1,6 @@
 import { record } from 'nanolytics';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+
 import { toast } from 'sonner';
 
 import type { StorageKey } from '@/lib/constants';
@@ -38,7 +38,7 @@ export function useStorageActions<T>({
     analytics,
     defaultOutputName,
 }: StorageActionsOptions<T>) {
-    const handleSave = useCallback(async () => {
+    const handleSave = async () => {
         record(analytics.save);
         const data = getExportData();
 
@@ -49,9 +49,9 @@ export function useStorageActions<T>({
             console.error(`Could not save ${storageKey}`, err);
             downloadFile(`${storageKey}-${Date.now()}.json`, JSON.stringify(data, null, 2));
         }
-    }, [analytics.save, getExportData, storageKey]);
+    };
 
-    const handleDownload = useCallback(() => {
+    const handleDownload = () => {
         const name = prompt('Enter output file name', defaultOutputName);
 
         if (name) {
@@ -59,12 +59,12 @@ export function useStorageActions<T>({
             const data = getExportData();
             downloadFile(name.endsWith('.json') ? name : `${name}.json`, JSON.stringify(data, null, 2));
         }
-    }, [analytics.download, getExportData, defaultOutputName]);
+    };
 
     const router = useRouter();
     const pathname = usePathname();
 
-    const handleReset = useCallback(() => {
+    const handleReset = () => {
         record(analytics.reset);
 
         // Immediate URL update to prevent race conditions
@@ -78,9 +78,9 @@ export function useStorageActions<T>({
         setTimeout(() => {
             reset();
         }, 100);
-    }, [analytics.reset, pathname, reset, router]);
+    };
 
-    const handleResetAll = useCallback(async () => {
+    const handleResetAll = async () => {
         record(analytics.reset);
 
         // Immediate URL update
@@ -100,11 +100,7 @@ export function useStorageActions<T>({
         setTimeout(() => {
             reset();
         }, 100);
-    }, [analytics.reset, pathname, reset, router, storageKey]);
+    };
 
-    // Return memoized object to ensure stable references
-    return useMemo(
-        () => ({ handleDownload, handleReset, handleResetAll, handleSave }),
-        [handleSave, handleDownload, handleReset, handleResetAll],
-    );
+    return { handleDownload, handleReset, handleResetAll, handleSave };
 }

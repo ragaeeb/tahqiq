@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { TRANSLATION_MODELS } from '@/lib/constants';
@@ -62,30 +62,27 @@ export function TranslatorSelect({
     // Use controlled value if provided, otherwise use internal state
     const currentValue = value ?? internalValue;
 
-    const handleChange = useCallback(
-        (newValue: string) => {
-            if (!newValue) {
-                return; // Ignore deselection
-            }
+    const handleChange = (newValue: string) => {
+        if (!newValue) {
+            return; // Ignore deselection
+        }
 
-            if (value === undefined) {
-                // Uncontrolled mode - update internal state
-                setInternalValue(newValue);
-            }
+        if (value === undefined) {
+            // Uncontrolled mode - update internal state
+            setInternalValue(newValue);
+        }
 
-            // Update hidden input for form submission
-            if (hiddenInputRef.current) {
-                hiddenInputRef.current.value = newValue;
-            }
+        // Update hidden input for form submission
+        if (hiddenInputRef.current) {
+            hiddenInputRef.current.value = newValue;
+        }
 
-            if (persist) {
-                sessionStorage.setItem(STORAGE_KEY, newValue);
-            }
+        if (persist) {
+            sessionStorage.setItem(STORAGE_KEY, newValue);
+        }
 
-            onChange?.(newValue);
-        },
-        [value, persist, onChange],
-    );
+        onChange?.(newValue);
+    };
 
     return (
         <div className="flex items-center gap-4">

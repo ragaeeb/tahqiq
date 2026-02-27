@@ -4,6 +4,7 @@ import type { NextConfig } from 'next';
 const transpilePackages: string[] = [];
 
 const nextConfig: NextConfig = {
+    reactCompiler: true,
     ...(transpilePackages.length && {
         experimental: { turbopackUseSystemTlsCerts: true },
         transpilePackages,

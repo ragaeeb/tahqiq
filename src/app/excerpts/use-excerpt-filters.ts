@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { createMatcher } from '@/lib/search';
 import type { Excerpt, Heading } from '@/stores/excerptsStore/types';
@@ -62,20 +62,18 @@ export function useExcerptFilters() {
     // Read current tab and filter values from URL
     const activeTab = (searchParams.get('tab') as FilterScope) || 'excerpts';
     const sortMode = (searchParams.get('sort') as SortMode) || 'default';
-    const filters = useMemo(() => {
-        const idsParam = searchParams.get('ids');
-        return {
-            ids: idsParam
-                ? idsParam
-                      .split(',')
-                      .filter(Boolean)
-                      .map((id) => id.trim())
-                : undefined,
-            nass: searchParams.get('nass') || '',
-            page: searchParams.get('page') || '',
-            text: searchParams.get('text') || '',
-        };
-    }, [searchParams]);
+    const idsParam = searchParams.get('ids');
+    const filters = {
+        ids: idsParam
+            ? idsParam
+                  .split(',')
+                  .filter(Boolean)
+                  .map((id) => id.trim())
+            : undefined,
+        nass: searchParams.get('nass') || '',
+        page: searchParams.get('page') || '',
+        text: searchParams.get('text') || '',
+    };
 
     // Read scroll target from URL hash
     // For excerpts: #2333 scrolls to row with `from` matching 2333
@@ -121,72 +119,60 @@ export function useExcerptFilters() {
     const hasData = allExcerpts.length > 0 || allHeadings.length > 0 || allFootnotes.length > 0;
 
     // Update URL with new tab
-    const setActiveTab = useCallback(
-        (tab: FilterScope) => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('tab', tab);
-            // Clear filters when switching tabs
-            params.delete('nass');
-            params.delete('text');
-            params.delete('page');
-            params.delete('ids');
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+    const setActiveTab = (tab: FilterScope) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', tab);
+        // Clear filters when switching tabs
+        params.delete('nass');
+        params.delete('text');
+        params.delete('page');
+        params.delete('ids');
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Update URL with new filter value
-    const setFilter = useCallback(
-        (field: FilterField, value: string) => {
-            const params = new URLSearchParams(searchParams.toString());
+    const setFilter = (field: FilterField, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
 
-            if (value) {
-                params.set(field, value);
-            } else {
-                params.delete(field);
-            }
+        if (value) {
+            params.set(field, value);
+        } else {
+            params.delete(field);
+        }
 
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Update URL with sort mode
-    const setSort = useCallback(
-        (mode: SortMode) => {
-            const params = new URLSearchParams(searchParams.toString());
+    const setSort = (mode: SortMode) => {
+        const params = new URLSearchParams(searchParams.toString());
 
-            if (mode === 'default') {
-                params.delete('sort');
-            } else {
-                params.set('sort', mode);
-            }
+        if (mode === 'default') {
+            params.delete('sort');
+        } else {
+            params.set('sort', mode);
+        }
 
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Clear the scroll state
-    const clearScrollTo = useCallback(() => {
+    const clearScrollTo = () => {
         setScrollToFrom(null);
         setScrollToId(null);
-    }, []);
+    };
 
     // Add specific IDs to the current filter
-    const addIdsToFilter = useCallback(
-        (newIds: string[]) => {
-            const params = new URLSearchParams(searchParams.toString());
-            const currentIds = params.get('ids')?.split(',').filter(Boolean) || [];
-            const updatedIds = Array.from(new Set([...currentIds, ...newIds]));
-            params.set('ids', updatedIds.join(','));
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+    const addIdsToFilter = (newIds: string[]) => {
+        const params = new URLSearchParams(searchParams.toString());
+        const currentIds = params.get('ids')?.split(',').filter(Boolean) || [];
+        const updatedIds = Array.from(new Set([...currentIds, ...newIds]));
+        params.set('ids', updatedIds.join(','));
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Compute filtered IDs for each tab based on active tab and filters
-    const filteredResults = useMemo(() => {
+    const filteredResults = (() => {
         if (!hasData) {
             return { eIds: undefined, fIds: undefined, hIds: undefined };
         }
@@ -200,7 +186,7 @@ export function useExcerptFilters() {
             fIds: activeTab === 'footnotes' ? filterItems(allFootnotes, filters).map((f) => f.id) : undefined,
             hIds: activeTab === 'headings' ? filterItems(allHeadings, filters).map((h) => h.id) : undefined,
         };
-    }, [hasData, filters, activeTab, allExcerpts, allFootnotes, allHeadings]);
+    })();
 
     // Sync filtered IDs to store when filters change or data is loaded
     useEffect(() => {
@@ -219,7 +205,7 @@ export function useExcerptFilters() {
         filterExcerptsByIds(filteredResults.eIds);
         filterHeadingsByIds(filteredResults.hIds);
         filterFootnotesByIds(filteredResults.fIds);
-    }, [filtersKey, hasData, filteredResults, filterExcerptsByIds, filterHeadingsByIds, filterFootnotesByIds]);
+    });
 
     return {
         activeTab,

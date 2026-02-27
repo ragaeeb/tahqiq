@@ -2,7 +2,7 @@
 
 import { DyeLight } from 'dyelight';
 import { BugIcon, DownloadIcon, SaveIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { fixAll, type ValidationErrorType } from 'wobble-bibble';
 
@@ -30,10 +30,7 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
     const headings = useExcerptsStore((state) => state.headings);
     const footnotes = useExcerptsStore((state) => state.footnotes);
 
-    const { untranslated, translatedIds } = useMemo(
-        () => buildCorpusSnapshot(excerpts, headings, footnotes),
-        [excerpts, headings, footnotes],
-    );
+    const { untranslated, translatedIds } = buildCorpusSnapshot(excerpts, headings, footnotes);
 
     // Shared state for pending overwrites
     const [pendingOverwrites, setPendingOverwrites] = useState<PendingOverwrites | null>(null);
@@ -44,10 +41,7 @@ export function AddTranslationTab({ model }: AddTranslationTabProps) {
 
     const { inspectorSegmentId, setInspectorSegmentId, inspectSegment, dyeLightRef } = useInspector();
 
-    const inspectorSegment = useMemo(
-        () => untranslated.find((s) => s.id === inspectorSegmentId),
-        [untranslated, inspectorSegmentId],
-    );
+    const inspectorSegment = untranslated.find((s) => s.id === inspectorSegmentId);
 
     const { submitTranslations } = useTranslationSubmit({
         dyeLightRef,

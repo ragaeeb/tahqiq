@@ -1,5 +1,5 @@
 import { EyeIcon, WrenchIcon } from 'lucide-react';
-import { useMemo } from 'react';
+
 import type { Range, ValidationError, ValidationErrorType } from 'wobble-bibble';
 
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,7 @@ interface ValidationErrorsProps {
 }
 
 export function ValidationErrors({ errors, onFix, onInspect }: ValidationErrorsProps) {
-    const groupedErrors = useMemo(() => {
-        return groupErrorMessages(errors);
-    }, [errors]);
+    const groupedErrors = groupErrorMessages(errors);
 
     if (groupedErrors.length === 0) {
         return null;

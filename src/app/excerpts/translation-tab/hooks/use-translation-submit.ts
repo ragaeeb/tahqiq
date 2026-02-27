@@ -2,7 +2,7 @@
 
 import type { DyeLightRef } from 'dyelight';
 import { record } from 'nanolytics';
-import { useCallback } from 'react';
+
 import { toast } from 'sonner';
 import { parseTranslations, validateTranslationResponse } from 'wobble-bibble';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
@@ -33,108 +33,97 @@ export function useTranslationSubmit({
 }: UseTranslationSubmitProps) {
     const applyBulkTranslations = useExcerptsStore((state) => state.applyBulkTranslations);
 
-    const handleCommit = useCallback(async () => {
+    const handleCommit = async () => {
         const success = await useExcerptsStore.getState().save();
         if (success) {
             record('CommitTranslationsToStorage');
             return true;
         }
         return false;
-    }, []);
+    };
 
-    const doSubmit = useCallback(
-        async (translationMap: Map<string, string>, translatorValue: number, total: number, shouldCommit: boolean) => {
-            const { updated } = applyBulkTranslations(translationMap, translatorValue);
+    const doSubmit = async (
+        translationMap: Map<string, string>,
+        translatorValue: number,
+        total: number,
+        shouldCommit: boolean,
+    ) => {
+        const { updated } = applyBulkTranslations(translationMap, translatorValue);
 
-            record('AddBulkTranslations', `${updated}/${total}`);
+        record('AddBulkTranslations', `${updated}/${total}`);
 
-            if (updated === 0) {
-                toast.error(`No matching excerpts found for ${total} translations`);
+        if (updated === 0) {
+            toast.error(`No matching excerpts found for ${total} translations`);
+            return;
+        }
+
+        let message: string;
+        let isWarning = false;
+
+        if (updated < total) {
+            message = `Updated ${updated} of ${total} translations`;
+            isWarning = true;
+        } else {
+            message = `Updated ${updated} translations`;
+        }
+
+        if (shouldCommit) {
+            const success = await handleCommit();
+            if (success) {
+                message += ' & committed';
+            } else {
+                toast.error('Translations saved but failed to commit to storage');
                 return;
             }
+        }
 
-            let message: string;
-            let isWarning = false;
+        if (isWarning) {
+            toast.warning(message);
+        } else {
+            toast.success(message);
+        }
 
-            if (updated < total) {
-                message = `Updated ${updated} of ${total} translations`;
-                isWarning = true;
-            } else {
-                message = `Updated ${updated} translations`;
-            }
+        setTextValue('');
+        dyeLightRef.current?.focus();
+        setValidationErrors([]);
+        setPendingOverwrites(null); // Clear pending overwrites on success
+    };
 
+    const submitTranslations = async (shouldCommit = false) => {
+        const rawText = textValue.trim();
+
+        if (!rawText) {
             if (shouldCommit) {
                 const success = await handleCommit();
                 if (success) {
-                    message += ' & committed';
+                    toast.success('Committed current state to storage');
                 } else {
-                    toast.error('Translations saved but failed to commit to storage');
-                    return;
+                    toast.error('Failed to commit to storage');
                 }
-            }
-
-            if (isWarning) {
-                toast.warning(message);
             } else {
-                toast.success(message);
+                toast.error('Please enter some translations');
             }
+            return;
+        }
 
-            setTextValue('');
-            dyeLightRef.current?.focus();
-            setValidationErrors([]);
-            setPendingOverwrites(null); // Clear pending overwrites on success
-        },
-        [applyBulkTranslations, handleCommit, setTextValue, dyeLightRef, setValidationErrors, setPendingOverwrites],
-    );
+        const { errors, normalizedResponse } = validateTranslationResponse(untranslated, rawText);
+        setValidationErrors(errors);
 
-    const submitTranslations = useCallback(
-        async (shouldCommit = false) => {
-            const rawText = textValue.trim();
+        const { translationMap, count } = parseTranslations(normalizedResponse);
+        if (count === 0) {
+            toast.error('No valid translations found. Format: ID - Translation text');
+            return;
+        }
 
-            if (!rawText) {
-                if (shouldCommit) {
-                    const success = await handleCommit();
-                    if (success) {
-                        toast.success('Committed current state to storage');
-                    } else {
-                        toast.error('Failed to commit to storage');
-                    }
-                } else {
-                    toast.error('Please enter some translations');
-                }
-                return;
-            }
+        const overwrites = Array.from(translationMap.keys()).filter((id) => translatedIds.has(id));
+        if (overwrites.length > 0 && !pendingOverwrites) {
+            setPendingOverwrites({ duplicates: [], overwrites });
+            return;
+        }
 
-            const { errors, normalizedResponse } = validateTranslationResponse(untranslated, rawText);
-            setValidationErrors(errors);
-
-            const { translationMap, count } = parseTranslations(normalizedResponse);
-            if (count === 0) {
-                toast.error('No valid translations found. Format: ID - Translation text');
-                return;
-            }
-
-            const overwrites = Array.from(translationMap.keys()).filter((id) => translatedIds.has(id));
-            if (overwrites.length > 0 && !pendingOverwrites) {
-                setPendingOverwrites({ duplicates: [], overwrites });
-                return;
-            }
-
-            setPendingOverwrites(null);
-            doSubmit(translationMap, getTranslatorValue(selectedModel), count, shouldCommit);
-        },
-        [
-            textValue,
-            untranslated,
-            selectedModel,
-            translatedIds,
-            pendingOverwrites,
-            doSubmit,
-            handleCommit,
-            setValidationErrors,
-            setPendingOverwrites,
-        ],
-    );
+        setPendingOverwrites(null);
+        doSubmit(translationMap, getTranslatorValue(selectedModel), count, shouldCommit);
+    };
 
     return { handleCommit, submitTranslations };
 }

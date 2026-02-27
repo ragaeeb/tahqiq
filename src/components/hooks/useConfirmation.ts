@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * A React hook that provides confirmation state management for destructive actions.
@@ -35,46 +35,46 @@ export const useConfirmation = (onClick: () => void, resetTimeoutMs?: number) =>
     const [isConfirming, setIsConfirming] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const clearTimeoutRef = useCallback(() => {
+    const clearTimeoutRef = () => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
         }
-    }, []);
+    };
 
-    const reset = useCallback(() => {
+    const reset = () => {
         setIsConfirming(false);
         clearTimeoutRef();
-    }, [clearTimeoutRef]);
+    };
 
-    const handleClick = useCallback(
-        (e: React.MouseEvent<HTMLButtonElement>) => {
-            if (!isConfirming) {
-                e.preventDefault();
-                setIsConfirming(true);
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!isConfirming) {
+            e.preventDefault();
+            setIsConfirming(true);
 
-                // Set timeout to reset confirmation state if resetTimeoutMs is provided and > 0
-                if (resetTimeoutMs && resetTimeoutMs > 0) {
-                    clearTimeoutRef(); // Clear any existing timeout
-                    timeoutRef.current = setTimeout(() => {
-                        setIsConfirming(false);
-                        timeoutRef.current = null;
-                    }, resetTimeoutMs);
-                }
-            } else {
-                onClick();
-                reset();
+            // Set timeout to reset confirmation state if resetTimeoutMs is provided and > 0
+            if (resetTimeoutMs && resetTimeoutMs > 0) {
+                clearTimeoutRef(); // Clear any existing timeout
+                timeoutRef.current = setTimeout(() => {
+                    setIsConfirming(false);
+                    timeoutRef.current = null;
+                }, resetTimeoutMs);
             }
-        },
-        [onClick, isConfirming, resetTimeoutMs, clearTimeoutRef, reset],
-    );
+        } else {
+            onClick();
+            reset();
+        }
+    };
 
     // Cleanup timeout on unmount
     useEffect(() => {
         return () => {
-            clearTimeoutRef();
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
         };
-    }, [clearTimeoutRef]);
+    }, []);
 
     return { handleClick, isConfirming, reset };
 };

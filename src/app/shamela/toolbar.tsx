@@ -1,6 +1,6 @@
 import { DownloadIcon, EraserIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { ResetButton } from '@/components/reset-button';
@@ -20,13 +20,13 @@ export const Toolbar = () => {
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
 
     // Transform shamela pages to flappa-doormal Page format
-    const pages = useMemo(() => allPages.map((p) => ({ content: p.body, id: p.id })), [allPages]);
+    const pages = allPages.map((p) => ({ content: p.body, id: p.id }));
 
     /**
      * Creates a ShamelaBook object from the current store state.
      * Shared between save and download handlers to avoid duplication.
      */
-    const getExportData = useCallback((): ShamelaBook => {
+    const getExportData = (): ShamelaBook => {
         const state = useShamelaStore.getState();
         return {
             id: state.shamelaId!,
@@ -40,7 +40,7 @@ export const Toolbar = () => {
             titles: state.titles.map((t) => ({ content: t.content, id: t.id, page: t.page, parent: t.parent })),
             version: state.version,
         } as any;
-    }, []);
+    };
 
     const { handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadShamela', reset: 'ResetShamela', save: 'SaveShamela' },
@@ -49,7 +49,7 @@ export const Toolbar = () => {
         storageKey: STORAGE_KEYS.shamela,
     });
 
-    const handleSave = useCallback(async () => {
+    const handleSave = async () => {
         record('SaveShamela');
         const success = await useShamelaStore.getState().save();
         if (success) {
@@ -61,19 +61,19 @@ export const Toolbar = () => {
             const { downloadFile } = await import('@/lib/domUtils');
             downloadFile(name, JSON.stringify(data, null, 2));
         }
-    }, [getExportData]);
+    };
 
-    const handleRemovePageMarkers = useCallback(() => {
+    const handleRemovePageMarkers = () => {
         record('RemovePageMarkers');
         removePageMarkers();
         toast.success('Removed Arabic page markers from all pages');
-    }, [removePageMarkers]);
+    };
 
-    const handleRemoveFootnoteReferences = useCallback(() => {
+    const handleRemoveFootnoteReferences = () => {
         record('RemoveFootnoteReferences');
         removeFootnoteReferences();
         toast.success('Removed footnote references and cleared footnotes from all pages');
-    }, [removeFootnoteReferences]);
+    };
 
     return (
         <div className="space-x-2">

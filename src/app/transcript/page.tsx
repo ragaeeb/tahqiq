@@ -1,7 +1,6 @@
 'use client';
 
 import { record } from 'nanolytics';
-import { useMemo } from 'react';
 
 import { DataGate } from '@/components/data-gate';
 import { useSessionRestore } from '@/components/hooks/use-session-restore';
@@ -30,11 +29,9 @@ export default function Transcript() {
     const addTranscripts = useTranscriptStore((state) => state.addTranscripts);
     const segments = useTranscriptStore(selectCurrentSegments);
 
-    const segmentItems = useMemo(() => {
-        return (segments || []).map((segment) => (
-            <SegmentItem key={segment.start.toString() + segment.end.toString()} segment={segment} />
-        ));
-    }, [segments]);
+    const segmentItems = (segments || []).map((segment) => (
+        <SegmentItem key={segment.start.toString() + segment.end.toString()} segment={segment} />
+    ));
 
     // Session restore hook with adapter for legacy data
     useSessionRestore(STORAGE_KEYS.transcript, initTranscripts, 'RestoreTranscriptFromSession', adaptLegacyTranscripts);

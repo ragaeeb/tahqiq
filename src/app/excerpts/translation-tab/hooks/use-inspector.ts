@@ -1,13 +1,13 @@
 'use client';
 
 import type { DyeLightRef } from 'dyelight';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 export function useInspector() {
     const [inspectorSegmentId, setInspectorSegmentId] = useState<string | null>(null);
     const dyeLightRef = useRef<DyeLightRef>(null);
 
-    const inspectSegment = useCallback((e: React.MouseEvent, id: string, range?: { start: number; end: number }) => {
+    const inspectSegment = (e: React.MouseEvent, id: string, range?: { start: number; end: number }) => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -31,7 +31,7 @@ export function useInspector() {
                 }
             }
         }, 50);
-    }, []);
+    };
 
     return { dyeLightRef, inspectorSegmentId, inspectSegment, setInspectorSegmentId };
 }

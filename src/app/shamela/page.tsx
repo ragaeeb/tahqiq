@@ -1,7 +1,7 @@
 'use client';
 
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
@@ -53,38 +53,29 @@ function ShamelaPageContent() {
         });
     }, [init, hydrateSettings]);
 
-    const handleTabChange = useCallback(
-        (tab: string) => {
-            setActiveTab(tab as 'pages' | 'titles');
-        },
-        [setActiveTab],
-    );
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab as 'pages' | 'titles');
+    };
 
     /**
      * Navigate to a specific page in the Pages tab.
      * This is used when clicking Page or Parent links in the Titles tab.
      */
-    const handleNavigateToPage = useCallback(
-        (pageId: number) => {
-            navigateToItem('pages', pageId);
-        },
-        [navigateToItem],
-    );
+    const handleNavigateToPage = (pageId: number) => {
+        navigateToItem('pages', pageId);
+    };
 
-    const onShamelaLoaded = useCallback(
-        (book: ShamelaBook, fileName?: string) => {
-            init(book, fileName || `shamela-${book.id}.json`);
-        },
-        [init],
-    );
+    const onShamelaLoaded = (book: ShamelaBook, fileName?: string) => {
+        init(book, fileName || `shamela-${book.id}.json`);
+    };
 
-    const parseShamelaUrl = useCallback((url: string) => {
+    const parseShamelaUrl = (url: string) => {
         if (/^\d+$/.test(url)) {
             return url;
         }
         const match = url.match(/shamela\.ws\/book\/(\d+)/);
         return match ? match[1] : undefined;
-    }, []);
+    };
 
     return (
         <DataGate

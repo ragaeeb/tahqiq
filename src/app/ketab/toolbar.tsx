@@ -2,7 +2,7 @@ import type { Page } from 'flappa-doormal';
 import { htmlToMarkdown } from 'ketab-online-sdk';
 import { DownloadIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { ResetButton } from '@/components/reset-button';
@@ -18,19 +18,14 @@ export const Toolbar = () => {
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
     const titles = useKetabStore((state) => state.titles);
     const allPages = useKetabStore((state) => state.pages);
-    const pages = useMemo<Page[]>(
-        () => allPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id })),
-        [allPages],
-    );
-    const headings = useMemo(() => {
-        return titles.map((t) => ({ content: t.title, id: t.id }));
-    }, [titles]);
+    const pages: Page[] = allPages.map((p) => ({ content: htmlToMarkdown(p.body), id: p.id }));
+    const headings = titles.map((t) => ({ content: t.title, id: t.id }));
 
     /**
      * Creates a KetabBook object from the current store state.
      * Shared between save and download handlers to avoid duplication.
      */
-    const getExportData = useCallback((): Partial<KetabBook> => {
+    const getExportData = (): Partial<KetabBook> => {
         const state = useKetabStore.getState();
         return {
             id: state.bookId,
@@ -43,7 +38,7 @@ export const Toolbar = () => {
             })),
             title: state.bookTitle,
         } as Partial<KetabBook>;
-    }, []);
+    };
 
     const { handleSave, handleDownload, handleReset, handleResetAll } = useStorageActions({
         analytics: { download: 'DownloadKetab', reset: 'ResetKetab', save: 'SaveKetab' },
@@ -52,11 +47,11 @@ export const Toolbar = () => {
         storageKey: STORAGE_KEYS.ketab,
     });
 
-    const handleRemoveFootnoteReferences = useCallback(() => {
+    const handleRemoveFootnoteReferences = () => {
         record('RemoveKetabFootnoteReferences');
         removeFootnoteReferences();
         toast.success('Removed footnote references and cleared footnotes from all pages');
-    }, [removeFootnoteReferences]);
+    };
 
     return (
         <div className="space-x-2">

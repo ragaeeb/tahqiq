@@ -1,7 +1,7 @@
 'use client';
 
 import { record } from 'nanolytics';
-import { Suspense, useCallback, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import '@/lib/analytics';
@@ -58,30 +58,21 @@ function WebPageContent() {
         });
     }, [init]);
 
-    const handleTabChange = useCallback(
-        (tab: string) => {
-            setActiveTab(tab as 'pages' | 'titles');
-        },
-        [setActiveTab],
-    );
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab as 'pages' | 'titles');
+    };
 
     /**
      * Navigate to a specific page in the Pages tab.
      * This is used when clicking Page links in the Titles tab.
      */
-    const handleNavigateToPage = useCallback(
-        (pageId: number) => {
-            navigateToItem('pages', pageId);
-        },
-        [navigateToItem],
-    );
+    const handleNavigateToPage = (pageId: number) => {
+        navigateToItem('pages', pageId);
+    };
 
-    const onWebLoaded = useCallback(
-        (data: ScrapeResult, _fileName?: string) => {
-            init(data);
-        },
-        [init],
-    );
+    const onWebLoaded = (data: ScrapeResult, _fileName?: string) => {
+        init(data);
+    };
 
     const origin = getOriginFromPattern(urlPattern);
 

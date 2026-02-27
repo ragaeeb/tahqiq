@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type JsonObject = Record<string, Record<number | string, unknown> | unknown[]>;
 
@@ -32,58 +32,55 @@ export default function JsonDropZone({
     const [isDragging, setIsDragging] = useState(false);
     const dropZoneRef = useRef<HTMLDivElement>(null);
 
-    const handleDragEnter = useCallback((e: DragEvent) => {
+    const handleDragEnter = (e: DragEvent) => {
         e.preventDefault();
         setIsDragging(true);
-    }, []);
+    };
 
-    const handleDragLeave = useCallback((e: DragEvent) => {
+    const handleDragLeave = (e: DragEvent) => {
         e.preventDefault();
         // Check if we're leaving the actual drop zone and not entering a child element
         if (dropZoneRef.current && !dropZoneRef.current.contains(e.relatedTarget as Node)) {
             setIsDragging(false);
         }
-    }, []);
+    };
 
-    const handleDragOver = useCallback((e: DragEvent) => {
+    const handleDragOver = (e: DragEvent) => {
         e.preventDefault();
-    }, []);
+    };
 
-    const handleDrop = useCallback(
-        async (e: DragEvent) => {
-            e.preventDefault();
-            setIsDragging(false);
+    const handleDrop = async (e: DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
 
-            const normalizedAllowedExtensions = allowedExtensions.split(',').map((e) => e.trim().toLowerCase());
+        const normalizedAllowedExtensions = allowedExtensions.split(',').map((e) => e.trim().toLowerCase());
 
-            const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
-                normalizedAllowedExtensions.some((ext) => f.name.toLowerCase().endsWith(ext)),
-            );
+        const files = Array.from(e.dataTransfer?.files || []).filter((f) =>
+            normalizedAllowedExtensions.some((ext) => f.name.toLowerCase().endsWith(ext)),
+        );
 
-            if (files.length === 0 || files.length > maxFiles) {
-                return;
-            }
+        if (files.length === 0 || files.length > maxFiles) {
+            return;
+        }
 
-            try {
-                const result: Record<string, File | JsonObject | string> = {};
+        try {
+            const result: Record<string, File | JsonObject | string> = {};
 
-                for (const file of files) {
-                    result[file.name] = file;
+            for (const file of files) {
+                result[file.name] = file;
 
-                    if (file.name.endsWith('.json')) {
-                        result[file.name] = JSON.parse(await file.text());
-                    } else if (file.name.endsWith('.txt')) {
-                        result[file.name] = await file.text();
-                    }
+                if (file.name.endsWith('.json')) {
+                    result[file.name] = JSON.parse(await file.text());
+                } else if (file.name.endsWith('.txt')) {
+                    result[file.name] = await file.text();
                 }
-
-                onFiles(result);
-            } catch (error) {
-                console.error('Error parsing JSON file:', error);
             }
-        },
-        [onFiles, maxFiles, allowedExtensions],
-    );
+
+            onFiles(result);
+        } catch (error) {
+            console.error('Error parsing JSON file:', error);
+        }
+    };
 
     useEffect(() => {
         const dropZoneElement = dropZoneRef.current;
@@ -104,7 +101,7 @@ export default function JsonDropZone({
             dropZoneElement.removeEventListener('dragover', handleDragOver as EventListener);
             dropZoneElement.removeEventListener('drop', handleDrop);
         };
-    }, [handleDragEnter, handleDragLeave, handleDragOver, handleDrop]);
+    });
 
     return (
         <div

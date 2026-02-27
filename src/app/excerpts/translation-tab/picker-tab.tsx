@@ -3,7 +3,7 @@
 import { estimateTokenCount } from 'bitaboom';
 import { ClipboardCopyIcon, RefreshCwIcon, SendIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { formatExcerptsForPrompt, getPrompts } from 'wobble-bibble';
 import { Pill } from '@/components/pill';
@@ -40,19 +40,16 @@ export function PickerTab({ model }: PickerTabProps) {
     const resetSentToLlm = useExcerptsStore((state) => state.resetSentToLlm);
 
     const prompts = getPrompts();
-    const visiblePrompts = useMemo(() => prompts.filter((p) => p.id !== MASTER_PROMPT_ID), [prompts]);
+    const visiblePrompts = prompts.filter((p) => p.id !== MASTER_PROMPT_ID);
 
     // Handle prompt selection
-    const handlePromptChange = useCallback(
-        (val: string) => {
-            const selected = prompts.find((p) => p.id === val);
-            if (selected) {
-                setPrompt(val, selected.content);
-                record('SelectTranslationPrompt', val);
-            }
-        },
-        [prompts, setPrompt],
-    );
+    const handlePromptChange = (val: string) => {
+        const selected = prompts.find((p) => p.id === val);
+        if (selected) {
+            setPrompt(val, selected.content);
+            record('SelectTranslationPrompt', val);
+        }
+    };
 
     // Auto-select first prompt if none selected and prompts available (only on mount)
     const hasAutoSelected = useRef(false);
@@ -65,29 +62,26 @@ export function PickerTab({ model }: PickerTabProps) {
     }, [promptId, visiblePrompts, setPrompt]);
 
     // Combine all selectable items
-    const allItems = useMemo(() => [...excerpts, ...headings, ...footnotes], [excerpts, headings, footnotes]);
+    const allItems = [...excerpts, ...headings, ...footnotes];
 
     // Get untranslated IDs not already sent - computed once
-    const availableIds = useMemo(() => getUntranslatedIds(allItems, sentToLlmIds), [allItems, sentToLlmIds]);
+    const availableIds = getUntranslatedIds(allItems, sentToLlmIds);
 
     // Selected index (from 0 to this index inclusive)
     const [selectedEndIndex, setSelectedEndIndex] = useState<number | null>(null);
 
     // Limit displayed pills for performance
-    const displayedIds = useMemo(() => availableIds.slice(0, MAX_VISIBLE_PILLS), [availableIds]);
+    const displayedIds = availableIds.slice(0, MAX_VISIBLE_PILLS);
     const hasMore = availableIds.length > MAX_VISIBLE_PILLS;
 
     // Build item lookup map once for O(1) access
-    const itemMap = useMemo(() => {
-        const map = new Map<string, (typeof allItems)[0]>();
-        for (const e of allItems) {
-            map.set(e.id, e);
-        }
-        return map;
-    }, [allItems]);
+    const itemMap = new Map<string, (typeof allItems)[0]>();
+    for (const e of allItems) {
+        itemMap.set(e.id, e);
+    }
 
     // Group IDs by token limits
-    const tokenGroups = useMemo((): TokenGroup[] => {
+    const tokenGroups: TokenGroup[] = (() => {
         if (displayedIds.length === 0 || !promptForTranslation) {
             return groupIdsByTokenLimits([], () => undefined, 0);
         }
@@ -99,51 +93,37 @@ export function PickerTab({ model }: PickerTabProps) {
         const promptTokens = estimateTokenCount(promptForTranslation, provider);
 
         return groupIdsByTokenLimits(displayedIds, (id) => itemMap.get(id)?.nass, promptTokens, provider);
-    }, [displayedIds, itemMap, promptForTranslation, model]);
+    })();
 
     // Get selected IDs (from first to selectedEndIndex)
-    const selectedIds = useMemo(() => {
-        if (selectedEndIndex === null) {
-            return [];
-        }
-        return availableIds.slice(0, selectedEndIndex + 1);
-    }, [availableIds, selectedEndIndex]);
+    const selectedIds = selectedEndIndex === null ? [] : availableIds.slice(0, selectedEndIndex + 1);
 
     // Get selected items for formatting using map lookup
-    const selectedItems = useMemo(() => {
-        return selectedIds.map((id) => itemMap.get(id)).filter(Boolean) as typeof allItems;
-    }, [itemMap, selectedIds]);
+    const selectedItems = selectedIds.map((id) => itemMap.get(id)).filter(Boolean) as typeof allItems;
 
     // Format content for clipboard
-    const formattedContent = useMemo(() => {
-        if (selectedItems.length === 0 || !promptForTranslation) {
-            return '';
-        }
-        return formatExcerptsForPrompt(
-            selectedItems.map((s) => ({ id: s.id, text: s.nass })),
-            promptForTranslation,
-        );
-    }, [selectedItems, promptForTranslation]);
+    const formattedContent =
+        selectedItems.length === 0 || !promptForTranslation
+            ? ''
+            : formatExcerptsForPrompt(
+                  selectedItems.map((s) => ({ id: s.id, text: s.nass })),
+                  promptForTranslation,
+              );
 
-    // Estimate token count - also use provider here for accurate count (although less critical for display, good for consistency)
-    const tokenCount = useMemo(() => {
-        return estimateTokenCount(formattedContent, model.provider);
-    }, [formattedContent, model]);
+    // Estimate token count
+    const tokenCount = estimateTokenCount(formattedContent, model.provider);
 
     // Find original index in displayedIds for a given id
-    const getOriginalIndex = useCallback((id: string) => displayedIds.indexOf(id), [displayedIds]);
+    const getOriginalIndex = (id: string) => displayedIds.indexOf(id);
 
-    const handlePillClick = useCallback(
-        (id: string) => {
-            const index = getOriginalIndex(id);
-            if (index !== -1) {
-                setSelectedEndIndex(index);
-            }
-        },
-        [getOriginalIndex],
-    );
+    const handlePillClick = (id: string) => {
+        const index = getOriginalIndex(id);
+        if (index !== -1) {
+            setSelectedEndIndex(index);
+        }
+    };
 
-    const handleCopy = useCallback(async () => {
+    const handleCopy = async () => {
         if (!formattedContent) {
             toast.error('No excerpts selected');
             return;
@@ -158,9 +138,9 @@ export function PickerTab({ model }: PickerTabProps) {
             console.error('Failed to copy:', err);
             toast.error('Failed to copy to clipboard');
         }
-    }, [formattedContent, selectedIds.length, tokenCount]);
+    };
 
-    const handleRemove = useCallback(async () => {
+    const handleRemove = async () => {
         record('MarkAsSentToLlm', `${selectedIds.length} excerpts`);
 
         await navigator.clipboard.writeText(formattedContent);
@@ -169,28 +149,25 @@ export function PickerTab({ model }: PickerTabProps) {
         toast.success(`Copied and Marked ${selectedIds.length} excerpts as sent`);
 
         setSelectedEndIndex(null);
-    }, [selectedIds, markAsSentToLlm, formattedContent]);
+    };
 
-    const handleReset = useCallback(() => {
+    const handleReset = () => {
         record('ResetSentToLlm');
         resetSentToLlm();
         setSelectedEndIndex(null);
         toast.info('Reset sent tracking');
-    }, [resetSentToLlm]);
+    };
 
     // Check if a group has any selected items
-    const isGroupPartiallySelected = useCallback(
-        (group: TokenGroup) => {
-            if (selectedEndIndex === null) {
-                return false;
-            }
-            return group.ids.some((id) => {
-                const idx = getOriginalIndex(id);
-                return idx !== -1 && idx <= selectedEndIndex;
-            });
-        },
-        [selectedEndIndex, getOriginalIndex],
-    );
+    const isGroupPartiallySelected = (group: TokenGroup) => {
+        if (selectedEndIndex === null) {
+            return false;
+        }
+        return group.ids.some((id) => {
+            const idx = getOriginalIndex(id);
+            return idx !== -1 && idx <= selectedEndIndex;
+        });
+    };
 
     return (
         <div className="flex flex-1 flex-col overflow-hidden">

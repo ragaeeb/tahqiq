@@ -2,7 +2,7 @@
 
 import type { Page } from 'flappa-doormal';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createMatcher } from '@/lib/search';
 import { selectAllPages, selectAllTitles } from '@/stores/webStore/selectors';
 import { useWebStore } from '@/stores/webStore/useWebStore';
@@ -55,10 +55,7 @@ export function useWebFilters() {
 
     // Read current tab and filter values from URL
     const activeTab = (searchParams.get('tab') as FilterScope) || 'pages';
-    const filters = useMemo(
-        () => ({ content: searchParams.get('content') || '', id: searchParams.get('id') || '' }),
-        [searchParams],
-    );
+    const filters = { content: searchParams.get('content') || '', id: searchParams.get('id') || '' };
 
     // Read scroll target from URL hash (e.g., #123)
     // We need to use state since window.location.hash isn't available during SSR
@@ -95,73 +92,64 @@ export function useWebFilters() {
     const hasData = allPages.length > 0 || allTitles.length > 0;
 
     // Update URL with new tab
-    const setActiveTab = useCallback(
-        (tab: FilterScope) => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('tab', tab);
-            // Clear filters when switching tabs
-            params.delete('content');
-            params.delete('id');
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+    const setActiveTab = (tab: FilterScope) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', tab);
+        // Clear filters when switching tabs
+        params.delete('content');
+        params.delete('id');
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Update URL with new filter value
-    const setFilter = useCallback(
-        (field: FilterField, value: string) => {
-            const params = new URLSearchParams(searchParams.toString());
+    const setFilter = (field: FilterField, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
 
-            if (value) {
-                params.set(field, value);
-            } else {
-                params.delete(field);
-            }
+        if (value) {
+            params.set(field, value);
+        } else {
+            params.delete(field);
+        }
 
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        },
-        [searchParams, router, pathname],
-    );
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     /**
      * Navigate to a specific tab and scroll to a particular item by ID.
      * Uses URL hash for the scroll target (e.g., ?tab=pages#123)
      */
-    const navigateToItem = useCallback(
-        (tab: FilterScope, itemId: number) => {
-            setScrollToId(itemId);
+    const navigateToItem = (tab: FilterScope, itemId: number) => {
+        setScrollToId(itemId);
 
-            const params = new URLSearchParams();
-            params.set('tab', tab);
+        const params = new URLSearchParams();
+        params.set('tab', tab);
 
-            // Try to use router's callback if available
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        // Try to use router's callback if available
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
 
-            // Queue hash update for next tick to ensure router navigation completes
-            // Consider using router.events if available for more reliable timing
-            requestAnimationFrame(() => {
-                const currentUrl = new URL(window.location.href);
-                currentUrl.hash = itemId.toString();
-                window.history.replaceState(window.history.state, '', currentUrl.toString());
-            });
-        },
-        [pathname, router],
-    );
+        // Queue hash update for next tick to ensure router navigation completes
+        // Consider using router.events if available for more reliable timing
+        requestAnimationFrame(() => {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.hash = itemId.toString();
+            window.history.replaceState(window.history.state, '', currentUrl.toString());
+        });
+    };
 
     /**
      * Clear the scrollTo state after scrolling is complete.
      * The hash remains in the URL for shareability.
      */
-    const clearScrollTo = useCallback(() => {
+    const clearScrollTo = () => {
         if (scrollToId) {
             setScrollToId(null);
             // Note: We intentionally keep the hash in the URL for shareability
             // Users can copy the URL and share it, and it will scroll to the same item
         }
-    }, [scrollToId]);
+    };
 
     // Helper to apply filters to the active tab
-    const applyFiltersToTab = useCallback(() => {
+    const applyFiltersToTab = () => {
         if (activeTab === 'pages') {
             const filtered = filterContents(allPages, filters);
             filterPagesByIds(filtered.map((p) => p.id));
@@ -171,7 +159,7 @@ export function useWebFilters() {
             filterTitlesByIds(filtered.map((t) => t.id));
             filterPagesByIds([]);
         }
-    }, [activeTab, allPages, allTitles, filters, filterPagesByIds, filterTitlesByIds]);
+    };
 
     // Apply filters when URL params change OR when data is first loaded
     useEffect(() => {
@@ -198,7 +186,7 @@ export function useWebFilters() {
         if (hasData) {
             applyFiltersToTab();
         }
-    }, [filtersKey, hasData, filters, applyFiltersToTab, filterPagesByIds, filterTitlesByIds]);
+    });
 
     return { activeTab, clearScrollTo, filters, navigateToItem, scrollToId, setActiveTab, setFilter };
 }

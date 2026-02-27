@@ -1,7 +1,7 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 type VirtualizedListProps<T> = {
     data: T[];
@@ -58,39 +58,29 @@ function VirtualizerContent<T>({
     }, [data, estimateSize, findScrollIndex, getKey]);
 
     // Increased default estimate to accommodate larger content
-    const defaultEstimateSize = useCallback(() => 150, []);
+    const defaultEstimateSize = () => 150;
 
-    const estimateSizeFn = useCallback(
-        (index: number) => estimateSizeRef.current?.(index) ?? defaultEstimateSize(),
-        [defaultEstimateSize],
-    );
-    const getItemKey = useCallback((index: number) => {
+    const estimateSizeFn = (index: number) => estimateSizeRef.current?.(index) ?? defaultEstimateSize();
+    const getItemKey = (index: number) => {
         const item = dataRef.current[index];
         return item ? getKeyRef.current(item, index) : `loading-${index}`;
-    }, []);
-    const getScrollElement = useCallback(() => parentRef.current, [parentRef]);
-    const measureElement = useMemo(() => {
-        if (typeof window === 'undefined' || navigator.userAgent.indexOf('Firefox') !== -1) {
-            return undefined;
-        }
-        return (element: Element) => element.getBoundingClientRect().height;
-    }, []);
+    };
+    const getScrollElement = () => parentRef.current;
+    const measureElement =
+        typeof window === 'undefined' || navigator.userAgent.indexOf('Firefox') !== -1
+            ? undefined
+            : (element: Element) => element.getBoundingClientRect().height;
 
-    const virtualizer = useVirtualizer(
-        useMemo(
-            () => ({
-                count: data.length,
-                estimateSize: estimateSizeFn,
-                getItemKey,
-                getScrollElement,
-                // Initialize with the saved scroll offset to prevent flash
-                initialOffset: initialScrollTop,
-                measureElement,
-                overscan: 5,
-            }),
-            [data.length, estimateSizeFn, getItemKey, getScrollElement, initialScrollTop, measureElement],
-        ),
-    );
+    const virtualizer = useVirtualizer({
+        count: data.length,
+        estimateSize: estimateSizeFn,
+        getItemKey,
+        getScrollElement,
+        // Initialize with the saved scroll offset to prevent flash
+        initialOffset: initialScrollTop,
+        measureElement,
+        overscan: 5,
+    });
 
     // Restore scroll position synchronously before paint
     useLayoutEffect(() => {
@@ -139,12 +129,12 @@ function VirtualizerContent<T>({
         }
     }, [scrollToId, data, virtualizer, onScrollToComplete, parentRef]);
 
-    const headerRef = useCallback((node: HTMLDivElement | null) => {
+    const headerRef = (node: HTMLDivElement | null) => {
         if (node) {
             const nextHeight = node.getBoundingClientRect().height;
             setHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
         }
-    }, []);
+    };
 
     const virtualItems = virtualizer.getVirtualItems();
 
@@ -208,17 +198,14 @@ function VirtualizedList<T>({
         getKeyRef.current = getKey;
     }, [getKey]);
 
-    const getKeyStable = useCallback((item: T, index: number) => getKeyRef.current(item, index), []);
+    const getKeyStable = (item: T, index: number) => getKeyRef.current(item, index);
 
     // Create a stable key based on structural changes - only remount when first/last items change
     // NOT on every length change. This prevents scroll jumps on deletions in the middle.
     // The virtualizer can handle measurement cache updates for middle deletions.
-    const dataVersion = useMemo(() => {
-        const first = data[0] ? getKeyStable(data[0], 0) : '';
-        const last = data.at(-1) ? getKeyStable(data.at(-1)!, data.length - 1) : '';
-        const version = `${first}-${last}`;
-        return version;
-    }, [data, getKeyStable]);
+    const first = data[0] ? getKeyStable(data[0], 0) : '';
+    const last = data.at(-1) ? getKeyStable(data.at(-1)!, data.length - 1) : '';
+    const dataVersion = `${first}-${last}`;
 
     // NOTE: We previously had key-based scroll restoration here, but it conflicts with
     // the initialScrollTop mechanism which already correctly preserves scroll position.
@@ -232,11 +219,11 @@ function VirtualizedList<T>({
     }, [dataVersion]);
 
     // Save scroll position continuously
-    const handleScroll = useCallback(() => {
+    const handleScroll = () => {
         if (parentRef.current) {
             scrollTopRef.current = parentRef.current.scrollTop;
         }
-    }, []);
+    };
 
     // Determine which scrollToId to use - only user-provided now
 

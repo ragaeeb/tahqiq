@@ -65,17 +65,14 @@ export function DialogTrigger({ defaultOpen, onOpenChange, open, renderContent, 
 
     // Use controlled or uncontrolled state
     const dialogOpen = open ?? isOpen;
-    const setDialogOpen = React.useCallback(
-        (newOpen: boolean) => {
-            if (open === undefined) {
-                setIsOpen(newOpen);
-            }
-            onOpenChange?.(newOpen);
-        },
-        [open, onOpenChange],
-    );
+    const setDialogOpen = (newOpen: boolean) => {
+        if (open === undefined) {
+            setIsOpen(newOpen);
+        }
+        onOpenChange?.(newOpen);
+    };
 
-    const closeHandler = React.useCallback(() => setDialogOpen(false), [setDialogOpen]);
+    const closeHandler = () => setDialogOpen(false);
 
     return (
         <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
@@ -105,17 +102,14 @@ export function DialogTriggerButton({
 
     // Use controlled or uncontrolled state
     const dialogOpen = open ?? isOpen;
-    const setDialogOpen = React.useCallback(
-        (newOpen: boolean) => {
-            if (open === undefined) {
-                setIsOpen(newOpen);
-            }
-            onOpenChange?.(newOpen);
-        },
-        [open, onOpenChange],
-    );
+    const setDialogOpen = (newOpen: boolean) => {
+        if (open === undefined) {
+            setIsOpen(newOpen);
+        }
+        onOpenChange?.(newOpen);
+    };
 
-    const closeHandler = React.useCallback(() => setDialogOpen(false), [setDialogOpen]);
+    const closeHandler = () => setDialogOpen(false);
 
     return (
         <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>

@@ -1,6 +1,6 @@
 import { getSegmentDebugReason, type Page } from 'flappa-doormal';
 import { ChevronDown, ChevronUp, Eye, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import VirtualizedList from '@/app/excerpts/virtualized-list';
 import SubmittableInput from '@/components/submittable-input';
@@ -102,19 +102,15 @@ export const PreviewTab = ({ pages }: PreviewTabProps) => {
         });
     };
 
-    const segments = useMemo(() => {
-        const result = mapPagesToExcerpts(pages, [], { ...(options as any), debug });
+    const segmentsResult = mapPagesToExcerpts(pages, [], { ...(options as any), debug });
 
-        if (!result.report.ok) {
-            toast.warning(`${result.report.issues.length} issues found: ${result.report.summary}`);
-        }
+    if (!segmentsResult.report.ok) {
+        toast.warning(`${segmentsResult.report.issues.length} issues found: ${segmentsResult.report.summary}`);
+    }
 
-        return result.excerpts;
-    }, [pages, options, debug]);
+    const segments = segmentsResult.excerpts;
 
-    const { filteredSegments, filterOptions } = useMemo(() => {
-        return buildSegmentFilterOptions(segments, metaKey, filterKey);
-    }, [segments, metaKey, filterKey]);
+    const { filteredSegments, filterOptions } = buildSegmentFilterOptions(segments, metaKey, filterKey);
 
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-4 py-3">
