@@ -127,7 +127,7 @@ export const ReplacementsTab = () => {
                 {replacements.map((replacement, index) => (
                     <ReplacementRow
                         index={index}
-                        key={`${index}-${replacement.regex}`}
+                        key={`${index.toString()}-${replacement.regex}`}
                         onChange={handleChange}
                         onDelete={handleDelete}
                         replacement={replacement}

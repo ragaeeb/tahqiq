@@ -2,6 +2,10 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { decompressJson } from '@/lib/compression';
 import { createJsonStream, downloadFromHuggingFace } from '@/lib/network';
 
+const isShadowStaticExport = process.env.TAHQIQ_STATIC_EXPORT === '1';
+
+export const dynamic = 'force-static';
+
 /**
  * Generic API route to download files from HuggingFace datasets.
  *
@@ -16,6 +20,10 @@ import { createJsonStream, downloadFromHuggingFace } from '@/lib/network';
  * Handles .br (Brotli) decompression automatically.
  */
 export async function GET(req: NextRequest) {
+    if (isShadowStaticExport) {
+        return NextResponse.json({ error: 'HuggingFace API disabled in static export shadow build.' }, { status: 501 });
+    }
+
     const { searchParams } = new URL(req.url);
     const dataset = searchParams.get('dataset');
     const file = searchParams.get('file');

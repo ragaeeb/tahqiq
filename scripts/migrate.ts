@@ -181,38 +181,50 @@ export const migrateGzipped = async (id: string) => {
 };
 
 export const migrateLegacyCompilation = async (id: string) => {
-    const e: LegacyCompilation = await Bun.file(`${id}.json`).json();
+    const c: LegacyCompilation = await Bun.file(`${id}.json`).json();
+    const arabicConverter = new Intl.NumberFormat('ar-SA');
+    const fallbackLastUpdatedAt = c.lastUpdatedAt ? mapUnixTimestampToSeconds(c.lastUpdatedAt) : nowInSeconds();
 
-    const headings: Heading[] = (e.headings || []).map((h) => ({
+    const headings: Heading[] = (c.headings || []).map((h) => ({
         from: h.from,
         id: h.id,
-        lastUpdatedAt: mapUnixTimestampToSeconds(h.lastUpdatedAt),
+        lastUpdatedAt: h.lastUpdatedAt ? mapUnixTimestampToSeconds(h.lastUpdatedAt) : fallbackLastUpdatedAt,
         nass: h.nass,
         text: h.text,
         translator: h.translator,
     }));
 
-    const excerpts: Excerpt[] = e.excerpts.map((e) => ({
-        from: e.from,
-        id: e.id,
-        lastUpdatedAt: mapUnixTimestampToSeconds(e.lastUpdatedAt),
-        ...(e.type === 1 && { meta: { type: Markers.Book } }),
-        ...(e.type === 2 && { meta: { type: Markers.Chapter } }),
-        nass: e.arabic,
-        text: e.translation,
-        ...(e.to && { to: e.to }),
-        translator: e.translator,
-    }));
+    const excerpts: Excerpt[] = c.excerpts.map((e) => {
+        const meta = {
+            ...(e.index && { num: arabicConverter.format(e.index) }),
+            ...(e.type === 1 && { type: Markers.Book }),
+            ...(e.type === 2 && { type: Markers.Chapter }),
+        };
+
+        return {
+            from: e.from,
+            id: e.id,
+            lastUpdatedAt: e.lastUpdatedAt ? mapUnixTimestampToSeconds(e.lastUpdatedAt) : fallbackLastUpdatedAt,
+            ...(Object.keys(meta).length > 0 && { meta }),
+            nass: e.arabic,
+            text: e.translation,
+            ...(e.to && { to: e.to }),
+            translator: e.translator,
+        } as Excerpt;
+    });
 
     const compilation = {
-        collection: e.collection,
+        collection: c.collection,
         contractVersion: LatestContractVersion.Excerpts,
-        createdAt: mapUnixTimestampToSeconds(e.createdAt),
+        createdAt: mapUnixTimestampToSeconds(c.createdAt),
         excerpts,
-        footnotes: [],
+        footnotes: (c.footnotes || []).map((e) => ({
+            ...e,
+            lastUpdatedAt: mapUnixTimestampToSeconds(e.lastUpdatedAt),
+        })),
         headings,
         lastUpdatedAt: nowInSeconds(),
-        options: e.options as any,
+        options: c.options as any,
         postProcessingApps: [{ id: packageJson.name, timestamp: nowInSeconds(), version: packageJson.version }],
     } satisfies Compilation;
 
@@ -273,11 +285,11 @@ export const upload = async (id: string) => {
     });
 };
 
-const COLLECTION = '1119';
+const collection = Bun.argv[2] ?? '11';
 
-//migrateGzipped(COLLECTION);
-//migrateAtharnet(COLLECTION);
-//migrateWordpress(COLLECTION);
-//migrate(COLLECTION, 'https://al-albany.com/audios/content/{{page}}/1');
-upload(COLLECTION);
-//migrateLegacyCompilation(COLLECTION);
+//migrateGzipped(collection);
+//migrateAtharnet(collection);
+//migrateWordpress(collection);
+//migrate(collection, 'https://al-albany.com/audios/content/{{page}}/1');
+//upload(collection);
+migrateLegacyCompilation(collection);

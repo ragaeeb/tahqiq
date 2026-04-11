@@ -164,6 +164,7 @@ export type LegacyMatnParseOptions = {
 export type LegacyExcerpt = Pick<Excerpt, 'from' | 'lastUpdatedAt' | 'to' | 'translator' | 'id'> & {
     type: number;
     translation: string;
+    index?: number;
     arabic: string;
 };
 

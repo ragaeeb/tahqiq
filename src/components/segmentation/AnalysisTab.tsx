@@ -48,7 +48,7 @@ const ExamplesDialogContent = ({ pattern }: { pattern: CommonLineStartPattern })
                     </thead>
                     <tbody>
                         {pattern.examples.map((ex, idx) => (
-                            <tr className="border-b" key={`${ex.pageId}-${idx}`}>
+                            <tr className="border-b" key={`${ex.pageId}-${idx.toString()}`}>
                                 <td className="px-2 py-2 text-left text-muted-foreground text-xs tabular-nums">
                                     {ex.pageId}
                                 </td>

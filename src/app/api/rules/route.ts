@@ -3,6 +3,9 @@ import type { Rule } from 'trie-rules';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
+const isShadowStaticExport = process.env.TAHQIQ_STATIC_EXPORT === '1';
+
+export const dynamic = 'force-static';
 
 /**
  * Fetches data from a URL with retry logic
@@ -38,6 +41,10 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
  * @returns A JSON response containing the rules array or an error message.
  */
 export async function GET() {
+    if (isShadowStaticExport) {
+        return NextResponse.json({ rules: [] satisfies Rule[] });
+    }
+
     try {
         const response = await fetchWithRetry(process.env.RULES_ENDPOINT!);
         const rawRules = (await response.json()) as Rule[];

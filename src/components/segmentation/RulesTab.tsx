@@ -55,7 +55,7 @@ const TokenMappingsSection = () => {
             ) : (
                 <div className="flex flex-col gap-2">
                     {tokenMappings.map((m, idx) => (
-                        <div className="grid grid-cols-2 gap-2" key={`${m.token}:${m.name}:${idx}`}>
+                        <div className="grid grid-cols-2 gap-2" key={`${m.token}:${m.name}:${idx.toString()}`}>
                             <Input
                                 className="h-8 font-mono text-xs"
                                 defaultValue={m.token}
@@ -332,7 +332,7 @@ export const RulesTab = () => {
                     <RuleRow
                         index={index}
                         // force remount for uncontrolled inputs when JSON tab overwrites options
-                        key={`${index}-${JSON.stringify(rule)}`}
+                        key={`${index.toString()}-${JSON.stringify(rule)}`}
                         onDelete={deleteRule}
                         onPatch={patchRule}
                         onSetPatternKey={setPatternKey}

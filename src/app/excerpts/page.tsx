@@ -43,7 +43,7 @@ import {
     selectFootnoteCount,
     selectHeadingCount,
 } from '@/stores/excerptsStore/selectors';
-import type { Compilation, Excerpt } from '@/stores/excerptsStore/types';
+import type { Compilation, Excerpt, Heading } from '@/stores/excerptsStore/types';
 import { useExcerptsStore } from '@/stores/excerptsStore/useExcerptsStore';
 import { useSettingsStore } from '@/stores/settingsStore/useSettingsStore';
 import ExcerptRow from './excerpt-row';
@@ -227,13 +227,25 @@ function ExcerptsPageContent() {
     // Storage actions hook
     const getExportData = (): Compilation => {
         const state = useExcerptsStore.getState();
+        const headingIds = new Set<string>();
+        const headings: Heading[] = [];
+
+        state.headings.forEach((h) => {
+            if (headingIds.has(h.id)) {
+                console.warn(`Omitting duplicate heading ${h.id}`);
+            } else {
+                headings.push(h);
+                headingIds.add(h.id);
+            }
+        });
+
         return {
             collection: state.collection,
             contractVersion: state.contractVersion,
             createdAt: state.createdAt,
             excerpts: state.excerpts,
             footnotes: state.footnotes,
-            headings: state.headings,
+            headings,
             lastUpdatedAt: nowInSeconds(),
             options: state.options,
             postProcessingApps: state.postProcessingApps.concat({

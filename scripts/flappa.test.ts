@@ -2,7 +2,7 @@ import { expect, it } from 'bun:test';
 import { segmentPages } from 'flappa-doormal';
 import type { Compilation } from '@/stores/excerptsStore/types';
 
-it.skip('should migrate', async () => {
+it.only('should migrate', async () => {
     const data: Compilation = await Bun.file('excerpts.json').json();
     const pages = data.excerpts.map((e, i) => ({ content: e.nass, id: i }));
 
