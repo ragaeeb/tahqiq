@@ -1,3 +1,18 @@
+# [1.53.0](https://github.com/ragaeeb/tahqiq/compare/v1.52.14...v1.53.0) (2026-05-12)
+
+
+### Bug Fixes
+
+* **lint:** Fix linting errors ([7344213](https://github.com/ragaeeb/tahqiq/commit/734421330d948c11e2d352cf055bbab588c52d4e))
+
+
+### Features
+
+* **build:** Fix test ([4058fdb](https://github.com/ragaeeb/tahqiq/commit/4058fdbfd31b30f5e6e7ca420b12e4d584039fb9))
+* **build:** Fix tests ([ae0af34](https://github.com/ragaeeb/tahqiq/commit/ae0af34f5cdeb1a87d42f02278c40bfdb7c7de98))
+* **clean:** Remove rupture baby features ([88a061c](https://github.com/ragaeeb/tahqiq/commit/88a061ccf40ee6dd101fb892fdd228a3a8d2dfb3))
+* **ts:** Fix build ([b6d4c0d](https://github.com/ragaeeb/tahqiq/commit/b6d4c0d3fe198c6a47f35c264edb6a4aa86777bf))
+
 ## [1.52.14](https://github.com/ragaeeb/tahqiq/compare/v1.52.13...v1.52.14) (2026-02-27)
 
 
