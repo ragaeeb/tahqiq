@@ -70,7 +70,7 @@ export const detectTokenPatterns = (text: string): DetectedPattern[] => {
 
     // Process tokens in priority order
     for (const tokenName of TOKEN_PRIORITY) {
-        const pattern = TOKEN_PATTERNS[tokenName];
+        const pattern = (TOKEN_PATTERNS as Record<string, string>)[tokenName];
         if (!pattern) {
             continue;
         }

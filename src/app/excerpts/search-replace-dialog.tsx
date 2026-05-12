@@ -52,7 +52,7 @@ function buildSearchRegex(pattern: string): RegExp | null {
     if (tokenRegex.test(pattern)) {
         tokenRegex.lastIndex = 0;
         const expanded = pattern.replace(tokenRegex, (_match, tokenName: string) => {
-            return TOKEN_PATTERNS[tokenName] || _match;
+            return (TOKEN_PATTERNS as Record<string, string>)[tokenName] || _match;
         });
         try {
             return new RegExp(expanded, 'gu');
