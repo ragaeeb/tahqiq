@@ -4,7 +4,16 @@ import { LatestContractVersion, Markers } from '@/lib/constants';
 const segmentPagesMock = mock(() => []);
 const validateSegmentsMock = mock(() => ({ issues: [] }));
 
-mock.module('flappa-doormal', () => ({ segmentPages: segmentPagesMock, validateSegments: validateSegmentsMock }));
+// Import the real module first so we can spread it in the mock factory,
+// preserving all other exports (containsTokens, TOKEN_PATTERNS, etc.)
+// for test files that run in the same worker.
+const flappaDoorMal = await import('flappa-doormal');
+
+mock.module('flappa-doormal', () => ({
+    ...flappaDoorMal,
+    segmentPages: segmentPagesMock,
+    validateSegments: validateSegmentsMock,
+}));
 
 type DebugMeta = import('./segmentation').DebugMeta;
 
