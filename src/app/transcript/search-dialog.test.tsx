@@ -14,6 +14,20 @@ mock.module('@/components/ui/dialog', () => ({
     DialogTitle: ({ children }: any) => <h4>{children}</h4>,
 }));
 
+mock.module('@/components/submittable-input', () => ({
+    default: ({ name, onSubmit }: any) => (
+        <input
+            data-testid={`input-${name}`}
+            name={name}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    onSubmit((e.target as HTMLInputElement).value);
+                }
+            }}
+        />
+    ),
+}));
+
 import { SearchDialog } from './search-dialog';
 
 let setSelectedPartSpy: jest.Mock;
@@ -51,14 +65,11 @@ describe('SearchDialog', () => {
             render(<SearchDialog />);
         });
 
-        const queryField = screen.getByRole('textbox');
+        const queryField = screen.getByTestId('input-query');
 
         await act(async () => {
             fireEvent.change(queryField, { target: { value: 'match' } });
-        });
-
-        await act(async () => {
-            fireEvent.submit(queryField.closest('form')!);
+            fireEvent.keyDown(queryField, { key: 'Enter' });
         });
 
         expect(await screen.findByText('match me')).toBeTruthy();
