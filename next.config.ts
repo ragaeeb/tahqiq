@@ -9,9 +9,9 @@ const nextConfig: NextConfig = {
     reactCompiler: true,
     ...(isShadowStaticExport && { images: { unoptimized: true }, output: 'export' as const, trailingSlash: true }),
     ...(transpilePackages.length && {
-        experimental: { turbopackUseSystemTlsCerts: true },
         transpilePackages,
         turbopack: { root: path.resolve(process.cwd(), '..') },
+        turbopackUseSystemTlsCerts: true,
     }),
 };
 

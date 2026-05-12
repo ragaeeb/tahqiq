@@ -43,6 +43,7 @@ export function DatasetLoader<T>({
 
     const fetchDataset = async (id: string, toastId: string | number) => {
         const file = `${id}.json.br`;
+        console.log('dataset', dataset, 'file', file);
         const response = await fetch(
             `/api/huggingface?dataset=${encodeURIComponent(dataset)}&file=${encodeURIComponent(file)}`,
             { headers: { Authorization: `Bearer ${huggingfaceToken}` } },

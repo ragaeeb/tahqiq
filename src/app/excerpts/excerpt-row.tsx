@@ -1,19 +1,17 @@
 'use client';
 
-import { ArrowDownIcon, ChevronDownIcon, ChevronUpIcon, EyeIcon, PencilIcon, Trash2Icon, XIcon } from 'lucide-react';
+import { ArrowDownIcon, ChevronDownIcon, ChevronUpIcon, EyeIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ConfirmButton } from '@/components/confirm-button';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DialogTriggerButton } from '@/components/ui/dialog-trigger';
 import { Textarea } from '@/components/ui/textarea';
 import { createUpdate } from '@/lib/common';
 import { Markers } from '@/lib/constants';
 import { autoResizeTextarea } from '@/lib/domUtils';
 import type { Excerpt } from '@/stores/excerptsStore/types';
-import { EditExcerptDialogContent } from './edit-excerpt-dialog';
 
 type ExcerptRowProps = {
     data: Excerpt;
@@ -212,15 +210,6 @@ function ExcerptRow({
                 )}
                 <td className="w-28 px-1 py-1 text-center align-top">
                     <div className="flex items-center justify-center gap-0">
-                        <DialogTriggerButton
-                            aria-label={`Edit excerpt ${data.id}`}
-                            className="h-7 w-7 p-0"
-                            onClick={() => record('EditExcerptOpen', data.id)}
-                            renderContent={() => <EditExcerptDialogContent excerpt={data} onUpdate={onUpdate} />}
-                            variant="ghost"
-                        >
-                            <PencilIcon className="h-4 w-4 text-blue-500" />
-                        </DialogTriggerButton>
                         <ConfirmButton
                             aria-label={`Delete excerpt ${data.id}`}
                             className="h-7 w-7 p-0"

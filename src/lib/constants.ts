@@ -1,5 +1,3 @@
-import type { LLMProvider } from 'bitaboom';
-
 export const DEFAULT_HINTS = [
     'احسن الله اليكم',
     'جزاك الله',
@@ -9,22 +7,6 @@ export const DEFAULT_HINTS = [
     'اما بعد',
     'جزاكم الله خيرا',
 ];
-
-/**
- * Translation model options for the toggle group (auto-sorted by numeric value)
- * Colors include: base bg, selected bg, and opacity fade when unselected
- */
-// Define the type for a single model
-export type TranslationModel = { label: string; value: string; color: string; provider: LLMProvider };
-
-export const TRANSLATION_MODELS = [
-    { color: 'emerald', label: 'GPT 5o', provider: 'openai', value: '879' },
-    { color: 'blue', label: 'Gemini 3.0 Pro', provider: 'gemini', value: '890' },
-    { color: 'purple', label: 'OpenAI GPT 5.2 Thinking', provider: 'openai', value: '893' },
-    { color: 'orange', label: 'Grok 4 Expert', provider: 'grok', value: '895' },
-].sort((a, b) => Number(a.value) - Number(b.value)) as readonly TranslationModel[];
-
-export const MASTER_PROMPT_ID = 'master_prompt';
 
 export const LatestContractVersion = {
     Ajza: 'v0.1',

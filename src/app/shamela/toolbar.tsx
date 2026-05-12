@@ -1,6 +1,7 @@
 import { DownloadIcon, EraserIcon, FootprintsIcon, SaveIcon, SplitIcon } from 'lucide-react';
 import { record } from 'nanolytics';
 import { useState } from 'react';
+import { convertContentToMarkdown } from 'shamela';
 import { toast } from 'sonner';
 import { useStorageActions } from '@/components/hooks/use-storage-actions';
 import { ResetButton } from '@/components/reset-button';
@@ -20,7 +21,7 @@ export const Toolbar = () => {
     const [isSegmentationPanelOpen, setIsSegmentationPanelOpen] = useState(false);
 
     // Transform shamela pages to flappa-doormal Page format
-    const pages = allPages.map((p) => ({ content: p.body, id: p.id }));
+    const pages = allPages.map((p) => ({ content: convertContentToMarkdown(p.body), id: p.id }));
 
     /**
      * Creates a ShamelaBook object from the current store state.

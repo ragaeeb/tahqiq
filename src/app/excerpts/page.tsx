@@ -1,17 +1,7 @@
 'use client';
 
-import {
-    DownloadIcon,
-    LanguagesIcon,
-    Merge,
-    PackageIcon,
-    SaveIcon,
-    SearchIcon,
-    SettingsIcon,
-    TypeIcon,
-} from 'lucide-react';
+import { DownloadIcon, Merge, PackageIcon, SaveIcon, SettingsIcon, TypeIcon } from 'lucide-react';
 import { record } from 'nanolytics';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Rule } from 'trie-rules';
@@ -33,7 +23,7 @@ import { compressOnClient } from '@/lib/compression.client';
 import { STORAGE_KEYS } from '@/lib/constants';
 import { getNeighbors } from '@/lib/grouping';
 import { uploadToHuggingFace } from '@/lib/network';
-import { canMergeSegments, findExcerptIssues } from '@/lib/segmentation';
+import { canMergeSegments } from '@/lib/segmentation';
 import { nowInSeconds } from '@/lib/time';
 import {
     selectAllExcerpts,
@@ -51,7 +41,6 @@ import FootnoteRow from './footnote-row';
 import HeadingRow from './heading-row';
 import { SegmentationOptionsContent } from './options-dialog';
 import ExcerptsTableHeader from './table-header';
-import { TranslationDialogContent } from './translation-dialog';
 import { useExcerptFilters } from './use-excerpt-filters';
 import VirtualizedList from './virtualized-list';
 
@@ -59,9 +48,6 @@ import VirtualizedList from './virtualized-list';
  * Inner component that uses useSearchParams (requires Suspense boundary)
  */
 function ExcerptsPageContent() {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
     const init = useExcerptsStore((state) => state.init);
     const reset = useExcerptsStore((state) => state.reset);
     const excerpts = useExcerptsStore(selectAllExcerpts);
@@ -270,29 +256,6 @@ function ExcerptsPageContent() {
         storageKey: STORAGE_KEYS.excerpts,
     });
 
-    // Find all issues: gaps (missing translations) and truncated translations
-    const handleFindGap = () => {
-        const issueIds = findExcerptIssues(allExcerpts);
-
-        if (issueIds.length > 0) {
-            const params = new URLSearchParams(searchParams.toString());
-            // Clear previous filters to show only the issues
-            params.delete('nass');
-            params.delete('text');
-            params.delete('page');
-            params.set('tab', 'excerpts');
-            params.set('ids', issueIds.join(','));
-
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-
-            toast.info(
-                `Found ${issueIds.length} issue${issueIds.length > 1 ? 's' : ''} (gaps + truncated translations)`,
-            );
-        } else {
-            toast.info('No issues found');
-        }
-    };
-
     const handleApplyFormatting = async () => {
         setIsFormattingLoading(true);
         try {
@@ -429,19 +392,6 @@ function ExcerptsPageContent() {
                                     <PackageIcon />
                                 </Button>
                             )}
-                            <DialogTriggerButton
-                                onClick={() => {
-                                    record('OpenTranslationPicker');
-                                }}
-                                renderContent={() => <TranslationDialogContent />}
-                                title="Select excerpts for LLM translation"
-                                className="bg-indigo-500 hover:bg-indigo-600"
-                            >
-                                <LanguagesIcon />
-                            </DialogTriggerButton>
-                            <Button className="bg-amber-500" onClick={handleFindGap} title="Find first translation gap">
-                                <SearchIcon />
-                            </Button>
                             <Button
                                 className="bg-blue-500"
                                 disabled={isFormattingLoading}

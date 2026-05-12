@@ -1,6 +1,5 @@
 import { sanitizeArabic } from 'baburchi';
 import { countWords, preformatArabicText } from 'bitaboom';
-import type { CharacterRange } from 'dyelight';
 import { type Page, type Segment, type SegmentValidationReport, segmentPages, validateSegments } from 'flappa-doormal';
 export type DebugMeta = {
     contentLengthSplit?: { splitReason: string; maxContentLength?: number };
@@ -8,15 +7,7 @@ export type DebugMeta = {
     [key: string]: any;
 };
 
-import type { Segment as TextSegment, ValidationError } from 'wobble-bibble';
-import {
-    LatestContractVersion,
-    MAX_CONSECUTIVE_GAPS_TO_FLAG,
-    Markers,
-    MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK,
-    MIN_TRANSLATION_RATIO,
-    SHORT_SEGMENT_WORD_THRESHOLD,
-} from '@/lib/constants';
+import { LatestContractVersion, Markers, SHORT_SEGMENT_WORD_THRESHOLD } from '@/lib/constants';
 import { applyReplacements } from '@/lib/replace';
 import { nowInSeconds } from '@/lib/time';
 import type { Compilation, Excerpt, ExcerptType, Heading, IndexedExcerpt } from '@/stores/excerptsStore/types';
@@ -149,154 +140,6 @@ export const mapPagesToExcerpts = (
         promptForTranslation: '',
         report,
     };
-};
-
-/**
- * Get untranslated excerpt IDs not in the "sent" set
- */
-export const getUntranslatedIds = (excerpts: Excerpt[], sentIds: Set<string>) => {
-    return excerpts.filter((e) => !e.text && !sentIds.has(e.id)).map((e) => e.id);
-};
-
-/**
- * Builds an array of validation segments for wobble-bibble's validateTranslationResponse.
- * Maps the nass (Arabic source) field to text as expected by the library.
- *
- * @param excerpts - Array of excerpts
- * @param headings - Array of headings
- * @param footnotes - Array of footnotes
- * @returns Array of segments with { id, text } where text is the nass value
- */
-export const buildCorpusSnapshot = (excerpts: Excerpt[], headings: Heading[], footnotes: Excerpt[]) => {
-    const untranslated: TextSegment[] = [];
-    const translatedIds = new Set<string>();
-
-    for (const e of [...excerpts, ...headings, ...footnotes]) {
-        if (e.text) {
-            translatedIds.add(e.id);
-        } else {
-            untranslated.push({ id: e.id, text: e.nass });
-        }
-    }
-
-    return { translatedIds, untranslated };
-};
-
-/**
- * Converts wobble-bibble validation errors to DyeLight character range highlights.
- * Each error's range is mapped to a red background highlight.
- * Includes the original Arabic source text in the tooltip if segments are provided.
- *
- * @param errors - Array of validation errors with range information
- * @param segments - Optional source segments to look up Arabic text for tooltips
- * @returns Array of CharacterRange objects for DyeLight highlights prop
- */
-export const errorsToHighlights = (errors: ValidationError[]): CharacterRange[] => {
-    return errors.map((error) => ({ className: 'bg-red-200', end: error.range.end, start: error.range.start }));
-};
-
-/**
- * Detects when a translation appears truncated compared to its Arabic source.
- * This catches LLM errors where only a portion of the text was translated.
- *
- * @param arabicText - The original Arabic text
- * @param translationText - The English/target translation
- * @returns Error message describing the issue, or undefined if valid
- */
-export const detectTruncatedTranslation = (
-    arabicText: string | null | undefined,
-    translationText: string | null | undefined,
-): string | undefined => {
-    const arabic = (arabicText ?? '').trim();
-    const translation = (translationText ?? '').trim();
-
-    // Skip check if Arabic is empty or too short
-    if (arabic.length < MIN_ARABIC_LENGTH_FOR_TRUNCATION_CHECK) {
-        return;
-    }
-
-    // Check for empty/whitespace-only translation with substantial Arabic
-    if (translation.length === 0) {
-        return `Translation appears empty but Arabic text has ${arabic.length} characters`;
-    }
-
-    // Calculate the ratio of translation to Arabic length
-    const ratio = translation.length / arabic.length;
-
-    // If ratio is below threshold, the translation is likely truncated
-    if (ratio < MIN_TRANSLATION_RATIO) {
-        const expectedMinLength = Math.round(arabic.length * MIN_TRANSLATION_RATIO);
-        return `Translation appears truncated: ${translation.length} chars for ${arabic.length} char Arabic text (expected at least ~${expectedMinLength} chars)`;
-    }
-};
-
-/**
- * Item type for gap/issue detection (has both nass and text fields).
- */
-type ExcerptIssueItem = { id: string; nass?: string | null; text?: string | null };
-
-/**
- * Finds all excerpts with issues: gaps (missing translations surrounded by translations)
- * and truncated translations (suspiciously short compared to Arabic source).
- *
- * Gap detection:
- * - A gap is one or more consecutive items without translation, surrounded by items with translations
- * - Only flags gaps if there are 1 to MAX_CONSECUTIVE_GAPS_TO_FLAG consecutive missing items
- *
- * Truncation detection:
- * - Only checks items that HAVE a translation (text is defined and non-empty)
- * Checks if a translation is truncated compared to its Arabic source.
- */
-function isTranslationTruncated(item: ExcerptIssueItem): boolean {
-    return !!detectTruncatedTranslation(item.nass, item.text);
-}
-
-/**
- * Checks if a segment point is a gap surrounded by translations
- */
-function isSurroundedGap(items: ExcerptIssueItem[], start: number, end: number): boolean {
-    const hasPrev = start > 0 && !!items[start - 1].text?.trim();
-    const hasNext = end < items.length - 1 && !!items[end + 1].text?.trim();
-    return hasPrev && hasNext && end - start + 1 <= MAX_CONSECUTIVE_GAPS_TO_FLAG;
-}
-
-/**
- * Finds all issues in a list of items: gaps (missing translations between translated blocks)
- * and truncated translations (too short for the Arabic text).
- *
- * @param items - List of items to check
- * @returns Array of IDs that have issues
- */
-export const findExcerptIssues = (items: ExcerptIssueItem[]): string[] => {
-    const issueIds = new Set<string>();
-
-    let i = 0;
-    while (i < items.length) {
-        if (items[i].text?.trim()) {
-            // Check for truncation if it has text
-            if (isTranslationTruncated(items[i])) {
-                issueIds.add(items[i].id);
-            }
-            i++;
-            continue;
-        }
-
-        // Found an item without translation - find the end of this gap
-        const start = i;
-        while (i + 1 < items.length && !items[i + 1].text?.trim()) {
-            i++;
-        }
-
-        // Check if this gap is surrounded by translated items and within size limit
-        if (isSurroundedGap(items, start, i)) {
-            for (let j = start; j <= i; j++) {
-                issueIds.add(items[j].id);
-            }
-        }
-        i++;
-    }
-
-    return Array.from(issueIds);
 };
 
 export const canMergeSegments = <T extends { id: string }>(selectedIds: Set<string>, excerpts: T[]) => {

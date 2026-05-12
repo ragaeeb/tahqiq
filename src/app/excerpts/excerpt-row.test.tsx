@@ -29,10 +29,6 @@ mock.module('@/components/ui/dialog', () => ({
     DialogTrigger: ({ children }: any) => <div data-testid="dialog-trigger">{children}</div>,
 }));
 
-mock.module('./edit-excerpt-dialog', () => ({
-    EditExcerptDialogContent: () => <div data-testid="edit-dialog-content" />,
-}));
-
 mock.module('@/components/confirm-button', () => ({
     ConfirmButton: ({ children, onClick, ...props }: any) => (
         <button onClick={onClick} type="button" {...props}>

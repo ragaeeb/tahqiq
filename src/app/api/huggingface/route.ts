@@ -4,7 +4,7 @@ import { createJsonStream, downloadFromHuggingFace } from '@/lib/network';
 
 const isShadowStaticExport = process.env.TAHQIQ_STATIC_EXPORT === '1';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 /**
  * Generic API route to download files from HuggingFace datasets.
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'HuggingFace API disabled in static export shadow build.' }, { status: 501 });
     }
 
-    const { searchParams } = new URL(req.url);
+    const searchParams = req.nextUrl?.searchParams ?? new URL(req.url).searchParams;
     const dataset = searchParams.get('dataset');
     const file = searchParams.get('file');
     const authHeader = req.headers.get('Authorization');
